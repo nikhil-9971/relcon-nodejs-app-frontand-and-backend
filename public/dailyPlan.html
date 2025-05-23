@@ -264,7 +264,7 @@
 
         // ⏳ Proceed to submit
         const response = await fetch(
-          "https://relconecz-database.onrender.com/saveDailyPlan",
+          "https://relconstatnodejs-app.onrender.com/saveDailyPlan",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -330,7 +330,7 @@
 
         try {
           const res = await fetch(
-            `https://relconecz-database.onrender.com/getROInfo/${roCode}`
+            `https://relconstatnodejs-app.onrender.com/getROInfo/${roCode}`
           );
           if (!res.ok) throw new Error("RO Code not found");
 
