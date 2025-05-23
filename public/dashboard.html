@@ -99,8 +99,10 @@
         }
       }
 
+      const API_BASE = "https://relconecz-database.onrender.com";
+
       function logout() {
-        fetch("/logout", {
+        fetch(`${API_BASE}/logout`, {
           method: "POST",
           credentials: "include",
         }).finally(() => {
@@ -116,7 +118,9 @@
       // 👤 Fetch user info
       async function fetchUser() {
         try {
-          const res = await fetch("/user", { credentials: "include" });
+          const res = await fetch(`${API_BASE}/user`, {
+            credentials: "include",
+          });
           if (!res.ok) throw new Error("Not logged in");
           const user = await res.json();
           const text = `${user.engineerName || user.username} (${user.role})`;
