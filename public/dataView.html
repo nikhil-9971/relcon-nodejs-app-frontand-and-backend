@@ -547,9 +547,12 @@
       let loggedInUser = null;
 
       async function fetchUserSession() {
-        const res = await fetch("http://localhost:3000/user", {
-          credentials: "include",
-        });
+        const res = await fetch(
+          "https://relconecz-database.onrender.com/user",
+          {
+            credentials: "include",
+          }
+        );
 
         if (res.status !== 200) {
           alert("Please log in first.");
@@ -571,7 +574,9 @@
       }
 
       async function fetchAndStoreData() {
-        const res = await fetch("http://localhost:3000/getDailyPlans");
+        const res = await fetch(
+          "https://relconecz-database.onrender.com/getDailyPlans"
+        );
         const data = await res.json();
         fullData = data;
 
@@ -861,7 +866,7 @@
       }
 
       function logout() {
-        fetch("http://localhost:3000/logout", {
+        fetch("https://relconecz-database.onrender.com/logout", {
           method: "POST",
           credentials: "include",
         }).finally(() => {
@@ -981,11 +986,14 @@
 
         //if (!workDone) return alert("Please enter work done");
 
-        const res = await fetch("http://localhost:3000/saveStatus", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(statusData),
-        });
+        const res = await fetch(
+          "https://relconecz-database.onrender.com/saveStatus",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(statusData),
+          }
+        );
 
         if (res.ok) {
           alert("✅ Status saved");
