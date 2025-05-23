@@ -16,7 +16,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://relconecz-database.onrender.com", // ✅ specify your frontend
+    origin: "https://relconstatnodejs-app.onrender.com", // ✅ specify your frontend
     credentials: true, // ✅ allow cookies
   })
 );
