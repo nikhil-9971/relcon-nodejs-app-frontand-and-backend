@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | RELCON SYSTEMS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      #particles-js {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        top: 0;
+        left: 0;
+      }
+      /* Button click animation */
+      .btn-clicked {
+        animation: pulse 0.4s ease;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          background-color: #4caf50;
+        }
+        50% {
+          transform: scale(1.1);
+          background-color: #34d399;
+        }
+        100% {
+          transform: scale(1);
+          background-color: #4caf50;
+        }
+      }
+
+      /* Toaster styles */
+      .toaster {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4caf50;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 9999;
+        opacity: 0;
+        animation: fadeInOut 3s ease forwards;
+      }
+
+      @keyframes fadeInOut {
+        0% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 h-screen flex items-center justify-center relative">
+    <!-- Background Animation -->
+    <div id="particles-js"></div>
+
+    <!-- Date/Time -->
+    <div
+      class="absolute top-2 right-4 text-blue-600 text-sm font-medium"
+      id="datetime"
+    ></div>
+
+    <!-- Login Box -->
+    <div
+      class="bg-white shadow-lg rounded-lg flex flex-col md:flex-row max-w-4xl w-full overflow-hidden z-10"
+    >
+      <!-- Left Section (Form) -->
+      <div class="w-full md:w-1/2 p-8">
+        <h2 class="text-2xl font-bold text-center text-green-600 mb-6">
+          RELCON ECZ DATABASE
+        </h2>
+        <form onsubmit="handleLogin(event)">
+          <label class="block text-gray-700">Username</label>
+          <input
+            type="text"
+            id="username"
+            class="w-full border rounded px-3 py-2 mb-4"
+            required
+          />
+          <label class="block text-gray-700">Password</label>
+          <input
+            type="password"
+            id="password"
+            class="w-full border rounded px-3 py-2 mb-6"
+            required
+          />
+          <button
+            id="loginBtn"
+            type="submit"
+            class="w-full py-2 rounded text-white font-semibold bg-green-600 hover:bg-green-700 transition-all flex justify-center items-center gap-2"
+          >
+            <span id="btnText">Login</span>
+            <svg
+              id="spinner"
+              class="animate-spin h-5 w-5 text-white hidden"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+          </button>
+        </form>
+        <div id="toastContainer"></div>
+        <p id="error" class="text-red-500 text-center mt-4 hidden">
+          Invalid login. Try again.
+        </p>
+      </div>
+
+      <!-- Right Section (Image) -->
+      <div
+        class="hidden md:flex items-center justify-center w-1/2 bg-gray-50 p-4"
+      >
+        <img
+          src="./assets/login.png"
+          alt="Login Illustration"
+          class="max-w-full h-auto"
+        />
+      </div>
+    </div>
+
+    <!-- Scripts -->
+
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+      // Particle Background
+      particlesJS("particles-js", {
+        particles: {
+          number: { value: 100, density: { enable: true, value_area: 800 } },
+          color: {
+            value: ["#00bcd4", "#ff4081", "#4caf50", "#ffeb3b", "#2196f3"],
+          },
+          shape: { type: "circle", stroke: { width: 0, color: "#000" } },
+          opacity: { value: 0.6, random: true },
+          size: { value: 4, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#cccccc",
+            opacity: 0.4,
+            width: 1,
+          },
+          move: { enable: true, speed: 2, out_mode: "out" },
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "grab" },
+            onclick: { enable: true, mode: "push" },
+          },
+          modes: {
+            grab: { distance: 200, line_linked: { opacity: 0.8 } },
+            push: { particles_nb: 4 },
+          },
+        },
+        retina_detect: true,
+      });
+
+      // Date/Time display
+      function updateDateTime() {
+        const now = new Date();
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+        };
+        const date = now.toLocaleDateString(undefined, options);
+        const time = now.toLocaleTimeString();
+        document.getElementById("datetime").innerText = `${date}, ${time}`;
+      }
+      setInterval(updateDateTime, 1000);
+      updateDateTime();
+
+      // Show toaster
+      function showToast(message) {
+        const toast = document.createElement("div");
+        toast.className = "toaster";
+        toast.innerText = message;
+        document.getElementById("toastContainer").appendChild(toast);
+        setTimeout(() => {
+          toast.remove();
+        }, 3000);
+      }
+
+      // Login Handler
+      async function handleLogin(event) {
+        event.preventDefault();
+
+        const loginBtn = document.getElementById("loginBtn");
+        const spinner = document.getElementById("spinner");
+        const btnText = document.getElementById("btnText");
+
+        // Show spinner and disable button
+        loginBtn.disabled = true;
+        spinner.classList.remove("hidden");
+        btnText.textContent = "Logging in...";
+        loginBtn.classList.add("btn-clicked");
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const response = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("role", data.role);
+          localStorage.setItem("engineerName", data.engineerName);
+
+          showToast("Login Successfully");
+
+          setTimeout(() => {
+            window.location.href = "dashboard";
+          }, 1000);
+        } else {
+          document.getElementById("error").classList.remove("hidden");
+        }
+
+        // Reset button after response
+        setTimeout(() => {
+          spinner.classList.add("hidden");
+          btnText.textContent = "Login";
+          loginBtn.disabled = false;
+          loginBtn.classList.remove("btn-clicked");
+        }, 400);
+      }
+    </script>
+  </body>
+</html>

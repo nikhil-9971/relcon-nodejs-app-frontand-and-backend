@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | RELCON SYSTEMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      iframe {
+        width: 100%;
+        height: 100vh;
+        border: none;
+      }
+      .active-link {
+        background-color: white;
+        color: #15803d;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex flex-col md:flex-row bg-gray-100">
+    <!-- Mobile Navbar -->
+    <div
+      class="md:hidden bg-green-700 text-white p-4 flex justify-between items-center"
+    >
+      <div class="font-bold text-lg">RELCON</div>
+      <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside
+      id="sidebar"
+      class="w-64 bg-gray-200 text-gray-800 flex-col shadow-md hidden md:flex absolute md:relative top-0 left-0 z-50 h-screen md:h-auto md:block transition-all"
+    >
+      <div
+        class="px-4 py-3 text-base font-bold border-b border-gray-300 leading-5 tracking-wide bg-gray-200"
+      >
+        <span class="block text-blue-700 text-lg">RELCON SYSTEMS</span>
+      </div>
+
+      <!-- 👤 Logged-in user -->
+      <div
+        id="userDetails"
+        class="px-4 py-2 text-sm text-gray-700 border-b border-gray-300"
+      >
+        👤 Loading user...
+      </div>
+
+      <!-- Nav links -->
+      <nav class="flex-1 p-4 space-y-2">
+        <a
+          href="#"
+          id="visitLink"
+          class="flex items-center gap-2 px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all active-link"
+          onclick="loadPage('dataView.html', this)"
+        >
+          📋 Visit Record
+        </a>
+        <a
+          href="#"
+          id="planLink"
+          class="flex items-center gap-2 px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+          onclick="loadPage('dailyPlan.html', this)"
+        >
+          📝 Daily Plan
+        </a>
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-gray-300">
+        <button
+          onclick="logout()"
+          class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+        >
+          🚪 Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <iframe id="contentFrame" src="dataView.html"></iframe>
+    </main>
+
+    <script>
+      function loadPage(page, linkElement) {
+        document.getElementById("contentFrame").src = page;
+        document.querySelectorAll("nav a").forEach((link) => {
+          link.classList.remove("active-link");
+        });
+        if (linkElement) linkElement.classList.add("active-link");
+
+        // Close sidebar in mobile view
+        if (window.innerWidth < 768) {
+          document.getElementById("sidebar").classList.add("hidden");
+        }
+      }
+
+      function logout() {
+        fetch("/logout", {
+          method: "POST",
+          credentials: "include",
+        }).finally(() => {
+          window.location.href = "login.html";
+        });
+      }
+
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("hidden");
+      }
+
+      // 👤 Fetch user info
+      async function fetchUser() {
+        try {
+          const res = await fetch("/user", { credentials: "include" });
+          if (!res.ok) throw new Error("Not logged in");
+          const user = await res.json();
+          const text = `${user.engineerName || user.username} (${user.role})`;
+          document.getElementById("userDetails").textContent = `👤 ${text}`;
+        } catch {
+          document.getElementById("userDetails").textContent =
+            "⚠️ Not logged in";
+        }
+      }
+
+      fetchUser();
+
+      //Intactivity window
+      let inactivityTimeout;
+
+      function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(() => {
+          alert("You were inactive for 15 minutes. Logging out.");
+          logout();
+        }, 15 * 60 * 1000); // 15 minutes
+      }
+
+      // Reset timer on activity
+      ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) =>
+        window.addEventListener(evt, resetInactivityTimer)
+      );
+
+      // Start/reset timer when page loads
+      window.onload = () => {
+        fetchUser(); // existing function
+        resetInactivityTimer(); // new
+      };
+    </script>
+  </body>
+</html>
