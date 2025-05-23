@@ -575,8 +575,12 @@
 
       async function fetchAndStoreData() {
         const res = await fetch(
-          "https://relconecz-database.onrender.com/getDailyPlans"
+          "https://relconecz-database.onrender.com/getDailyPlans",
+          {
+            credentials: "include", // ✅ this must be here
+          }
         );
+
         const data = await res.json();
         fullData = data;
 
