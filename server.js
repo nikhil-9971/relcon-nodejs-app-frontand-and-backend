@@ -14,16 +14,36 @@ const statusRoutes = require("./routes/statusmodel");
 const app = express();
 connectDB();
 
-app.use(cors({ credentials: true, origin: true }));
+app.use(
+  cors({
+    origin: "https://relconecz-database.onrender.com", // ✅ specify your frontend
+    credentials: true, // ✅ allow cookies
+  })
+);
+
+// app.use(cors({ credentials: true, origin: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: { maxAge: 15 * 60 * 1000 },
+//   })
+// );
 
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 15 * 60 * 1000 },
+    cookie: {
+      maxAge: 15 * 60 * 1000,
+      secure: true, // ✅ Required for HTTPS on Render
+      sameSite: "None", // ✅ Required for cross-origin cookies
+    },
   })
 );
 
