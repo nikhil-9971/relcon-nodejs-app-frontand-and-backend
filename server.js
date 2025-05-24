@@ -41,8 +41,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 15 * 60 * 1000,
-      secure: true, // ✅ Required for HTTPS on Render
-      sameSite: "None", // ✅ Required for cross-origin cookies
+      secure: false, // 🔁 allow HTTP during development
+      sameSite: "Lax", // 🔁 safer than "None" for local testing
     },
   })
 );
