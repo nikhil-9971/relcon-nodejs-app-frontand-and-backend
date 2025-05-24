@@ -16,7 +16,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://relconstatnodejs-app.onrender.com", // ✅ specify your frontend
+    origin: "http://localhost:3000", // ✅ specify your frontend
     credentials: true, // ✅ allow cookies
   })
 );
