@@ -16,7 +16,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // ✅ specify your frontend
+    origin: "https://relconecz-node.onrender.com", // ✅ specify your frontend
     credentials: true, // ✅ allow cookies
   })
 );
