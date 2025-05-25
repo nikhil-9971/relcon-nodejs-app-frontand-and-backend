@@ -956,6 +956,37 @@
       }
 
       async function saveStatus() {
+        const requiredFields = [
+          "probeMake",
+          "lowProductLock",
+          "highWaterSet",
+          "duSerialNumber",
+          "connectivityType",
+          "sim1Provider",
+          "sim1Number",
+          "sim2Provider",
+          "sim2Number",
+          "iemiNumber",
+          "bosVersion",
+          "fccVersion",
+          "wirelessSlave",
+          "sftpConfig",
+          "adminPassword",
+          "workCompletion",
+          "earthingStatus",
+          "duOffline",
+          "duRemark",
+          "locationField",
+        ];
+        // Validate all required fields
+        for (const id of requiredFields) {
+          const el = document.getElementById(id);
+          if (!el || !el.value.trim()) {
+            alert(`❌ Please fill in ${id.replace(/([A-Z])/g, " $1")} field`);
+            el.focus();
+            return;
+          }
+        }
         const statusData = {
           planId: document.getElementById("statusPlanId").value,
           probeMake: document.getElementById("probeMake").value,
