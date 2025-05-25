@@ -871,8 +871,12 @@
 
         ws["!cols"] = Array(9).fill({ wch: 25 });
 
+        const userName =
+          loggedInUser.engineerName || loggedInUser.username || "User";
+        const safeName = userName.replace(/\s+/g, "_"); // Replace spaces with _
+
         XLSX.utils.book_append_sheet(wb, ws, "Visit Records");
-        XLSX.writeFile(wb, `${loggedInUser}_VisitRecords_${date}.xlsx`);
+        XLSX.writeFile(wb, `${safeName}_VisitRecords_${date}.xlsx`);
       }
 
       function logout() {
