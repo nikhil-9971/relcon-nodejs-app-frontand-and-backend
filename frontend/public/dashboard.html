@@ -86,6 +86,7 @@
     </main>
 
     <script>
+      const baseUrl = "https://relcon-backend.onrender.com";
       function loadPage(page, linkElement) {
         document.getElementById("contentFrame").src = page;
         document.querySelectorAll("nav a").forEach((link) => {
@@ -99,10 +100,8 @@
         }
       }
 
-      const API_BASE = "https://relconecz-node.onrender.com";
-
       function logout() {
-        fetch(`${API_BASE}/logout`, {
+        fetch(`${baseUrl}/logout`, {
           method: "POST",
           credentials: "include",
         }).finally(() => {
@@ -118,7 +117,7 @@
       // 👤 Fetch user info
       async function fetchUser() {
         try {
-          const res = await fetch(`${API_BASE}/user`, {
+          const res = await fetch(`${baseUrl}/user`, {
             credentials: "include",
           });
           if (!res.ok) throw new Error("Not logged in");

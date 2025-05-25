@@ -155,6 +155,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
+      //backend url
+
+      const baseUrl = "https://relcon-backend.onrender.com";
+
       // Particle Background
       particlesJS("particles-js", {
         particles: {
@@ -232,15 +236,12 @@
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
-        const response = await fetch(
-          "https://relconecz-node.onrender.com/login",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-            credentials: "include", // ✅ Add this line
-          }
-        );
+        const response = await fetch(`${baseUrl}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+          credentials: "include", // ✅ Add this line
+        });
 
         if (response.ok) {
           const data = await response.json();

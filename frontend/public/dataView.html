@@ -542,12 +542,13 @@
     ></div>
 
     <script>
+      const baseUrl = "https://relcon-backend.onrender.com";
       let fullData = [];
       let filteredData = [];
       let loggedInUser = null;
 
       async function fetchUserSession() {
-        const res = await fetch("https://relconecz-node.onrender.com/user", {
+        const res = await fetch(`${baseUrl}/user`, {
           credentials: "include",
         });
 
@@ -571,12 +572,9 @@
       }
 
       async function fetchAndStoreData() {
-        const res = await fetch(
-          "https://relconecz-node.onrender.com/getDailyPlans",
-          {
-            credentials: "include", // ✅ this must be here
-          }
-        );
+        const res = await fetch(`${baseUrl}/getDailyPlans`, {
+          credentials: "include", // ✅ this must be here
+        });
 
         const data = await res.json();
         fullData = data;
@@ -867,7 +865,7 @@
       }
 
       function logout() {
-        fetch("https://relconecz-node.onrender.com/logout", {
+        fetch(`${baseUrl}/logout`, {
           method: "POST",
           credentials: "include",
         }).finally(() => {
@@ -987,14 +985,11 @@
 
         //if (!workDone) return alert("Please enter work done");
 
-        const res = await fetch(
-          "https://relconecz-node.onrender.com/saveStatus",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(statusData),
-          }
-        );
+        const res = await fetch(`${baseUrl}/saveStatus`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(statusData),
+        });
 
         if (res.ok) {
           alert("✅ Status saved");
