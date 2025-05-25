@@ -820,7 +820,7 @@
         const ws = XLSX.utils.aoa_to_sheet(allRows);
 
         // Merge first row left to right except last cell
-        ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }];
+        ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
 
         // Apply green background to title row
         for (let c = 0; c <= 8; c++) {
