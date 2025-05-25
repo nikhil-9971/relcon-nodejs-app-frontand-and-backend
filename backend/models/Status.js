@@ -7,6 +7,7 @@ const StatusSchema = new mongoose.Schema({
   lowProductLock: String,
   highWaterSet: String,
   duSerialNumber: String,
+  dgStatus: String,
   connectivityType: String,
   sim1Provider: String,
   sim1Number: String,
