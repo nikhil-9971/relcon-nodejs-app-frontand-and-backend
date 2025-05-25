@@ -989,6 +989,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(statusData),
+          credentials: "include", // ✅ add this
         });
 
         if (res.ok) {
@@ -1010,8 +1011,8 @@
 
       async function downloadPDF(planId) {
         try {
-          const resPlan = await fetch(`/getPlanById/${planId}`);
-          const resStatus = await fetch(`/getStatusByPlan/${planId}`);
+          const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`);
+          const resStatus = await fetch(`${baseUrl}/getStatusByPlan/${planId}`);
 
           if (!resPlan.ok || !resStatus.ok) {
             alert("❌ Failed to fetch visit or status data");

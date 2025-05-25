@@ -245,7 +245,10 @@
         // ✅ Check if this RO Code + Date combo already exists
         try {
           const checkRes = await fetch(
-            `${baseUrl}?roCode=${data.roCode}&date=${data.date}`
+            `${baseUrl}?roCode=${data.roCode}&date=${data.date}`,
+            {
+              credentials: "include",
+            }
           );
           const exists = await checkRes.json();
 
@@ -268,6 +271,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
+          credentials: "include",
         });
 
         btn.disabled = false;
@@ -327,7 +331,9 @@
         }
 
         try {
-          const res = await fetch(`${baseUrl}/getROInfo/${roCode}`);
+          const res = await fetch(`${baseUrl}/getROInfo/${roCode}`, {
+            credentials: "include",
+          });
           if (!res.ok) throw new Error("RO Code not found");
 
           const data = await res.json();
@@ -365,7 +371,9 @@
             selectedType === "Issue & PM Visit"
           ) {
             try {
-              const res = await fetch(`${baseUrl}/getROInfo/${roCode}`);
+              const res = await fetch(`${baseUrl}/getROInfo/${roCode}`, {
+                credentials: "include",
+              });
               if (!res.ok) throw new Error("RO Code not found");
 
               const data = await res.json();
