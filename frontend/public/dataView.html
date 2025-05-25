@@ -687,7 +687,7 @@
           } else if (plan.phase && plan.phase.includes("HPCL/")) {
             statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">➕ Add Status</button>`;
           } else {
-            statusBtn = `<span class="text-gray-400 italic">Not eligible</span>`;
+            statusBtn = `<span class="text-gray-400 italic">Not required</span>`;
           }
 
           row.innerHTML = `
