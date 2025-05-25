@@ -245,10 +245,8 @@
         // ✅ Check if this RO Code + Date combo already exists
         try {
           const checkRes = await fetch(
-            `${baseUrl}?roCode=${data.roCode}&date=${data.date}`,
-            {
-              credentials: "include",
-            }
+            `${baseUrl}/checkDuplicate?roCode=${data.roCode}&date=${data.date}`,
+            { credentials: "include" }
           );
           const exists = await checkRes.json();
 
