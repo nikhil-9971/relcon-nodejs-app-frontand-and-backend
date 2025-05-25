@@ -305,6 +305,20 @@
             </div>
 
             <div>
+              <label class="text-sm font-semibold">DG Status</label>
+              <select
+                id="dgStatus"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>Standard DG</option>
+                <option>Non Standard DG</option>
+                <option>No DG Available</option>
+              </select>
+            </div>
+
+            <div>
               <label class="text-sm font-semibold">Connectivity Type</label>
               <select
                 id="connectivityType"
@@ -961,6 +975,7 @@
           "lowProductLock",
           "highWaterSet",
           "duSerialNumber",
+          "dgStatus",
           "connectivityType",
           "sim1Provider",
           "sim1Number",
@@ -993,6 +1008,7 @@
           lowProductLock: document.getElementById("lowProductLock").value,
           highWaterSet: document.getElementById("highWaterSet").value,
           duSerialNumber: document.getElementById("duSerialNumber").value,
+          dgStatus: document.getElementById("dgStatus").value,
           connectivityType: document.getElementById("connectivityType").value,
           sim1Provider: document.getElementById("sim1Provider").value,
           sim1Number: document.getElementById("sim1Number").value,
@@ -1080,6 +1096,7 @@
             ["Low Product Lock", status.lowProductLock],
             ["High water Lock", status.highWaterSet],
             ["DU Serial Number Updated", status.duSerialNumber],
+            ["Outlet DG Status", status.dgStatus],
             ["Connectivity Type", status.connectivityType],
             ["Sim 1 Provider Name", status.sim1Provider],
             ["Sim 1 Number", status.sim1Number],
@@ -1162,7 +1179,7 @@
           }
 
           // Save the file
-          doc.save(`Status_Report_${plan.roCode}.pdf`);
+          doc.save(`Status_Report_${plan.roCode}_${plan.date}.pdf`);
         } catch (err) {
           console.error("PDF Generation Error:", err);
           alert("❌ Error generating PDF");
