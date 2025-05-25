@@ -16,7 +16,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://relconecz-node.onrender.com", // ✅ specify your frontend
+    origin: "https://relconecz1.netlify.app", // ✅ specify your frontend
     credentials: true, // ✅ allow cookies
   })
 );
