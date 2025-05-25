@@ -59,8 +59,8 @@ app.use((req, res, next) => {
 });
 
 // fallback routes
-app.get("/:page", (req, res, next) => {
-  const filePath = path.join(__dirname, "public", `${req.params.page}.html`);
+app.get("/page/:name", (req, res, next) => {
+  const filePath = path.join(__dirname, "public", `${req.params.name}.html`);
   res.sendFile(filePath, (err) => {
     if (err) next();
   });
