@@ -733,10 +733,11 @@
           amcQtr: document.getElementById("editAmcQtr").value,
         };
 
-        const res = await fetch("/updateDailyPlan/" + id, {
+        const res = await fetch(`${baseUrl}/updateDailyPlan/` + id, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updated),
+          credentials: "include",
         });
 
         if (res.ok) {
@@ -763,8 +764,9 @@
         if (!confirm("Are you sure you want to delete this record?")) return;
 
         try {
-          const res = await fetch(`/deleteDailyPlan/${planId}`, {
+          const res = await fetch(`${baseUrl}/deleteDailyPlan/${planId}`, {
             method: "DELETE",
+            credentials: "include",
           });
 
           if (res.ok) {
