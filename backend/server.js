@@ -3,6 +3,7 @@ const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 
 const connectDB = require("./config/db");
@@ -12,73 +13,66 @@ const roRoutes = require("./routes/romaster");
 const statusRoutes = require("./routes/statusmodel");
 
 const app = express();
+
+// ✅ Connect to MongoDB
 connectDB();
 
+// ✅ CORS setup for frontend → Netlify
 app.use(
   cors({
-    origin: "https://relconecz1.netlify.app", // ✅ specify your frontend
-    credentials: true, // ✅ allow cookies
+    origin: "https://relconecz1.netlify.app",
+    credentials: true,
   })
 );
 
-// app.use(cors({ credentials: true, origin: true }));
+// ✅ Needed for cookies to work cross-origin
+app.set("trust proxy", 1);
+
+// ✅ Middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
+// ✅ Session configuration for cross-origin
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 15 * 60 * 1000,
-      secure: false, // 🔁 allow HTTP during development
-      sameSite: "Lax", // 🔁 safer than "None" for local testing
+      maxAge: 15 * 60 * 1000, // 15 minutes
+      secure: true, // ✅ required for HTTPS (Netlify + Render)
+      sameSite: "none", // ✅ allow cookies cross-origin
+      httpOnly: true,
     },
   })
 );
 
+// ✅ Static files
 app.use(express.static("public"));
 
-// API Routes
+// ✅ Routes
 app.use("/", authRoutes);
 app.use("/", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
 
-// app.get("/auth", (req, res) => {
-//   res.sendFile(path.join(__dirname, "public", "login.html"));
-// });
-// Redirect all *.html URLs to clean ones
+// ✅ Optional: redirect *.html → clean path
 app.use((req, res, next) => {
   if (req.path.endsWith(".html")) {
-    const cleanPath = req.path.slice(0, -5); // remove '.html'
-    return res.redirect(301, cleanPath); // permanent redirect
+    const cleanPath = req.path.slice(0, -5);
+    return res.redirect(301, cleanPath);
   }
   next();
 });
 
-// Serve static files from 'public'
-app.use(express.static(path.join(__dirname, "public")));
-
-// Route: root → auth.html
-// app.get("/", (req, res) => {
-// res.sendFile(path.join(__dirname, "public", "login.html"));
-// });
-
-// Route: /dashboard → dashboard.html etc.
-// app.get("/:page", (req, res, next) => {
-//   const filePath = path.join(__dirname, "public", ${req.params.page}.html);
-//   res.sendFile(filePath, (err) => {
-//     if (err) next(); // 404 fallback
-//   });
-// });
-
-// 404 fallback
+// ✅ 404 fallback
 app.use((req, res) => {
   res.status(404).send("Page not found");
 });
 
-app.listen(3000, () => {
-  console.log("✅ Server running at http://localhost:3000");
+// ✅ Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
