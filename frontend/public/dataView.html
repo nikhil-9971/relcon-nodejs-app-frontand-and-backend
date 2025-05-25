@@ -149,7 +149,7 @@
               <th class="px-2 py-1">Issue Type</th>
               <th class="px-2 py-1">AMC Qtr</th>
               <th class="px-2 py-1">Update Status</th>
-              <th class="px-2 py-1">Action</th>
+              <th class="px-2 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -587,6 +587,9 @@
         if (user.role === "engineer") {
           document.getElementById("engineerFilterWrapper").style.display =
             "none";
+          // Hide Action column header for engineers
+          const actionHeader = document.getElementById("actionHeader");
+          if (actionHeader) actionHeader.style.display = "none";
         }
       }
 
