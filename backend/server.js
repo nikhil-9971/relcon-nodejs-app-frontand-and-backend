@@ -1,9 +1,21 @@
-require("dotenv").config();
 const express = require("express");
+const cors = require("cors"); // ✅ EARLY
+const app = express();
+
+app.use(
+  cors({
+    origin: "https://relconecz1.netlify.app", // ✅ your frontend URL
+    credentials: true,
+  })
+);
+
+// ✅ Add this line to handle preflight OPTIONS requests
+app.options("*", cors()); // <------ THIS IS REQUIRED
+
 const session = require("express-session");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const path = require("path");
+require("dotenv").config();
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
@@ -11,28 +23,10 @@ const planRoutes = require("./routes/plans");
 const roRoutes = require("./routes/romaster");
 const statusRoutes = require("./routes/statusmodel");
 
-const app = express();
 connectDB();
 
-app.use(
-  cors({
-    origin: "https://relconecz1.netlify.app", // ✅ specify your frontend
-    credentials: true, // ✅ allow cookies
-  })
-);
-
-// app.use(cors({ credentials: true, origin: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// app.use(
-//   session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: { maxAge: 15 * 60 * 1000 },
-//   })
-// );
 
 app.use(
   session({
@@ -41,13 +35,11 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 15 * 60 * 1000,
-      secure: false, // 🔁 allow HTTP during development
-      sameSite: "Lax", // 🔁 safer than "None" for local testing
+      secure: false,
+      sameSite: "Lax",
     },
   })
 );
-
-app.use(express.static("public"));
 
 // API Routes
 app.use("/", authRoutes);
@@ -55,35 +47,25 @@ app.use("/", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
 
-// app.get("/auth", (req, res) => {
-//   res.sendFile(path.join(__dirname, "public", "login.html"));
-// });
-// Redirect all *.html URLs to clean ones
+// Serve static files
+app.use(express.static(path.join(__dirname, "public")));
+
 app.use((req, res, next) => {
   if (req.path.endsWith(".html")) {
-    const cleanPath = req.path.slice(0, -5); // remove '.html'
-    return res.redirect(301, cleanPath); // permanent redirect
+    const cleanPath = req.path.slice(0, -5);
+    return res.redirect(301, cleanPath);
   }
   next();
 });
 
-// Serve static files from 'public'
-app.use(express.static(path.join(__dirname, "public")));
-
-// Route: root → auth.html
-app.get("/", (req, res) => {
-  // res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// Route: /dashboard → dashboard.html etc.
+// fallback routes
 app.get("/:page", (req, res, next) => {
   const filePath = path.join(__dirname, "public", `${req.params.page}.html`);
   res.sendFile(filePath, (err) => {
-    if (err) next(); // 404 fallback
+    if (err) next();
   });
 });
 
-// 404 fallback
 app.use((req, res) => {
   res.status(404).send("Page not found");
 });
