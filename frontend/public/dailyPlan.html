@@ -164,6 +164,7 @@
                 <option>SAT</option>
                 <option>NO PLAN</option>
                 <option>HPCL OFFICE</option>
+                <option>IN LEAVE</option>
               </select>
             </div>
             <div>
@@ -398,6 +399,41 @@
           document.getElementById("issueType").value = "NO PLAN";
           document.getElementById("purpose").value = "NO PLAN";
           document.getElementById("amcQtr").value = "NO PLAN";
+
+          // Replace REGION input with dropdown
+          const regionContainer =
+            document.getElementById("region").parentElement;
+          regionContainer.innerHTML = `
+        <label class="label">🌍 REGION:</label>
+        <select id="region" class="form-select rounded-lg">
+          <option>BEGUSARAI RET RO</option>
+          <option>PATNA RETAIL RO</option>
+        </select>
+      `;
+        } else if (selectedPhase === "IN LEAVE") {
+          // Set fields
+          document.getElementById("roCode").value = "N/A";
+          document.getElementById("roName").value = "IN LEAVE";
+          document.getElementById("issueType").value = "IN LEAVE";
+          document.getElementById("purpose").value = "IN LEAVE";
+          document.getElementById("amcQtr").value = "IN LEAVE";
+
+          // Replace REGION input with dropdown
+          const regionContainer =
+            document.getElementById("region").parentElement;
+          regionContainer.innerHTML = `
+        <label class="label">🌍 REGION:</label>
+        <select id="region" class="form-select rounded-lg">
+          <option>BEGUSARAI RET RO</option>
+          <option>PATNA RETAIL RO</option>
+        </select>
+      `;
+        } else if (selectedPhase === "HPCL OFFICE") {
+          // Set fields
+          document.getElementById("roCode").value = "N/A";
+          document.getElementById("roName").value = "HPCL OFFICE";
+          document.getElementById("issueType").value = "HPCL OFFICE";
+          document.getElementById("amcQtr").value = "HPCL OFFICE";
 
           // Replace REGION input with dropdown
           const regionContainer =
