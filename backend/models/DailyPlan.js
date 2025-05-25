@@ -4,7 +4,6 @@ const PlanSchema = new mongoose.Schema({
   roCode: String,
   roName: String,
   region: String,
-  salesArea: String,
   phase: String,
   date: String,
   issueType: String,
