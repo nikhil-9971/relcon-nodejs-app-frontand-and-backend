@@ -680,9 +680,16 @@
           const row = document.createElement("tr");
           row.className = index % 2 === 0 ? "bg-white" : "bg-gray-50";
 
-          const statusBtn = plan.statusSaved
-            ? `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded">📄 Download PDF</button>`
-            : `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">➕ Add Status</button>`;
+          let statusBtn = "";
+
+          if (plan.statusSaved) {
+            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded">📄 Download PDF</button>`;
+          } else if (plan.phase && plan.phase.includes("HPCL/")) {
+            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">➕ Add Status</button>`;
+          } else {
+            statusBtn = `<span class="text-gray-400 italic">Not eligible</span>`;
+          }
+
           row.innerHTML = `
                         <td class="border px-2 py-1">${plan.region}</td>
                         <td class="border px-2 py-1">${plan.engineer}</td>
