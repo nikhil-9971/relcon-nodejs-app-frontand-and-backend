@@ -14,22 +14,22 @@ const statusRoutes = require("./routes/statusmodel");
 const app = express();
 connectDB();
 
+// ✅ CORS
 app.use(
   cors({
-    origin: "https://relconecz1.netlify.app", // ✅ your frontend
+    origin: "https://relconecz1.netlify.app",
     credentials: true,
   })
 );
-
-// ✅ Handle preflight requests for all routes
 app.options("*", cors());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// ✅ Session
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "fallbackSecret",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -40,23 +40,29 @@ app.use(
   })
 );
 
-// Static files
-app.use(express.static("public"));
+// ✅ Static files
+app.use(express.static(path.join(__dirname, "public")));
 
-// API Routes
+// ✅ Routes
 app.use("/", authRoutes);
 app.use("/", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
 
-// ❌ REMOVE this route completely:
+// ✅ Test route
+app.get("/", (req, res) => {
+  res.send("✅ Backend is running!");
+});
+
+// ❌ Remove this (causes Render crash):
 // app.get("/:page", ...);
 
-// Final fallback route
+// ✅ 404 fallback
 app.use((req, res) => {
   res.status(404).send("Page not found");
 });
 
+// ✅ Server
 app.listen(3000, () => {
   console.log("✅ Server running at http://localhost:3000");
 });
