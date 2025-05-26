@@ -717,9 +717,9 @@
           let statusBtn = "";
 
           if (plan.statusSaved) {
-            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded">📄 Download PDF</button>`;
+            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"><i class="fa-solid fa-circle-down"></i>Status</button>`;
           } else if (plan.phase && plan.phase.includes("HPCL/")) {
-            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">➕ Add Status</button>`;
+            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"><i class="fa-solid fa-plus"></i>Status</button>`;
           } else {
             statusBtn = `<span class="text-gray-400 italic">Not required</span>`;
           }
