@@ -10,6 +10,7 @@ const PlanSchema = new mongoose.Schema({
   engineer: String,
   amcQtr: String,
   purpose: String,
+  completionStatus: String, // Add this field
 });
 
 module.exports =
