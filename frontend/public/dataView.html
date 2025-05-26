@@ -1123,17 +1123,8 @@
       }
 
       window.onload = async () => {
-        const today = new Date().toISOString().split("T")[0];
-        document.getElementById("fromDate").value = today;
-        document.getElementById("toDate").value = today;
-
         await fetchUserSession();
         await fetchAndStoreData();
-
-        checkFilterValidity();
-
-        // 🔄 Auto-run the filter on page load
-        document.getElementById("applyBtn").click();
       };
 
       //pdf generation code
