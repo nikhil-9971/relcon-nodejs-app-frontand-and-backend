@@ -17,12 +17,14 @@ router.post("/saveDailyPlan", async (req, res) => {
 // ✅ Check for Duplicate Daily Plan by roCode and date
 router.get("/checkDuplicate", async (req, res) => {
   try {
-    const { roCode, date } = req.query;
-    if (!roCode || !date) return res.status(400).send("Missing roCode or date");
+    const { roCode, date, engineer } = req.query;
+    if (!roCode || !date)
+      return res.status(400).send("Missing roCode or date or engineer");
 
     const duplicate = await DailyPlan.findOne({
       roCode: roCode.toUpperCase().trim(),
       date: date.trim(),
+      engineer: engineer.trim(),
     });
 
     if (duplicate) {
