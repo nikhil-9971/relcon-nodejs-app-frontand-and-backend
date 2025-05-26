@@ -148,6 +148,7 @@
               <th class="px-2 py-1">Date</th>
               <th class="px-2 py-1">Issue Type</th>
               <th class="px-2 py-1">AMC Qtr</th>
+              <th class="px-2 py-1">Completion Status</th>
               <th class="px-2 py-1">Update Status</th>
               <th class="px-2 py-1" id="actionHeader">Action</th>
             </tr>
@@ -554,6 +555,36 @@
       </div>
     </div>
 
+    <!-- Completion Modal -->
+    <div
+      id="completionModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded w-full max-w-md">
+        <h2 class="text-lg font-semibold mb-3">📝 Enter Completion Status</h2>
+        <input type="hidden" id="completionPlanId" />
+        <textarea
+          id="completionInput"
+          rows="3"
+          class="w-full border rounded p-2"
+        ></textarea>
+        <div class="mt-4 text-right">
+          <button
+            onclick="closeCompletionModal()"
+            class="bg-gray-300 px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveCompletionStatus()"
+            class="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            💾 Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div
       id="toast"
@@ -703,6 +734,18 @@
                         <td class="border px-2 py-1">${plan.date}</td>
                         <td class="border px-2 py-1">${plan.issueType}</td>
                         <td class="border px-2 py-1">${plan.amcQtr}</td>
+                        <td class="border px-2 py-1">
+          ${
+            loggedInUser.role === "admin"
+              ? `<span class="text-blue-600 underline cursor-pointer" onclick="openCompletionModal('${
+                  plan._id
+                }', \`${plan.completionStatus || ""}\`)">
+           ${plan.completionStatus ? plan.completionStatus : "➕ Click to Add"}
+         </span>`
+              : plan.completionStatus || "-"
+          }
+       </td>
+
                         <td class="border px-2 py-1 text-center">${statusBtn}</td>
                          <td class="border px-2 py-1 text-center space-x-1">
         ${
@@ -1199,6 +1242,41 @@
           alert("❌ Error generating PDF");
         }
       }
+
+      //Completion model Feature for admin only
+
+      function openCompletionModal(planId, currentText) {
+        document.getElementById("completionPlanId").value = planId;
+        document.getElementById("completionInput").value = currentText || "";
+        document.getElementById("completionModal").classList.remove("hidden");
+      }
+
+      function closeCompletionModal() {
+        document.getElementById("completionModal").classList.add("hidden");
+      }
+
+      async function saveCompletionStatus() {
+        const id = document.getElementById("completionPlanId").value;
+        const text = document.getElementById("completionInput").value;
+
+        const res = await fetch(`${baseUrl}/updateCompletion/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ completionStatus: text }),
+        });
+
+        if (res.ok) {
+          alert("✅ Completion status saved");
+          closeCompletionModal();
+          await fetchAndStoreData();
+          applyFilter(document.getElementById("applyBtn")); // refresh
+        } else {
+          alert("❌ Error saving completion status");
+        }
+      }
+
+      // Toaster
 
       function showToast(message, type = "success") {
         const toast = document.getElementById("toast");
