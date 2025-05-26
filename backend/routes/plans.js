@@ -112,4 +112,20 @@ router.delete("/deleteDailyPlan/:id", async (req, res) => {
   }
 });
 
+//Completion Status added
+router.put("/updateCompletion/:id", async (req, res) => {
+  try {
+    const { completionStatus } = req.body;
+    const updated = await DailyPlan.findByIdAndUpdate(
+      req.params.id,
+      { completionStatus },
+      { new: true }
+    );
+    if (!updated) return res.status(404).send("Plan not found");
+    res.send("✅ Completion status updated");
+  } catch (err) {
+    res.status(500).send("Server error");
+  }
+});
+
 module.exports = router;
