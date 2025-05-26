@@ -853,15 +853,14 @@
         }
       }
 
-      // Export excel
       function exportStyledExcel() {
         const wb = XLSX.utils.book_new();
-
         const date = new Date().toISOString().slice(0, 10);
 
         const titleRow = [
           ["Coordinator Name: Nikhil Trivedi", "", "", "", "", "Date: " + date],
         ];
+
         const headerRow = [
           [
             "Region",
@@ -873,60 +872,80 @@
             "Issue Type",
             "AMC_QTR_DETAIL",
             "Date of Visit",
+            "Completion Status",
           ],
         ];
 
         const tableRows = filteredData.map((d) => [
-          d.region,
-          d.engineer,
-          d.phase,
-          d.roCode,
-          d.roName,
-          d.purpose,
-          d.issueType,
-          d.amcQtr,
-          d.date,
+          (d.region || "").trim(),
+          (d.engineer || "").trim(),
+          (d.phase || "").trim(),
+          (d.roCode || "").trim(),
+          (d.roName || "").trim(),
+          (d.purpose || "").trim(),
+          (d.issueType || "").trim(),
+          (d.amcQtr || "").trim(),
+          (d.date || "").trim(),
+          (d.completionStatus || "").trim(),
         ]);
 
         const allRows = [...titleRow, ...headerRow, ...tableRows];
         const ws = XLSX.utils.aoa_to_sheet(allRows);
 
-        // Merge first row left to right except last cell
         ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
 
-        // Apply green background to title row
-        for (let c = 0; c <= 8; c++) {
+        // Format title row
+        for (let c = 0; c <= 9; c++) {
           const cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
           if (cell) {
             cell.s = {
+              font: { name: "Calibri", sz: 11, bold: true },
               fill: { fgColor: { rgb: "00FF00" } },
-              font: { bold: true },
+              alignment: { vertical: "center", horizontal: "left" },
             };
           }
         }
 
-        // Apply yellow to header row
-        for (let c = 0; c <= 8; c++) {
+        // Format header row
+        for (let c = 0; c <= 9; c++) {
           const cell = ws[XLSX.utils.encode_cell({ r: 1, c })];
           if (cell) {
             cell.s = {
+              font: { name: "Calibri", sz: 11, bold: true },
               fill: { fgColor: { rgb: "FFFF00" } },
-              font: { bold: true },
               border: {
                 top: { style: "thin", color: { rgb: "000000" } },
                 bottom: { style: "thin", color: { rgb: "000000" } },
                 left: { style: "thin", color: { rgb: "000000" } },
                 right: { style: "thin", color: { rgb: "000000" } },
               },
+              alignment: { vertical: "center", horizontal: "center" },
             };
           }
         }
 
-        ws["!cols"] = Array(9).fill({ wch: 25 });
+        // Format data rows
+        for (let r = 2; r < allRows.length; r++) {
+          for (let c = 0; c <= 9; c++) {
+            const cell = ws[XLSX.utils.encode_cell({ r, c })];
+            if (cell) {
+              cell.s = {
+                font: { name: "Calibri", sz: 9 },
+                alignment: {
+                  vertical: "center",
+                  horizontal: "left",
+                  wrapText: true,
+                },
+              };
+            }
+          }
+        }
+
+        ws["!cols"] = Array(10).fill({ wch: 25 });
 
         const userName =
           loggedInUser.engineerName || loggedInUser.username || "User";
-        const safeName = userName.replace(/\s+/g, "_"); // Replace spaces with _
+        const safeName = userName.replace(/\s+/g, "_");
 
         XLSX.utils.book_append_sheet(wb, ws, "Visit Records");
         XLSX.writeFile(wb, `${safeName}_VisitRecords_${date}.xlsx`);
