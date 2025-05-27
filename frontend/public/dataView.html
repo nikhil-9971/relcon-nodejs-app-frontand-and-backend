@@ -46,17 +46,19 @@
           transform: translateY(-10px);
         }
       }
-      table td,
-      table th {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        vertical-align: middle;
+      table {
+        font-size: 10px !important; /* chhota font */
+        table-layout: auto !important; /* auto-width columns */
+        width: max-content !important; /* content ke according width */
       }
 
-      table {
-        font-size: 8px; /* chhota font */
-        table-layout: auto !important; /* allow auto column width */
+      table th,
+      table td {
+        white-space: nowrap !important; /* wrap band */
+        text-align: center !important; /* ✅ center align */
+        vertical-align: middle !important;
+        padding: 4px 6px !important;
+        font-size: 10px !important;
       }
     </style>
   </head>
@@ -147,7 +149,7 @@
       >
         <table
           id="dataTable"
-          class="min-w-full bg-white border border-gray-300 text-left text-sm table-auto"
+          class="min-w-full bg-white border border-gray-300 text-left text-[10px] table-auto"
         >
           <thead class="bg-gray-200 sticky top-0 z-10 shadow">
             <tr>
