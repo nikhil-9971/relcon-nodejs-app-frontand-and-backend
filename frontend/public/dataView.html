@@ -166,6 +166,9 @@
               <th class="px-1 py-1">Update Status</th>
               <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
+            <tr id="columnFilters">
+              <!-- ye row JS se fill karenge -->
+            </tr>
           </thead>
           <tbody id="tableBody" class="text-[10px]"></tbody>
         </table>
@@ -1137,6 +1140,59 @@
         }
       }
 
+      //data filer
+      function createColumnFilters() {
+        const filterRow = document.getElementById("columnFilters");
+        const headers = [
+          "region",
+          "engineer",
+          "phase",
+          "roCode",
+          "roName",
+          "purpose",
+          "date",
+          "issueType",
+          "amcQtr",
+          "completionStatus",
+          "",
+          "",
+        ];
+
+        headers.forEach((key, index) => {
+          const th = document.createElement("th");
+          if (key && index < 10) {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "🔍";
+            input.className = "border px-1 py-0.5 rounded w-full text-[10px]";
+            input.setAttribute("data-key", key);
+            input.addEventListener("input", applyColumnFilter);
+            th.appendChild(input);
+          }
+          filterRow.appendChild(th);
+        });
+      }
+
+      function applyColumnFilter() {
+        const filters = [...document.querySelectorAll("#columnFilters input")];
+        let data = filteredData;
+
+        filters.forEach((input) => {
+          const key = input.getAttribute("data-key");
+          const value = input.value.toLowerCase();
+
+          if (value) {
+            data = data.filter((d) =>
+              String(d[key] || "")
+                .toLowerCase()
+                .includes(value)
+            );
+          }
+        });
+
+        populateTable(data);
+      }
+
       window.onload = async () => {
         const today = new Date().toISOString().split("T")[0];
         document.getElementById("fromDate").value = today;
@@ -1144,6 +1200,7 @@
 
         await fetchUserSession();
         await fetchAndStoreData();
+        createColumnFilters(); // ✅ add this
 
         checkFilterValidity();
 
