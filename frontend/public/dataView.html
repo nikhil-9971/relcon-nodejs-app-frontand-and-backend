@@ -175,6 +175,13 @@
           </thead>
           <tbody id="tableBody" class="text-[10px]"></tbody>
         </table>
+
+        <!-- Pignation add
+          -->
+        <div
+          id="pagination"
+          class="flex justify-center mt-4 gap-1 text-sm text-gray-700"
+        ></div>
       </div>
     </div>
 
@@ -617,6 +624,8 @@
       let fullData = [];
       let filteredData = [];
       let loggedInUser = null;
+      let currentPage = 1;
+      const rowsPerPage = 10;
 
       async function fetchUserSession() {
         const res = await fetch(`${baseUrl}/user`, {
@@ -720,6 +729,8 @@
         const query = document
           .getElementById("searchInput")
           .value.toLowerCase();
+        currentPage = 1;
+
         const finalFiltered = filteredData.filter((plan) =>
           Object.values(plan).some((val) =>
             String(val).toLowerCase().includes(query)
@@ -731,7 +742,12 @@
       function populateTable(data) {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = "";
-        data.forEach((plan, index) => {
+
+        // Calculate pagination
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
+
+        paginatedData.forEach((plan, index) => {
           const row = document.createElement("tr");
           row.className = index % 2 === 0 ? "bg-white" : "bg-gray-50";
 
@@ -1180,6 +1196,45 @@
         }
 
         populateTable(data);
+      }
+
+      //pignation
+      function renderPagination(totalRows) {
+        const pagination = document.getElementById("pagination");
+        pagination.innerHTML = "";
+
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        if (totalPages <= 1) return;
+
+        const createBtn = (label, page, disabled = false, active = false) => {
+          const btn = document.createElement("button");
+          btn.textContent = label;
+          btn.className = `px-2 py-1 border rounded ${
+            active ? "bg-blue-600 text-white" : "hover:bg-gray-200"
+          }`;
+          if (disabled) {
+            btn.classList.add("opacity-50", "cursor-not-allowed");
+            btn.disabled = true;
+          } else {
+            btn.onclick = () => {
+              currentPage = page;
+              applySearch(); // Reapply search+filter+sort
+            };
+          }
+          return btn;
+        };
+
+        pagination.appendChild(
+          createBtn("« Prev", currentPage - 1, currentPage === 1)
+        );
+
+        for (let i = 1; i <= totalPages; i++) {
+          pagination.appendChild(createBtn(i, i, false, currentPage === i));
+        }
+
+        pagination.appendChild(
+          createBtn("Next »", currentPage + 1, currentPage === totalPages)
+        );
       }
 
       window.onload = async () => {
