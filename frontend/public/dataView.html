@@ -752,7 +752,7 @@
                         <td class="border px-1 py-1">
           ${
             loggedInUser.role === "admin"
-              ? `<span class="text-blue-600 underline cursor-pointer" onclick="openCompletionModal('${
+              ? `<span class="text-blue-500  cursor-pointer" onclick="openCompletionModal('${
                   plan._id
                 }', \`${plan.completionStatus || ""}\`)">
            ${plan.completionStatus ? plan.completionStatus : "➕ Click to Add"}
