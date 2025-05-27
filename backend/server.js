@@ -20,7 +20,8 @@ connectDB();
 // ✅ CORS setup for frontend → Netlify
 app.use(
   cors({
-    origin: "https://relconecz1.netlify.app",
+    //origin: "https://relconecz1.netlify.app",
+    origin: "https://relcon-frontend.onrender.com",
     credentials: true,
   })
 );
