@@ -46,22 +46,17 @@
           transform: translateY(-10px);
         }
       }
-
       table td,
       table th {
-        white-space: nowrap; /* ✅ prevent text wrap */
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 160px;
         vertical-align: middle;
       }
 
       table {
-        font-size: 9px;
-      }
-
-      table td button {
-        white-space: nowrap;
+        font-size: 8px; /* chhota font */
+        table-layout: auto !important; /* allow auto column width */
       }
     </style>
   </head>
@@ -152,7 +147,7 @@
       >
         <table
           id="dataTable"
-          class="min-w-full bg-white border border-gray-300 text-left text-sm table-fixed"
+          class="min-w-full bg-white border border-gray-300 text-left text-sm table-auto"
         >
           <thead class="bg-gray-200 sticky top-0 z-10 shadow">
             <tr>
