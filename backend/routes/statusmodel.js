@@ -66,6 +66,7 @@ router.post("/saveStatus", async (req, res) => {
 });
 
 // New Api added for Status record fetch
+
 router.get("/getMergedStatusRecords", async (req, res) => {
   try {
     const statusRecords = await Status.find().populate("planId");
@@ -77,6 +78,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
       roCode: plan?.roCode || "",
       roName: plan?.roName || "",
       date: plan?.date || "",
+      amcQtr: plan?.amcQtr || "", // ✅ Add this line
       purpose: plan?.purpose || "",
 
       probeMake: status.probeMake,
