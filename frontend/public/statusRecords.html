@@ -36,7 +36,7 @@
       const baseUrl = "https://relcon-backend.onrender.com";
 
       async function fetchStatusRecords() {
-        const res = await fetch(`${baseUrl}/getAllStatus`, {
+        const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -44,7 +44,38 @@
       }
 
       function renderTable(data) {
-        const headers = Object.keys(data[0] || {});
+        const headers = [
+          "Engineer Name",
+          "Region",
+          "Phase",
+          "RO Code",
+          "RO Name",
+          "Date",
+          "AMC Qtr",
+          "Purpose of Visit",
+          "Probe Make",
+          "Low Product Lock",
+          "Highwater Lock Set",
+          "DU Serial number Updated",
+          "DG Status",
+          "ConnectivityType",
+          "Sim1Provider",
+          "Sim1Number",
+          "Sim2Provider",
+          "Sim2Number",
+          "iemiNumber",
+          "BOS Version",
+          "FCC Version",
+          "Wireless Slave Version",
+          "SFTP Config",
+          "Admin Password Updated",
+          "Work Completion",
+          "Earthing Status",
+          "Du Offline",
+          "Du Remark",
+          "location Field",
+        ];
+
         const headerRow = document.getElementById("tableHeader");
         headerRow.innerHTML = headers
           .map((h) => `<th class="border px-2 py-1">${h}</th>`)
@@ -61,7 +92,7 @@
           })
           .join("");
 
-        window.statusData = data; // store for CSV export
+        window.statusData = data;
       }
 
       function exportToCSV() {
