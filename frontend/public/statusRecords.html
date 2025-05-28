@@ -44,49 +44,49 @@
       }
 
       function renderTable(data) {
-        const headers = [
-          "Engineer Name",
-          "Region",
-          "Phase",
-          "RO Code",
-          "RO Name",
-          "Date",
-          "AMC Qtr",
-          "Purpose of Visit",
-          "Probe Make",
-          "Low Product Lock",
-          "Highwater Lock Set",
-          "DU Serial number Updated",
-          "DG Status",
-          "ConnectivityType",
-          "Sim1Provider",
-          "Sim1Number",
-          "Sim2Provider",
-          "Sim2Number",
-          "iemiNumber",
-          "BOS Version",
-          "FCC Version",
-          "Wireless Slave Version",
-          "SFTP Config",
-          "Admin Password Updated",
-          "Work Completion",
-          "Earthing Status",
-          "Du Offline",
-          "Du Remark",
-          "location Field",
+        const columns = [
+          { key: "engineer", label: "Engineer Name" },
+          { key: "region", label: "Region" },
+          { key: "phase", label: "Phase" },
+          { key: "roCode", label: "RO Code" },
+          { key: "roName", label: "RO Name" },
+          { key: "date", label: "Date" },
+          { key: "purpose", label: "Purpose of Visit" },
+          { key: "probeMake", label: "Probe Make" },
+          { key: "lowProductLock", label: "Low Product Lock" },
+          { key: "highWaterSet", label: "Highwater Lock Set" },
+          { key: "duSerialNumber", label: "DU Serial number Updated" },
+          { key: "dgStatus", label: "DG Status" },
+          { key: "connectivityType", label: "Connectivity Type" },
+          { key: "sim1Provider", label: "Sim1 Provider" },
+          { key: "sim1Number", label: "Sim1 Number" },
+          { key: "sim2Provider", label: "Sim2 Provider" },
+          { key: "sim2Number", label: "Sim2 Number" },
+          { key: "iemiNumber", label: "IEMI Number" },
+          { key: "bosVersion", label: "BOS Version" },
+          { key: "fccVersion", label: "FCC Version" },
+          { key: "wirelessSlave", label: "Wireless Slave Version" },
+          { key: "sftpConfig", label: "SFTP Config" },
+          { key: "adminPassword", label: "Admin Password Updated" },
+          { key: "workCompletion", label: "Work Completion" },
+          { key: "earthingStatus", label: "Earthing Status" },
+          { key: "duOffline", label: "DU Offline" },
+          { key: "duRemark", label: "DU Remark" },
+          { key: "locationField", label: "Location Field" },
         ];
 
         const headerRow = document.getElementById("tableHeader");
-        headerRow.innerHTML = headers
-          .map((h) => `<th class="border px-2 py-1">${h}</th>`)
+        headerRow.innerHTML = columns
+          .map((col) => `<th class="border px-2 py-1">${col.label}</th>`)
           .join("");
 
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = data
           .map((record) => {
-            return `<tr>${headers
+            return `<tr>${columns
               .map(
-                (h) => `<td class="border px-2 py-1">${record[h] || ""}</td>`
+                (col) =>
+                  `<td class="border px-2 py-1">${record[col.key] || ""}</td>`
               )
               .join("")}</tr>`;
           })
