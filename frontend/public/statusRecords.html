@@ -1,0 +1,80 @@
+<!-- statusRecords.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Status Records</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-6 bg-gray-100 font-sans">
+    <div class="max-w-6xl mx-auto bg-white p-6 shadow rounded">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">📝 Status Records</h1>
+        <button
+          onclick="exportToCSV()"
+          class="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          📤 Export to CSV
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table
+          id="statusTable"
+          class="min-w-full table-auto border border-gray-300 text-sm"
+        >
+          <thead class="bg-gray-200">
+            <tr id="tableHeader"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend.onrender.com";
+
+      async function fetchStatusRecords() {
+        const res = await fetch(`${baseUrl}/getAllStatus`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        renderTable(data);
+      }
+
+      function renderTable(data) {
+        const headers = Object.keys(data[0] || {});
+        const headerRow = document.getElementById("tableHeader");
+        headerRow.innerHTML = headers
+          .map((h) => `<th class="border px-2 py-1">${h}</th>`)
+          .join("");
+
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = data
+          .map((record) => {
+            return `<tr>${headers
+              .map(
+                (h) => `<td class="border px-2 py-1">${record[h] || ""}</td>`
+              )
+              .join("")}</tr>`;
+          })
+          .join("");
+
+        window.statusData = data; // store for CSV export
+      }
+
+      function exportToCSV() {
+        const ws = XLSX.utils.json_to_sheet(window.statusData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
+        XLSX.writeFile(
+          wb,
+          `Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
+        );
+      }
+
+      fetchStatusRecords();
+    </script>
+  </body>
+</html>
