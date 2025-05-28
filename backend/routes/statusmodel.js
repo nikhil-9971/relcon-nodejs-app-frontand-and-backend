@@ -70,38 +70,43 @@ router.get("/getMergedStatusRecords", async (req, res) => {
   try {
     const statusRecords = await Status.find().populate("planId");
 
-    const merged = statusRecords.map(({ planId: plan, ...status }) => ({
-      engineer: plan?.engineer || "",
-      region: plan?.region || "",
-      phase: plan?.phase || "",
-      roCode: plan?.roCode || "",
-      roName: plan?.roName || "",
-      date: plan?.date || "",
-      amcQtr: plan?.amcQtr || "",
-      purpose: plan?.purpose || "",
+    const merged = statusRecords.map((record) => {
+      const plan = record.planId || {};
+      const status = record || {};
 
-      probeMake: status?.probeMake || "",
-      lowProductLock: status?.lowProductLock || "",
-      highWaterSet: status?.highWaterSet || "",
-      duSerialNumber: status?.duSerialNumber || "",
-      dgStatus: status?.dgStatus || "",
-      connectivityType: status?.connectivityType || "",
-      sim1Provider: status?.sim1Provider || "",
-      sim1Number: status?.sim1Number || "",
-      sim2Provider: status?.sim2Provider || "",
-      sim2Number: status?.sim2Number || "",
-      iemiNumber: status?.iemiNumber || "",
-      bosVersion: status?.bosVersion || "",
-      fccVersion: status?.fccVersion || "",
-      wirelessSlave: status?.wirelessSlave || "",
-      sftpConfig: status?.sftpConfig || "",
-      adminPassword: status?.adminPassword || "",
-      workCompletion: status?.workCompletion || "",
-      earthingStatus: status?.earthingStatus || "",
-      duOffline: status?.duOffline || "",
-      duRemark: status?.duRemark || "",
-      locationField: status?.locationField || "",
-    }));
+      return {
+        engineer: plan.engineer || "",
+        region: plan.region || "",
+        phase: plan.phase || "",
+        roCode: plan.roCode || "",
+        roName: plan.roName || "",
+        date: plan.date || "",
+        amcQtr: plan.amcQtr || "",
+        purpose: plan.purpose || "",
+
+        probeMake: status.probeMake || "",
+        lowProductLock: status.lowProductLock || "",
+        highWaterSet: status.highWaterSet || "",
+        duSerialNumber: status.duSerialNumber || "",
+        dgStatus: status.dgStatus || "",
+        connectivityType: status.connectivityType || "",
+        sim1Provider: status.sim1Provider || "",
+        sim1Number: status.sim1Number || "",
+        sim2Provider: status.sim2Provider || "",
+        sim2Number: status.sim2Number || "",
+        iemiNumber: status.iemiNumber || "",
+        bosVersion: status.bosVersion || "",
+        fccVersion: status.fccVersion || "",
+        wirelessSlave: status.wirelessSlave || "",
+        sftpConfig: status.sftpConfig || "",
+        adminPassword: status.adminPassword || "",
+        workCompletion: status.workCompletion || "",
+        earthingStatus: status.earthingStatus || "",
+        duOffline: status.duOffline || "",
+        duRemark: status.duRemark || "",
+        locationField: status.locationField || "",
+      };
+    });
 
     res.json(merged);
   } catch (err) {
