@@ -136,9 +136,17 @@
           const user = await res.json();
           const text = `${user.engineerName || user.username} (${user.role})`;
           document.getElementById("userDetails").textContent = `👤 ${text}`;
+
+          // 👇 Show Status link only for admin
+          if (user.role === "admin") {
+            document.getElementById("statusLink").style.display = "flex";
+          } else {
+            document.getElementById("statusLink").style.display = "none";
+          }
         } catch {
           document.getElementById("userDetails").textContent =
             "⚠️ Not logged in";
+          document.getElementById("statusLink").style.display = "none";
         }
       }
 
