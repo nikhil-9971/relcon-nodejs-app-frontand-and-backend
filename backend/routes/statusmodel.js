@@ -65,4 +65,14 @@ router.post("/saveStatus", async (req, res) => {
   }
 });
 
+// Fetch all saved status records
+router.get("/getAllStatus", async (req, res) => {
+  try {
+    const allStatus = await Status.find().sort({ createdAt: -1 });
+    res.json(allStatus);
+  } catch (err) {
+    res.status(500).send("Server error: " + err.message);
+  }
+});
+
 module.exports = router;
