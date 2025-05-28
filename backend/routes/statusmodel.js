@@ -65,11 +65,44 @@ router.post("/saveStatus", async (req, res) => {
   }
 });
 
-// Fetch all saved status records
-router.get("/getAllStatus", async (req, res) => {
+// New Api added for Status record fetch
+router.get("/getMergedStatusRecords", async (req, res) => {
   try {
-    const allStatus = await Status.find().sort({ createdAt: -1 });
-    res.json(allStatus);
+    const statusRecords = await Status.find().populate("planId");
+
+    const merged = statusRecords.map(({ planId: plan, ...status }) => ({
+      engineer: plan?.engineer || "",
+      region: plan?.region || "",
+      phase: plan?.phase || "",
+      roCode: plan?.roCode || "",
+      roName: plan?.roName || "",
+      date: plan?.date || "",
+      purpose: plan?.purpose || "",
+
+      probeMake: status.probeMake,
+      lowProductLock: status.lowProductLock,
+      highWaterSet: status.highWaterSet,
+      duSerialNumber: status.duSerialNumber,
+      dgStatus: status.dgStatus,
+      connectivityType: status.connectivityType,
+      sim1Provider: status.sim1Provider,
+      sim1Number: status.sim1Number,
+      sim2Provider: status.sim2Provider,
+      sim2Number: status.sim2Number,
+      iemiNumber: status.iemiNumber,
+      bosVersion: status.bosVersion,
+      fccVersion: status.fccVersion,
+      wirelessSlave: status.wirelessSlave,
+      sftpConfig: status.sftpConfig,
+      adminPassword: status.adminPassword,
+      workCompletion: status.workCompletion,
+      earthingStatus: status.earthingStatus,
+      duOffline: status.duOffline,
+      duRemark: status.duRemark,
+      locationField: status.locationField,
+    }));
+
+    res.json(merged);
   } catch (err) {
     res.status(500).send("Server error: " + err.message);
   }
