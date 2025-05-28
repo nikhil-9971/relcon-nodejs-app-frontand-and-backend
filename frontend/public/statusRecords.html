@@ -1,4 +1,3 @@
-<!-- statusRecords.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -8,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="p-6 bg-gray-100 font-sans">
-    <div class="max-w-6xl mx-auto bg-white p-6 shadow rounded">
+    <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">📝 Status Records</h1>
         <button
@@ -40,6 +39,7 @@
           credentials: "include",
         });
         const data = await res.json();
+        console.log("Fetched Sample:", data[0]);
         renderTable(data);
       }
 
@@ -56,13 +56,13 @@
           { key: "probeMake", label: "Probe Make" },
           { key: "lowProductLock", label: "Low Product Lock" },
           { key: "highWaterSet", label: "Highwater Lock Set" },
-          { key: "duSerialNumber", label: "DU Serial number Updated" },
+          { key: "duSerialNumber", label: "DU Serial Number Updated" },
           { key: "dgStatus", label: "DG Status" },
           { key: "connectivityType", label: "Connectivity Type" },
-          { key: "sim1Provider", label: "Sim1 Provider" },
-          { key: "sim1Number", label: "Sim1 Number" },
-          { key: "sim2Provider", label: "Sim2 Provider" },
-          { key: "sim2Number", label: "Sim2 Number" },
+          { key: "sim1Provider", label: "SIM1 Provider" },
+          { key: "sim1Number", label: "SIM1 Number" },
+          { key: "sim2Provider", label: "SIM2 Provider" },
+          { key: "sim2Number", label: "SIM2 Number" },
           { key: "iemiNumber", label: "IEMI Number" },
           { key: "bosVersion", label: "BOS Version" },
           { key: "fccVersion", label: "FCC Version" },
@@ -78,7 +78,10 @@
 
         const headerRow = document.getElementById("tableHeader");
         headerRow.innerHTML = columns
-          .map((col) => `<th class="border px-2 py-1">${col.label}</th>`)
+          .map(
+            (col) =>
+              `<th class="border px-2 py-1 bg-gray-100">${col.label}</th>`
+          )
           .join("");
 
         const tbody = document.getElementById("tableBody");
