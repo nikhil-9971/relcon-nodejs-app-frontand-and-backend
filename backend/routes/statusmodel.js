@@ -120,28 +120,30 @@ router.delete("/deleteStatus/:id", async (req, res) => {
   console.log("DELETE request for:", id);
 
   if (!id || id === "undefined") {
-    return res.status(400).send("Invalid ID provided.");
+    return res.status(400).send("❌ Invalid ID provided.");
   }
 
   try {
-    let deleted;
+    let deleted = null;
 
-    // Try deleting using planId (must be valid ObjectId)
-    if (mongoose.Types.ObjectId.isValid(id)) {
+    // Check if it's a valid ObjectId
+    const isValidId = mongoose.Types.ObjectId.isValid(id);
+
+    if (isValidId) {
       deleted = await Status.findOneAndDelete({ planId: id });
+      if (!deleted) {
+        deleted = await Status.findByIdAndDelete(id);
+      }
     }
 
-    // If not found or not valid ObjectId, try deleting by _id
-    if (!deleted && mongoose.Types.ObjectId.isValid(id)) {
-      deleted = await Status.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).send("❌ Status not found.");
     }
 
-    if (!deleted) return res.status(404).send("Status not found");
-
-    res.send("Status deleted");
+    res.send("✅ Status deleted.");
   } catch (err) {
-    console.error("Delete error:", err);
-    res.status(500).send("Delete error: " + err.message);
+    console.error("❌ Delete error:", err);
+    res.status(500).send("❌ Server error: " + err.message);
   }
 });
 
