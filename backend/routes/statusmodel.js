@@ -132,13 +132,22 @@ router.put("/updateStatus/:planId", async (req, res) => {
 });
 
 // DELETE by planId
-router.delete("/deleteStatus/:planId", async (req, res) => {
+// DELETE by planId or _id fallback
+router.delete("/deleteStatus/:id", async (req, res) => {
   try {
-    console.log("DELETE /deleteStatus:", req.params.planId);
-    const deleted = await Status.findOneAndDelete({
-      planId: req.params.planId,
-    });
+    const id = req.params.id;
+    console.log("DELETE request for:", id);
+
+    // First, try to delete using planId
+    let deleted = await Status.findOneAndDelete({ planId: id });
+
+    // If not found, fallback to deleting by _id
+    if (!deleted) {
+      deleted = await Status.findByIdAndDelete(id);
+    }
+
     if (!deleted) return res.status(404).send("Status not found");
+
     res.send("Status deleted");
   } catch (err) {
     console.error("Delete error:", err);
