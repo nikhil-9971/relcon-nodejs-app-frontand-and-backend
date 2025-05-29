@@ -138,16 +138,15 @@
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = data
           .map((record) => {
+            const encoded = btoa(
+              unescape(encodeURIComponent(JSON.stringify(record)))
+            );
             const row = columns
               .map((col) => {
                 if (col.key === "actions") {
                   return `<td class="border text-center px-2 py-1">
-              <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='openEditModal(${JSON.stringify(
-                record
-              )})'>✏️</button>
-              <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteStatus("${
-                record._id
-              }")'>🗑️</button>
+              <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+              <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteStatus("${record._id}")'>🗑️</button>
             </td>`;
                 }
                 return `<td class="border text-center px-2 py-1">${
@@ -160,13 +159,20 @@
           .join("");
       }
 
-      let editingStatus = null;
+      function handleEditClick(encoded) {
+        try {
+          const json = decodeURIComponent(escape(atob(encoded)));
+          const record = JSON.parse(json);
+          openEditModal(record);
+        } catch (err) {
+          console.error("Edit parse error:", err);
+          alert("Unable to open editor");
+        }
+      }
 
       function openEditModal(record) {
-        editingStatus = record;
         const form = document.getElementById("editForm");
         form.innerHTML = "";
-
         Object.entries(record).forEach(([key, value]) => {
           if (key === "_id") {
             form.innerHTML += `<input type="hidden" name="${key}" value="${value}" />`;
@@ -181,13 +187,11 @@
           }" class="w-full border px-2 py-1 rounded" />
           </div>`;
         });
-
         document.getElementById("editModal").classList.remove("hidden");
       }
 
       function closeModal() {
         document.getElementById("editModal").classList.add("hidden");
-        editingStatus = null;
       }
 
       async function saveEdit() {
@@ -195,7 +199,6 @@
         const formData = new FormData(form);
         const updated = {};
         formData.forEach((val, key) => (updated[key] = val));
-
         const updateId = updated._id;
 
         const res = await fetch(`${baseUrl}/updateStatus/${updateId}`, {
@@ -208,7 +211,7 @@
           await fetchStatusRecords();
           closeModal();
         } else {
-          alert("Error updating status.");
+          alert("Error updating record.");
         }
       }
 
