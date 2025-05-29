@@ -115,43 +115,48 @@ router.get("/getMergedStatusRecords", async (req, res) => {
 });
 
 // UPDATE by planId
-router.put("/updateStatus/:planId", async (req, res) => {
-  try {
-    console.log("PUT /updateStatus:", req.params.planId, req.body);
-    const updated = await Status.findOneAndUpdate(
-      { planId: req.params.planId },
-      req.body,
-      { new: true }
-    );
-    if (!updated) return res.status(404).send("Status not found");
-    res.json(updated);
-  } catch (err) {
-    console.error("Update error:", err);
-    res.status(500).send("Update error: " + err.message);
-  }
-});
-
-// DELETE by planId
-// DELETE by planId or _id fallback
 router.delete("/deleteStatus/:id", async (req, res) => {
   try {
-    const id = req.params.id;
-    console.log("DELETE request for:", id);
+    const { id } = req.params;
+    console.log("Deleting:", id);
 
-    // First, try to delete using planId
-    let deleted = await Status.findOneAndDelete({ planId: id });
+    // Try delete by planId
+    let result = await Status.findOneAndDelete({ planId: id });
 
-    // If not found, fallback to deleting by _id
-    if (!deleted) {
-      deleted = await Status.findByIdAndDelete(id);
+    // If that fails, try by _id
+    if (!result) {
+      result = await Status.findByIdAndDelete(id);
     }
 
-    if (!deleted) return res.status(404).send("Status not found");
-
+    if (!result) return res.status(404).send("Status not found");
     res.send("Status deleted");
   } catch (err) {
     console.error("Delete error:", err);
     res.status(500).send("Delete error: " + err.message);
+  }
+});
+
+router.put("/updateStatus/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    console.log("Updating:", id, updateData);
+
+    // Try update by planId
+    let result = await Status.findOneAndUpdate({ planId: id }, updateData, {
+      new: true,
+    });
+
+    // Fallback by _id
+    if (!result) {
+      result = await Status.findByIdAndUpdate(id, updateData, { new: true });
+    }
+
+    if (!result) return res.status(404).send("Status not found");
+    res.json(result);
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).send("Update error: " + err.message);
   }
 });
 
