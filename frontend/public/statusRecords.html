@@ -83,6 +83,8 @@
     <!-- Script -->
     <script>
       const baseUrl = "https://relcon-backend.onrender.com";
+      let allStatusData = [];
+      let filteredData = [];
 
       async function fetchStatusRecords() {
         const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -90,8 +92,42 @@
         });
         const data = await res.json();
         console.log("Fetched Sample:", data[0]);
-        window.allStatusData = data;
-        renderTable(data);
+        allStatusData = data;
+        applyDateRangeFilter(); // initial render
+      }
+
+      function applyDateRangeFilter() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+
+        filteredData = allStatusData.filter((row) => {
+          const rowDate = new Date(row.date);
+          if (fromDate && rowDate < fromDate) return false;
+          if (toDate && rowDate > toDate) return false;
+          return true;
+        });
+
+        renderTable(filteredData);
+      }
+
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        filteredData = allStatusData;
+        renderTable(filteredData);
+      }
+
+      function exportToCSV() {
+        const ws = XLSX.utils.json_to_sheet(filteredData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
+        XLSX.writeFile(
+          wb,
+          `Filtered_Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
+        );
       }
 
       function renderTable(data) {
@@ -148,44 +184,6 @@
               .join("")}</tr>`;
           })
           .join("");
-      }
-
-      function applyDateRangeFilter() {
-        const from = document.getElementById("fromDate").value;
-        const to = document.getElementById("toDate").value;
-
-        if (!from && !to) {
-          renderTable(window.allStatusData);
-          return;
-        }
-
-        const fromDate = from ? new Date(from) : null;
-        const toDate = to ? new Date(to) : null;
-
-        const filtered = window.allStatusData.filter((row) => {
-          const rowDate = new Date(row.date);
-          if (fromDate && rowDate < fromDate) return false;
-          if (toDate && rowDate > toDate) return false;
-          return true;
-        });
-
-        renderTable(filtered);
-      }
-
-      function clearDateRangeFilter() {
-        document.getElementById("fromDate").value = "";
-        document.getElementById("toDate").value = "";
-        renderTable(window.allStatusData);
-      }
-
-      function exportToCSV() {
-        const ws = XLSX.utils.json_to_sheet(window.allStatusData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
-        XLSX.writeFile(
-          wb,
-          `Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
-        );
       }
 
       fetchStatusRecords();
