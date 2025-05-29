@@ -30,6 +30,40 @@
         </button>
       </div>
 
+      <!-- Filter Controls -->
+      <div class="flex flex-wrap items-center gap-4 mb-4">
+        <div>
+          <label for="fromDate" class="block text-sm font-medium text-gray-700"
+            >📅 From:</label
+          >
+          <input
+            type="date"
+            id="fromDate"
+            class="border border-gray-300 rounded px-2 py-1 text-sm"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div>
+          <label for="toDate" class="block text-sm font-medium text-gray-700"
+            >📅 To:</label
+          >
+          <input
+            type="date"
+            id="toDate"
+            class="border border-gray-300 rounded px-2 py-1 text-sm"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div class="self-end">
+          <button
+            onclick="clearDateRangeFilter()"
+            class="bg-yellow-500 text-white px-4 py-2 rounded"
+          >
+            ♻️ Clear Filter
+          </button>
+        </div>
+      </div>
+
       <div class="overflow-x-auto">
         <table
           id="statusTable"
@@ -83,13 +117,37 @@
         renderTable(data);
       }
 
+      function applyDateRangeFilter() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+
+        filteredData = allStatusData.filter((row) => {
+          const rowDate = new Date(row.date);
+          if (fromDate && rowDate < fromDate) return false;
+          if (toDate && rowDate > toDate) return false;
+          return true;
+        });
+
+        renderTable(filteredData);
+      }
+
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        filteredData = allStatusData;
+        renderTable(filteredData);
+      }
+
       function exportToCSV() {
-        const ws = XLSX.utils.json_to_sheet(allStatusData);
+        const ws = XLSX.utils.json_to_sheet(filteredData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
         XLSX.writeFile(
           wb,
-          `Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
+          `Filtered_Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
         );
       }
 
