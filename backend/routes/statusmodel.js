@@ -114,4 +114,31 @@ router.get("/getMergedStatusRecords", async (req, res) => {
   }
 });
 
+// DELETE route
+router.delete("/deleteStatus/:planId", async (req, res) => {
+  try {
+    const { planId } = req.params;
+    await Status.findOneAndDelete({ planId });
+    res.send("Status deleted");
+  } catch (err) {
+    res.status(500).send("Delete error: " + err.message);
+  }
+});
+
+// UPDATE route
+router.put("/updateStatus/:planId", async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const updateData = req.body;
+
+    const updated = await Status.findOneAndUpdate({ planId }, updateData, {
+      new: true,
+    });
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).send("Update error: " + err.message);
+  }
+});
+
 module.exports = router;
