@@ -32,17 +32,37 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap gap-4 items-center mb-4">
-        <label class="font-medium text-sm text-gray-700"
-          >📅 Filter by Dates:</label
-        >
-        <div id="dateFilters" class="flex flex-wrap gap-2"></div>
-        <button
-          onclick="clearDateFilters()"
-          class="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400"
-        >
-          ❌ Clear
-        </button>
+      <div class="flex flex-wrap items-center gap-4 mb-4">
+        <div>
+          <label for="fromDate" class="block text-sm font-medium text-gray-700"
+            >📅 From:</label
+          >
+          <input
+            type="date"
+            id="fromDate"
+            class="border border-gray-300 rounded px-2 py-1 text-sm"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div>
+          <label for="toDate" class="block text-sm font-medium text-gray-700"
+            >📅 To:</label
+          >
+          <input
+            type="date"
+            id="toDate"
+            class="border border-gray-300 rounded px-2 py-1 text-sm"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div class="self-end">
+          <button
+            onclick="clearDateRangeFilter()"
+            class="bg-yellow-500 text-white px-4 py-2 rounded"
+          >
+            ♻️ Clear Filter
+          </button>
+        </div>
       </div>
 
       <div class="overflow-x-auto">
@@ -127,50 +147,34 @@
 
         //window.statusData = data;
         window.allStatusData = data;
-        window.statusData = data; // current view
-        populateDateFilters(data);
+        renderTable(data);
       }
 
-      function populateDateFilters(data) {
-        const uniqueDates = [
-          ...new Set(data.map((d) => d.date).filter(Boolean)),
-        ];
-        uniqueDates.sort();
+      function applyDateRangeFilter() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
 
-        const container = document.getElementById("dateFilters");
-        container.innerHTML = uniqueDates
-          .map(
-            (date) => `
-    <label class="flex items-center gap-1">
-      <input type="checkbox" value="${date}" onchange="applyDateFilter()" />
-      <span class="text-[11px]">${date}</span>
-    </label>
-  `
-          )
-          .join("");
-      }
-
-      function applyDateFilter() {
-        const selectedDates = Array.from(
-          document.querySelectorAll("#dateFilters input:checked")
-        ).map((input) => input.value);
-
-        if (selectedDates.length === 0) {
+        if (!from && !to) {
           renderTable(window.allStatusData);
           return;
         }
 
-        const filtered = window.allStatusData.filter((row) =>
-          selectedDates.includes(row.date)
-        );
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+
+        const filtered = window.allStatusData.filter((row) => {
+          const rowDate = new Date(row.date);
+          if (fromDate && rowDate < fromDate) return false;
+          if (toDate && rowDate > toDate) return false;
+          return true;
+        });
 
         renderTable(filtered);
       }
 
-      function clearDateFilters() {
-        document
-          .querySelectorAll("#dateFilters input")
-          .forEach((cb) => (cb.checked = false));
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
         renderTable(window.allStatusData);
       }
 
