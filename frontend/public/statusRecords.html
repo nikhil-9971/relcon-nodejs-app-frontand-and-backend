@@ -30,39 +30,6 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap items-center gap-4 mb-4">
-        <div>
-          <label for="fromDate" class="block text-sm font-medium text-gray-700"
-            >📅 From:</label
-          >
-          <input
-            type="date"
-            id="fromDate"
-            class="border border-gray-300 rounded px-2 py-1 text-sm"
-            onchange="applyDateRangeFilter()"
-          />
-        </div>
-        <div>
-          <label for="toDate" class="block text-sm font-medium text-gray-700"
-            >📅 To:</label
-          >
-          <input
-            type="date"
-            id="toDate"
-            class="border border-gray-300 rounded px-2 py-1 text-sm"
-            onchange="applyDateRangeFilter()"
-          />
-        </div>
-        <div class="self-end">
-          <button
-            onclick="clearDateRangeFilter()"
-            class="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
-            ♻️ Clear Filter
-          </button>
-        </div>
-      </div>
-
       <div class="overflow-x-auto">
         <table
           id="statusTable"
@@ -76,6 +43,7 @@
       </div>
     </div>
 
+    <!-- Edit Modal -->
     <div
       id="editModal"
       class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
@@ -105,7 +73,6 @@
     <script>
       const baseUrl = "https://relcon-backend.onrender.com";
       let allStatusData = [];
-      let filteredData = [];
 
       async function fetchStatusRecords() {
         const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -113,39 +80,16 @@
         });
         const data = await res.json();
         allStatusData = data;
-        applyDateRangeFilter();
-      }
-
-      function applyDateRangeFilter() {
-        const from = document.getElementById("fromDate").value;
-        const to = document.getElementById("toDate").value;
-        const fromDate = from ? new Date(from) : null;
-        const toDate = to ? new Date(to) : null;
-
-        filteredData = allStatusData.filter((row) => {
-          const rowDate = new Date(row.date);
-          if (fromDate && rowDate < fromDate) return false;
-          if (toDate && rowDate > toDate) return false;
-          return true;
-        });
-
-        renderTable(filteredData);
-      }
-
-      function clearDateRangeFilter() {
-        document.getElementById("fromDate").value = "";
-        document.getElementById("toDate").value = "";
-        filteredData = allStatusData;
-        renderTable(filteredData);
+        renderTable(data);
       }
 
       function exportToCSV() {
-        const ws = XLSX.utils.json_to_sheet(filteredData);
+        const ws = XLSX.utils.json_to_sheet(allStatusData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
         XLSX.writeFile(
           wb,
-          `Filtered_Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
+          `Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
         );
       }
 
@@ -198,14 +142,13 @@
               .map((col) => {
                 if (col.key === "actions") {
                   return `<td class="border text-center px-2 py-1">
-                <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='openEditModal(${JSON.stringify(
-                  record
-                )})'>✏️</button>
-              <button onclick='deleteStatus("${
-                record.planId || record._id
+              <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='openEditModal(${JSON.stringify(
+                record
+              )})'>✏️</button>
+              <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteStatus("${
+                record._id
               }")'>🗑️</button>
-
-              </td>`;
+            </td>`;
                 }
                 return `<td class="border text-center px-2 py-1">${
                   record[col.key] || ""
@@ -224,21 +167,19 @@
         const form = document.getElementById("editForm");
         form.innerHTML = "";
 
-        Object.keys(record).forEach((key) => {
-          if (key === "actions") return;
-          if (key === "planId" || key === "_id") {
-            form.innerHTML += `<input type="hidden" name="${key}" value="${record[key]}" />`;
+        Object.entries(record).forEach(([key, value]) => {
+          if (key === "_id") {
+            form.innerHTML += `<input type="hidden" name="${key}" value="${value}" />`;
             return;
           }
-
+          if (key === "actions") return;
           form.innerHTML += `
-            <div>
-              <label class="block text-gray-700 font-medium mb-1">${key}</label>
-              <input type="text" name="${key}" value="${
-            record[key] || ""
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">${key}</label>
+            <input type="text" name="${key}" value="${
+            value || ""
           }" class="w-full border px-2 py-1 rounded" />
-            </div>
-          `;
+          </div>`;
         });
 
         document.getElementById("editModal").classList.remove("hidden");
@@ -255,7 +196,7 @@
         const updated = {};
         formData.forEach((val, key) => (updated[key] = val));
 
-        const updateId = updated.planId || updated._id;
+        const updateId = updated._id;
 
         const res = await fetch(`${baseUrl}/updateStatus/${updateId}`, {
           method: "PUT",
@@ -265,30 +206,21 @@
 
         if (res.ok) {
           await fetchStatusRecords();
-          applyDateRangeFilter();
           closeModal();
         } else {
-          const text = await res.text();
-          alert("Error: " + text);
+          alert("Error updating status.");
         }
       }
 
       async function deleteStatus(id) {
-        if (!id || id === "undefined") {
-          alert("❌ Invalid ID. Cannot delete.");
-          return;
-        }
-
+        if (!id || id === "undefined") return alert("Invalid ID");
         const res = await fetch(`${baseUrl}/deleteStatus/${id}`, {
           method: "DELETE",
         });
-
         if (res.ok) {
           await fetchStatusRecords();
-          applyDateRangeFilter();
         } else {
-          const text = await res.text();
-          alert("❌ Delete failed: " + text);
+          alert("Delete failed.");
         }
       }
 
