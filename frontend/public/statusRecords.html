@@ -201,9 +201,10 @@
                 <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='openEditModal(${JSON.stringify(
                   record
                 )})'>✏️</button>
-                <button class="bg-red-500 text-white px-2 py-1 rounded" onclick='deleteStatus("${
-                  record.planId
+                <button onclick='deleteStatus("${
+                  record.planId || record._id
                 }")'>🗑️</button>
+
               </td>`;
                 }
                 return `<td class="border text-center px-2 py-1">${
@@ -225,10 +226,11 @@
 
         Object.keys(record).forEach((key) => {
           if (key === "actions") return;
-          if (key === "planId") {
-            form.innerHTML += `<input type="hidden" name="planId" value="${record[key]}" />`;
+          if (key === "planId" || key === "_id") {
+            form.innerHTML += `<input type="hidden" name="${key}" value="${record[key]}" />`;
             return;
           }
+
           form.innerHTML += `
             <div>
               <label class="block text-gray-700 font-medium mb-1">${key}</label>
@@ -253,7 +255,9 @@
         const updated = {};
         formData.forEach((val, key) => (updated[key] = val));
 
-        const res = await fetch(`${baseUrl}/updateStatus/${updated.planId}`, {
+        const updateId = updated.planId || updated._id;
+
+        const res = await fetch(`${baseUrl}/updateStatus/${updateId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updated),
