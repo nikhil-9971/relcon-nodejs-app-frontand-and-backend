@@ -114,30 +114,35 @@ router.get("/getMergedStatusRecords", async (req, res) => {
   }
 });
 
-// DELETE route
-router.delete("/deleteStatus/:planId", async (req, res) => {
+// UPDATE by planId
+router.put("/updateStatus/:planId", async (req, res) => {
   try {
-    const { planId } = req.params;
-    await Status.findOneAndDelete({ planId });
-    res.send("Status deleted");
+    console.log("PUT /updateStatus:", req.params.planId, req.body);
+    const updated = await Status.findOneAndUpdate(
+      { planId: req.params.planId },
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).send("Status not found");
+    res.json(updated);
   } catch (err) {
-    res.status(500).send("Delete error: " + err.message);
+    console.error("Update error:", err);
+    res.status(500).send("Update error: " + err.message);
   }
 });
 
-// UPDATE route
-router.put("/updateStatus/:planId", async (req, res) => {
+// DELETE by planId
+router.delete("/deleteStatus/:planId", async (req, res) => {
   try {
-    const { planId } = req.params;
-    const updateData = req.body;
-
-    const updated = await Status.findOneAndUpdate({ planId }, updateData, {
-      new: true,
+    console.log("DELETE /deleteStatus:", req.params.planId);
+    const deleted = await Status.findOneAndDelete({
+      planId: req.params.planId,
     });
-
-    res.json(updated);
+    if (!deleted) return res.status(404).send("Status not found");
+    res.send("Status deleted");
   } catch (err) {
-    res.status(500).send("Update error: " + err.message);
+    console.error("Delete error:", err);
+    res.status(500).send("Delete error: " + err.message);
   }
 });
 
