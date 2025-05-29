@@ -80,6 +80,36 @@
       </div>
     </div>
 
+    <!-- Edited Model -->
+
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-6 rounded shadow max-h-[80vh] overflow-y-auto w-[90%] max-w-4xl"
+      >
+        <h2 class="text-lg font-bold mb-4">Edit Status</h2>
+        <form id="editForm" class="grid grid-cols-2 gap-4 text-xs">
+          <!-- Dynamic fields will be injected here -->
+        </form>
+        <div class="mt-4 flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-gray-500 text-white px-4 py-1 rounded mr-2"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveEdit()"
+            class="bg-green-600 text-white px-4 py-1 rounded"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Script -->
     <script>
       const baseUrl = "https://relcon-backend.onrender.com";
@@ -161,6 +191,7 @@
           { key: "duOffline", label: "DU Offline" },
           { key: "duRemark", label: "DU Remark" },
           { key: "locationField", label: "Location Field" },
+          { key: "actions", label: "Actions" },
         ];
 
         const headerRow = document.getElementById("tableHeader");
@@ -174,19 +205,92 @@
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = data
           .map((record) => {
-            return `<tr>${columns
-              .map(
-                (col) =>
-                  `<td class="border text-center px-3 py-2 text-gray-800">${
-                    record[col.key] || ""
-                  }</td>`
-              )
-              .join("")}</tr>`;
+            const row = columns
+              .map((col) => {
+                if (col.key === "actions") {
+                  return `
+        <td class="border text-center px-2 py-1">
+          <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='openEditModal(${JSON.stringify(
+            record
+          )})'>✏️</button>
+          <button class="bg-red-500 text-white px-2 py-1 rounded" onclick='deleteStatus("${
+            record.planId
+          }")'>🗑️</button>
+        </td>
+      `;
+                }
+                return `<td class="border text-center px-2 py-1">${
+                  record[col.key] || ""
+                }</td>`;
+              })
+              .join("");
+            return `<tr>${row}</tr>`;
           })
           .join("");
       }
 
       fetchStatusRecords();
+
+      // Edited Model Code
+      let editingStatus = null;
+
+      function openEditModal(record) {
+        editingStatus = record;
+        const form = document.getElementById("editForm");
+        form.innerHTML = "";
+
+        Object.keys(record).forEach((key) => {
+          if (key !== "actions") {
+            form.innerHTML += `
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">${key}</label>
+          <input type="text" name="${key}" value="${record[key]}" class="w-full border px-2 py-1 rounded" />
+        </div>
+      `;
+          }
+        });
+
+        document.getElementById("editModal").classList.remove("hidden");
+      }
+
+      function closeModal() {
+        document.getElementById("editModal").classList.add("hidden");
+        editingStatus = null;
+      }
+
+      async function saveEdit() {
+        const form = document.getElementById("editForm");
+        const formData = new FormData(form);
+        const updated = {};
+        formData.forEach((val, key) => (updated[key] = val));
+
+        const res = await fetch(`${baseUrl}/updateStatus/${updated.planId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated),
+        });
+
+        if (res.ok) {
+          await fetchStatusRecords();
+          closeModal();
+        } else {
+          alert("Error saving update");
+        }
+      }
+
+      async function deleteStatus(planId) {
+        if (!confirm("Are you sure you want to delete this record?")) return;
+
+        const res = await fetch(`${baseUrl}/deleteStatus/${planId}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          await fetchStatusRecords();
+        } else {
+          alert("Delete failed");
+        }
+      }
     </script>
   </body>
 </html>
