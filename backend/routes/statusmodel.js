@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const Status = require("../models/Status");
 
@@ -114,21 +115,29 @@ router.get("/getMergedStatusRecords", async (req, res) => {
   }
 });
 
-// UPDATE by planId
 router.delete("/deleteStatus/:id", async (req, res) => {
+  const { id } = req.params;
+  console.log("DELETE request for:", id);
+
+  if (!id || id === "undefined") {
+    return res.status(400).send("Invalid ID provided.");
+  }
+
   try {
-    const { id } = req.params;
-    console.log("Deleting:", id);
+    let deleted;
 
-    // Try delete by planId
-    let result = await Status.findOneAndDelete({ planId: id });
-
-    // If that fails, try by _id
-    if (!result) {
-      result = await Status.findByIdAndDelete(id);
+    // Try deleting using planId (must be valid ObjectId)
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      deleted = await Status.findOneAndDelete({ planId: id });
     }
 
-    if (!result) return res.status(404).send("Status not found");
+    // If not found or not valid ObjectId, try deleting by _id
+    if (!deleted && mongoose.Types.ObjectId.isValid(id)) {
+      deleted = await Status.findByIdAndDelete(id);
+    }
+
+    if (!deleted) return res.status(404).send("Status not found");
+
     res.send("Status deleted");
   } catch (err) {
     console.error("Delete error:", err);
