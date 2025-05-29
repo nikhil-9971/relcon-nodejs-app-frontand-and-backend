@@ -201,10 +201,9 @@
                 <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='openEditModal(${JSON.stringify(
                   record
                 )})'>✏️</button>
-                <button onclick='deleteStatus("${
-                  record.planId || record._id
-                }")'>🗑️</button>
-
+              <button onclick='deleteStatus("${
+                record.planId || record._id
+              }")'>🗑️</button>
               </td>`;
                 }
                 return `<td class="border text-center px-2 py-1">${
@@ -273,9 +272,13 @@
         }
       }
 
-      async function deleteStatus(planId) {
-        if (!confirm("Are you sure you want to delete this record?")) return;
-        const res = await fetch(`${baseUrl}/deleteStatus/${planId}`, {
+      async function deleteStatus(id) {
+        if (!id || id === "undefined") {
+          alert("Invalid ID — cannot delete");
+          return;
+        }
+
+        const res = await fetch(`${baseUrl}/deleteStatus/${id}`, {
           method: "DELETE",
         });
 
