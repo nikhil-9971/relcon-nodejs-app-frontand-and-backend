@@ -5,6 +5,20 @@
     <title>Status Records</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      th,
+      td {
+        white-space: nowrap; /* Prevent wrapping */
+      }
+
+      /* Optional: make headers stick on scroll for usability */
+      thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f3f4f6; /* Tailwind's gray-100 */
+        z-index: 1;
+      }
+    </style>
   </head>
   <body class="p-6 bg-gray-100 font-sans">
     <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
@@ -21,7 +35,7 @@
       <div class="overflow-x-auto">
         <table
           id="statusTable"
-          class="min-w-full table-auto border border-gray-300 text-sm"
+          class="min-w-max table-auto border border-gray-300 text-[9px] whitespace-nowrap"
         >
           <thead class="bg-gray-200">
             <tr id="tableHeader"></tr>
@@ -80,7 +94,7 @@
         headerRow.innerHTML = columns
           .map(
             (col) =>
-              `<th class="border px-2 py-1 bg-gray-100">${col.label}</th>`
+              `<th class="border px-3 py-2 bg-gray-100 text-left font-semibold text-gray-700">${col.label}</th>`
           )
           .join("");
 
@@ -90,7 +104,9 @@
             return `<tr>${columns
               .map(
                 (col) =>
-                  `<td class="border px-2 py-1">${record[col.key] || ""}</td>`
+                  `<td class="border px-3 py-2 text-gray-800">${
+                    record[col.key] || ""
+                  }</td>`
               )
               .join("")}</tr>`;
           })
