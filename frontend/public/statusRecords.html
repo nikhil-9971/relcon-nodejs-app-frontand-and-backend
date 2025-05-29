@@ -32,6 +32,24 @@
         </button>
       </div>
 
+      <div class="flex items-center gap-4 mb-4">
+        <label for="filterDate" class="text-sm font-medium text-gray-700"
+          >📅 Filter by Date:</label
+        >
+        <input
+          type="date"
+          id="filterDate"
+          class="border border-gray-300 rounded px-2 py-1 text-sm"
+          onchange="applyDateFilter()"
+        />
+        <button
+          onclick="clearFilter()"
+          class="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400"
+        >
+          ❌ Clear
+        </button>
+      </div>
+
       <div class="overflow-x-auto">
         <table
           id="statusTable"
@@ -94,7 +112,7 @@
         headerRow.innerHTML = columns
           .map(
             (col) =>
-              `<th class="border px-3 py-2 bg-gray-100 text-left font-semibold text-gray-700">${col.label}</th>`
+              `<th class="border px-3 py-2 bg-gray-100 text-center font-semibold text-gray-700">${col.label}</th>`
           )
           .join("");
 
@@ -104,7 +122,7 @@
             return `<tr>${columns
               .map(
                 (col) =>
-                  `<td class="border px-3 py-2 text-gray-800">${
+                  `<td class="border text-center px-3 py-2 text-gray-800">${
                     record[col.key] || ""
                   }</td>`
               )
@@ -113,6 +131,21 @@
           .join("");
 
         window.statusData = data;
+      }
+
+      function applyDateFilter() {
+        const selectedDate = document.getElementById("filterDate").value;
+        if (!selectedDate) return renderTable(window.statusData);
+
+        const filtered = window.statusData.filter((row) =>
+          row.date?.startsWith(selectedDate)
+        );
+        renderTable(filtered);
+      }
+
+      function clearFilter() {
+        document.getElementById("filterDate").value = "";
+        renderTable(window.statusData);
       }
 
       function exportToCSV() {
