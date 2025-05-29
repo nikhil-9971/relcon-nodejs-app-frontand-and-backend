@@ -32,18 +32,13 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-4 mb-4">
-        <label for="filterDate" class="text-sm font-medium text-gray-700"
-          >📅 Filter by Date:</label
+      <div class="flex flex-wrap gap-4 items-center mb-4">
+        <label class="font-medium text-sm text-gray-700"
+          >📅 Filter by Dates:</label
         >
-        <input
-          type="date"
-          id="filterDate"
-          class="border border-gray-300 rounded px-2 py-1 text-sm"
-          onchange="applyDateFilter()"
-        />
+        <div id="dateFilters" class="flex flex-wrap gap-2"></div>
         <button
-          onclick="clearFilter()"
+          onclick="clearDateFilters()"
           class="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400"
         >
           ❌ Clear
@@ -130,22 +125,53 @@
           })
           .join("");
 
-        window.statusData = data;
+        //window.statusData = data;
+        window.allStatusData = data;
+        window.statusData = data; // current view
+        populateDateFilters(data);
+      }
+
+      function populateDateFilters(data) {
+        const uniqueDates = [
+          ...new Set(data.map((d) => d.date).filter(Boolean)),
+        ];
+        uniqueDates.sort();
+
+        const container = document.getElementById("dateFilters");
+        container.innerHTML = uniqueDates
+          .map(
+            (date) => `
+    <label class="flex items-center gap-1">
+      <input type="checkbox" value="${date}" onchange="applyDateFilter()" />
+      <span class="text-[11px]">${date}</span>
+    </label>
+  `
+          )
+          .join("");
       }
 
       function applyDateFilter() {
-        const selectedDate = document.getElementById("filterDate").value;
-        if (!selectedDate) return renderTable(window.statusData);
+        const selectedDates = Array.from(
+          document.querySelectorAll("#dateFilters input:checked")
+        ).map((input) => input.value);
 
-        const filtered = window.statusData.filter((row) =>
-          row.date?.startsWith(selectedDate)
+        if (selectedDates.length === 0) {
+          renderTable(window.allStatusData);
+          return;
+        }
+
+        const filtered = window.allStatusData.filter((row) =>
+          selectedDates.includes(row.date)
         );
+
         renderTable(filtered);
       }
 
-      function clearFilter() {
-        document.getElementById("filterDate").value = "";
-        renderTable(window.statusData);
+      function clearDateFilters() {
+        document
+          .querySelectorAll("#dateFilters input")
+          .forEach((cb) => (cb.checked = false));
+        renderTable(window.allStatusData);
       }
 
       function exportToCSV() {
