@@ -129,6 +129,12 @@
       </div>
     </div>
 
+    <!-- Toast Message -->
+    <div
+      id="toast"
+      class="fixed bottom-4 right-4 hidden bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm"
+    ></div>
+
     <script>
       const baseUrl = "https://relcon-backend.onrender.com";
       let allStatusData = [];
@@ -307,6 +313,7 @@
         if (res.ok) {
           await fetchStatusRecords();
           closeModal();
+          showToast("Record successfully updated ✅");
         } else {
           alert("Error updating record.");
         }
@@ -349,6 +356,7 @@
         document.getElementById("deleteModal").classList.add("hidden");
 
         if (res.ok) {
+          showToast("Status Record Successfully Deleted ✅"); // ✅ success toast here
           await fetchStatusRecords();
         } else {
           const error = await res.text();
@@ -359,6 +367,16 @@
       }
 
       fetchStatusRecords();
+
+      function showToast(message = "Success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("hidden");
+
+        setTimeout(() => {
+          toast.classList.add("hidden");
+        }, 3000);
+      }
     </script>
   </body>
 </html>
