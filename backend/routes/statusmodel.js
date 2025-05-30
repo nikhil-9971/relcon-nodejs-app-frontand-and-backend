@@ -9,6 +9,7 @@ router.post("/saveStatus", async (req, res) => {
     const {
       planId,
       probeMake,
+      probeSize,
       lowProductLock,
       highWaterSet,
       duSerialNumber,
@@ -36,6 +37,7 @@ router.post("/saveStatus", async (req, res) => {
       {
         planId,
         probeMake,
+        probeSize,
         lowProductLock,
         highWaterSet,
         duSerialNumber,
@@ -87,6 +89,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
         amcQtr: plan.amcQtr || "",
         purpose: plan.purpose || "",
         probeMake: status.probeMake || "",
+        probeSize: status.probeSize || "",
         lowProductLock: status.lowProductLock || "",
         highWaterSet: status.highWaterSet || "",
         duSerialNumber: status.duSerialNumber || "",
