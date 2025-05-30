@@ -4,6 +4,7 @@ const StatusSchema = new mongoose.Schema({
   planId: { type: mongoose.Schema.Types.ObjectId, ref: "DailyPlan" },
   createdAt: { type: Date, default: Date.now },
   probeMake: String,
+  probeSize: String,
   lowProductLock: String,
   highWaterSet: String,
   duSerialNumber: String,
