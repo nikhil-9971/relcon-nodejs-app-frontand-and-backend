@@ -400,8 +400,8 @@
       }
 
       //Export to Jay Sheet
-      function exportSelectedFields() {
-  const selectedFields = {
+      
+  const customHeaderMap  = {
     roCode: "Site Ro Code",
     roName: "Site Name",
     phase : "Phase",
@@ -422,10 +422,13 @@
 
   };
 
+  function exportSelectedFields() {
+  const selectedFields = Object.keys(customHeaderMap);
+
   const trimmedData = filteredData.map((record) => {
     const selected = {};
     selectedFields.forEach((key) => {
-      selected[key] = record[key] || "";
+      selected[customHeaderMap[key]] = record[key] || "";
     });
     return selected;
   });
@@ -433,8 +436,9 @@
   const ws = XLSX.utils.json_to_sheet(trimmedData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "SelectedFields");
-  XLSX.writeFile(wb, `Daily_Status_Report_ECZ_NIKHIL_${new Date().toISOString().slice(0, 10)}.csv`);
+  XLSX.writeFile(wb, `Daily_Status_ECZ_NIKHIL_${new Date().toISOString().slice(0, 10)}.csv`);
 }
+
 
 
       function showToast(message = "Success") {
