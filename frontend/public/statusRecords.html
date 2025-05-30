@@ -35,10 +35,10 @@
   </button>
   <div id="exportMenu" class="absolute right-0 mt-2 hidden bg-white border rounded shadow z-50 text-sm">
     <button onclick="exportToCSV()" class="block px-4 py-2 hover:bg-gray-100 w-full text-left">
-      🔄 Export All Filtered Data
+      🔄 Export All 
     </button>
     <button onclick="exportSelectedFields()" class="block px-4 py-2 hover:bg-gray-100 w-full text-left">
-      🧾 Export Jay Sheet
+      🧾 Export Jay 
     </button>
   </div>
 </div>
@@ -401,26 +401,26 @@
 
       //Export to Jay Sheet
       function exportSelectedFields() {
-  const selectedFields = [
-    "roCode",
-    "roName",
-    "phase",
-    "region",
-    "engineer",
-    "dgStatus",
-    "earthingStatus",
-    "probeMake",
-    "probeSize",
-    "date",
-    "connectivityType",
-    "iemiNumber",
-    "sim1Provider",
-    "sim1Number",
-    "sim2Provider",
-    "sim2Number",
-    "locationField",
+  const selectedFields = {
+    roCode: "Site Ro Code",
+    roName: "Site Name",
+    phase : "Phase",
+    region: "Region",
+    engineer: "Engineer Name",
+    dgStatus: "DG Status",
+    earthingStatus: "Earthing Status",
+    probeMake: "Probe Make",
+    probeSize: "Product & Probe Size",
+    date: "Date of Visit",
+    connectivityType:"SIM CARD (DEALER SIM/BRODBAND/VSAT/RELCON SIM/SDWAN",
+    iemiNumber: "IEMI Number",
+    sim1Provider: "Company1",
+    sim1Number: "SIM 1 Number",
+    sim2Provider:"Company2",
+    sim2Number: "SIM 2 Number",
+    locationField:"Site Location",
 
-  ];
+  };
 
   const trimmedData = filteredData.map((record) => {
     const selected = {};
