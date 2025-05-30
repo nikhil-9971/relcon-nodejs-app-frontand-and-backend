@@ -22,12 +22,27 @@
     <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">📝 Status Records</h1>
-        <button
+        <!-- <button
           onclick="exportToCSV()"
           class="bg-green-600 text-white px-4 py-2 rounded"
         >
           📤 Export to CSV
-        </button>
+        </button> -->
+
+        <div class="relative">
+  <button onclick="toggleExportMenu()" class="bg-green-600 text-white px-4 py-2 rounded">
+    📤 Export to CSV
+  </button>
+  <div id="exportMenu" class="absolute right-0 mt-2 hidden bg-white border rounded shadow z-50 text-sm">
+    <button onclick="exportToCSV()" class="block px-4 py-2 hover:bg-gray-100 w-full text-left">
+      🔄 Export All Filtered Data
+    </button>
+    <button onclick="exportSelectedFields()" class="block px-4 py-2 hover:bg-gray-100 w-full text-left">
+      🧾 Export Jay Sheet
+    </button>
+  </div>
+</div>
+
       </div>
 
       <!-- Filter Controls -->
@@ -64,18 +79,7 @@
         </div>
       </div>
 
-      <!-- <div class="overflow-x-auto">
-        <table
-          id="statusTable"
-          class="min-w-max table-auto border border-gray-300 text-[9px] whitespace-nowrap"
-        >
-          <thead class="bg-gray-200">
-            <tr id="tableHeader"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div> -->
+      
 
     <div class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded">
   <table id="statusTable" class="min-w-max table-auto w-full text-[9px]">
@@ -378,6 +382,60 @@
       }
 
       fetchStatusRecords();
+
+      function toggleExportMenu() {
+        const menu = document.getElementById("exportMenu");
+        menu.classList.toggle("hidden");
+        setTimeout(() => {
+        document.addEventListener("click", closeExportMenu);
+        }, 10);
+        }
+
+        function closeExportMenu(event) {
+       const menu = document.getElementById("exportMenu");
+       if (!event.target.closest("#exportMenu") && !event.target.closest("button[onclick^='toggleExportMenu']")) {
+        menu.classList.add("hidden");
+        document.removeEventListener("click", closeExportMenu);
+       }
+      }
+
+      //Export to Jay Sheet
+      function exportSelectedFields() {
+  const selectedFields = [
+    "roCode",
+    "roName",
+    "phase",
+    "region",
+    "engineer",
+    "dgStatus",
+    "earthingStatus",
+    "probeMake",
+    "probeSize",
+    "date",
+    "connectivityType",
+    "iemiNumber",
+    "sim1Provider",
+    "sim1Number",
+    "sim2Provider",
+    "sim2Number",
+    "locationField",
+
+  ];
+
+  const trimmedData = filteredData.map((record) => {
+    const selected = {};
+    selectedFields.forEach((key) => {
+      selected[key] = record[key] || "";
+    });
+    return selected;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(trimmedData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SelectedFields");
+  XLSX.writeFile(wb, `Daily_Status_Report_ECZ_NIKHIL_${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
 
       function showToast(message = "Success") {
         const toast = document.getElementById("toast");
