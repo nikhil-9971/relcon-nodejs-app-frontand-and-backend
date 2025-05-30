@@ -256,21 +256,35 @@
       function openEditModal(record) {
         const form = document.getElementById("editForm");
         form.innerHTML = "";
+
         Object.entries(record).forEach(([key, value]) => {
           if (key === "_id") {
             form.innerHTML += `<input type="hidden" name="${key}" value="${value}" />`;
             return;
           }
+
           if (key === "actions") return;
+
+          // Make planId field readonly
+          const isReadonly = key === "planId" ? "readonly" : "";
+
           form.innerHTML += `
-          <div>
-            <label class="block text-gray-700 font-medium mb-1">${key}</label>
-            <input type="text" name="${key}" value="${
-            value || ""
-          }" class="w-full border px-2 py-1 rounded" />
-          </div>`;
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">${key}</label>
+        <input
+          type="text"
+          name="${key}"
+          value="${value || ""}"
+          ${isReadonly}
+          class="w-full border px-2 py-1 rounded ${isReadonly && "bg-gray-100"}"
+        />
+      </div>`;
         });
-        document.getElementById("editModal").classList.remove("hidden");
+
+        // ✅ Make modal visible and center it with flex
+        const modal = document.getElementById("editModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex"); // This centers the modal content using Tailwind
       }
 
       function closeModal() {
