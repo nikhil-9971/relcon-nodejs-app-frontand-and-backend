@@ -288,6 +288,18 @@
               </select>
             </div>
 
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold"
+                >Product and Probe Size</label
+              >
+              <textarea
+                id="probeSize"
+                required
+                placeholder="Example: T1-MS-16KL, T2-HSD-35KL....."
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
             <div>
               <label class="text-sm font-semibold">Low Product Lock Set</label>
               <select
@@ -1080,6 +1092,7 @@
       async function saveStatus() {
         const requiredFields = [
           "probeMake",
+          "probeSize",
           "lowProductLock",
           "highWaterSet",
           "duSerialNumber",
@@ -1113,6 +1126,7 @@
         const statusData = {
           planId: document.getElementById("statusPlanId").value,
           probeMake: document.getElementById("probeMake").value,
+          probeSize: document.getElementById("probeSize").value,
           lowProductLock: document.getElementById("lowProductLock").value,
           highWaterSet: document.getElementById("highWaterSet").value,
           duSerialNumber: document.getElementById("duSerialNumber").value,
@@ -1249,6 +1263,7 @@
             ["AMC Qtr", plan.amcQtr],
             ["Purpose", plan.purpose],
             ["Probe Make", status.probeMake],
+            ["Product & Probe Size", status.probeSize],
             ["Low Product Lock", status.lowProductLock],
             ["High water Lock", status.highWaterSet],
             ["DU Serial Number Updated", status.duSerialNumber],
