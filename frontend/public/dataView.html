@@ -640,8 +640,11 @@
       const rowsPerPage = 10;
 
       async function fetchUserSession() {
+        const token = localStorage.getItem("token");
         const res = await fetch(`${baseUrl}/user`, {
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         if (res.status !== 200) {
@@ -667,8 +670,12 @@
       }
 
       async function fetchAndStoreData() {
+        const token = localStorage.getItem("token");
         const res = await fetch(`${baseUrl}/getDailyPlans`, {
-          credentials: "include", // ✅ this must be here
+          // credentials: "include",// ✅ this must
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         const data = await res.json();
@@ -836,6 +843,7 @@
       }
 
       async function saveEdit() {
+        const token = localStorage.getItem("token");
         const id = document.getElementById("editPlanId").value;
         const updated = {
           region: document.getElementById("editRegion").value,
@@ -851,7 +859,10 @@
 
         const res = await fetch(`${baseUrl}/updateDailyPlan/` + id, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(updated),
           credentials: "include",
         });
