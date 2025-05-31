@@ -1,31 +1,58 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+const SECRET = process.env.JWT_SECRET || "relcon-secret-key"; // Add this in .env file
+
+// 🔐 Login - returns JWT
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
-  if (!user || !(await bcrypt.compare(password, user.password)))
-    return res.status(401).send("Invalid credentials");
 
-  req.session.user = {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  const payload = {
     username: user.username,
     role: user.role,
     engineerName: user.engineerName,
   };
 
-  res.json(req.session.user);
+  const token = jwt.sign(payload, SECRET, { expiresIn: "2h" });
+
+  res.json({ token });
 });
 
-router.get("/user", (req, res) => {
-  if (req.session.user) res.json(req.session.user);
-  else res.status(401).json({ error: "Not logged in" });
+// 🔒 Get logged-in user info (requires token)
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+};
+
+router.get("/user", verifyToken, (req, res) => {
+  res.json(req.user);
 });
 
+// Logout not required with JWT – handled on frontend by clearing localStorage
+// But optional dummy route if needed
 router.post("/logout", (req, res) => {
-  req.session.destroy();
-  res.sendStatus(200);
+  res.status(200).json({ message: "Client should clear token manually" });
 });
 
 module.exports = router;
