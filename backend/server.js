@@ -17,10 +17,26 @@ const app = express();
 // ✅ Connect to MongoDB
 connectDB();
 
+const allowedOrigins = ["https://relconecz1.netlify.app"];
+
+app.options(
+  "*",
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
 // ✅ CORS setup for frontend → Netlify
+// app.use(
+//   cors({
+//     origin: "https://relconecz1.netlify.app",
+//     credentials: true,
+//   })
+// );
 app.use(
   cors({
-    origin: "https://relconecz1.netlify.app",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
