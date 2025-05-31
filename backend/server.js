@@ -16,19 +16,9 @@ const app = express();
 connectDB();
 
 // ✅ CORS setup for frontend → Netlify
-const allowedOrigins = ["https://relconecz1.netlify.app"];
-
-app.options(
-  "*",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
-
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: "https://relconecz1.netlify.app",
     credentials: true,
   })
 );
