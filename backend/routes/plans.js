@@ -41,7 +41,6 @@ router.get("/checkDuplicate", async (req, res) => {
 
 // ✅ Get All Plans with statusSaved flag
 router.get("/getDailyPlans", verifyToken, async (req, res) => {
-  if (!req.session.user) return res.status(401).send("Unauthorized");
   //const { role, engineerName } = req.session.user;
   const { role, engineerName } = req.user; // 👈 Use JWT user info
   try {
