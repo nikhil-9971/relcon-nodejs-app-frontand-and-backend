@@ -152,10 +152,12 @@
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       let allStatusData = [];
-
+      const token = localStorage.getItem("token");
       async function fetchStatusRecords() {
         const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
-          credentials: "include",
+           headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         const data = await res.json();
         allStatusData = data;
