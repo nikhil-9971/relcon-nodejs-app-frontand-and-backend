@@ -247,15 +247,11 @@
           '<span class="spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> Submitting...';
 
         // ✅ Check if this RO Code + Date combo already exists
-        const token = localStorage.getItem("token");
+
         try {
           const checkRes = await fetch(
             `${baseUrl}/checkDuplicate?roCode=${data.roCode}&date=${data.date}&engineer=${engineer}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+            { credentials: "include" }
           );
           const exists = await checkRes.json();
 
@@ -276,11 +272,9 @@
         // ⏳ Proceed to submit
         const response = await fetch(`${baseUrl}/saveDailyPlan`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
+          credentials: "include",
         });
 
         btn.disabled = false;
@@ -341,9 +335,7 @@
 
         try {
           const res = await fetch(`${baseUrl}/getROInfo/${roCode}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           });
           if (!res.ok) throw new Error("RO Code not found");
 
@@ -383,9 +375,7 @@
           ) {
             try {
               const res = await fetch(`${baseUrl}/getROInfo/${roCode}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
+                credentials: "include",
               });
               if (!res.ok) throw new Error("RO Code not found");
 
