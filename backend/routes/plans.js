@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const DailyPlan = require("../models/DailyPlan");
 const Status = require("../models/Status");
+const verifyToken = require("../middleware/authMiddleware");
 
 // ✅ Save Daily Plan
 router.post("/saveDailyPlan", async (req, res) => {
@@ -41,8 +42,8 @@ router.get("/checkDuplicate", async (req, res) => {
 // ✅ Get All Plans with statusSaved flag
 router.get("/getDailyPlans", async (req, res) => {
   if (!req.session.user) return res.status(401).send("Unauthorized");
-  const { role, engineerName } = req.session.user;
-
+  //const { role, engineerName } = req.session.user;
+  const { role, engineerName } = req.user; // 👈 Use JWT user info
   try {
     const plans =
       role === "admin"
