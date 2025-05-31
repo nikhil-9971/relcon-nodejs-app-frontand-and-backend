@@ -429,6 +429,11 @@
     const selected = {};
     selectedFields.forEach((key) => {
       selected[customHeaderMap[key]] = record[key] || "";
+
+       if (key === "sim1Number" || key === "sim2Number" || key === "iemiNumber")  {
+        value = "`" + value; // Force Excel to treat as plain text
+      }
+
     });
     return selected;
   });
