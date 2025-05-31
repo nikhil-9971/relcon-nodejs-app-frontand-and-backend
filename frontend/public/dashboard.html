@@ -97,13 +97,25 @@
     </main>
 
     <script>
-      const baseUrl = "https://relcon-backend.onrender.com";
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
+      // 🔐 Get token
+      function getToken() {
+        return localStorage.getItem("token");
+      }
+
+      // 🔒 Logout function
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      }
+
+      // 📦 Load iframe content
       function loadPage(page, linkElement) {
         document.getElementById("contentFrame").src = page;
-        document.querySelectorAll("nav a").forEach((link) => {
-          link.classList.remove("active-link");
-        });
+        document
+          .querySelectorAll("nav a")
+          .forEach((link) => link.classList.remove("active-link"));
         if (linkElement) linkElement.classList.add("active-link");
 
         // Close sidebar in mobile view
@@ -112,66 +124,54 @@
         }
       }
 
-      function logout() {
-        fetch(`${baseUrl}/logout`, {
-          method: "POST",
-          credentials: "include",
-        }).finally(() => {
-          window.location.href = "login.html";
-        });
-      }
-
-      function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        sidebar.classList.toggle("hidden");
-      }
-
       // 👤 Fetch user info
       async function fetchUser() {
+        const token = getToken();
+        if (!token) return logout();
+
         try {
           const res = await fetch(`${baseUrl}/user`, {
-            credentials: "include",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           });
-          if (!res.ok) throw new Error("Not logged in");
+
+          if (res.status === 403 || res.status === 401)
+            throw new Error("Expired");
           const user = await res.json();
+
           const text = `${user.engineerName || user.username} (${user.role})`;
           document.getElementById("userDetails").textContent = `👤 ${text}`;
 
-          // 👇 Show Status link only for admin
-          if (user.role === "admin") {
-            document.getElementById("statusLink").style.display = "flex";
-          } else {
-            document.getElementById("statusLink").style.display = "none";
-          }
-        } catch {
-          document.getElementById("userDetails").textContent =
-            "⚠️ Not logged in";
-          document.getElementById("statusLink").style.display = "none";
+          // Only show for admin
+          document.getElementById("statusLink").style.display =
+            user.role === "admin" ? "flex" : "none";
+        } catch (err) {
+          logout();
         }
       }
 
-      fetchUser();
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("hidden");
+      }
 
-      //Intactivity window
+      // ⏱ Inactivity auto logout
       let inactivityTimeout;
-
       function resetInactivityTimer() {
         clearTimeout(inactivityTimeout);
         inactivityTimeout = setTimeout(() => {
           alert("You were inactive for 15 minutes. Logging out.");
           logout();
-        }, 15 * 60 * 1000); // 15 minutes
+        }, 15 * 60 * 1000);
       }
 
-      // Reset timer on activity
       ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) =>
         window.addEventListener(evt, resetInactivityTimer)
       );
 
-      // Start/reset timer when page loads
       window.onload = () => {
-        fetchUser(); // existing function
-        resetInactivityTimer(); // new
+        fetchUser();
+        resetInactivityTimer();
       };
     </script>
   </body>

@@ -155,7 +155,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
-      const baseUrl = "https://relcon-backend.onrender.com";
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
       // Particle Background
       particlesJS("particles-js", {
@@ -217,6 +217,13 @@
         }, 3000);
       }
 
+      // Decode JWT (to extract role, engineerName)
+      function decodeJWT(token) {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(window.atob(base64));
+      }
+
       // Login Handler
       async function handleLogin(event) {
         event.preventDefault();
@@ -234,24 +241,31 @@
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
-        const response = await fetch(`${baseUrl}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-          credentials: "include", // ✅ Add this line
-        });
+        try {
+          const response = await fetch(`${baseUrl}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
 
-        if (response.ok) {
+          if (!response.ok) throw new Error("Login failed");
+
           const data = await response.json();
-          localStorage.setItem("role", data.role);
-          localStorage.setItem("engineerName", data.engineerName);
+
+          // ✅ Save token
+          localStorage.setItem("token", data.token);
+
+          // ✅ Optional: decode token to get role & name
+          const user = decodeJWT(data.token);
+          localStorage.setItem("role", user.role);
+          localStorage.setItem("engineerName", user.engineerName);
 
           showToast("Login Successfully");
 
           setTimeout(() => {
             window.location.href = "dashboard.html";
           }, 1000);
-        } else {
+        } catch (err) {
           document.getElementById("error").classList.remove("hidden");
         }
 
