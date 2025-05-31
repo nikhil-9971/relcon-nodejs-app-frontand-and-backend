@@ -428,12 +428,12 @@
   const trimmedData = filteredData.map((record) => {
     const selected = {};
     selectedFields.forEach((key) => {
-      selected[customHeaderMap[key]] = record[key] || "";
+      let value = record[key] || "";
 
        if (key === "sim1Number" || key === "sim2Number" || key === "iemiNumber")  {
         value = "`" + value; // Force Excel to treat as plain text
       }
-
+    selected[customHeaderMap[key]] = value;
     });
     return selected;
   });
