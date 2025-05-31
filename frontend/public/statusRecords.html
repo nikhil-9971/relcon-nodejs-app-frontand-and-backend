@@ -430,7 +430,7 @@
     selectedFields.forEach((key) => {
       let value = record[key] || "";
 
-       if (key === "sim1Number" || key === "sim2Number" || key === "iemiNumber")  {
+       if ((key === "sim1Number" || key === "sim2Number" || key === "iemiNumber") && record.connectivityType === "RELCON SIM")  {
         value = "`" + value; // Force Excel to treat as plain text
       }
     selected[customHeaderMap[key]] = value;
