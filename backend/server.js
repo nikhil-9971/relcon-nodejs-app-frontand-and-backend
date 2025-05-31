@@ -1,9 +1,7 @@
 require("dotenv").config();
 const express = require("express");
-const session = require("express-session");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
 const path = require("path");
 
 const connectDB = require("./config/db");
@@ -18,37 +16,31 @@ const app = express();
 connectDB();
 
 // ✅ CORS setup for frontend → Netlify
-app.use(
+const allowedOrigins = ["https://relconecz1.netlify.app"];
+
+app.options(
+  "*",
   cors({
-    origin: "https://relconecz1.netlify.app",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
-// ✅ Needed for cookies to work cross-origin
-app.set("trust proxy", 1);
-
-// ✅ Middlewares
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// ✅ Session configuration for cross-origin
 app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 15 * 60 * 1000, // 15 minutes
-      secure: true, // ✅ required for HTTPS (Netlify + Render)
-      sameSite: "none", // ✅ allow cookies cross-origin
-      httpOnly: true,
-    },
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
   })
 );
 
-// ✅ Static files
+// ✅ Body parsers
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// ✅ Trust proxy for HTTPS (still useful)
+app.set("trust proxy", 1);
+
+// ✅ Static files (optional)
 app.use(express.static("public"));
 
 // ✅ Routes
@@ -57,7 +49,7 @@ app.use("/", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
 
-// ✅ Optional: redirect *.html → clean path
+// ✅ Optional: redirect *.html to clean path
 app.use((req, res, next) => {
   if (req.path.endsWith(".html")) {
     const cleanPath = req.path.slice(0, -5);
