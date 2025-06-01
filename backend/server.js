@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const planRoutes = require("./routes/plans");
 const roRoutes = require("./routes/romaster");
 const statusRoutes = require("./routes/statusmodel");
+const atgstatusRoutes = require("./routes/atgStatusRoutes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/", authRoutes);
 app.use("/", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
+app.use("/", atgstatusRoutes);
 
 // ✅ Optional: redirect *.html to clean path
 app.use((req, res, next) => {
