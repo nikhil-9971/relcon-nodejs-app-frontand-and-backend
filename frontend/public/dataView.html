@@ -625,6 +625,62 @@
       </div>
     </div>
 
+    <!-- ATG Status Modal -->
+    <div
+      id="atgModal"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
+    >
+      <div class="bg-white w-full max-w-lg rounded shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4 text-center text-gray-800">
+          🔧 Update ATG Status
+        </h2>
+        <input type="hidden" id="atgPlanId" />
+
+        <div class="space-y-3">
+          <div>
+            <label class="font-semibold text-sm">Probe Status</label>
+            <textarea
+              id="probeStatus"
+              placeholder="e.g. Probe working/replaced at Tank 2"
+              class="w-full border p-2 rounded"
+            ></textarea>
+          </div>
+          <div>
+            <label class="font-semibold text-sm">Calibration Info</label>
+            <input
+              type="text"
+              id="calibrationInfo"
+              placeholder="e.g. Calibrated at T1 & T2"
+              class="w-full border p-2 rounded"
+            />
+          </div>
+          <div>
+            <label class="font-semibold text-sm">Remarks</label>
+            <textarea
+              id="atgRemarks"
+              placeholder="Any additional notes"
+              class="w-full border p-2 rounded"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="mt-4 text-right space-x-2">
+          <button
+            onclick="closeATGModal()"
+            class="bg-gray-300 px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="submitATGStatus()"
+            class="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            💾 Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div
       id="toast"
@@ -1461,20 +1517,67 @@
       }
 
       //ATG MODEL
-      function openATGModal(planId) {
-        // Open separate ATG Status form page
-        const popup = window.open(
-          "atgStatus.html",
-          "_blank",
-          "width=700,height=600"
-        );
 
-        // Pass planId to child window after a short delay
-        popup.onload = () => {
-          if (popup.loadATGForm) {
-            popup.loadATGForm(planId);
+      async function openATGModal(planId) {
+        document.getElementById("atgPlanId").value = planId;
+
+        // Reset previous values
+        document.getElementById("probeStatus").value = "";
+        document.getElementById("calibrationInfo").value = "";
+        document.getElementById("atgRemarks").value = "";
+
+        // If ATG status exists, populate it
+        try {
+          const res = await fetch(`${baseUrl}/atg-status/${planId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            document.getElementById("probeStatus").value =
+              data.probeStatus || "";
+            document.getElementById("calibrationInfo").value =
+              data.calibrationInfo || "";
+            document.getElementById("atgRemarks").value = data.remarks || "";
           }
+        } catch (err) {
+          console.warn("Failed to fetch ATG data:", err.message);
+        }
+
+        document.getElementById("atgModal").classList.remove("hidden");
+      }
+
+      function closeATGModal() {
+        document.getElementById("atgModal").classList.add("hidden");
+      }
+
+      async function submitATGStatus() {
+        const payload = {
+          planId: document.getElementById("atgPlanId").value,
+          probeStatus: document.getElementById("probeStatus").value,
+          calibrationInfo: document.getElementById("calibrationInfo").value,
+          remarks: document.getElementById("atgRemarks").value,
         };
+
+        const res = await fetch(`${baseUrl}/atg-status`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          alert("✅ ATG status saved successfully!");
+          closeATGModal();
+          await fetchAndStoreData();
+          applyFilter(document.getElementById("applyBtn"));
+        } else {
+          alert("❌ Failed to save ATG status");
+        }
       }
     </script>
   </body>
