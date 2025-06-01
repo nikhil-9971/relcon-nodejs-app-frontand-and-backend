@@ -776,8 +776,20 @@
             statusBtn = `<span class="text-gray-400 italic">Not required</span>`;
           }
 
-          //ATG BUTTON CODE
-
+          //check ATG Status
+          async function checkATGStatus(planId) {
+            try {
+              const res = await fetch(`${baseUrl}/atg-status/${planId}`, {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              });
+              return res.ok;
+            } catch (err) {
+              return false;
+            }
+          }
+          // ATG status check & button logic
           let atgStatusBtn = "";
 
           if (
@@ -785,12 +797,21 @@
             (plan.issueType === "ATG Visit" ||
               plan.issueType === "ATG & PM Visit")
           ) {
-            atgStatusBtn = `
-    <button
-      onclick="openATGModal('${plan._id}')"
-      class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs">
-      ➕ Add ATG Status
-    </button>`;
+            atgStatusBtn = `<span class="text-gray-400 italic">Loading...</span>`; // temporary placeholder
+
+            checkATGStatus(plan._id).then((exists) => {
+              const btnHtml = `
+      <button onclick="openATGModal('${plan._id}')"
+        class="${
+          exists ? "bg-blue-500" : "bg-orange-500"
+        } hover:bg-opacity-90 text-white px-2 py-1 rounded text-xs">
+        ${exists ? "📝 Edit ATG Status" : "➕ Add ATG Status"}
+      </button>`;
+
+              // Replace content inside the correct cell
+              const cell = row.querySelector(".atg-status-cell");
+              if (cell) cell.innerHTML = btnHtml;
+            });
           }
 
           row.innerHTML = `
@@ -816,7 +837,7 @@
        </td>
 
                         <td class="border px-1 py-1 text-center">${statusBtn}</td>
-                        <td class="border px-1 py-1 text-center">${atgStatusBtn}</td>
+                        <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
 
                          <td class="border px-2 py-1 text-center space-x-1">
         ${
