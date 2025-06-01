@@ -4,11 +4,17 @@ const atgStatusSchema = new mongoose.Schema({
   planId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "DailyPlan",
-    required: true,
   },
-  probeStatus: String,
-  calibrationInfo: String,
-  remarks: String,
+  zone: String,
+  atgIssuetype: String,
+  startTime: String,
+  bfrStatus: String,
+  actionSite: String,
+  supportPerson: String,
+  resolvedStatus: String,
+  endTime: String,
+  nextAction: String,
+  remark: String,
   createdAt: { type: Date, default: Date.now },
 });
 
