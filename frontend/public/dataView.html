@@ -630,50 +630,147 @@
       id="atgModal"
       class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
     >
-      <div class="bg-white w-full max-w-lg rounded shadow-lg p-6">
-        <h2 class="text-xl font-semibold mb-4 text-center text-gray-800">
+      <div class="bg-white w-full max-w-4xl rounded-xl shadow-lg p-8">
+        <h2
+          class="text-2xl font-semibold mb-6 text-center text-gray-800 border-b pb-2"
+        >
           🔧 Update ATG Status
         </h2>
+
         <input type="hidden" id="atgPlanId" />
 
-        <div class="space-y-3">
+        <form
+          id="atgForm"
+          class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm"
+        >
+          <!-- Zone -->
           <div>
-            <label class="font-semibold text-sm">Probe Status</label>
-            <textarea
-              id="probeStatus"
-              placeholder="e.g. Probe working/replaced at Tank 2"
-              class="w-full border p-2 rounded"
-            ></textarea>
+            <label class="font-semibold">Zone</label>
+            <select id="zone" required class="w-full mt-1 border p-2 rounded">
+              <option value="">Select</option>
+              <option>ECZ</option>
+            </select>
           </div>
+
+          <!-- ATG Related Issue -->
           <div>
-            <label class="font-semibold text-sm">Calibration Info</label>
+            <label class="font-semibold">ATG Related Issue</label>
             <input
               type="text"
-              id="calibrationInfo"
-              placeholder="e.g. Calibrated at T1 & T2"
-              class="w-full border p-2 rounded"
+              id="atgIssuetype"
+              required
+              class="w-full mt-1 border p-2 rounded"
             />
           </div>
+
+          <!-- TIME TO REACH ENG -->
           <div>
-            <label class="font-semibold text-sm">Remarks</label>
+            <label class="font-semibold">Time to Reach Engineer</label>
+            <input
+              type="time"
+              id="startTime"
+              required
+              class="w-full mt-1 border p-2 rounded"
+              step="60"
+            />
+          </div>
+
+          <!-- Status of Site Before Visit -->
+          <div>
+            <label class="font-semibold">Status Before Visit</label>
+            <input
+              type="text"
+              id="bfrStatus"
+              required
+              class="w-full mt-1 border p-2 rounded"
+            />
+          </div>
+
+          <!-- Action on Site -->
+          <div class="md:col-span-2">
+            <label class="font-semibold">Action Taken on Site</label>
             <textarea
-              id="atgRemarks"
-              placeholder="Any additional notes"
-              class="w-full border p-2 rounded"
+              id="actionSite"
+              rows="3"
+              class="w-full mt-1 border p-2 rounded"
             ></textarea>
           </div>
-        </div>
 
-        <div class="mt-4 text-right space-x-2">
+          <!-- Support Taken -->
+          <div>
+            <label class="font-semibold">Support Taken? With Whom</label>
+            <select
+              id="supportPerson"
+              required
+              class="w-full mt-1 border p-2 rounded"
+            >
+              <option value="">Select</option>
+              <option>YES/VIREN</option>
+              <option>YES/BALDEV</option>
+              <option>YES/SAGAR</option>
+              <option>YES/DHAVAL</option>
+            </select>
+          </div>
+
+          <!-- Resolved Status -->
+          <div>
+            <label class="font-semibold">Resolved Status</label>
+            <select
+              id="resolvedStatus"
+              required
+              class="w-full mt-1 border p-2 rounded"
+            >
+              <option value="">Select</option>
+              <option>YES</option>
+              <option>NO</option>
+            </select>
+          </div>
+
+          <!-- Resolved Time -->
+          <div>
+            <label class="font-semibold">Resolved at What Time?</label>
+            <input
+              type="time"
+              id="endTime"
+              required
+              class="w-full mt-1 border p-2 rounded"
+              step="60"
+            />
+          </div>
+
+          <!-- Next Action -->
+          <div class="md:col-span-2">
+            <label class="font-semibold">Next Action (if any)</label>
+            <textarea
+              id="nextAction"
+              rows="2"
+              class="w-full mt-1 border p-2 rounded"
+            ></textarea>
+          </div>
+
+          <!-- Remarks -->
+          <div class="md:col-span-2">
+            <label class="font-semibold">Remarks</label>
+            <textarea
+              id="remark"
+              rows="2"
+              placeholder="Any additional notes"
+              class="w-full mt-1 border p-2 rounded"
+            ></textarea>
+          </div>
+        </form>
+
+        <!-- Buttons -->
+        <div class="mt-6 text-right space-x-3">
           <button
             onclick="closeATGModal()"
-            class="bg-gray-300 px-4 py-2 rounded"
+            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-2 rounded shadow"
           >
             Cancel
           </button>
           <button
             onclick="submitATGStatus()"
-            class="bg-green-600 text-white px-4 py-2 rounded"
+            class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded shadow"
           >
             💾 Save
           </button>
@@ -1525,65 +1622,43 @@
 
       //ATG MODEL
 
-      async function openATGModal(planId) {
-        document.getElementById("atgPlanId").value = planId;
+      async function submitATGStatus() {
+        const planId = document.getElementById("atgPlanId").value;
+        const payload = {
+          planId,
+          zone: document.getElementById("zone").value,
+          atgIssuetype: document.getElementById("atgIssuetype").value,
+          startTime: document.getElementById("startTime").value,
+          bfrStatus: document.getElementById("bfrStatus").value,
+          actionSite: document.getElementById("actionSite").value,
+          supportPerson: document.getElementById("supportPerson").value,
+          resolvedStatus: document.getElementById("resolvedStatus").value,
+          endTime: document.getElementById("endTime").value,
+          nextAction: document.getElementById("nextAction").value,
+          remark: document.getElementById("remark").value,
+        };
 
-        // Reset previous values
-        document.getElementById("probeStatus").value = "";
-        document.getElementById("calibrationInfo").value = "";
-        document.getElementById("atgRemarks").value = "";
-
-        // If ATG status exists, populate it
         try {
-          const res = await fetch(`${baseUrl}/atg-status/${planId}`, {
+          const res = await fetch(`${baseUrl}/atg-status`, {
+            method: "POST",
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
+            body: JSON.stringify(payload),
           });
 
           if (res.ok) {
-            const data = await res.json();
-            document.getElementById("probeStatus").value =
-              data.probeStatus || "";
-            document.getElementById("calibrationInfo").value =
-              data.calibrationInfo || "";
-            document.getElementById("atgRemarks").value = data.remarks || "";
+            alert("✅ ATG status saved successfully");
+            closeATGModal();
+            await fetchAndStoreData();
+            applyFilter(document.getElementById("applyBtn"));
+          } else {
+            alert("❌ Failed to save ATG status");
           }
         } catch (err) {
-          console.warn("Failed to fetch ATG data:", err.message);
-        }
-
-        document.getElementById("atgModal").classList.remove("hidden");
-      }
-
-      function closeATGModal() {
-        document.getElementById("atgModal").classList.add("hidden");
-      }
-
-      async function submitATGStatus() {
-        const payload = {
-          planId: document.getElementById("atgPlanId").value,
-          probeStatus: document.getElementById("probeStatus").value,
-          calibrationInfo: document.getElementById("calibrationInfo").value,
-          remarks: document.getElementById("atgRemarks").value,
-        };
-
-        const res = await fetch(`${baseUrl}/atg-status`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-          alert("✅ ATG status saved successfully!");
-          closeATGModal();
-          await fetchAndStoreData();
-          applyFilter(document.getElementById("applyBtn"));
-        } else {
-          alert("❌ Failed to save ATG status");
+          console.error("ATG save error:", err);
+          alert("❌ Network error saving ATG status");
         }
       }
     </script>
