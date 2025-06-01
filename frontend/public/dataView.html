@@ -961,15 +961,15 @@
 
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
-    <button onclick="openATGModal('${plan._id}')"
-      class="text-white px-2 py-1 rounded text-sm ${
-        exists
-          ? "bg-green-500 cursor-not-allowed"
-          : "bg-orange-500 hover:bg-orange-600"
-      }"
-      ${exists ? "disabled" : ""}>
-      ${exists ? "✅ Added" : "➕ Add ATG Status"}
-    </button>`;
+  <button onclick="allowATGModalOpen = true; openATGModal('${plan._id}')"
+    class="text-white px-2 py-1 rounded text-sm ${
+      exists
+        ? "bg-green-500 cursor-not-allowed"
+        : "bg-orange-500 hover:bg-orange-600"
+    }"
+    ${exists ? "disabled" : ""}>
+    ${exists ? "✅ Added" : "➕ Add ATG Status"}
+  </button>`;
 
               // Replace content inside the correct cell
               const cell = row.querySelector(".atg-status-cell");
@@ -1625,13 +1625,15 @@
 
       //ATG MODEL
 
-      function openATGModal(planId) {
-        document.getElementById("atgPlanId").value = planId;
+      let allowATGModalOpen = false;
 
-        // Reset form
+      function openATGModal(planId) {
+        if (!allowATGModalOpen) return; // Block unexpected open
+        allowATGModalOpen = false; // reset flag after opening
+
+        document.getElementById("atgPlanId").value = planId;
         document.getElementById("atgForm").reset();
 
-        // Clear or set default values if needed
         document.getElementById("zone").value = "";
         document.getElementById("atgIssuetype").value = "";
         document.getElementById("startTime").value = "";
@@ -1644,7 +1646,6 @@
         document.getElementById("nextAction").value = "";
         document.getElementById("remark").value = "";
 
-        // Show modal
         document.getElementById("atgModal").classList.remove("hidden");
       }
 
