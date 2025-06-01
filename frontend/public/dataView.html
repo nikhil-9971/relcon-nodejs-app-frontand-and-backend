@@ -1622,6 +1622,32 @@
 
       //ATG MODEL
 
+      function openATGModal(planId) {
+        document.getElementById("atgPlanId").value = planId;
+
+        // Reset form
+        document.getElementById("atgForm").reset();
+
+        // Clear or set default values if needed
+        document.getElementById("zone").value = "";
+        document.getElementById("atgIssuetype").value = "";
+        document.getElementById("startTime").value = "";
+        document.getElementById("bfrStatus").value = "";
+        document.getElementById("actionSite").value = "";
+        document.getElementById("supportPerson").value = "";
+        document.getElementById("resolvedStatus").value = "";
+        document.getElementById("endTime").value = "";
+        document.getElementById("nextAction").value = "";
+        document.getElementById("remark").value = "";
+
+        // Show modal
+        document.getElementById("atgModal").classList.remove("hidden");
+      }
+
+      function closeATGModal() {
+        document.getElementById("atgModal").classList.add("hidden");
+      }
+
       async function submitATGStatus() {
         const planId = document.getElementById("atgPlanId").value;
         const payload = {
