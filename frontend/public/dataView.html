@@ -170,7 +170,7 @@
               <th class="px-1 py-1">AMC Qtr</th>
               <th class="px-1 py-1">Completion Status</th>
               <th class="px-1 py-1">Update Status</th>
-              <th class="px-1 py-1">Update ATG Status</th>
+              <th class="px-1 py-1" id="atgHeader">Update ATG Status</th>
               <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
@@ -723,6 +723,10 @@
           // Hide Action column header for engineers
           const actionHeader = document.getElementById("actionHeader");
           if (actionHeader) actionHeader.style.display = "none";
+
+          // Hide Update ATG Status column
+          const atgHeader = document.getElementById("atgHeader");
+          if (atgHeader) atgHeader.style.display = "none";
         }
       }
 
