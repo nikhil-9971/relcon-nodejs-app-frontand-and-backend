@@ -11,6 +11,7 @@ const atgStatusSchema = new mongoose.Schema({
   bfrStatus: String,
   actionSite: String,
   supportPerson: String,
+  earthingStatus: String,
   resolvedStatus: String,
   endTime: String,
   nextAction: String,
