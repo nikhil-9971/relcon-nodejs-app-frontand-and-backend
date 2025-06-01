@@ -776,6 +776,23 @@
             statusBtn = `<span class="text-gray-400 italic">Not required</span>`;
           }
 
+          //ATG BUTTON CODE
+
+          let atgStatusBtn = "";
+
+          if (
+            loggedInUser.role === "admin" &&
+            (plan.issueType === "ATG Visit" ||
+              plan.issueType === "ATG & PM Visit")
+          ) {
+            atgStatusBtn = `
+    <button
+      onclick="openATGModal('${plan._id}')"
+      class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs">
+      ➕ Add ATG Status
+    </button>`;
+          }
+
           row.innerHTML = `
                         <td class="border px-1 py-1">${plan.region}</td>
                         <td class="border px-1 py-1">${plan.engineer}</td>
@@ -799,6 +816,8 @@
        </td>
 
                         <td class="border px-1 py-1 text-center">${statusBtn}</td>
+                        <td class="border px-1 py-1 text-center">${atgStatusBtn}</td>
+
                          <td class="border px-2 py-1 text-center space-x-1">
         ${
           loggedInUser?.role === "admin"
@@ -1418,6 +1437,23 @@
         setTimeout(() => {
           toast.classList.add("hidden");
         }, 3000);
+      }
+
+      //ATG MODEL
+      function openATGModal(planId) {
+        // Open separate ATG Status form page
+        const popup = window.open(
+          "atgStatus.html",
+          "_blank",
+          "width=700,height=600"
+        );
+
+        // Pass planId to child window after a short delay
+        popup.onload = () => {
+          if (popup.loadATGForm) {
+            popup.loadATGForm(planId);
+          }
+        };
       }
     </script>
   </body>
