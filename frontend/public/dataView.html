@@ -628,11 +628,13 @@
     <!-- ATG Status Modal -->
     <div
       id="atgModal"
-      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center"
     >
-      <div class="bg-white w-full max-w-4xl rounded-xl shadow-lg p-8">
+      <div
+        class="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-lg p-6 text-[11px]"
+      >
         <h2
-          class="text-2xl font-semibold mb-6 text-center text-gray-800 border-b pb-2"
+          class="text-xl font-semibold mb-4 text-center text-gray-800 border-b pb-2"
         >
           🔧 Update ATG Status
         </h2>
@@ -641,12 +643,12 @@
 
         <form
           id="atgForm"
-          class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]"
         >
           <!-- Zone -->
           <div>
             <label class="font-semibold">Zone</label>
-            <select id="zone" required class="w-full mt-1 border p-2 rounded">
+            <select id="zone" class="w-full mt-1 border p-2 rounded">
               <option value="">Select</option>
               <option>ECZ</option>
             </select>
@@ -658,7 +660,6 @@
             <input
               type="text"
               id="atgIssuetype"
-              required
               class="w-full mt-1 border p-2 rounded"
             />
           </div>
@@ -669,7 +670,6 @@
             <input
               type="time"
               id="startTime"
-              required
               class="w-full mt-1 border p-2 rounded"
               step="60"
             />
@@ -681,7 +681,6 @@
             <input
               type="text"
               id="bfrStatus"
-              required
               class="w-full mt-1 border p-2 rounded"
             />
           </div>
@@ -699,11 +698,7 @@
           <!-- Support Taken -->
           <div>
             <label class="font-semibold">Support Taken? With Whom</label>
-            <select
-              id="supportPerson"
-              required
-              class="w-full mt-1 border p-2 rounded"
-            >
+            <select id="supportPerson" class="w-full mt-1 border p-2 rounded">
               <option value="">Select</option>
               <option>YES/VIREN</option>
               <option>YES/BALDEV</option>
@@ -712,14 +707,20 @@
             </select>
           </div>
 
+          <!-- Earthing Status -->
+          <div>
+            <label class="font-semibold">Earthing Status</label>
+            <select id="earthingStatus" class="w-full mt-1 border p-2 rounded">
+              <option value="">Select</option>
+              <option>OK</option>
+              <option>NOT OK</option>
+            </select>
+          </div>
+
           <!-- Resolved Status -->
           <div>
             <label class="font-semibold">Resolved Status</label>
-            <select
-              id="resolvedStatus"
-              required
-              class="w-full mt-1 border p-2 rounded"
-            >
+            <select id="resolvedStatus" class="w-full mt-1 border p-2 rounded">
               <option value="">Select</option>
               <option>YES</option>
               <option>NO</option>
@@ -732,7 +733,6 @@
             <input
               type="time"
               id="endTime"
-              required
               class="w-full mt-1 border p-2 rounded"
               step="60"
             />
@@ -761,7 +761,10 @@
         </form>
 
         <!-- Buttons -->
-        <div class="mt-6 text-right space-x-3">
+        <!-- Sticky Bottom Buttons -->
+        <div
+          class="sticky bottom-0 bg-white py-4 mt-6 border-t border-gray-200 flex justify-end space-x-3"
+        >
           <button
             onclick="closeATGModal()"
             class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-2 rounded shadow"
@@ -1635,6 +1638,7 @@
         document.getElementById("bfrStatus").value = "";
         document.getElementById("actionSite").value = "";
         document.getElementById("supportPerson").value = "";
+        document.getElementById("earthingStatus").value = "";
         document.getElementById("resolvedStatus").value = "";
         document.getElementById("endTime").value = "";
         document.getElementById("nextAction").value = "";
@@ -1658,6 +1662,7 @@
           bfrStatus: document.getElementById("bfrStatus").value,
           actionSite: document.getElementById("actionSite").value,
           supportPerson: document.getElementById("supportPerson").value,
+          earthingStatus: document.getElementById("earthingStatus").value,
           resolvedStatus: document.getElementById("resolvedStatus").value,
           endTime: document.getElementById("endTime").value,
           nextAction: document.getElementById("nextAction").value,
