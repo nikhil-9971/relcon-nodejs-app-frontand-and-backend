@@ -962,7 +962,7 @@
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
     <button onclick="openATGModal('${plan._id}')"
-      class="text-white px-2 py-1 rounded text-xs ${
+      class="text-white px-2 py-1 rounded text-sm ${
         exists
           ? "bg-green-500 cursor-not-allowed"
           : "bg-orange-500 hover:bg-orange-600"
