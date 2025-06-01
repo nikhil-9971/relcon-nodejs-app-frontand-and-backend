@@ -159,6 +159,8 @@
                 <option>Issue Visit</option>
                 <option>PM Visit</option>
                 <option>Issue & PM Visit</option>
+                <option>ATG Visit</option>
+                <option>ATG & PM Visit</option>
                 <option>Survey</option>
                 <option>Power ON</option>
                 <option>SAT</option>
@@ -373,7 +375,9 @@
 
           if (
             selectedType === "PM Visit" ||
-            selectedType === "Issue & PM Visit"
+            selectedType === "Issue & PM Visit" ||
+            selectedType === "ATG Visit" ||
+            selectedType === "ATG & PM Visit"
           ) {
             try {
               const res = await fetch(`${baseUrl}/getROInfo/${roCode}`, {
