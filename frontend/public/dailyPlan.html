@@ -252,9 +252,7 @@
           const checkRes = await fetch(
             `${baseUrl}/checkDuplicate?roCode=${data.roCode}&date=${data.date}&engineer=${data.engineer}`,
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+              credentials: "include",
             }
           );
           const exists = await checkRes.json();
