@@ -897,7 +897,7 @@
           });
 
           if (res.ok) {
-            showToast("🗑️ Record deleted successfully");
+            showToast("🗑️ Record deleted successfully", "bg-red-600");
             await fetchAndStoreData();
             applyFilter(document.getElementById("applyBtn"));
           } else {
