@@ -857,12 +857,15 @@
 
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
-      <button onclick="openATGModal('${plan._id}')"
-        class="${
-          exists ? "bg-blue-500" : "bg-orange-500"
-        } hover:bg-opacity-90 text-white px-2 py-1 rounded text-xs">
-        ${exists ? "📝 Edit ATG Status" : "➕ Add ATG Status"}
-      </button>`;
+    <button onclick="openATGModal('${plan._id}')"
+      class="text-white px-2 py-1 rounded text-xs ${
+        exists
+          ? "bg-green-500 cursor-not-allowed"
+          : "bg-orange-500 hover:bg-orange-600"
+      }"
+      ${exists ? "disabled" : ""}>
+      ${exists ? "✅ Added" : "➕ Add ATG Status"}
+    </button>`;
 
               // Replace content inside the correct cell
               const cell = row.querySelector(".atg-status-cell");
