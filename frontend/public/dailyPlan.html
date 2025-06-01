@@ -250,7 +250,7 @@
 
         try {
           const checkRes = await fetch(
-            `${baseUrl}/checkDuplicate?roCode=${data.roCode}&date=${data.date}&engineer=${engineer}`,
+            `${baseUrl}/checkDuplicate?roCode=${data.roCode}&date=${data.date}&engineer=${data.engineer}`,
             { credentials: "include" }
           );
           const exists = await checkRes.json();
