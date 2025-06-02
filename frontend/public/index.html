@@ -76,7 +76,7 @@
 
     <!-- Date/Time -->
     <div
-      class="absolute top-2 right-4 text-blue-600 text-sm font-medium"
+      class="absolute top-2 right-4 text-green-600 text-sm font-medium"
       id="datetime"
     ></div>
 
@@ -202,7 +202,6 @@
         const date = now.toLocaleDateString(undefined, options);
         const time = now.toLocaleTimeString();
         document.getElementById("datetime").innerText = `${date}, ${time}`;
-        document.getElementById("datetime").classList.add("text-green-600");
       }
       setInterval(updateDateTime, 1000);
       updateDateTime();
