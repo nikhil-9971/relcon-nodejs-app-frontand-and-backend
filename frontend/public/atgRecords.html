@@ -193,12 +193,46 @@
       }
 
       function exportAll() {
-        const ws = XLSX.utils.json_to_sheet(filteredData);
+        const customHeaderMap = {
+          zone: "Zone",
+          region: "Region",
+          roCode: "RO Code",
+          engineer: "Engineer Name",
+          phase: "Phase",
+          roName: "RO Name",
+          atgIssuetype: "ATG Related Issue",
+          date: "Scheduled Visit Date",
+          startTime: "TIME TO REACH ENG",
+          bfrStatus: "STATUS OF SITE BEFORE VISIT",
+          actionSite: "Action on site",
+          supportPerson: "IS SUPPORT TAKEN ? WITH WHOM",
+          earthingStatus1: "EARTHING STATUS WITH PHOTO",
+          resolvedStatus: "Resolved?",
+          endTime: "RESOLVED AT WHAT TIME ?",
+          nextAction: "Next Action if any",
+          remark: "Remarks",
+        };
+
+        const exportData = filteredData.map((record) => {
+          const row = {};
+          Object.entries(customHeaderMap).forEach(([key, label]) => {
+            row[label] = record[key] || "";
+          });
+          return row;
+        });
+
+        // 🟡 Pick date from first record, fallback to today if missing
+        const visitDateRaw = filteredData[0]?.date || new Date().toISOString();
+        const visitDate = new Date(visitDateRaw).toISOString().slice(0, 10);
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "ATG_Export");
         XLSX.writeFile(
           wb,
-          `ATG_Records_${new Date().toISOString().slice(0, 10)}.csv`
+          `ATG_Visit_${visitDate}_${Math.floor(
+            1000 + Math.random() * 9000
+          )}.csv`
         );
       }
 
