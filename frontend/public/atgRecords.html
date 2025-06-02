@@ -1,3 +1,4 @@
+<!-- START OF FINAL VERSION -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -90,6 +91,33 @@
       </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-6 rounded shadow max-h-[80vh] overflow-y-auto w-[90%] max-w-4xl"
+      >
+        <h2 class="text-lg font-bold mb-4">Edit ATG Status</h2>
+        <form id="editForm" class="grid grid-cols-2 gap-4 text-xs"></form>
+        <div class="mt-4 flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-gray-500 text-white px-4 py-1 rounded mr-2"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveEdit()"
+            class="bg-green-600 text-white px-4 py-1 rounded"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div
       id="toast"
@@ -100,7 +128,9 @@
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       const token = localStorage.getItem("token");
       let atgData = [],
-        filteredData = [];
+        filteredData = [],
+        role = "",
+        username = "";
 
       const columns = [
         { key: "engineer", label: "Engineer" },
@@ -109,8 +139,6 @@
         { key: "roCode", label: "RO Code" },
         { key: "roName", label: "RO Name" },
         { key: "date", label: "Visit Date" },
-        { key: "amcQtr", label: "AMC Qtr" },
-        { key: "purpose", label: "Purpose" },
         { key: "zone", label: "Zone" },
         { key: "atgIssuetype", label: "ATG Issue Type" },
         { key: "startTime", label: "Start Time" },
@@ -122,6 +150,7 @@
         { key: "endTime", label: "End Time" },
         { key: "nextAction", label: "Next Action" },
         { key: "remark", label: "Remarks" },
+        { key: "actions", label: "Actions" },
       ];
 
       function renderTable(data) {
@@ -136,60 +165,82 @@
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = data
           .map((record) => {
-            return (
-              `<tr>` +
-              columns
-                .map(
-                  (col) =>
-                    `<td class="border text-center px-2 py-1">${
-                      record[col.key] || ""
-                    }</td>`
-                )
-                .join("") +
-              `</tr>`
+            const encoded = btoa(
+              unescape(encodeURIComponent(JSON.stringify(record)))
             );
+            const row = columns
+              .map((col) => {
+                if (col.key === "actions") {
+                  if (role === "admin") {
+                    return `<td class="border text-center px-2 py-1">
+            <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='editRecord("${encoded}")'>✏️</button>
+            <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record._id}")'>🗑️</button>
+          </td>`;
+                  } else
+                    return `<td class="border text-center px-2 py-1">-</td>`;
+                }
+                return `<td class="border text-center px-2 py-1">${
+                  record[col.key] || ""
+                }</td>`;
+              })
+              .join("");
+            return `<tr>${row}</tr>`;
           })
           .join("");
       }
 
-      async function fetchATGStatus() {
-        const res = await fetch(`${baseUrl}/getMergedATGStatus`, {
-          headers: { Authorization: `Bearer ${token}` },
+      function editRecord(encoded) {
+        const record = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        const form = document.getElementById("editForm");
+        form.innerHTML = "";
+        Object.entries(record).forEach(([key, value]) => {
+          if (key === "_id") {
+            form.innerHTML += `<input type="hidden" name="${key}" value="${value}" />`;
+          } else if (key !== "planId") {
+            form.innerHTML += `
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">${key}</label>
+          <input type="text" name="${key}" value="${
+              value || ""
+            }" class="w-full border px-2 py-1 rounded" />
+        </div>`;
+          }
         });
-        const all = await res.json();
-
-        // Role-based filtering
-        const tokenData = JSON.parse(atob(token.split(".")[1]));
-        const username = tokenData.name || "";
-        const role = tokenData.role || "";
-
-        atgData =
-          role === "admin" ? all : all.filter((r) => r.engineer === username);
-        filteredData = [...atgData];
-        renderTable(filteredData);
+        document.getElementById("editModal").classList.remove("hidden");
+        document.getElementById("editModal").classList.add("flex");
       }
 
-      function applyDateRangeFilter() {
-        const from = document.getElementById("fromDate").value;
-        const to = document.getElementById("toDate").value;
-        const fromDate = from ? new Date(from) : null;
-        const toDate = to ? new Date(to) : null;
-
-        filteredData = atgData.filter((row) => {
-          const rowDate = new Date(row.date);
-          return (
-            (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate)
-          );
-        });
-
-        renderTable(filteredData);
+      function closeModal() {
+        document.getElementById("editModal").classList.add("hidden");
       }
 
-      function clearDateRangeFilter() {
-        document.getElementById("fromDate").value = "";
-        document.getElementById("toDate").value = "";
-        filteredData = [...atgData];
-        renderTable(filteredData);
+      async function saveEdit() {
+        const form = document.getElementById("editForm");
+        const formData = new FormData(form);
+        const updated = {};
+        formData.forEach((val, key) => (updated[key] = val));
+        const id = updated._id;
+        const res = await fetch(`${baseUrl}/updateATGStatus/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated),
+        });
+        if (res.ok) {
+          fetchATGStatus();
+          closeModal();
+          showToast("Record updated successfully ✅");
+        } else alert("Update failed.");
+      }
+
+      async function deleteRecord(id) {
+        if (!confirm("Are you sure to delete this record?")) return;
+        const res = await fetch(`${baseUrl}/deleteATGStatus/${id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          showToast("Deleted successfully ✅");
+          fetchATGStatus();
+        } else alert("Delete failed.");
       }
 
       function exportAll() {
@@ -212,7 +263,6 @@
           nextAction: "Next Action if any",
           remark: "Remarks",
         };
-
         const exportData = filteredData.map((record) => {
           const row = {};
           Object.entries(customHeaderMap).forEach(([key, label]) => {
@@ -220,11 +270,8 @@
           });
           return row;
         });
-
-        // 🟡 Pick date from first record, fallback to today if missing
         const visitDateRaw = filteredData[0]?.date || new Date().toISOString();
         const visitDate = new Date(visitDateRaw).toISOString().slice(0, 10);
-
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "ATG_Export");
@@ -236,6 +283,27 @@
         );
       }
 
+      function applyDateRangeFilter() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+        filteredData = atgData.filter((row) => {
+          const rowDate = new Date(row.date);
+          return (
+            (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate)
+          );
+        });
+        renderTable(filteredData);
+      }
+
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        filteredData = [...atgData];
+        renderTable(filteredData);
+      }
+
       function showToast(msg) {
         const toast = document.getElementById("toast");
         toast.textContent = msg || "Success";
@@ -243,7 +311,22 @@
         setTimeout(() => toast.classList.add("hidden"), 3000);
       }
 
+      async function fetchATGStatus() {
+        const res = await fetch(`${baseUrl}/getMergedATGStatus`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const all = await res.json();
+        const tokenData = JSON.parse(atob(token.split(".")[1]));
+        username = tokenData.name || "";
+        role = tokenData.role || "";
+        atgData =
+          role === "admin" ? all : all.filter((r) => r.engineer === username);
+        filteredData = [...atgData];
+        renderTable(filteredData);
+      }
+
       fetchATGStatus();
     </script>
   </body>
 </html>
+<!-- END OF FINAL VERSION -->
