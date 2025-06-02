@@ -200,14 +200,63 @@
       }
 
       function exportToCSV() {
-        const ws = XLSX.utils.json_to_sheet(filteredData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
-        XLSX.writeFile(
-          wb,
-          `Filtered_Status_Records_${new Date().toISOString().slice(0, 10)}.csv`
-        );
+  const customHeaderMap = {
+    engineer: "Engineer Name",
+    region: "Region",
+    phase: "Phase",
+    roCode: "RO Code",
+    roName: "RO Name",
+    date: "Date",
+    amcQtr: "AMC Qtr",
+    purpose: "Purpose of Visit",
+    probeMake: "Probe Make",
+    probeSize: "Product & Probe Size",
+    lowProductLock: "Low Product Lock",
+    highWaterSet: "Highwater Lock Set",
+    duSerialNumber: "DU Serial Number Updated",
+    dgStatus: "DG Status",
+    connectivityType: "Connectivity Type",
+    sim1Provider: "SIM1 Provider",
+    sim1Number: "SIM1 Number",
+    sim2Provider: "SIM2 Provider",
+    sim2Number: "SIM2 Number",
+    iemiNumber: "IEMI Number",
+    bosVersion: "BOS Version",
+    fccVersion: "FCC Version",
+    wirelessSlave: "Wireless Slave Version",
+    sftpConfig: "SFTP Config",
+    adminPassword: "Admin Password Updated",
+    workCompletion: "Work Completion",
+    earthingStatus: "Earthing Status",
+    duOffline: "DU Offline",
+    duRemark: "DU Remark",
+    locationField: "Site Location"
+  };
+
+  const finalData = filteredData.map((record) => {
+    const row = {};
+    for (const key in customHeaderMap) {
+      let value = record[key] || "";
+
+      if (["iemiNumber", "sim1Number", "sim2Number"].includes(key)) {
+        value = "`" + value; // Force Excel to treat as plain text
       }
+
+      row[customHeaderMap[key]] = value;
+    }
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(finalData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
+  XLSX.writeFile(
+    wb,
+    `Filtered_Status_Records_${new Date().toISOString().slice(0, 10)}_${Math.floor(1000 + Math.random() * 9000)}.csv`
+
+  );
+}
+
 
       function renderTable(data) {
         const columns = [
@@ -454,7 +503,8 @@
   const ws = XLSX.utils.json_to_sheet(trimmedData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "SelectedFields");
-  XLSX.writeFile(wb, `Daily_Status_ECZ_NIKHIL_${new Date().toISOString().slice(0, 10)}.csv`);
+  XLSX.writeFile(wb, `Daily_Status_ECZ_NIKHIL_${new Date().toISOString().slice(0, 10)}_${Math.floor(1000 + Math.random() * 9000)}.csv`
+);
 }
 
 
