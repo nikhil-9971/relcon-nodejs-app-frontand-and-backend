@@ -238,7 +238,7 @@
     for (const key in customHeaderMap) {
       let value = record[key] || "";
 
-      if (["iemiNumber", "sim1Number", "sim2Number"].includes(key)) {
+      if ((["iemiNumber", "sim1Number", "sim2Number"].includes(key)) && record.connectivityType === "RELCON SIM") {
         value = "`" + value; // Force Excel to treat as plain text
       }
 
