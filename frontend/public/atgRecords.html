@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ATG Records</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f1f5f9;
+        font-size: 12px;
+      }
+      th,
+      td {
+        white-space: nowrap;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f3f4f6;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body class="p-6 bg-gray-100 text-[9px]">
+    <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">🛠️ ATG Status Records</h1>
+        <button
+          onclick="exportAll()"
+          class="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          📤 Export CSV
+        </button>
+      </div>
+
+      <!-- Date Filter -->
+      <div class="flex flex-wrap items-center gap-4 mb-4">
+        <div>
+          <label
+            for="fromDate"
+            class="block text-[12px] font-medium text-gray-700"
+            >📅 From:</label
+          >
+          <input
+            type="date"
+            id="fromDate"
+            class="border border-gray-300 rounded px-2 py-1 text-[12px]"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div>
+          <label
+            for="toDate"
+            class="block text-[12px] font-medium text-gray-700"
+            >📅 To:</label
+          >
+          <input
+            type="date"
+            id="toDate"
+            class="border border-gray-300 rounded px-2 py-1 text-[12px]"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div class="self-end">
+          <button
+            onclick="clearDateRangeFilter()"
+            class="bg-yellow-500 text-white px-4 py-2 rounded"
+          >
+            ♻️ Clear Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div
+        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded"
+      >
+        <table id="atgTable" class="min-w-max table-auto w-full text-[10px]">
+          <thead class="bg-gray-200 sticky top-0 z-10">
+            <tr id="tableHeader"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="fixed top-5 right-5 hidden bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm"
+    ></div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      const token = localStorage.getItem("token");
+      let atgData = [],
+        filteredData = [];
+
+      const columns = [
+        { key: "engineer", label: "Engineer" },
+        { key: "region", label: "Region" },
+        { key: "phase", label: "Phase" },
+        { key: "roCode", label: "RO Code" },
+        { key: "roName", label: "RO Name" },
+        { key: "date", label: "Visit Date" },
+        { key: "amcQtr", label: "AMC Qtr" },
+        { key: "purpose", label: "Purpose" },
+        { key: "zone", label: "Zone" },
+        { key: "atgIssuetype", label: "ATG Issue Type" },
+        { key: "startTime", label: "Start Time" },
+        { key: "bfrStatus", label: "Before Status" },
+        { key: "actionSite", label: "Action Taken" },
+        { key: "supportPerson", label: "Support Person" },
+        { key: "earthingStatus1", label: "Earthing Status" },
+        { key: "resolvedStatus", label: "Resolved?" },
+        { key: "endTime", label: "End Time" },
+        { key: "nextAction", label: "Next Action" },
+        { key: "remark", label: "Remarks" },
+      ];
+
+      function renderTable(data) {
+        const headerRow = document.getElementById("tableHeader");
+        headerRow.innerHTML = columns
+          .map(
+            (col) =>
+              `<th class="border px-3 py-2 bg-gray-100 text-center font-semibold text-gray-700">${col.label}</th>`
+          )
+          .join("");
+
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = data
+          .map((record) => {
+            return (
+              `<tr>` +
+              columns
+                .map(
+                  (col) =>
+                    `<td class="border text-center px-2 py-1">${
+                      record[col.key] || ""
+                    }</td>`
+                )
+                .join("") +
+              `</tr>`
+            );
+          })
+          .join("");
+      }
+
+      async function fetchATGStatus() {
+        const res = await fetch(`${baseUrl}/getMergedATGStatus`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const all = await res.json();
+
+        // Role-based filtering
+        const tokenData = JSON.parse(atob(token.split(".")[1]));
+        const username = tokenData.name || "";
+        const role = tokenData.role || "";
+
+        atgData =
+          role === "admin" ? all : all.filter((r) => r.engineer === username);
+        filteredData = [...atgData];
+        renderTable(filteredData);
+      }
+
+      function applyDateRangeFilter() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+
+        filteredData = atgData.filter((row) => {
+          const rowDate = new Date(row.date);
+          return (
+            (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate)
+          );
+        });
+
+        renderTable(filteredData);
+      }
+
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        filteredData = [...atgData];
+        renderTable(filteredData);
+      }
+
+      function exportAll() {
+        const ws = XLSX.utils.json_to_sheet(filteredData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "ATG_Export");
+        XLSX.writeFile(
+          wb,
+          `ATG_Records_${new Date().toISOString().slice(0, 10)}.csv`
+        );
+      }
+
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg || "Success";
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 3000);
+      }
+
+      fetchATGStatus();
+    </script>
+  </body>
+</html>
