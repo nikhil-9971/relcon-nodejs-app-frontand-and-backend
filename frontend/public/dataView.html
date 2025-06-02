@@ -1696,14 +1696,7 @@
           if (res.ok) {
             alert("✅ ATG status saved successfully");
             closeATGModal();
-            // ✅ Update the ATG button immediately
-            const btnCell = document.getElementById(`atg-btn-${planId}`);
-            if (btnCell) {
-              btnCell.innerHTML = `
-      <button disabled class="bg-green-500 text-white px-2 py-1 rounded text-[10px] cursor-not-allowed">
-        ✅ Added
-      </button>`;
-            }
+
             await fetchAndStoreData?.(); // optional chaining if defined
             applyFilter?.(document.getElementById("applyBtn"));
           } else {
