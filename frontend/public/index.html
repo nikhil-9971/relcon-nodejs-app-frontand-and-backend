@@ -202,6 +202,7 @@
         const date = now.toLocaleDateString(undefined, options);
         const time = now.toLocaleTimeString();
         document.getElementById("datetime").innerText = `${date}, ${time}`;
+        document.getElementById("datetime").classList.add("text-green-600");
       }
       setInterval(updateDateTime, 1000);
       updateDateTime();
