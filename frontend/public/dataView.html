@@ -1634,28 +1634,30 @@
         }, 3000);
       }
 
-      //ATG MODEL
-
+      // ATG STATUS MODAL HANDLER
       let allowATGModalOpen = false;
 
       function openATGModal(planId) {
-        if (!allowATGModalOpen) return; // Block unexpected open
-        allowATGModalOpen = false; // reset flag after opening
+        if (!allowATGModalOpen) return;
+        allowATGModalOpen = false;
 
         document.getElementById("atgPlanId").value = planId;
         document.getElementById("atgForm").reset();
 
-        document.getElementById("zone").value = "";
-        document.getElementById("atgIssuetype").value = "";
-        document.getElementById("startTime").value = "";
-        document.getElementById("bfrStatus").value = "";
-        document.getElementById("actionSite").value = "";
-        document.getElementById("supportPerson").value = "";
-        document.getElementById("earthingStatus1").value = "";
-        document.getElementById("resolvedStatus").value = "";
-        document.getElementById("endTime").value = "";
-        document.getElementById("nextAction").value = "";
-        document.getElementById("remark").value = "";
+        const fields = [
+          "zone",
+          "atgIssuetype",
+          "startTime",
+          "bfrStatus",
+          "actionSite",
+          "supportPerson",
+          "earthingStatus1",
+          "resolvedStatus",
+          "endTime",
+          "nextAction",
+          "remark",
+        ];
+        fields.forEach((id) => (document.getElementById(id).value = ""));
 
         document.getElementById("atgModal").classList.remove("hidden");
       }
@@ -1674,7 +1676,7 @@
           bfrStatus: document.getElementById("bfrStatus").value,
           actionSite: document.getElementById("actionSite").value,
           supportPerson: document.getElementById("supportPerson").value,
-          earthingStatus: document.getElementById("earthingStatus1").value,
+          earthingStatus1: document.getElementById("earthingStatus1").value,
           resolvedStatus: document.getElementById("resolvedStatus").value,
           endTime: document.getElementById("endTime").value,
           nextAction: document.getElementById("nextAction").value,
@@ -1682,7 +1684,7 @@
         };
 
         try {
-          const res = await fetch(`${baseUrl}/atg-status`, {
+          const res = await fetch(`${baseUrl}/saveATGStatus`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1694,10 +1696,11 @@
           if (res.ok) {
             alert("✅ ATG status saved successfully");
             closeATGModal();
-            await fetchAndStoreData();
-            applyFilter(document.getElementById("applyBtn"));
+            await fetchAndStoreData?.(); // optional chaining if defined
+            applyFilter?.(document.getElementById("applyBtn"));
           } else {
-            alert("❌ Failed to save ATG status");
+            const errorText = await res.text();
+            alert("❌ Failed to save ATG status: " + errorText);
           }
         } catch (err) {
           console.error("ATG save error:", err);
@@ -1706,7 +1709,7 @@
       }
 
       function handleATGButtonClick(planId, exists) {
-        if (exists) return; // don't allow if already added
+        if (exists) return;
         allowATGModalOpen = true;
         openATGModal(planId);
       }
