@@ -948,16 +948,18 @@
           //check ATG Status
           async function checkATGStatus(planId) {
             try {
-              const res = await fetch(`${baseUrl}/saveATGStatus/${planId}`, {
+              const res = await fetch(`${baseUrl}/checkATGStatus/${planId}`, {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
               });
-              return res.ok;
-            } catch (err) {
+              const data = await res.json();
+              return data.exists;
+            } catch {
               return false;
             }
           }
+
           // ATG status check & button logic
           let atgStatusBtn = "";
 
