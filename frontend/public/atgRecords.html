@@ -153,6 +153,41 @@
         { key: "actions", label: "Actions" },
       ];
 
+      function getUserFromToken(token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          return {
+            username: (payload.name || "").trim().toLowerCase(),
+            role: (payload.role || "").trim().toLowerCase(),
+          };
+        } catch (e) {
+          console.error("Invalid token format", e);
+          return { username: "", role: "" };
+        }
+      }
+
+      async function fetchATGStatus() {
+        const res = await fetch(`${baseUrl}/getMergedATGStatus`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const all = await res.json();
+
+        const { username: extractedName, role: extractedRole } =
+          getUserFromToken(token);
+        username = extractedName;
+        role = extractedRole;
+
+        atgData =
+          role === "admin"
+            ? all
+            : all.filter(
+                (r) => (r.engineer || "").trim().toLowerCase() === username
+              );
+
+        filteredData = [...atgData];
+        renderTable(filteredData);
+      }
+
       function renderTable(data) {
         const headerRow = document.getElementById("tableHeader");
         headerRow.innerHTML = columns
@@ -171,13 +206,12 @@
             const row = columns
               .map((col) => {
                 if (col.key === "actions") {
-                  if (role === "admin") {
-                    return `<td class="border text-center px-2 py-1">
-            <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='editRecord("${encoded}")'>✏️</button>
-            <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record._id}")'>🗑️</button>
-          </td>`;
-                  } else
-                    return `<td class="border text-center px-2 py-1">-</td>`;
+                  return role === "admin"
+                    ? `<td class="border text-center px-2 py-1">
+                <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='editRecord("${encoded}")'>✏️</button>
+                <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record._id}")'>🗑️</button>
+              </td>`
+                    : `<td class="border text-center px-2 py-1">-</td>`;
                 }
                 return `<td class="border text-center px-2 py-1">${
                   record[col.key] || ""
@@ -322,27 +356,6 @@
           console.error("Invalid token format", e);
           return { username: "", role: "" };
         }
-      }
-
-      async function fetchATGStatus() {
-        const res = await fetch(`${baseUrl}/getMergedATGStatus`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const all = await res.json();
-
-        const { username: extractedName, role: extractedRole } =
-          getUserFromToken(token);
-        username = extractedName;
-        role = extractedRole;
-
-        atgData =
-          role === "admin"
-            ? all
-            : all.filter(
-                (r) => (r.engineer || "").trim().toLowerCase() === username
-              );
-        filteredData = [...atgData];
-        renderTable(filteredData);
       }
 
       fetchATGStatus();
