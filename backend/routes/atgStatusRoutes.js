@@ -101,4 +101,14 @@ router.delete("/deleteATGStatus/:id", async (req, res) => {
   }
 });
 
+router.get("/checkATGStatus/:planId", async (req, res) => {
+  const { planId } = req.params;
+  try {
+    const exists = await ATGStatus.exists({ planId });
+    res.json({ exists: !!exists });
+  } catch (err) {
+    res.status(500).send("Error checking ATG status");
+  }
+});
+
 module.exports = router;
