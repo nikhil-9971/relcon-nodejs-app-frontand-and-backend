@@ -9,6 +9,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -279,7 +280,7 @@
           fetchATGStatus();
         } else alert("Delete failed.");
       }
-
+      // Export excel file
       function exportAll() {
         const customHeaderMap = {
           zone: "Zone",
@@ -300,23 +301,67 @@
           nextAction: "Next Action if any",
           remark: "Remarks",
         };
-        const exportData = filteredData.map((record) => {
-          const row = {};
-          Object.entries(customHeaderMap).forEach(([key, label]) => {
-            row[label] = record[key] || "";
-          });
-          return row;
+
+        const headers = Object.values(customHeaderMap);
+        const rows = filteredData.map((record) =>
+          Object.keys(customHeaderMap).map((key) => record[key] || "")
+        );
+
+        const aoa = [headers, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        const range = XLSX.utils.decode_range(ws["!ref"]);
+
+        // Style: Calibri, font size 11, borders, bold headers
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[cellRef]) continue;
+
+            ws[cellRef].s = {
+              font: {
+                name: "Calibri",
+                sz: 11,
+                bold: R === 0, // bold headers only
+              },
+              border: {
+                top: { style: "thin", color: { rgb: "000000" } },
+                bottom: { style: "thin", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } },
+              },
+              alignment: {
+                vertical: "center",
+                wrapText: true,
+              },
+            };
+          }
+        }
+
+        // Auto width for columns
+        ws["!cols"] = headers.map((header, idx) => {
+          const maxLen = Math.max(
+            header.length,
+            ...rows.map((row) => (row[idx] ? row[idx].toString().length : 0))
+          );
+          return { wch: maxLen + 2 };
         });
-        const visitDateRaw = filteredData[0]?.date || new Date().toISOString();
-        const visitDate = new Date(visitDateRaw).toISOString().slice(0, 10);
-        const ws = XLSX.utils.json_to_sheet(exportData);
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "ATG_Export");
+
+        const visitDateRaw = filteredData[0]?.date || new Date().toISOString();
+        const visitDate = new Date(visitDateRaw).toISOString().slice(0, 10);
+
         XLSX.writeFile(
           wb,
           `ATG_Visit_${visitDate}_${Math.floor(
             1000 + Math.random() * 9000
-          )}.csv`
+          )}.xlsx`,
+          {
+            bookType: "xlsx",
+            cellStyles: true,
+          }
         );
       }
 
