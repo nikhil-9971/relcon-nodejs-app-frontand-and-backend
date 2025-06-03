@@ -348,19 +348,6 @@
         setTimeout(() => toast.classList.add("hidden"), 3000);
       }
 
-      function getUserFromToken(token) {
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          return {
-            username: (payload.name || "").trim().toLowerCase(),
-            role: (payload.role || "").trim().toLowerCase(),
-          };
-        } catch (e) {
-          console.error("Invalid token format", e);
-          return { username: "", role: "" };
-        }
-      }
-
       fetchATGStatus();
     </script>
   </body>
