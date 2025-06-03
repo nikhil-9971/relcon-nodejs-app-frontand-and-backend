@@ -961,21 +961,20 @@
           }
 
           // ATG status check & button logic
+          // ATG status check & button logic
           let atgStatusBtn = "";
 
+          // Case 1: If issue type is ATG Visit or ATG & PM Visit
           if (
             loggedInUser.role === "admin" &&
             (plan.issueType === "ATG Visit" ||
               plan.issueType === "ATG & PM Visit")
           ) {
-            atgStatusBtn = `<span class="text-gray-400 italic">Loading...</span>`; // placeholder
+            atgStatusBtn = `<span class="text-gray-400 italic">Loading...</span>`; // initial placeholder
 
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
-             <button onclick="handleATGButtonClick('${plan._id}', ${
-                exists ? "true" : "false"
-              })"
-
+      <button onclick="handleATGButtonClick('${plan._id}', ${exists})"
         class="text-white px-2 py-1 rounded text-[10px] ${
           exists
             ? "bg-green-500 cursor-not-allowed"
@@ -983,11 +982,19 @@
         }"
         ${exists ? "disabled" : ""}>
         ${exists ? "✅ Added" : "➕ Add ATG Status"}
-      </button>`;
+      </button>
+    `;
 
-              const cell = row.querySelector(".atg-status-cell");
+              // Safely update cell once rendered
+              const cell = document.querySelector(
+                `tr[data-id="${plan._id}"] .atg-status-cell`
+              );
               if (cell) cell.innerHTML = btnHtml;
             });
+          }
+          // Case 2: All other issueTypes - just show "-"
+          else {
+            atgStatusBtn = `<span class="text-gray-400 text-center block">-</span>`;
           }
 
           row.innerHTML = `
