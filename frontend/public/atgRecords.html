@@ -311,16 +311,36 @@
         setTimeout(() => toast.classList.add("hidden"), 3000);
       }
 
+      function getUserFromToken(token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          return {
+            username: (payload.name || "").trim().toLowerCase(),
+            role: (payload.role || "").trim().toLowerCase(),
+          };
+        } catch (e) {
+          console.error("Invalid token format", e);
+          return { username: "", role: "" };
+        }
+      }
+
       async function fetchATGStatus() {
         const res = await fetch(`${baseUrl}/getMergedATGStatus`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const all = await res.json();
-        const tokenData = JSON.parse(atob(token.split(".")[1]));
-        username = tokenData.name || "";
-        role = tokenData.role || "";
+
+        const { username: extractedName, role: extractedRole } =
+          getUserFromToken(token);
+        username = extractedName;
+        role = extractedRole;
+
         atgData =
-          role === "admin" ? all : all.filter((r) => r.engineer === username);
+          role === "admin"
+            ? all
+            : all.filter(
+                (r) => (r.engineer || "").trim().toLowerCase() === username
+              );
         filteredData = [...atgData];
         renderTable(filteredData);
       }
