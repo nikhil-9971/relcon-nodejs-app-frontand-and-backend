@@ -1342,6 +1342,20 @@
           "duRemark",
           "locationField",
         ];
+        // ⛔ Check if location is valid before save
+        const location = document.getElementById("locationField").value;
+        if (
+          !location ||
+          location === "Fetching location..." ||
+          location === "Unable to fetch location" ||
+          location === "Geolocation not supported"
+        ) {
+          alert(
+            "❌ Location not available. Please allow location access before saving."
+          );
+          return;
+        }
+
         // Validate all required fields
         for (const id of requiredFields) {
           const el = document.getElementById(id);
