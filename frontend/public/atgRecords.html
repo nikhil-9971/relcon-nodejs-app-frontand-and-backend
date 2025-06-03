@@ -157,7 +157,9 @@
         try {
           const payload = JSON.parse(atob(token.split(".")[1]));
           return {
-            username: (payload.name || "").trim().toLowerCase(),
+            username: (payload.engineerName || payload.name || "")
+              .trim()
+              .toLowerCase(),
             role: (payload.role || "").trim().toLowerCase(),
           };
         } catch (e) {
