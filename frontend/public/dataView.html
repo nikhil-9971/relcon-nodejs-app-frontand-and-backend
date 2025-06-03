@@ -948,7 +948,7 @@
           //check ATG Status
           async function checkATGStatus(planId) {
             try {
-              const res = await fetch(`${baseUrl}/atg-status/${planId}`, {
+              const res = await fetch(`${baseUrl}/saveATGStatus/${planId}`, {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
