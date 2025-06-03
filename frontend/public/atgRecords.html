@@ -222,6 +222,7 @@
           })
           .join("");
       }
+      fetchATGStatus();
 
       function editRecord(encoded) {
         const record = JSON.parse(decodeURIComponent(escape(atob(encoded))));
