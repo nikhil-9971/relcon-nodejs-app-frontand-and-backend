@@ -8,6 +8,10 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -100,7 +104,9 @@
     <div id="dailyPlan">
       <form method="post" onsubmit="handleSubmit(event)" id="formId">
         <div class="card">
-          <div class="header-bar">➕ Manually Plan Creation</div>
+          <div class="header-bar">
+            <i class="fa-solid fa-plus"></i> Manually Plan Creation
+          </div>
 
           <div class="grid-cols-2 mb-4">
             <div class="col-span-2 flex gap-2">
@@ -123,16 +129,20 @@
             </div>
 
             <div>
-              <label class="label">🏢 RO NAME:</label
+              <label class="label"
+                ><i class="fa-solid fa-gas-pump"></i> RO NAME:</label
               ><input id="roName" type="text" class="form-input rounded-lg" />
             </div>
             <div>
-              <label class="label">🌍 REGION:</label
+              <label class="label"
+                ><i class="fa-solid fa-city"></i> REGION:</label
               ><input id="region" type="text" class="form-input rounded-lg" />
             </div>
 
             <div>
-              <label class="label">🔄 PHASE:</label>
+              <label class="label"
+                ><i class="fa-solid fa-subscript"></i> PHASE:</label
+              >
               <select id="phase" class="form-select rounded-lg">
                 <option disabled selected>Select Phase ⬇️</option>
                 <option>HPCL/Phase-X</option>
@@ -149,13 +159,17 @@
               </select>
             </div>
             <div>
-              <label class="label">📅 Schedule Date:</label
+              <label class="label"
+                ><i class="fa-regular fa-calendar-days"></i> Schedule
+                Date:</label
               ><input id="date" type="date" class="form-input rounded-lg" />
             </div>
             <div>
-              <label class="label">⚠️ Issue Type:</label>
+              <label class="label"
+                ><i class="fa-solid fa-subscript"></i> Issue Type:</label
+              >
               <select id="issueType" class="form-select rounded-lg">
-                <option disabled selected>Select Issue Type ⬇️</option>
+                <option disabled selected>Select Issue Type</option>
                 <option>Issue Visit</option>
                 <option>PM Visit</option>
                 <option>Issue & PM Visit</option>
@@ -170,9 +184,11 @@
               </select>
             </div>
             <div>
-              <label class="label">👷‍♂️ Engineer Name:</label>
+              <label class="label"
+                ><i class="fa-solid fa-user"></i> Engineer Name:</label
+              >
               <select id="engineer" class="form-select rounded-lg">
-                <option disabled selected>Select Engineer Name ⬇️</option>
+                <option disabled selected>Select Engineer Name</option>
                 <option>Abhishek Pathak</option>
                 <option>Amit Kumar</option>
                 <option>Banti Kumar</option>
@@ -185,11 +201,14 @@
               </select>
             </div>
             <div>
-              <label class="label">🏢 AMC Year_Qtr:</label
+              <label class="label"
+                ><i class="fa-solid fa-subscript"></i> AMC Year_Qtr:</label
               ><input id="amcQtr" type="text" class="form-input rounded-lg" />
             </div>
             <div>
-              <label class="label">📝 PURPOSE OF VISIT:</label>
+              <label class="label"
+                ><i class="fa-solid fa-list-check"></i> PURPOSE OF VISIT:</label
+              >
               <input
                 id="purpose"
                 type="text"
