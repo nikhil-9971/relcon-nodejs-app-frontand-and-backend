@@ -57,40 +57,49 @@
 
       <!-- Nav links -->
       <nav class="flex-1 p-4 space-y-2">
+        <!-- Daily Plan (outside list) -->
         <a
           href="#"
-          id="visitLink"
-          class="flex items-center gap-2 px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all active-link"
-          onclick="loadPage('dataView.html', this)"
-        >
-          📋 Visit Record
-        </a>
-        <a
-          href="#"
-          id="planLink"
-          class="flex items-center gap-2 px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
           onclick="loadPage('dailyPlan.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
         >
-          📝 Daily Plan
+          📝 Create Daily Plan
         </a>
-
-        <a
-          href="#"
-          id="statusLink"
-          class="flex items-center gap-2 px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-          onclick="loadPage('statusRecords.html', this)"
-        >
-          📝 Status Record
-        </a>
-
-        <a
-          href="#"
-          id="statusLink"
-          class="flex items-center gap-2 px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-          onclick="loadPage('atgRecords.html', this)"
-        >
-          📝 ATG Record
-        </a>
+        <div>
+          <button
+            onclick="toggleRecordList()"
+            class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-semibold"
+          >
+            📁 Report
+            <span id="toggleIcon">▼</span>
+          </button>
+          <ul id="recordList" class="ml-4 mt-1 space-y-1 hidden">
+            <li>
+              <a
+                href="#"
+                onclick="loadPage('dataView.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                >📋 Visit Record</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="loadPage('statusRecords.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                >📝 Status Record</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="loadPage('atgRecords.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                >📝 ATG Record</a
+              >
+            </li>
+          </ul>
+        </div>
       </nav>
 
       <!-- Logout -->
@@ -112,18 +121,15 @@
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
-      // 🔐 Get token
       function getToken() {
         return localStorage.getItem("token");
       }
 
-      // 🔒 Logout function
       function logout() {
         localStorage.removeItem("token");
         window.location.href = "login.html";
       }
 
-      // 📦 Load iframe content
       function loadPage(page, linkElement) {
         document.getElementById("contentFrame").src = page;
         document
@@ -131,13 +137,11 @@
           .forEach((link) => link.classList.remove("active-link"));
         if (linkElement) linkElement.classList.add("active-link");
 
-        // Close sidebar in mobile view
         if (window.innerWidth < 768) {
           document.getElementById("sidebar").classList.add("hidden");
         }
       }
 
-      // 👤 Fetch user info
       async function fetchUser() {
         const token = getToken();
         if (!token) return logout();
@@ -156,9 +160,12 @@
           const text = `${user.engineerName || user.username} (${user.role})`;
           document.getElementById("userDetails").textContent = `👤 ${text}`;
 
-          // Only show for admin
-          document.getElementById("statusLink").style.display =
-            user.role === "admin" ? "flex" : "none";
+          // Only show Status Record to admin
+          if (user.role !== "admin") {
+            document
+              .querySelectorAll("a[href*='statusRecords.html']")
+              .forEach((el) => (el.style.display = "none"));
+          }
         } catch (err) {
           logout();
         }
@@ -168,7 +175,15 @@
         document.getElementById("sidebar").classList.toggle("hidden");
       }
 
-      // ⏱ Inactivity auto logout
+      function toggleRecordList() {
+        const list = document.getElementById("recordList");
+        const icon = document.getElementById("toggleIcon");
+        const isHidden = list.classList.contains("hidden");
+
+        list.classList.toggle("hidden");
+        icon.textContent = isHidden ? "▲" : "▼";
+      }
+
       let inactivityTimeout;
       function resetInactivityTimer() {
         clearTimeout(inactivityTimeout);
