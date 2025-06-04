@@ -74,9 +74,13 @@
             onclick="toggleRecordList()"
             class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
           >
-            <i class="fa-solid fa-folder-plus"></i> Report
+            <div class="flex items-center">
+              <i class="fa-solid fa-folder-plus"></i>
+              <span class="ml-1">Report</span>
+            </div>
             <span id="toggleIcon" class="text-green-800">▼</span>
           </button>
+
           <ul id="recordList" class="ml-4 mt-1 space-y-1 hidden">
             <li>
               <a
