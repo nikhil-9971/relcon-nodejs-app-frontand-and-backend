@@ -65,7 +65,7 @@
         <a
           href="#"
           onclick="loadPage('dailyPlan.html', this)"
-          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium active-link"
         >
           <i class="fa-solid fa-plus"></i> Create Daily Plan
         </a>
@@ -169,11 +169,9 @@
           document.getElementById("userDetails").textContent = `👤 ${text}`;
 
           // Only show Status Record to admin
-          if (user.role !== "admin") {
-            document
-              .querySelectorAll("a[href*='statusRecords.html']")
-              .forEach((el) => (el.style.display = "none"));
-          }
+
+          document.getElementById("statusLink").style.display =
+            user.role === "admin" ? "flex" : "none";
         } catch (err) {
           logout();
         }
