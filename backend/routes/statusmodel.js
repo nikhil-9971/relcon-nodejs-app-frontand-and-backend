@@ -5,6 +5,8 @@ const Status = require("../models/Status");
 const { AuditTrail } = require("../models/AuditLog");
 const jwt = require("jsonwebtoken");
 
+const { verifyToken } = require("./auth");
+
 const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
 
 // Middleware to extract user from token
@@ -141,7 +143,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
 });
 
 // Update status by _id
-router.put("/updateStatus/:id", async (req, res) => {
+router.put("/updateStatus/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
   if (!id || id === "undefined") {
@@ -174,7 +176,7 @@ router.put("/updateStatus/:id", async (req, res) => {
 });
 
 // Delete status by _id
-router.delete("/deleteStatus/:id", async (req, res) => {
+router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
   if (!id || id === "undefined") {
