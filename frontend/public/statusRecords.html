@@ -172,6 +172,7 @@
 
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      let filteredData = [];
       let allStatusData = [];
       const token = localStorage.getItem("token");
       async function fetchStatusRecords() {
