@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Audit Report | RELCON SYSTEMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        font-size: 12px;
+        background-color: #f1f5f9;
+      }
+      .section-title {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #15803d;
+      }
+    </style>
+  </head>
+  <body class="p-4">
+    <h1 class="text-xl font-semibold mb-6 text-green-800">🛡️ Audit Report</h1>
+
+    <!-- LOGIN LOGS -->
+    <section class="mb-10">
+      <h2 class="section-title mb-2">🟢 Login Logs</h2>
+      <div class="overflow-x-auto bg-white shadow rounded">
+        <table class="w-full table-auto border-collapse">
+          <thead class="bg-gray-100 text-left">
+            <tr>
+              <th class="px-4 py-2">Engineer</th>
+              <th class="px-4 py-2">Role</th>
+              <th class="px-4 py-2">Login Time</th>
+              <th class="px-4 py-2">IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="loginLogsBody" class="text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- AUDIT TRAILS -->
+    <section>
+      <h2 class="section-title mb-2">✏️ Edit & Delete Trails</h2>
+      <div class="overflow-x-auto bg-white shadow rounded">
+        <table class="w-full table-auto border-collapse">
+          <thead class="bg-gray-100 text-left">
+            <tr>
+              <th class="px-4 py-2">User</th>
+              <th class="px-4 py-2">Action</th>
+              <th class="px-4 py-2">Record Type</th>
+              <th class="px-4 py-2">Timestamp</th>
+              <th class="px-4 py-2">Details</th>
+            </tr>
+          </thead>
+          <tbody id="auditTrailsBody" class="text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt.onrender.com"; // 🔁 Your backend URL
+
+      async function loadAuditData() {
+        const token = localStorage.getItem("token");
+        if (!token) return alert("Token missing. Please log in again.");
+
+        try {
+          const [loginRes, trailRes] = await Promise.all([
+            fetch(`${baseUrl}/audit/loginLogs`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${baseUrl}/audit/auditTrails`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+          const loginLogs = await loginRes.json();
+          const trails = await trailRes.json();
+
+          // Render Login Logs
+          document.getElementById("loginLogsBody").innerHTML = loginLogs
+            .map(
+              (log) => `
+          <tr class="border-b">
+            <td class="px-4 py-2">${log.engineerName || log.username}</td>
+            <td class="px-4 py-2">${log.role}</td>
+            <td class="px-4 py-2">${new Date(
+              log.loginTime
+            ).toLocaleString()}</td>
+            <td class="px-4 py-2">${log.ip}</td>
+          </tr>
+        `
+            )
+            .join("");
+
+          // Render Audit Trails
+          document.getElementById("auditTrailsBody").innerHTML = trails
+            .map(
+              (trail) => `
+          <tr class="border-b align-top">
+            <td class="px-4 py-2">${trail.modifiedBy}</td>
+            <td class="px-4 py-2 text-blue-600 font-medium">${trail.action.toUpperCase()}</td>
+            <td class="px-4 py-2">${trail.recordType}</td>
+            <td class="px-4 py-2">${new Date(
+              trail.timestamp
+            ).toLocaleString()}</td>
+            <td class="px-4 py-2 whitespace-pre-wrap">
+              ${
+                trail.before
+                  ? `<b>Before:</b> ${JSON.stringify(
+                      trail.before,
+                      null,
+                      2
+                    )}<br>`
+                  : ""
+              }
+              ${
+                trail.after
+                  ? `<b>After:</b> ${JSON.stringify(trail.after, null, 2)}`
+                  : ""
+              }
+            </td>
+          </tr>
+        `
+            )
+            .join("");
+        } catch (error) {
+          console.error("Failed to load audit data:", error);
+          alert("Failed to load audit logs. Check console for details.");
+        }
+      }
+
+      loadAuditData();
+    </script>
+  </body>
+</html>
