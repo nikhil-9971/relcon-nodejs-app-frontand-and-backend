@@ -2,6 +2,26 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Status = require("../models/Status");
+const { AuditTrail } = require("../models/AuditLog");
+const jwt = require("jsonwebtoken");
+
+const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
+
+// Middleware to extract user from token
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(authHeader.split(" ")[1], SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+}
 
 // Save Status Route
 router.post("/saveStatus", async (req, res) => {
@@ -137,6 +157,15 @@ router.put("/updateStatus/:id", async (req, res) => {
 
     if (!updated) return res.status(404).send("Status not found");
 
+    // ✅ Save audit log
+    await AuditTrail.create({
+      modifiedBy: req.user.username,
+      action: "edit",
+      recordType: "status",
+      before: oldData,
+      after: updated,
+    });
+
     res.send("Status updated");
   } catch (err) {
     console.error("Update error:", err);
@@ -160,6 +189,15 @@ router.delete("/deleteStatus/:id", async (req, res) => {
     const deleted = await Status.findByIdAndDelete(id);
 
     if (!deleted) return res.status(404).send("Status not found");
+
+    // ✅ Save audit log
+    await AuditTrail.create({
+      modifiedBy: req.user.username,
+      action: "delete",
+      recordType: "status",
+      before: oldData,
+      after: null,
+    });
 
     res.send("Status deleted");
   } catch (err) {
