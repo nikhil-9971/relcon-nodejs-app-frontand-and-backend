@@ -73,4 +73,9 @@ router.post("/logout", (req, res) => {
   res.status(200).json({ message: "Client should clear token manually" });
 });
 
-module.exports = router;
+//module.exports = router;
+
+module.exports = {
+  router,
+  verifyToken,
+};

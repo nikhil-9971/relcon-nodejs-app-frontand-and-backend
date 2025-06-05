@@ -139,13 +139,13 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       return res.status(400).send("Invalid ObjectId format.");
     }
 
+    const oldData = await Status.findById(id); // ✅ add this line
     const updated = await Status.findByIdAndUpdate(id, req.body, { new: true });
 
     if (!updated) return res.status(404).send("Status not found");
 
-    // ✅ Save audit log
     await AuditTrail.create({
-      modifiedBy: req.user.username,
+      modifiedBy: req.user.username || "unkown",
       action: "edit",
       recordType: "status",
       before: oldData,
@@ -172,13 +172,13 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
       return res.status(400).send("Invalid ObjectId format.");
     }
 
+    const oldData = await Status.findById(id); // ✅ add this line
     const deleted = await Status.findByIdAndDelete(id);
 
     if (!deleted) return res.status(404).send("Status not found");
 
-    // ✅ Save audit log
     await AuditTrail.create({
-      modifiedBy: req.user.username,
+      modifiedBy: req.user.username || "unkown",
       action: "delete",
       recordType: "status",
       before: oldData,
@@ -191,4 +191,5 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
     res.status(500).send("Delete error: " + err.message);
   }
 });
+
 module.exports = router;
