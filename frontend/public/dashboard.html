@@ -29,6 +29,16 @@
         color: #15803d;
         font-weight: 600;
       }
+
+      #recordList {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+      }
+
+      #recordList.open {
+        max-height: 300px; /* adjust based on content */
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
@@ -70,6 +80,7 @@
           <i class="fa-solid fa-user-pen"></i> Create Daily Plan
         </a>
         <div>
+          <!-- Toggle Button -->
           <button
             onclick="toggleRecordList()"
             class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
@@ -78,12 +89,13 @@
               <i class="fa-solid fa-folder-plus"></i>
               <span class="ml-1">Report</span>
             </div>
-            <span id="toggleIcon" class="text-green-800 hover:text-white"
-              >▼</span
-            >
+            <span id="toggleIcon" class="text-green-800 hover:text-white">
+              <i class="fa-solid fa-caret-down"></i>
+            </span>
           </button>
 
-          <ul id="recordList" class="ml-4 mt-1 space-y-1 hidden">
+          <!-- Dropdown UL (initially collapsed but not hidden) -->
+          <ul id="recordList" class="ml-4 mt-1 space-y-1">
             <li>
               <a
                 href="#"
@@ -98,9 +110,8 @@
                 id="statusLink"
                 onclick="loadPage('statusRecords.html', this)"
                 class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-                ><i class="fa-solid fa-file-excel"></i>
-                <span class="ml-1">Status Report</span>
-              </a>
+                ><i class="fa-solid fa-file-excel"></i> Status Report</a
+              >
             </li>
             <li>
               <a
@@ -188,10 +199,11 @@
       function toggleRecordList() {
         const list = document.getElementById("recordList");
         const icon = document.getElementById("toggleIcon");
-        const isHidden = list.classList.contains("hidden");
 
-        list.classList.toggle("hidden");
-        icon.textContent = isHidden ? "▲" : "▼";
+        const isOpen = list.classList.toggle("open");
+        icon.innerHTML = isOpen
+          ? '<i class="fa-solid fa-caret-down"></i>'
+          : '<i class="fa-solid fa-caret-left"></i>';
       }
 
       let inactivityTimeout;
