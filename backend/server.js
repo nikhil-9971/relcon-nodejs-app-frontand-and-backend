@@ -5,7 +5,7 @@ const cors = require("cors");
 const path = require("path");
 
 const connectDB = require("./config/db");
-const authRoutes = require("./routes/auth");
+//const authRoutes = require("./routes/auth");
 const planRoutes = require("./routes/plans");
 const roRoutes = require("./routes/romaster");
 const statusRoutes = require("./routes/statusmodel");
