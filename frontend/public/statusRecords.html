@@ -183,8 +183,20 @@
         });
         const data = await res.json();
         allStatusData = data;
+        filteredData = data;
         renderTable(data);
       }
+
+    function applySearch() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const sourceData = filteredData.length > 0 ? filteredData : allStatusData;
+      const finalFiltered = sourceData.filter((status) =>
+        Object.values(status).some((val) =>
+          String(val).toLowerCase().includes(query)
+        )
+      );
+      renderTable(finalFiltered);
+    }
 
       function applyDateRangeFilter() {
         const from = document.getElementById("fromDate").value;
@@ -210,18 +222,7 @@
         renderTable(filteredData);
       }
 
-      function applySearch() {
-        const query = document
-          .getElementById("searchInput")
-          .value.toLowerCase();
-
-        const finalFiltered = filteredData.filter((status) =>
-          Object.values(status).some((val) =>
-            String(val).toLowerCase().includes(query)
-          )
-        );
-        populateTable(finalFiltered);
-      }
+      
 
 
       function exportToCSV() {
