@@ -90,6 +90,16 @@
         </div>
       </div>
 
+        <!-- ✅ Search Bar -->
+      <div class="mb-4">
+        <input
+          type="text"
+          id="searchInput"
+          oninput="applySearch()"
+          placeholder="🔎 Search anything..."
+          class="w-full border px-3 py-2 rounded"
+        />
+      </div>
       
 
     <div class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded">
@@ -198,6 +208,20 @@
         filteredData = allStatusData;
         renderTable(filteredData);
       }
+
+      function applySearch() {
+        const query = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+
+        const finalFiltered = filteredData.filter((status) =>
+          Object.values(status).some((val) =>
+            String(val).toLowerCase().includes(query)
+          )
+        );
+        populateTable(finalFiltered);
+      }
+
 
       function exportToCSV() {
   const customHeaderMap = {
