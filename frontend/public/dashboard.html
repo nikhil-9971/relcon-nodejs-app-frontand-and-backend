@@ -198,9 +198,10 @@
       function toggleRecordList() {
         const list = document.getElementById("recordList");
         const icon = document.getElementById("toggleIcon");
+        const isHidden = list.classList.contains("hidden");
 
-        list.classList.toggle("show");
-        icon.textContent = list.classList.contains("show") ? "▲" : "▼";
+        list.classList.toggle("hidden");
+        icon.textContent = isHidden ? "▲" : "▼";
       }
 
       let inactivityTimeout;
