@@ -9,22 +9,6 @@ const { verifyToken } = require("./auth");
 
 const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
 
-// Middleware to extract user from token
-function verifyToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(authHeader.split(" ")[1], SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({ error: "Invalid or expired token" });
-  }
-}
-
 // Save Status Route
 router.post("/saveStatus", async (req, res) => {
   try {
