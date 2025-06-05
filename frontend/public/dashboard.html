@@ -124,6 +124,15 @@
             </li>
           </ul>
         </div>
+        <a
+          href="#"
+          id="auditLink"
+          onclick="loadPage('auditReport.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          style="display: none"
+        >
+          <i class="fa-solid fa-shield-halved"></i> Audit Report
+        </a>
       </nav>
 
       <!-- Logout -->
@@ -188,6 +197,10 @@
 
           document.getElementById("statusLink").style.display =
             user.role === "admin" ? "flex" : "none";
+          // Show Audit Report only to admin + Nikhil Trivedi
+          if (user.role === "admin" && user.engineerName === "Nikhil Trivedi") {
+            document.getElementById("auditLink").style.display = "block";
+          }
         } catch (err) {
           logout();
         }
