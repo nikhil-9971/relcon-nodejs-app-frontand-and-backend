@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { LoginLog } = require("../models/AuditLog");
 
 const SECRET = process.env.JWT_SECRET || "relcon-secret-key"; // Add this in .env file
 
@@ -24,13 +25,21 @@ router.post("/login", async (req, res) => {
   const token = jwt.sign(payload, SECRET, { expiresIn: "2h" });
 
   // ✅ Save login log
-  await LoginLog.create({
-    engineerName: user.engineerName,
-    username: user.username,
-    role: user.role,
-    ip:
-      req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress,
-  });
+
+  // ✅ Save login log
+  try {
+    await LoginLog.create({
+      engineerName: user.engineerName || user.name || "Unknown",
+      username: user.username,
+      role: user.role,
+      ip:
+        req.ip ||
+        req.headers["x-forwarded-for"] ||
+        req.connection.remoteAddress,
+    });
+  } catch (logErr) {
+    console.error("LoginLog error:", logErr.message);
+  }
 
   res.json({ token });
 });
