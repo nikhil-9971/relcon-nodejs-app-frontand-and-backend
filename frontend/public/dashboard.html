@@ -200,9 +200,7 @@
         const icon = document.getElementById("toggleIcon");
 
         list.classList.toggle("show");
-        icon.textContent = list.classList.contains("show")
-          ? `<i class="fa-solid fa-caret-left"></i>`
-          : `<i class="fa-solid fa-caret-down"></i>`;
+        icon.textContent = list.classList.contains("show") ? "▲" : "▼";
       }
 
       let inactivityTimeout;
