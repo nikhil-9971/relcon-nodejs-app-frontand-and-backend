@@ -29,6 +29,16 @@
         color: #15803d;
         font-weight: 600;
       }
+
+      #recordList {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+      }
+
+      #recordList.show {
+        max-height: 500px; /* enough height to show all items */
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
@@ -188,10 +198,11 @@
       function toggleRecordList() {
         const list = document.getElementById("recordList");
         const icon = document.getElementById("toggleIcon");
-        const isHidden = list.classList.contains("hidden");
 
-        list.classList.toggle("hidden");
-        icon.textContent = isHidden ? "▲" : "▼";
+        list.classList.toggle("show");
+        icon.textContent = list.classList.contains("show")
+          ? `<i class="fa-solid fa-caret-left"></i>`
+          : `<i class="fa-solid fa-caret-down"></i>`;
       }
 
       let inactivityTimeout;
