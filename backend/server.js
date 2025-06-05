@@ -42,7 +42,7 @@ app.use("/", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
 app.use("/", atgstatusRoutes);
-app.use("/", auditRoutes);
+app.use("/audit", auditRoutes);
 
 // ✅ Optional: redirect *.html to clean path
 app.use((req, res, next) => {
