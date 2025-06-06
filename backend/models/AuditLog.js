@@ -6,6 +6,7 @@ const loginLogSchema = new mongoose.Schema({
   role: String,
   loginTime: { type: Date, default: Date.now },
   ip: String,
+  location: String, // ✅ Add this
 });
 
 const auditTrailSchema = new mongoose.Schema({
