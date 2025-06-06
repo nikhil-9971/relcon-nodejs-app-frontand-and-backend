@@ -110,26 +110,34 @@
             <td class="px-2 py-1">${new Date(
               trail.timestamp
             ).toLocaleString()}</td>
-              <td class="px-2 py-1 whitespace-pre-wrap text-[10px] leading-tight">
-  <b>RO Code:</b> ${trail.roCode || "-"}<br>
-  <b>RO Name:</b> ${trail.roName || "-"}<br>
-  <b>Visit Date:</b> ${trail.visitDate || "-"}<br>
-  <b>Engineer:</b> ${trail.engineerName || "-"}<br>
-  ${
-    trail.before && Object.keys(trail.before).length
-      ? `<b>Before:</b> ${Object.entries(trail.before)
-          .map(([k, v]) => `<div class="ml-2">${k}: ${v}</div>`)
-          .join("")}`
-      : ""
-  }
-  ${
-    trail.after && Object.keys(trail.after).length
-      ? `<b>After:</b> ${Object.entries(trail.after)
-          .map(([k, v]) => `<div class="ml-2">${k}: ${v}</div>`)
-          .join("")}`
-      : ""
-  }
+
+
+              <td class="px-2 py-1 text-[10px] leading-tight">
+  <div>
+    <button onclick="toggleDetails(this)" class="text-blue-600 underline text-xs mb-1">Show Details</button>
+    <div class="details-content hidden mt-1">
+      <b>RO Code:</b> ${trail.roCode || "-"}<br>
+      <b>RO Name:</b> ${trail.roName || "-"}<br>
+      <b>Visit Date:</b> ${trail.visitDate || "-"}<br>
+      <b>Engineer:</b> ${trail.engineerName || "-"}<br>
+      ${
+        trail.before && Object.keys(trail.before).length
+          ? `<b>Before:</b>${Object.entries(trail.before)
+              .map(([k, v]) => `<div class="ml-2">${k}: ${v}</div>`)
+              .join("")}`
+          : ""
+      }
+      ${
+        trail.after && Object.keys(trail.after).length
+          ? `<b>After:</b>${Object.entries(trail.after)
+              .map(([k, v]) => `<div class="ml-2">${k}: ${v}</div>`)
+              .join("")}`
+          : ""
+      }
+    </div>
+  </div>
 </td>
+
           </tr>
         `
             )
@@ -141,6 +149,13 @@
       }
 
       loadAuditData();
+
+      function toggleDetails(btn) {
+        const content = btn.nextElementSibling;
+        const isHidden = content.classList.contains("hidden");
+        content.classList.toggle("hidden");
+        btn.textContent = isHidden ? "Hide Details" : "Show Details";
+      }
     </script>
   </body>
 </html>
