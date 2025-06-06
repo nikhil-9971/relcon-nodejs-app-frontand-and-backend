@@ -192,7 +192,8 @@
       if (role === "admin" && username === "anurag.mishra") {
       filteredData = data;
       } else {
-      filteredData = data.filter(record => record.isVerified === true);
+      filteredData = data.filter(record => record.isVerified === true || record.isVerified === "true");
+
       }
 
 
