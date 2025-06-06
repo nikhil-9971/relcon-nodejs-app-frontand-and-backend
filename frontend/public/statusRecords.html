@@ -537,9 +537,13 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
         }
 
         const res = await fetch(`${baseUrl}/deleteStatus/${deleteTargetId}`, {
-          method: "DELETE",
-        });
+        method: "DELETE",
+        headers: {
+         Authorization: `Bearer ${token}`,
+        },
+       });
 
+       
         document.getElementById("deleteModal").classList.add("hidden");
 
         if (res.ok) {
