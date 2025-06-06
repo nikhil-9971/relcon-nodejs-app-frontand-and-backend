@@ -4,9 +4,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { LoginLog } = require("../models/AuditLog");
-const fetch = require("node-fetch"); // 👈 at top
+const fetch = require("node-fetch");
 
-const SECRET = process.env.JWT_SECRET || "relcon-secret-key"; // Add this in .env file
+const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
 
 // 🔐 Login - returns JWT
 router.post("/login", async (req, res) => {
@@ -25,45 +25,50 @@ router.post("/login", async (req, res) => {
 
   const token = jwt.sign(payload, SECRET, { expiresIn: "2h" });
 
-  // ✅ Save login log
+  // ✅ Get real IP
+  const ipAddress =
+    req.headers["x-forwarded-for"]?.split(",")[0] ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    "UNKNOWN";
+
+  console.log("🔍 Login IP:", ipAddress);
+
+  // ✅ Fetch location
+  let location = "Unknown";
+
+  try {
+    const response = await fetch(
+      `https://ipinfo.io/${ipAddress}?token=be1a52b6573c44`
+    );
+    const data = await response.json();
+
+    console.log("🌐 IPInfo data:", data);
+
+    if (data.city && data.region && data.country && !data.bogon) {
+      location = `${data.city}, ${data.region}, ${data.country}`;
+    }
+  } catch (err) {
+    console.error("🌐 IP location fetch error:", err.message);
+  }
 
   // ✅ Save login log
   try {
-    const ipAddress =
-      req.headers["x-forwarded-for"]?.split(",")[0] ||
-      req.ip ||
-      req.connection.remoteAddress;
-
-    let location = "Unknown";
-
-    try {
-      const response = await fetch(
-        `https://ipinfo.io/${ipAddress}?token=be1a52b6573c44`
-      );
-      const data = await response.json();
-
-      if (data.city && data.region && data.country) {
-        location = `${data.city}, ${data.region}, ${data.country}`;
-      }
-    } catch (err) {
-      console.error("IP location fetch error:", err.message);
-    }
-
     await LoginLog.create({
       engineerName: user.engineerName || user.name || "Unknown",
       username: user.username,
       role: user.role,
       ip: ipAddress,
-      location, // ✅ new field
+      location,
     });
   } catch (logErr) {
-    console.error("LoginLog error:", logErr.message);
+    console.error("📛 LoginLog error:", logErr.message);
   }
 
   res.json({ token });
 });
 
-// 🔒 Get logged-in user info (requires token)
+// 🔒 Middleware: Verify token
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -82,18 +87,17 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+// 🔍 Logged-in user info
 router.get("/user", verifyToken, (req, res) => {
   res.json(req.user);
 });
 
-// Logout not required with JWT – handled on frontend by clearing localStorage
-// But optional dummy route if needed
+// 🔓 Dummy logout (handled on frontend)
 router.post("/logout", (req, res) => {
   res.status(200).json({ message: "Client should clear token manually" });
 });
 
-//module.exports = router;
-
+// ✅ Export router and middleware
 module.exports = {
   router,
   verifyToken,
