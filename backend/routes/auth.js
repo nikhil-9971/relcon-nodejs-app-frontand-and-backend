@@ -42,7 +42,7 @@ router.post("/login", async (req, res) => {
       );
       const data = await response.json();
 
-      if (data.status === "success") {
+      if (data.city && data.region && data.country) {
         location = `${data.city}, ${data.region}, ${data.country}`;
       }
     } catch (err) {
