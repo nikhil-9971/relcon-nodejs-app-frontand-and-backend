@@ -43,13 +43,14 @@ router.post("/login", async (req, res) => {
     );
     const data = await response.json();
 
-    console.log("🌐 IPInfo data:", data);
+    console.log("📡 IPInfo response:", data); // Debug
 
-    if (data.city && data.region && data.country && !data.bogon) {
+    // ✅ check for city, region, country
+    if (data && data.city && data.region && data.country) {
       location = `${data.city}, ${data.region}, ${data.country}`;
     }
   } catch (err) {
-    console.error("🌐 IP location fetch error:", err.message);
+    console.error("IP location fetch error:", err.message);
   }
 
   // ✅ Save login log
