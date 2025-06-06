@@ -219,12 +219,23 @@
         const fromDate = from ? new Date(from) : null;
         const toDate = to ? new Date(to) : null;
 
-        filteredData = allStatusData.filter((row) => {
-          const rowDate = new Date(row.date);
-          if (fromDate && rowDate < fromDate) return false;
-          if (toDate && rowDate > toDate) return false;
-          return true;
-        });
+        const user = JSON.parse(localStorage.getItem("user")) || {};
+      const username = user.username;
+        const role = user.role;
+
+      filteredData = allStatusData.filter((row) => {
+      const rowDate = new Date(row.date);
+     const inRange =
+        (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate);
+
+     // ✅ Admin Anurag sees all, others only verified
+        if (role === "admin" && username === "anurag.mishra") {
+        return inRange;
+        } else {
+        return inRange && (row.isVerified === true || row.isVerified === "true");
+     }
+    });
+
 
         renderTable(filteredData);
       }
