@@ -37,11 +37,13 @@ router.post("/login", async (req, res) => {
     let location = "Unknown";
 
     try {
-      const response = await fetch(`http://ip-api.com/json/${ipAddress}`);
+      const response = await fetch(
+        `https://ipinfo.io/${ipAddress}?token=be1a52b6573c44`
+      );
       const data = await response.json();
 
       if (data.status === "success") {
-        location = `${data.city}, ${data.regionName}, ${data.country}`;
+        location = `${data.city}, ${data.region}, ${data.country}`;
       }
     } catch (err) {
       console.error("IP location fetch error:", err.message);
