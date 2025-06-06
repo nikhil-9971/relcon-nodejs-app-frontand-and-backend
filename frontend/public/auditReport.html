@@ -21,46 +21,53 @@
       }
     </style>
   </head>
-  <body class="p-4">
-    <h1 class="text-xl font-semibold mb-6 text-green-800">🛡️ Audit Report</h1>
+  <body class="h-screen flex flex-col font-poppins bg-gray-100 text-[12px]">
+    <h1 class="text-xl font-semibold mb-2 text-green-800 p-2">
+      🛡️ Audit Report
+    </h1>
 
-    <!-- LOGIN LOGS -->
-    <section class="mb-10">
-      <h2 class="section-title mb-2">🟢 Login Logs</h2>
-      <div class="overflow-x-auto bg-white shadow rounded">
-        <table class="w-full table-auto border-collapse">
-          <thead class="bg-gray-100 text-left">
-            <tr>
-              <th class="px-4 py-2">Engineer</th>
-              <th class="px-4 py-2">Role</th>
-              <th class="px-4 py-2">Login Time</th>
-              <th class="px-4 py-2">IP Address</th>
-            </tr>
-          </thead>
-          <tbody id="loginLogsBody" class="text-[11px]"></tbody>
-        </table>
-      </div>
-    </section>
+    <div class="flex-1 flex flex-col md:h-full md:flex-row md:divide-x">
+      <!-- Top (or Left on large screens): Login Logs -->
+      <section
+        class="w-full md:w-1/2 h-1/2 md:h-full overflow-auto p-2 bg-white"
+      >
+        <h2 class="section-title mb-2">🟢 Login Logs</h2>
+        <div class="w-full overflow-auto">
+          <table class="min-w-max w-full table-auto border-collapse">
+            <thead class="bg-gray-100 text-left sticky top-0 z-10">
+              <tr>
+                <th class="px-4 py-2">Engineer</th>
+                <th class="px-4 py-2">Role</th>
+                <th class="px-4 py-2">Login Time</th>
+                <th class="px-4 py-2">IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="loginLogsBody" class="text-[11px]"></tbody>
+          </table>
+        </div>
+      </section>
 
-    <!-- AUDIT TRAILS -->
-    <section>
-      <h2 class="section-title mb-2">✏️ Edit & Delete Trails</h2>
-      <div class="overflow-x-auto bg-white shadow rounded">
-        <table class="w-full table-auto border-collapse">
-          <thead class="bg-gray-100 text-left">
-            <tr>
-              <th class="px-4 py-2">User</th>
-              <th class="px-4 py-2">Action</th>
-              <th class="px-4 py-2">Record Type</th>
-              <th class="px-4 py-2">Timestamp</th>
-              <th class="px-4 py-2">Details</th>
-            </tr>
-          </thead>
-          <tbody id="auditTrailsBody" class="text-[11px]"></tbody>
-        </table>
-      </div>
-    </section>
-
+      <!-- Bottom (or Right on large screens): Audit Trails -->
+      <section
+        class="w-full md:w-1/2 h-1/2 md:h-full overflow-auto p-2 bg-white"
+      >
+        <h2 class="section-title mb-2">✏️ Edit & Delete Trails</h2>
+        <div class="w-full overflow-auto">
+          <table class="min-w-max w-full table-auto border-collapse">
+            <thead class="bg-gray-100 text-left sticky top-0 z-10">
+              <tr>
+                <th class="px-4 py-2">User</th>
+                <th class="px-4 py-2">Action</th>
+                <th class="px-4 py-2">Record Type</th>
+                <th class="px-4 py-2">Timestamp</th>
+                <th class="px-4 py-2">Details</th>
+              </tr>
+            </thead>
+            <tbody id="auditTrailsBody" class="text-[11px]"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com"; // 🔁 Your backend URL
 
