@@ -198,7 +198,8 @@ if (role === "admin" && username === "nikhil.trivedi") {
 }
 
 
-        renderTable(data);
+         // ✅ Call renderTable(filteredData) NOT data
+  renderTable(filteredData);
       }
 
     function applySearch() {
