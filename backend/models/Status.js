@@ -25,6 +25,10 @@ const StatusSchema = new mongoose.Schema({
   duOffline: String,
   duRemark: String,
   locationField: String,
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports =
