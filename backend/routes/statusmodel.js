@@ -127,6 +127,21 @@ router.get("/getMergedStatusRecords", async (req, res) => {
 });
 
 // Update status by _id
+// 🔧 Utility: compare and return only changed fields
+function getChangedFields(oldDoc, newDoc) {
+  const before = {};
+  const after = {};
+
+  for (const key in newDoc) {
+    if (JSON.stringify(oldDoc[key]) !== JSON.stringify(newDoc[key])) {
+      before[key] = oldDoc[key];
+      after[key] = newDoc[key];
+    }
+  }
+
+  return { before, after };
+}
+
 router.put("/updateStatus/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -139,17 +154,22 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       return res.status(400).send("Invalid ObjectId format.");
     }
 
-    const oldData = await Status.findById(id); // ✅ add this line
+    const oldData = await Status.findById(id);
     const updated = await Status.findByIdAndUpdate(id, req.body, { new: true });
 
     if (!updated) return res.status(404).send("Status not found");
 
+    const { before, after } = getChangedFields(
+      oldData.toObject(),
+      updated.toObject()
+    );
+
     await AuditTrail.create({
-      modifiedBy: req.user.username || "unkown",
+      modifiedBy: req.user?.username || "unknown",
       action: "edit",
       recordType: "status",
-      before: oldData,
-      after: updated,
+      before,
+      after,
     });
 
     res.send("Status updated");
@@ -160,6 +180,8 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
 });
 
 // Delete status by _id
+
+module.exports = router;
 router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -172,16 +194,16 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
       return res.status(400).send("Invalid ObjectId format.");
     }
 
-    const oldData = await Status.findById(id); // ✅ add this line
+    const oldData = await Status.findById(id);
     const deleted = await Status.findByIdAndDelete(id);
 
     if (!deleted) return res.status(404).send("Status not found");
 
     await AuditTrail.create({
-      modifiedBy: req.user.username || "unkown",
+      modifiedBy: req.user?.username || "unknown",
       action: "delete",
       recordType: "status",
-      before: oldData,
+      before: oldData.toObject(),
       after: null,
     });
 
@@ -191,5 +213,3 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
     res.status(500).send("Delete error: " + err.message);
   }
 });
-
-module.exports = router;
