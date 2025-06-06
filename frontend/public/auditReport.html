@@ -108,22 +108,26 @@
             <td class="px-4 py-2">${new Date(
               trail.timestamp
             ).toLocaleString()}</td>
-            <td class="px-4 py-2 whitespace-pre-wrap">
-              ${
-                trail.before
-                  ? `<b>Before:</b> ${JSON.stringify(
-                      trail.before,
-                      null,
-                      2
-                    )}<br>`
-                  : ""
-              }
-              ${
-                trail.after
-                  ? `<b>After:</b> ${JSON.stringify(trail.after, null, 2)}`
-                  : ""
-              }
-            </td>
+              <td class="px-4 py-2 whitespace-pre-wrap text-xs">
+                <b>RO Code:</b> ${trail.roCode || "-"}<br>
+                <b>RO Name:</b> ${trail.roName || "-"}<br>
+                <b>Visit Date:</b> ${trail.visitDate || "-"}<br>
+                <b>Engineer:</b> ${trail.engineerName || "-"}<br><br>
+             ${
+               trail.before && Object.keys(trail.before).length
+                 ? `<b>Before:</b><br>${Object.entries(trail.before)
+                     .map(([k, v]) => `${k}: ${v}`)
+                     .join("<br>")}<br><br>`
+                 : ""
+             }
+            ${
+              trail.after && Object.keys(trail.after).length
+                ? `<b>After:</b><br>${Object.entries(trail.after)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join("<br>")}`
+                : ""
+            }
+          </td>
           </tr>
         `
             )
