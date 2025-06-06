@@ -240,22 +240,24 @@
         renderTable(filteredData);
       }
 
-     const user = JSON.parse(localStorage.getItem("user")) || {};
-      const username = user.username;
-      const role = user.role;
+      function clearDateRangeFilter() {
+  document.getElementById("fromDate").value = "";
+  document.getElementById("toDate").value = "";
 
-     filteredData = allStatusData.filter((row) => {
-     const rowDate = new Date(row.date);
-     const inRange =
-    (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate);
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const username = user.username;
+  const role = user.role;
 
-  // ✅ Admin Anurag sees all, others only verified
   if (role === "admin" && username === "anurag.mishra") {
-    return inRange;
+    filteredData = allStatusData;
   } else {
-    return inRange && (row.isVerified === true || row.isVerified === "true");
+    filteredData = allStatusData.filter(
+      (record) => record.isVerified === true || record.isVerified === "true"
+    );
   }
-});
+
+  renderTable(filteredData);
+}
 
 
       
