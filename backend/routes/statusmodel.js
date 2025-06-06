@@ -208,14 +208,16 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
     }
 
     const oldData = await Status.findById(id).populate("planId");
-    const deleted = await Status.findByIdAndDelete(id);
 
+    if (!oldData) return res.status(404).send("Status not found");
+
+    const plan = oldData.planId || {};
     const roCode = plan.roCode || "N/A";
     const roName = plan.roName || "N/A";
     const visitDate = plan.date || "N/A";
     const engineerName = plan.engineer || "N/A";
 
-    if (!deleted) return res.status(404).send("Status not found");
+    const deleted = await Status.findByIdAndDelete(id);
 
     await AuditTrail.create({
       modifiedBy: req.user?.username || "unknown",
