@@ -91,7 +91,9 @@
             <td class="px-4 py-2">${new Date(
               log.loginTime
             ).toLocaleString()}</td>
-            <td class="px-4 py-2">${log.ip}</td>
+            <td class="px-4 py-2">${log.ip}<br><small>${
+                log.location
+              }</small></td>
           </tr>
         `
             )
