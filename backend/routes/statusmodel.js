@@ -116,6 +116,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
         duOffline: status.duOffline || "",
         duRemark: status.duRemark || "",
         locationField: status.locationField || "",
+        isVerified: status.isVerified || false, // <-- ✅ Add this line
       };
     });
 
@@ -232,6 +233,52 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Delete error:", err);
     res.status(500).send("Delete error: " + err.message);
+  }
+});
+
+// ✅ VERIFY a status by ID
+router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || id === "undefined") {
+    return res.status(400).send("Invalid ID provided.");
+  }
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send("Invalid ObjectId format.");
+    }
+
+    const updated = await Status.findByIdAndUpdate(
+      id,
+      { isVerified: true },
+      { new: true }
+    ).populate("planId");
+
+    if (!updated) return res.status(404).send("Status not found");
+
+    const plan = updated.planId || {};
+    const roCode = plan.roCode || "N/A";
+    const roName = plan.roName || "N/A";
+    const visitDate = plan.date || "N/A";
+    const engineerName = plan.engineer || "N/A";
+
+    await AuditTrail.create({
+      modifiedBy: req.user?.username || "unknown",
+      action: "verify",
+      recordType: "status",
+      before: { isVerified: false },
+      after: { isVerified: true },
+      roCode,
+      roName,
+      visitDate,
+      engineerName,
+    });
+
+    res.send("Status verified successfully");
+  } catch (err) {
+    console.error("Verify error:", err);
+    res.status(500).send("Verify error: " + err.message);
   }
 });
 
