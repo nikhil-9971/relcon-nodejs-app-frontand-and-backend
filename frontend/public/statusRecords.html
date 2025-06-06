@@ -184,10 +184,9 @@
         const data = await res.json();
         allStatusData = data;
 
-        const user = JSON.parse(localStorage.getItem("user")); // Assuming user info stored in localStorage
-const username = user?.username;
-const role = user?.role;
-
+       const user = JSON.parse(localStorage.getItem("user")) || {};
+       const username = user.username;
+       const role = user.role;
 if (role === "admin" && username === "nikhil.trivedi") {
   filteredData = data.filter(record => record.isVerified === true);
 } else if (role === "admin" && username === "anurag.mishra") {
@@ -300,6 +299,9 @@ if (role === "admin" && username === "nikhil.trivedi") {
 
 
       function renderTable(data) {
+        const user = JSON.parse(localStorage.getItem("user")) || {};
+       const username = user.username;
+        const role = user.role;
         const columns = [
           { key: "engineer", label: "Engineer Name" },
           { key: "region", label: "Region" },
@@ -357,8 +359,7 @@ if (role === "admin" && username === "nikhil.trivedi") {
   `;
 
   // 👤 Check if logged-in user is anurag.mishra and record is not verified
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user?.role === "admin" && user?.username === "anurag.mishra" && !record.isVerified) {
+  if (role === "admin" && username === "anurag.mishra" && !record.isVerified) {
     actionsHTML += `<button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>`;
   }
 
