@@ -188,10 +188,11 @@
        const username = user.username;
        const role = user.role;
 
-       if (role === "admin" && username === "nikhil.trivedi") {
-        filteredData = data.filter(record => record.isVerified === true);
+       // ✅ Only Anurag sees all records
+      if (role === "admin" && username === "anurag.mishra") {
+      filteredData = data;
       } else {
-        filteredData = data;
+      filteredData = data.filter(record => record.isVerified === true);
       }
 
 
