@@ -15,6 +15,10 @@ const auditTrailSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
   before: Object,
   after: Object,
+  roCode: String, // ✅ new
+  roName: String, // ✅ new
+  visitDate: String, // ✅ new
+  engineerName: String, // ✅ new
 });
 
 module.exports = {
