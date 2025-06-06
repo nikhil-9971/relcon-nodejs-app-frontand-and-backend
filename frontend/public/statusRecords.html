@@ -187,14 +187,12 @@
        const user = JSON.parse(localStorage.getItem("user")) || {};
        const username = user.username;
        const role = user.role;
-if (role === "admin" && username === "nikhil.trivedi") {
-  filteredData = data.filter(record => record.isVerified === true);
-} else if (role === "admin" && username === "anurag.mishra") {
-  filteredData = data;
-} else {
-  // Default fallback (e.g., for engineer roles)
-  filteredData = data.filter(record => record.isVerified === true);
-}
+
+       if (role === "admin" && username === "nikhil.trivedi") {
+        filteredData = data.filter(record => record.isVerified === true);
+      } else {
+        filteredData = data;
+      }
 
 
          // ✅ Call renderTable(filteredData) NOT data
