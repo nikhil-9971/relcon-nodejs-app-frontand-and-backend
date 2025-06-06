@@ -183,7 +183,18 @@
         });
         const data = await res.json();
         allStatusData = data;
-        filteredData = data;
+
+        const user = JSON.parse(localStorage.getItem("user")); // Assuming user info stored in localStorage
+const username = user?.username;
+const role = user?.role;
+
+if (role === "admin" && username === "nikhil.trivedi") {
+  // Filter only verified records for Nikhil
+  filteredData = data.filter((record) => record.isVerified);
+} else {
+  filteredData = data; // Anurag and others see everything
+}
+
         renderTable(data);
       }
 
@@ -335,12 +346,21 @@
             );
             const row = columns
               .map((col) => {
-                if (col.key === "actions") {
-                  return `<td class="border text-center px-2 py-1">
-              <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-              <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteStatus("${record._id}")'>🗑️</button>
-            </td>`;
-                }
+               if (col.key === "actions") {
+  let actionsHTML = `
+    <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+    <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
+  `;
+
+  // 👤 Check if logged-in user is anurag.mishra and record is not verified
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user?.role === "admin" && user?.username === "anurag.mishra" && !record.isVerified) {
+    actionsHTML += `<button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>`;
+  }
+
+  return `<td class="border text-center px-2 py-1">${actionsHTML}</td>`;
+}
+
                 return `<td class="border text-center px-2 py-1">${
                   record[col.key] || ""
                 }</td>`;
@@ -470,6 +490,28 @@
 
         deleteTargetId = null;
       }
+
+      async function verifyRecord(id) {
+  const confirmed = confirm("Are you sure you want to mark this record as VERIFIED?");
+  if (!confirmed) return;
+
+  const res = await fetch(`${baseUrl}/verifyStatus/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ isVerified: true }),
+  });
+
+  if (res.ok) {
+    showToast("Record marked as Verified ✅");
+    await fetchStatusRecords();
+  } else {
+    alert("Verification failed.");
+  }
+}
+
 
       fetchStatusRecords();
 
