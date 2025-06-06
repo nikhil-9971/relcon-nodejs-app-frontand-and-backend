@@ -47,7 +47,7 @@ router.post("/login", async (req, res) => {
 
     // ✅ check for city, region, country
     if (data && data.city && data.region && data.country) {
-      location = `${data.city}, ${data.region}, ${data.country}`;
+      location = `${data.city}, ${data.region}, ${data.country}, ${data.org}`;
     }
   } catch (err) {
     console.error("IP location fetch error:", err.message);
