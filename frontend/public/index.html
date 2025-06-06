@@ -259,6 +259,10 @@
           const user = decodeJWT(data.token);
           localStorage.setItem("role", user.role);
           localStorage.setItem("engineerName", user.engineerName);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ username: user.username, role: user.role })
+          );
 
           showToast("Login Successfully");
 
