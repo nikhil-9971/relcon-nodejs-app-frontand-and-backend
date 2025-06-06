@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { LoginLog } = require("../models/AuditLog");
+const fetch = require("node-fetch"); // 👈 at top
 
 const SECRET = process.env.JWT_SECRET || "relcon-secret-key"; // Add this in .env file
 
@@ -28,14 +29,30 @@ router.post("/login", async (req, res) => {
 
   // ✅ Save login log
   try {
+    const ipAddress =
+      req.headers["x-forwarded-for"]?.split(",")[0] ||
+      req.ip ||
+      req.connection.remoteAddress;
+
+    let location = "Unknown";
+
+    try {
+      const response = await fetch(`http://ip-api.com/json/${ipAddress}`);
+      const data = await response.json();
+
+      if (data.status === "success") {
+        location = `${data.city}, ${data.regionName}, ${data.country}`;
+      }
+    } catch (err) {
+      console.error("IP location fetch error:", err.message);
+    }
+
     await LoginLog.create({
       engineerName: user.engineerName || user.name || "Unknown",
       username: user.username,
       role: user.role,
-      ip:
-        req.ip ||
-        req.headers["x-forwarded-for"] ||
-        req.connection.remoteAddress,
+      ip: ipAddress,
+      location, // ✅ new field
     });
   } catch (logErr) {
     console.error("LoginLog error:", logErr.message);
