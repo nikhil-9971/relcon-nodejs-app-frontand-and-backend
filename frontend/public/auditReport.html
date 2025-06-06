@@ -86,12 +86,12 @@
             .map(
               (log) => `
           <tr class="border-b">
-            <td class="px-4 py-2">${log.engineerName || log.username}</td>
-            <td class="px-4 py-2">${log.role}</td>
-            <td class="px-4 py-2">${new Date(
+            <td class="px-2 py-1">${log.engineerName || log.username}</td>
+            <td class="px-2 py-1">${log.role}</td>
+            <td class="px-2 py-1">${new Date(
               log.loginTime
             ).toLocaleString()}</td>
-            <td class="px-4 py-2">${log.ip}-> <small>${
+            <td class="px-2 py-1">${log.ip}-> <small>${
                 log.location
               }</small></td>
           </tr>
@@ -104,13 +104,13 @@
             .map(
               (trail) => `
           <tr class="border-b align-top">
-            <td class="px-4 py-2">${trail.modifiedBy}</td>
-            <td class="px-4 py-2 text-blue-600 font-medium">${trail.action.toUpperCase()}</td>
-            <td class="px-4 py-2">${trail.recordType}</td>
-            <td class="px-4 py-2">${new Date(
+            <td class="px-2 py-1">${trail.modifiedBy}</td>
+            <td class="px-2 py-1 text-blue-600 font-medium">${trail.action.toUpperCase()}</td>
+            <td class="px-2 py-1">${trail.recordType}</td>
+            <td class="px-2 py-1">${new Date(
               trail.timestamp
             ).toLocaleString()}</td>
-              <td class="px-4 py-2 whitespace-pre-wrap text-xs">
+              <td class="px-2 py-1 whitespace-pre-wrap text-xs">
                 <b>RO Code:</b> ${trail.roCode || "-"}<br>
                 <b>RO Name:</b> ${trail.roName || "-"}<br>
                 <b>Visit Date:</b> ${trail.visitDate || "-"}<br>
