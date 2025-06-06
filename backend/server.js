@@ -31,7 +31,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // ✅ Trust proxy for HTTPS (still useful)
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 // ✅ Static files (optional)
 app.use(express.static("public"));
