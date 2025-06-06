@@ -154,8 +154,10 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       return res.status(400).send("Invalid ObjectId format.");
     }
 
-    const oldData = await Status.findById(id);
-    const updated = await Status.findByIdAndUpdate(id, req.body, { new: true });
+    const oldData = await Status.findById(id).populate("planId");
+    const updated = await Status.findByIdAndUpdate(id, req.body, {
+      new: true,
+    }).populate("planId");
 
     if (!updated) return res.status(404).send("Status not found");
 
@@ -164,12 +166,23 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       updated.toObject()
     );
 
+    // 🧩 Extract additional info from `planId`
+    const plan = updated.planId || {};
+    const roCode = plan.roCode || "N/A";
+    const roName = plan.roName || "N/A";
+    const visitDate = plan.date || "N/A";
+    const engineerName = plan.engineer || "N/A";
+
     await AuditTrail.create({
       modifiedBy: req.user?.username || "unknown",
       action: "edit",
       recordType: "status",
       before,
       after,
+      roCode,
+      roName,
+      visitDate,
+      engineerName,
     });
 
     res.send("Status updated");
@@ -181,7 +194,6 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
 
 // Delete status by _id
 
-module.exports = router;
 router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -194,8 +206,13 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
       return res.status(400).send("Invalid ObjectId format.");
     }
 
-    const oldData = await Status.findById(id);
+    const oldData = await Status.findById(id).populate("planId");
     const deleted = await Status.findByIdAndDelete(id);
+
+    const roCode = plan.roCode || "N/A";
+    const roName = plan.roName || "N/A";
+    const visitDate = plan.date || "N/A";
+    const engineerName = plan.engineer || "N/A";
 
     if (!deleted) return res.status(404).send("Status not found");
 
@@ -205,6 +222,10 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
       recordType: "status",
       before: oldData.toObject(),
       after: null,
+      roCode,
+      roName,
+      visitDate,
+      engineerName,
     });
 
     res.send("Status deleted");
@@ -213,3 +234,5 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
     res.status(500).send("Delete error: " + err.message);
   }
 });
+
+module.exports = router;
