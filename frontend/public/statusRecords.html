@@ -189,11 +189,14 @@ const username = user?.username;
 const role = user?.role;
 
 if (role === "admin" && username === "nikhil.trivedi") {
-  // Filter only verified records for Nikhil
-  filteredData = data.filter((record) => record.isVerified);
+  filteredData = data.filter(record => record.isVerified === true);
+} else if (role === "admin" && username === "anurag.mishra") {
+  filteredData = data;
 } else {
-  filteredData = data; // Anurag and others see everything
+  // Default fallback (e.g., for engineer roles)
+  filteredData = data.filter(record => record.isVerified === true);
 }
+
 
         renderTable(data);
       }
