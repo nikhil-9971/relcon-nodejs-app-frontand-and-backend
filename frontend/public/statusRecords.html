@@ -413,6 +413,7 @@
             const encoded = btoa(
               unescape(encodeURIComponent(JSON.stringify(record)))
             );
+            const isVerified = record.isVerified === true || record.isVerified === "true";
             const row = columns
               .map((col) => {
                
