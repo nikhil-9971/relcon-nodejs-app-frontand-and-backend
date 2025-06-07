@@ -403,42 +403,40 @@
             );
             const row = columns
               .map((col) => {
-               if (col.key === "actions") {
- let actionsHTML = "";
+               
+if (col.key === "actions") {
+  let actionsHTML = "";
 
-// ✅ Rule: If NOT verified, allow Anurag to edit/delete
-if (
-  role === "admin" &&
-  username === "anurag.mishra" &&
-  !record.isVerified
-) {
-  actionsHTML += `
-    <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-    <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
-    <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>
-  `;
-}
+  // ✅ Allow edit/delete if not verified AND user is anurag.mishra
+  if (
+    role === "admin" &&
+    username === "anurag.mishra" &&
+    !record.isVerified
+  ) {
+    actionsHTML += `
+      <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+      <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
+      <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>
+    `;
+  }
 
-// ✅ Rule: If verified, only Nikhil can edit/delete
-if (
-  role === "admin" &&
-  username === "nikhil.trivedi" &&
-  (record.isVerified === true || record.isVerified === "true")
-) {
-  actionsHTML += `
-    <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-    <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
-  `;
-}
-
-
-  // 👤 Check if logged-in user is anurag.mishra and record is not verified
-  if (role === "admin" && username === "anurag.mishra" && !record.isVerified) {
-    actionsHTML += `<button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>`;
+  // ✅ Allow verified record edit/delete only for nikhil.trivedi
+  if (
+    role === "admin" &&
+    username === "nikhil.trivedi" &&
+    (record.isVerified === true || record.isVerified === "true")
+  ) {
+    actionsHTML += `
+      <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+      <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
+    `;
   }
 
   return `<td class="border text-center px-2 py-1">${actionsHTML}</td>`;
 }
+
+
+ 
 
                 let cellContent = record[col.key] || "";
 
@@ -509,7 +507,13 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
         const form = document.getElementById("editForm");
         const formData = new FormData(form);
         const updated = {};
-        formData.forEach((val, key) => (updated[key] = val));
+        formData.forEach((val, key) => {
+  if (key === "isVerified") {
+    updated[key] = val === "true" || val === true;
+  } else {
+    updated[key] = val;
+  }
+});
 
         // Preserve isVerified if present (checkbox may not exist)
 if (!("isVerified" in updated)) {
