@@ -510,6 +510,13 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
         const formData = new FormData(form);
         const updated = {};
         formData.forEach((val, key) => (updated[key] = val));
+
+        // Preserve isVerified if present (checkbox may not exist)
+if (!("isVerified" in updated)) {
+  const record = allStatusData.find((r) => r._id === updated._id);
+  updated.isVerified = record?.isVerified || false;
+}
+
         const updateId = updated._id;
 
         const res = await fetch(`${baseUrl}/updateStatus/${updateId}`, {
