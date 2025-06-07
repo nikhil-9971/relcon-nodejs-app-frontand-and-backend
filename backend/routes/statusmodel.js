@@ -156,6 +156,14 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
     }
 
     const oldData = await Status.findById(id).populate("planId");
+
+    // ✅ Prevent update if already verified and user is not nikhil.trivedi
+    if (oldData?.isVerified && req.user?.username !== "nikhil.trivedi") {
+      return res
+        .status(403)
+        .send("Verified records can only be updated by Nikhil.");
+    }
+
     const updated = await Status.findByIdAndUpdate(id, req.body, {
       new: true,
     }).populate("planId");
@@ -167,7 +175,6 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       updated.toObject()
     );
 
-    // 🧩 Extract additional info from `planId`
     const plan = updated.planId || {};
     const roCode = plan.roCode || "N/A";
     const roName = plan.roName || "N/A";
