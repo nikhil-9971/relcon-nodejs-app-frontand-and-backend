@@ -54,6 +54,18 @@
       transform: scale(1);
     }
   }
+
+  .locked-badge {
+  display: inline-block;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid #f87171;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
     </style>
   </head>
   <body class="p-6 bg-gray-100 text-[9px]">
@@ -430,6 +442,15 @@ if (col.key === "actions") {
       <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
       <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
     `;
+  }
+
+   // ✅ Anurag sees 🔒 Verified in place of buttons if already verified
+  if (
+    role === "admin" &&
+    username === "anurag.mishra" &&
+    isVerified
+  ) {
+    actionsHTML = `<span class="locked-badge" title="Verified record – actions disabled">🔒 Verified</span>`;
   }
 
   return `<td class="border text-center px-2 py-1">${actionsHTML}</td>`;
