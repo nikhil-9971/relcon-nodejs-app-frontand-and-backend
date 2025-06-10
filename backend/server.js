@@ -12,6 +12,7 @@ const statusRoutes = require("./routes/statusmodel");
 const atgstatusRoutes = require("./routes/atgStatusRoutes");
 const auditRoutes = require("./routes/audit");
 const { router: authRoutes } = require("./routes/auth");
+const taskRoutes = require("./routes/taskRoutes");
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/", planRoutes);
 app.use("/", statusRoutes);
 app.use("/", atgstatusRoutes);
 app.use("/audit", auditRoutes);
+app.use(taskRoutes);
 
 // ✅ Optional: redirect *.html to clean path
 app.use((req, res, next) => {
