@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Task Management | RELCON</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f1f5f9;
+        font-size: 11px;
+      }
+      .email-content {
+        white-space: pre-wrap;
+        font-family: monospace;
+        background: #f3f4f6;
+        padding: 8px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="p-6">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 rounded">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">📌 Task Management</h1>
+        <button
+          onclick="fetchTasks()"
+          class="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full table-auto text-sm border">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="border px-3 py-2">RO Code</th>
+              <th class="border px-3 py-2">RO Name</th>
+              <th class="border px-3 py-2">Issue</th>
+              <th class="border px-3 py-2">Engineer</th>
+              <th class="border px-3 py-2">Email Content</th>
+              <th class="border px-3 py-2">Status</th>
+              <th class="border px-3 py-2">Mail Reply</th>
+              <th class="border px-3 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="taskTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      const token = localStorage.getItem("token");
+
+      async function fetchTasks() {
+        const res = await fetch(`${baseUrl}/getTasks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const tasks = await res.json();
+        renderTasks(tasks);
+      }
+
+      function renderTasks(tasks) {
+        const tbody = document.getElementById("taskTableBody");
+        tbody.innerHTML = "";
+        tasks.forEach((task) => {
+          const row = document.createElement("tr");
+          row.className = "border-b";
+          row.innerHTML = `
+            <td class="border px-3 py-2">${task.roCode}</td>
+            <td class="border px-3 py-2">${task.roName}</td>
+            <td class="border px-3 py-2 text-red-600 font-semibold">${
+              task.issue
+            }</td>
+            <td class="border px-3 py-2">${task.engineer}</td>
+            <td class="border px-3 py-2 max-w-xs">
+              <div class="email-content text-xs">${task.emailContent}</div>
+            </td>
+            <td class="border px-3 py-2">
+              <select onchange="updateTaskStatus('${
+                task._id
+              }', this.value)" class="border px-2 py-1 rounded">
+                <option value="Pending" ${
+                  task.status === "Pending" ? "selected" : ""
+                }>Pending</option>
+                <option value="Mailed" ${
+                  task.status === "Mailed" ? "selected" : ""
+                }>Mailed</option>
+                <option value="Resolved" ${
+                  task.status === "Resolved" ? "selected" : ""
+                }>Resolved</option>
+              </select>
+            </td>
+            <td class="border px-3 py-2">
+              <textarea onchange="saveReply('${
+                task._id
+              }', this.value)" class="border w-full p-1 rounded" rows="2">${
+            task.mailReply || ""
+          }</textarea>
+            </td>
+            <td class="border px-3 py-2">
+              <button onclick="copyToClipboard('${
+                task._id
+              }')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">📋 Copy Email</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function copyToClipboard(taskId) {
+        const row = [...document.querySelectorAll("#taskTableBody tr")].find(
+          (tr) => tr.innerHTML.includes(taskId)
+        );
+        if (!row) return;
+        const emailText = row.querySelector(".email-content").innerText;
+        navigator.clipboard.writeText(emailText).then(() => {
+          alert("📋 Email content copied!");
+        });
+      }
+
+      async function updateTaskStatus(id, newStatus) {
+        await fetch(`${baseUrl}/updateTask/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+      }
+
+      async function saveReply(id, replyText) {
+        await fetch(`${baseUrl}/updateTask/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ mailReply: replyText }),
+        });
+      }
+
+      window.onload = fetchTasks;
+    </script>
+  </body>
+</html>

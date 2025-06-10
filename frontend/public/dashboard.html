@@ -124,6 +124,19 @@
             </li>
           </ul>
         </div>
+
+        <!-- Task Manager -->
+
+        <a
+          href="#"
+          id="taskManagementLink"
+          onclick="loadPage('taskManager.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          style="display: none"
+        >
+          <i class="fa-solid fa-list-check"></i> Task Management
+        </a>
+
         <a
           href="#"
           id="auditLink"
@@ -200,6 +213,12 @@
           // Show Audit Report only to admin + Nikhil Trivedi
           if (user.role === "admin" && user.engineerName === "Nikhil Trivedi") {
             document.getElementById("auditLink").style.display = "block";
+          }
+
+          // Show Task Management to admins only
+          if (user.role === "admin") {
+            document.getElementById("taskManagementLink").style.display =
+              "flex";
           }
         } catch (err) {
           logout();
