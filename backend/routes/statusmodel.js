@@ -5,9 +5,22 @@ const Status = require("../models/Status");
 const { AuditTrail } = require("../models/AuditLog");
 const jwt = require("jsonwebtoken");
 
+// models required at top
+const Task = require("../models/Task");
+const DailyPlan = require("../models/DailyPlan"); // if not already imported
+
 const { verifyToken } = require("./auth");
 
 const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
+
+// ✅ Utility: Email content generator
+function generateEmailContent({ roName, roCode, earthingStatus, duOffline }) {
+  return `Dear Client,\n\nDuring the recent visit to ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${
+    earthingStatus === "NOT OK"
+      ? "➡️ Earthing is NOT OK"
+      : `➡️ DU Offline Issue: ${duOffline}`
+  }\n\nPlease address this issue at the earliest.\n\nRegards,\nRELCON Systems Support Team`;
+}
 
 // Save Status Route
 router.post("/saveStatus", async (req, res) => {
@@ -69,6 +82,34 @@ router.post("/saveStatus", async (req, res) => {
       },
       { upsert: true, new: true }
     );
+
+    // ✅ Mark DailyPlan as statusSaved = true
+    await DailyPlan.findByIdAndUpdate(planId, { statusSaved: true });
+
+    // ✅ Auto-create task if condition matches
+    if (earthingStatus === "NOT OK" || (duOffline && duOffline !== "ALL OK")) {
+      const plan = await DailyPlan.findById(planId);
+      if (plan) {
+        const task = new Task({
+          statusId: savedStatus._id,
+          roCode: plan.roCode,
+          roName: plan.roName,
+          engineer: plan.engineer,
+          issue:
+            earthingStatus === "NOT OK"
+              ? "Earthing NOT OK"
+              : `DU Offline: ${duOffline}`,
+          emailContent: generateEmailContent({
+            roName: plan.roName,
+            roCode: plan.roCode,
+            earthingStatus,
+            duOffline,
+          }),
+        });
+
+        await task.save(); // ✅ Insert the new task
+      }
+    }
 
     res.send("Status saved");
   } catch (err) {
