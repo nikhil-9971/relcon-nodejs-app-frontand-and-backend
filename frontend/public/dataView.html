@@ -529,10 +529,25 @@
               </select>
             </div>
 
-            <div class="md:col-span-2">
+            <div>
               <label class="text-sm font-semibold">Earthing Status</label>
-              <textarea
+              <select
                 id="earthingStatus"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>OK</option>
+                <option>NOT OK</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold"
+                >Voltage Measurment Reading</label
+              >
+              <textarea
+                id="voltageReading"
                 required
                 placeholder="Example: Earthing OK, PN=234V, PE=233V, NE=1V"
                 class="w-full p-2 mt-1 border rounded"
@@ -1338,6 +1353,7 @@
           "adminPassword",
           "workCompletion",
           "earthingStatus",
+          "voltageReading",
           "duOffline",
           "duRemark",
           "locationField",
@@ -1386,6 +1402,7 @@
           adminPassword: document.getElementById("adminPassword").value,
           workCompletion: document.getElementById("workCompletion").value,
           earthingStatus: document.getElementById("earthingStatus").value,
+          voltageReading: document.getElementById("voltageReading").value,
           duOffline: document.getElementById("duOffline").value,
           duRemark: document.getElementById("duRemark").value,
           locationField: document.getElementById("locationField").value,
@@ -1523,6 +1540,7 @@
             ["Admin Password Updated", status.adminPassword],
             ["Work Completion Status", status.workCompletion],
             ["Earthing Status", status.earthingStatus],
+            ["Voltage Reading", status.voltageReading],
             ["No of DU offline", status.duOffline],
             ["DU offline remark", status.duRemark],
             ["Site Location", status.locationField],
