@@ -22,6 +22,7 @@ const StatusSchema = new mongoose.Schema({
   adminPassword: String,
   workCompletion: String,
   earthingStatus: String,
+  voltageReading: String,
   duOffline: String,
   duRemark: String,
   locationField: String,
