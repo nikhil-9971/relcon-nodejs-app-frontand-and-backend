@@ -52,7 +52,7 @@ router.post("/saveStatus", async (req, res) => {
       locationField,
     } = req.body;
 
-    await Status.findOneAndUpdate(
+    const savedStatus = await Status.findOneAndUpdate(
       { planId },
       {
         planId,
