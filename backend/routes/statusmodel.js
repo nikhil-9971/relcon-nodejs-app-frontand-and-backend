@@ -14,12 +14,33 @@ const { verifyToken } = require("./auth");
 const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
 
 // ✅ Utility: Email content generator
-function generateEmailContent({ roName, roCode, earthingStatus, duOffline }) {
-  return `Dear Client,\n\nDuring the recent visit to ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${
-    earthingStatus === "NOT OK"
-      ? "➡️ Earthing is NOT OK"
-      : `➡️ DU Offline Issue: ${duOffline}`
-  }\n\nPlease address this issue at the earliest.\n\nRegards,\nRELCON Systems Support Team`;
+function generateEmailContent({
+  roName,
+  roCode,
+  earthingStatus,
+  duOffline,
+  voltageReading,
+  duRemark,
+}) {
+  let observations = [];
+
+  if (earthingStatus === "NOT OK") {
+    observations.push(`➡️ Earthing is NOT OK (${voltageReading || "N/A"}V)`);
+  }
+
+  if (duOffline && duOffline !== 0 && duOffline !== "ALL OK") {
+    let duLine = `➡️ DU Offline Count: ${duOffline}`;
+    if (duRemark) {
+      duLine += `\n   🔹 Remark: ${duRemark}`;
+    }
+    observations.push(duLine);
+  }
+
+  const observationText = observations.length
+    ? observations.join("\n")
+    : "➡️ No major issues reported.";
+
+  return `Dear Client,\n\nDuring the recent visit to ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${observationText}\n\nPlease address this issue at the earliest.\n\nRegards,\nRELCON Systems`;
 }
 
 // Save Status Route
@@ -87,18 +108,26 @@ router.post("/saveStatus", async (req, res) => {
     await DailyPlan.findByIdAndUpdate(planId, { statusSaved: true });
 
     // ✅ Auto-create task if condition matches
-    if (earthingStatus === "NOT OK" || (duOffline && duOffline !== "ALL OK")) {
+    if (
+      earthingStatus === "NOT OK" ||
+      (duOffline && duOffline !== 0 && duOffline !== "ALL OK")
+    ) {
       const plan = await DailyPlan.findById(planId);
       if (plan) {
+        // 🔹 Determine full issue summary
+        const issues = [];
+        if (earthingStatus === "NOT OK") issues.push("Earthing NOT OK");
+        if (duOffline && duOffline !== 0 && duOffline !== "ALL OK")
+          issues.push(`DU Offline: ${duOffline}`);
+
+        const issueSummary = issues.join(" + ");
+
         const task = new Task({
           statusId: savedStatus._id,
           roCode: plan.roCode,
           roName: plan.roName,
           engineer: plan.engineer,
-          issue:
-            earthingStatus === "NOT OK"
-              ? "Earthing NOT OK"
-              : `DU Offline: ${duOffline}`,
+          issue: issueSummary,
           emailContent: generateEmailContent({
             roName: plan.roName,
             roCode: plan.roCode,
