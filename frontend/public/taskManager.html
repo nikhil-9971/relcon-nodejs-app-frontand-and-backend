@@ -78,13 +78,13 @@
           row.className = "border-b";
 
           let issueParts = [];
-          if (task.earthingStatus) {
+          if (task.earthingStatus && task.earthingStatus !== "OK") {
             let part = `Earthing Status → ${task.earthingStatus}`;
             if (task.voltageReading)
-              part += ` (Voltage: ${task.voltageReading}V)`;
+              part += ` (Voltage: ${task.voltageReading})`;
             issueParts.push(part);
           }
-          if (task.duOffline) {
+          if (task.duOffline && task.duOffline !== "ALL OK") {
             let part = `DU Offline → ${task.duOffline}`;
             if (task.duRemark) part += ` (Remark: ${task.duRemark})`;
             issueParts.push(part);
@@ -95,13 +95,13 @@
             : "-";
 
           let emailContent = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${task.date} at ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
-          if (task.earthingStatus) {
+          if (task.earthingStatus && task.earthingStatus !== "OK") {
             emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
             if (task.voltageReading)
               emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
             emailContent += "\n";
           }
-          if (task.duOffline) {
+          if (task.duOffline && task.duOffline !== "ALL OK") {
             emailContent += `➡️ DU Offline → ${task.duOffline}`;
             if (task.duRemark)
               emailContent += ` (Offline DU remark: ${task.duRemark})`;
