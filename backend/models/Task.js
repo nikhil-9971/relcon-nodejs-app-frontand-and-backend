@@ -10,6 +10,11 @@ const taskSchema = new mongoose.Schema({
   status: { type: String, default: "Pending" }, // Pending, Mailed, Resolved
   mailReply: String,
   createdAt: { type: Date, default: Date.now },
+  // ✅ Add these for UI display
+  earthingStatus: String,
+  voltageReading: String,
+  duOffline: String,
+  duRemark: String,
 });
 
 module.exports = mongoose.model("Task", taskSchema);
