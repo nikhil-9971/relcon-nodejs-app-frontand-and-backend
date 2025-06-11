@@ -132,8 +132,14 @@ router.post("/saveStatus", async (req, res) => {
             roName: plan.roName,
             roCode: plan.roCode,
             earthingStatus,
+            voltageReading,
             duOffline,
+            duRemark,
           }),
+          earthingStatus,
+          voltageReading,
+          duOffline,
+          duRemark,
         });
 
         await task.save(); // ✅ Insert the new task
