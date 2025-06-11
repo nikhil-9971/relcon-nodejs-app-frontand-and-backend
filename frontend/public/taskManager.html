@@ -12,7 +12,7 @@
       body {
         font-family: "Poppins", sans-serif;
         background-color: #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
       }
       .email-content {
         white-space: pre-wrap;
@@ -40,16 +40,16 @@
         <table class="min-w-full table-auto text-[11px] border">
           <thead class="bg-gray-200">
             <tr>
-              <th class="border px-2 py-1">RO Code</th>
-              <th class="border px-2 py-1">RO Name</th>
-              <th class="border px-2 py-1">Issue</th>
-              <th class="border px-2 py-1">Engineer</th>
-              <th class="border px-2 py-1">Email</th>
-              <th class="border px-2 py-1">Status</th>
-              <th class="border px-2 py-1">Mail Date</th>
-              <th class="border px-2 py-1">Task Completed By</th>
-              <th class="border px-2 py-1">Mail Reply</th>
-              <th class="border px-2 py-1">Actions</th>
+              <th class="border px-3 py-2">RO Code</th>
+              <th class="border px-3 py-2">RO Name</th>
+              <th class="border px-3 py-2">Issue</th>
+              <th class="border px-3 py-2">Engineer</th>
+              <th class="border px-3 py-2">Email</th>
+              <th class="border px-3 py-2">Status</th>
+              <th class="border px-3 py-2">Mail Date</th>
+              <th class="border px-3 py-2">Task Completed By</th>
+              <th class="border px-3 py-2">Mail Reply</th>
+              <th class="border px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody id="taskTableBody"></tbody>
@@ -75,12 +75,34 @@
         tasks.forEach((task) => {
           const row = document.createElement("tr");
           row.className = "border-b";
+
+          const voltage = task.voltageReading
+            ? ` <br/><span class='text-gray-500'>(Voltage: ${task.voltageReading}V)</span>`
+            : "";
+          const duRemark = task.duRemark
+            ? `<br/><span class='text-gray-500'>(Remark: ${task.duRemark})</span>`
+            : "";
+
+          const issueText =
+            task.issue.includes("Earthing") && task.voltageReading
+              ? task.issue.replace(
+                  "Earthing NOT OK",
+                  `Earthing NOT OK${voltage}`
+                )
+              : task.issue;
+
+          const finalIssueText =
+            issueText.includes("DU Offline") && task.duRemark
+              ? issueText.replace(
+                  /DU Offline: \d+/,
+                  (match) => `${match}${duRemark}`
+                )
+              : issueText;
+
           row.innerHTML = `
             <td class="border px-3 py-2">${task.roCode}</td>
             <td class="border px-3 py-2">${task.roName}</td>
-            <td class="border px-3 py-2 text-red-600 font-semibold">${
-              task.issue
-            }</td>
+            <td class="border px-3 py-2 text-red-600 font-semibold">${finalIssueText}</td>
             <td class="border px-3 py-2">${task.engineer}</td>
             <td class="border px-3 py-2 text-center">
               <button onclick="toggleEmail('${
