@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <title>Task Management | RELCON</title>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
@@ -21,6 +20,7 @@
         background: #f3f4f6;
         padding: 8px;
         border-radius: 4px;
+        display: none;
       }
     </style>
   </head>
@@ -44,8 +44,10 @@
               <th class="border px-2 py-1">RO Name</th>
               <th class="border px-2 py-1">Issue</th>
               <th class="border px-2 py-1">Engineer</th>
-              <th class="border px-2 py-1">Email Content</th>
+              <th class="border px-2 py-1">Email</th>
               <th class="border px-2 py-1">Status</th>
+              <th class="border px-2 py-1">Mail Date</th>
+              <th class="border px-2 py-1">Task Completed By</th>
               <th class="border px-2 py-1">Mail Reply</th>
               <th class="border px-2 py-1">Actions</th>
             </tr>
@@ -80,8 +82,13 @@
               task.issue
             }</td>
             <td class="border px-3 py-2">${task.engineer}</td>
-            <td class="border px-3 py-2 max-w-xs">
-              <div class="email-content text-xs">${task.emailContent}</div>
+            <td class="border px-3 py-2 text-center">
+              <button onclick="toggleEmail('${
+                task._id
+              }')" class="text-blue-600 underline">Show/Hide</button>
+              <div id="email_${task._id}" class="email-content mt-1">${
+            task.emailContent
+          }</div>
             </td>
             <td class="border px-3 py-2">
               <select onchange="updateTaskStatus('${
@@ -99,9 +106,29 @@
               </select>
             </td>
             <td class="border px-3 py-2">
-              <textarea onchange="saveReply('${
+              <input type="date" value="${
+                task.mailDate || ""
+              }" onchange="updateTaskField('${
+            task._id
+          }', 'mailDate', this.value)" class="border px-2 py-1 rounded w-full" />
+            </td>
+            <td class="border px-3 py-2">
+              <select onchange="updateTaskField('${
                 task._id
-              }', this.value)" class="border w-full p-1 rounded" rows="2">${
+              }', 'completedBy', this.value)" class="border px-2 py-1 rounded w-full">
+                <option value="">Select</option>
+                <option value="Anurag Mishra" ${
+                  task.completedBy === "Anurag Mishra" ? "selected" : ""
+                }>Anurag Mishra</option>
+                <option value="Nikhil Trivedi" ${
+                  task.completedBy === "Nikhil Trivedi" ? "selected" : ""
+                }>Nikhil Trivedi</option>
+              </select>
+            </td>
+            <td class="border px-3 py-2">
+              <textarea onchange="updateTaskField('${
+                task._id
+              }', 'mailReply', this.value)" class="border w-full p-1 rounded" rows="2">${
             task.mailReply || ""
           }</textarea>
             </td>
@@ -115,36 +142,40 @@
         });
       }
 
+      function toggleEmail(taskId) {
+        const emailDiv = document.getElementById("email_" + taskId);
+        if (emailDiv) {
+          emailDiv.style.display =
+            emailDiv.style.display === "none" ? "block" : "none";
+        }
+      }
+
       function copyToClipboard(taskId) {
-        const row = [...document.querySelectorAll("#taskTableBody tr")].find(
-          (tr) => tr.innerHTML.includes(taskId)
-        );
-        if (!row) return;
-        const emailText = row.querySelector(".email-content").innerText;
-        navigator.clipboard.writeText(emailText).then(() => {
+        const text = document.getElementById("email_" + taskId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
           alert("📋 Email content copied!");
         });
       }
 
-      async function updateTaskStatus(id, newStatus) {
+      async function updateTaskStatus(id, status) {
         await fetch(`${baseUrl}/updateTask/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status: newStatus }),
+          body: JSON.stringify({ status }),
         });
       }
 
-      async function saveReply(id, replyText) {
+      async function updateTaskField(id, field, value) {
         await fetch(`${baseUrl}/updateTask/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ mailReply: replyText }),
+          body: JSON.stringify({ [field]: value }),
         });
       }
 
