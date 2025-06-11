@@ -37,7 +37,7 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="min-w-full table-auto text-[11px] border">
+        <table class="min-w-full table-auto text-sm border">
           <thead class="bg-gray-200">
             <tr>
               <th class="border px-3 py-2">RO Code</th>
@@ -76,41 +76,49 @@
           const row = document.createElement("tr");
           row.className = "border-b";
 
-          const voltage = task.voltageReading
-            ? ` <br/><span class='text-gray-500'>(Voltage: ${task.voltageReading}V)</span>`
-            : "";
-          const duRemark = task.duRemark
-            ? `<br/><span class='text-gray-500'>(Remark: ${task.duRemark})</span>`
-            : "";
+          let issueParts = [];
+          if (task.earthingStatus) {
+            let part = `Earthing Status → ${task.earthingStatus}`;
+            if (task.voltageReading)
+              part += ` (Voltage: ${task.voltageReading}V)`;
+            issueParts.push(part);
+          }
+          if (task.duOffline) {
+            let part = `DU Offline → ${task.duOffline}`;
+            if (task.duRemark) part += ` (Remark: ${task.duRemark})`;
+            issueParts.push(part);
+          }
 
-          const issueText =
-            task.issue.includes("Earthing") && task.voltageReading
-              ? task.issue.replace(
-                  "Earthing NOT OK",
-                  `Earthing NOT OK${voltage}`
-                )
-              : task.issue;
+          const issueFormatted = issueParts.length
+            ? issueParts.join("<br>")
+            : "-";
 
-          const finalIssueText =
-            issueText.includes("DU Offline") && task.duRemark
-              ? issueText.replace(
-                  /DU Offline: \d+/,
-                  (match) => `${match}${duRemark}`
-                )
-              : issueText;
+          let emailContent = `Dear Client,\n\nDuring the recent visit to ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
+          if (task.earthingStatus) {
+            emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
+            if (task.voltageReading)
+              emailContent += ` (Voltage: ${task.voltageReading}V)`;
+            emailContent += "\n";
+          }
+          if (task.duOffline) {
+            emailContent += `➡️ DU Offline → ${task.duOffline}`;
+            if (task.duRemark) emailContent += ` (Remark: ${task.duRemark})`;
+            emailContent += "\n";
+          }
+          emailContent += `\nPlease address this issue at the earliest.\n\nRegards,\nRELCON Systems Support Team`;
 
           row.innerHTML = `
             <td class="border px-3 py-2">${task.roCode}</td>
             <td class="border px-3 py-2">${task.roName}</td>
-            <td class="border px-3 py-2 text-red-600 font-semibold">${finalIssueText}</td>
+            <td class="border px-3 py-2 text-red-600 font-semibold">${issueFormatted}</td>
             <td class="border px-3 py-2">${task.engineer}</td>
             <td class="border px-3 py-2 text-center">
               <button onclick="toggleEmail('${
                 task._id
               }')" class="text-blue-600 underline">Show/Hide</button>
-              <div id="email_${task._id}" class="email-content mt-1">${
-            task.emailContent
-          }</div>
+              <div id="email_${
+                task._id
+              }" class="email-content mt-1">${emailContent}</div>
             </td>
             <td class="border px-3 py-2">
               <select onchange="updateTaskStatus('${
