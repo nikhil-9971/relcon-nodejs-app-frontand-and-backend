@@ -98,12 +98,13 @@
           if (task.earthingStatus) {
             emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
             if (task.voltageReading)
-              emailContent += ` (Voltage: ${task.voltageReading}V)`;
+              emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
             emailContent += "\n";
           }
           if (task.duOffline) {
             emailContent += `➡️ DU Offline → ${task.duOffline}`;
-            if (task.duRemark) emailContent += ` (Remark: ${task.duRemark})`;
+            if (task.duRemark)
+              emailContent += ` (Offline DU remark: ${task.duRemark})`;
             emailContent += "\n";
           }
           emailContent += `\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.\n\nRegards,\nRELCON Systems`;
