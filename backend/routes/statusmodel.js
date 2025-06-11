@@ -17,6 +17,7 @@ const SECRET = process.env.JWT_SECRET || "relcon-secret-key";
 function generateEmailContent({
   roName,
   roCode,
+  date,
   earthingStatus,
   duOffline,
   voltageReading,
@@ -40,7 +41,7 @@ function generateEmailContent({
     ? observations.join("\n")
     : "➡️ No major issues reported.";
 
-  return `Dear Client,\n\nDuring the recent visit to ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${observationText}\n\nPlease address this issue at the earliest.\n\nRegards,\nRELCON Systems`;
+  return `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${date} at ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${observationText}\n\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.\n\nRegards,\nRELCON Systems`;
 }
 
 // Save Status Route
@@ -126,6 +127,7 @@ router.post("/saveStatus", async (req, res) => {
           statusId: savedStatus._id,
           roCode: plan.roCode,
           roName: plan.roName,
+          date: plan.date,
           engineer: plan.engineer,
           issue: issueSummary,
           emailContent: generateEmailContent({
