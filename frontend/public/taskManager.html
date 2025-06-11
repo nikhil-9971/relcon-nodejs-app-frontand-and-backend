@@ -40,16 +40,17 @@
         <table class="min-w-full table-auto text-[11px] border">
           <thead class="bg-gray-200">
             <tr>
-              <th class="border px-3 py-2">RO Code</th>
-              <th class="border px-3 py-2">RO Name</th>
-              <th class="border px-3 py-2">Issue</th>
-              <th class="border px-3 py-2">Engineer</th>
-              <th class="border px-3 py-2">Email</th>
-              <th class="border px-3 py-2">Status</th>
-              <th class="border px-3 py-2">Mail Date</th>
-              <th class="border px-3 py-2">Task Completed By</th>
-              <th class="border px-3 py-2">Mail Reply</th>
-              <th class="border px-3 py-2">Actions</th>
+              <th class="border px-2 py-1">RO Code</th>
+              <th class="border px-2 py-1">RO Name</th>
+              <th class="border px-2 py-1">Date of Visit</th>
+              <th class="border px-2 py-1">Issue</th>
+              <th class="border px-2 py-1">Engineer</th>
+              <th class="border px-2 py-1">Email</th>
+              <th class="border px-2 py-1">Status</th>
+              <th class="border px-2 py-1">Mail Date</th>
+              <th class="border px-2 py-1">Task Completed By</th>
+              <th class="border px-2 py-1">Mail Reply</th>
+              <th class="border px-2 py-1">Actions</th>
             </tr>
           </thead>
           <tbody id="taskTableBody"></tbody>
@@ -93,7 +94,7 @@
             ? issueParts.join("<br>")
             : "-";
 
-          let emailContent = `Dear Client,\n\nDuring the recent visit to ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
+          let emailContent = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${task.date} at ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
           if (task.earthingStatus) {
             emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
             if (task.voltageReading)
@@ -105,11 +106,12 @@
             if (task.duRemark) emailContent += ` (Remark: ${task.duRemark})`;
             emailContent += "\n";
           }
-          emailContent += `\nPlease address this issue at the earliest.\n\nRegards,\nRELCON Systems Support Team`;
+          emailContent += `\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.\n\nRegards,\nRELCON Systems`;
 
           row.innerHTML = `
             <td class="border px-3 py-2">${task.roCode}</td>
             <td class="border px-3 py-2">${task.roName}</td>
+            <td class="border px-3 py-2">${task.date}</td>
             <td class="border px-3 py-2 text-red-600 font-semibold">${issueFormatted}</td>
             <td class="border px-3 py-2">${task.engineer}</td>
             <td class="border px-3 py-2 text-center">
@@ -165,7 +167,7 @@
             <td class="border px-3 py-2">
               <button onclick="copyToClipboard('${
                 task._id
-              }')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">📋 Copy Email</button>
+              }')" class="bg-green-600 text-white px-2 py-1 rounded text-[11px]">📋 Copy Email</button>
             </td>
           `;
           tbody.appendChild(row);
