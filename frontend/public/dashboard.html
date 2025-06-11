@@ -243,9 +243,9 @@
       function resetInactivityTimer() {
         clearTimeout(inactivityTimeout);
         inactivityTimeout = setTimeout(() => {
-          alert("You were inactive for 15 minutes. Logging out.");
+          alert("You were inactive for 30 minutes. Logging out.");
           logout();
-        }, 15 * 60 * 1000);
+        }, 30 * 60 * 1000);
       }
 
       ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) =>
