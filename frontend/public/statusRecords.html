@@ -66,6 +66,15 @@
   padding: 2px 6px;
 }
 
+.task-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding-left: 4px;
+  color: #1f2937;
+  vertical-align: middle;
+}
+
+
     </style>
   </head>
   <body class="p-6 bg-gray-100 text-[9px]">
@@ -467,7 +476,12 @@ if (col.key === "actions") {
 // ✅ Add badge for verified record (on 'roCode' column or wherever appropriate)
 if (col.key === "roCode" && (record.isVerified === true || record.isVerified === "true")) {
   cellContent += ` <span class="verified-badge">✔ Verified</span>`;
+
+  if (record.taskGenerated) {
+    cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
+  }
 }
+
 
 return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
 
