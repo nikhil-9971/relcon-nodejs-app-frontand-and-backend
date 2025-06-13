@@ -630,6 +630,11 @@ if (!("isVerified" in updated)) {
 
   if (res.ok) {
     showToast("Record marked as Verified ✅");
+      // ✅ Notify task generation if it's Anurag verifying a problematic status
+    const responseText = await res.text();
+    if (isAnurag && responseText.includes("successfully")) {
+      showToast("📌 Task created after verification");
+    }
     await fetchStatusRecords();
   } else {
     alert("Verification failed.");
