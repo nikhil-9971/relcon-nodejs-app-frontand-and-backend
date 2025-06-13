@@ -119,9 +119,12 @@ router.get("/getMergedStatusRecords", async (req, res) => {
   try {
     const statusRecords = await Status.find().populate("planId");
 
-    const merged = statusRecords.map((record) => {
+    const merged = statusRecords.map(async (record) => {
       const plan = record.planId || {};
       const status = record || {};
+
+      // ✅ Check if task exists for this status
+      const taskExists = await Task.exists({ statusId: status._id });
 
       return {
         _id: status._id?.toString() || "",
@@ -158,6 +161,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
         duRemark: status.duRemark || "",
         locationField: status.locationField || "",
         isVerified: status.isVerified || false, // <-- ✅ Add this line
+        taskGenerated: !!taskExists, // ✅ new field
       };
     });
 
