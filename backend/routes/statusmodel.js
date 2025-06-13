@@ -119,51 +119,53 @@ router.get("/getMergedStatusRecords", async (req, res) => {
   try {
     const statusRecords = await Status.find().populate("planId");
 
-    const merged = statusRecords.map(async (record) => {
-      const plan = record.planId || {};
-      const status = record || {};
+    const merged = await Promise.all(
+      statusRecords.map(async (record) => {
+        const plan = record.planId || {};
+        const status = record || {};
 
-      // ✅ Check if task exists for this status
-      const taskExists = await Task.exists({ statusId: status._id });
+        // ✅ Check if task exists for this status
+        const taskExists = await Task.exists({ statusId: status._id });
 
-      return {
-        _id: status._id?.toString() || "",
-        planId: status.planId?._id?.toString() || "",
-        engineer: plan.engineer || "",
-        region: plan.region || "",
-        phase: plan.phase || "",
-        roCode: plan.roCode || "",
-        roName: plan.roName || "",
-        date: plan.date || "",
-        amcQtr: plan.amcQtr || "",
-        purpose: plan.purpose || "",
-        probeMake: status.probeMake || "",
-        probeSize: status.probeSize || "",
-        lowProductLock: status.lowProductLock || "",
-        highWaterSet: status.highWaterSet || "",
-        duSerialNumber: status.duSerialNumber || "",
-        dgStatus: status.dgStatus || "",
-        connectivityType: status.connectivityType || "",
-        sim1Provider: status.sim1Provider || "",
-        sim1Number: status.sim1Number || "",
-        sim2Provider: status.sim2Provider || "",
-        sim2Number: status.sim2Number || "",
-        iemiNumber: status.iemiNumber || "",
-        bosVersion: status.bosVersion || "",
-        fccVersion: status.fccVersion || "",
-        wirelessSlave: status.wirelessSlave || "",
-        sftpConfig: status.sftpConfig || "",
-        adminPassword: status.adminPassword || "",
-        workCompletion: status.workCompletion || "",
-        earthingStatus: status.earthingStatus || "",
-        voltageReading: status.voltageReading || "",
-        duOffline: status.duOffline || "",
-        duRemark: status.duRemark || "",
-        locationField: status.locationField || "",
-        isVerified: status.isVerified || false, // <-- ✅ Add this line
-        taskGenerated: !!taskExists, // ✅ new field
-      };
-    });
+        return {
+          _id: status._id?.toString() || "",
+          planId: status.planId?._id?.toString() || "",
+          engineer: plan.engineer || "",
+          region: plan.region || "",
+          phase: plan.phase || "",
+          roCode: plan.roCode || "",
+          roName: plan.roName || "",
+          date: plan.date || "",
+          amcQtr: plan.amcQtr || "",
+          purpose: plan.purpose || "",
+          probeMake: status.probeMake || "",
+          probeSize: status.probeSize || "",
+          lowProductLock: status.lowProductLock || "",
+          highWaterSet: status.highWaterSet || "",
+          duSerialNumber: status.duSerialNumber || "",
+          dgStatus: status.dgStatus || "",
+          connectivityType: status.connectivityType || "",
+          sim1Provider: status.sim1Provider || "",
+          sim1Number: status.sim1Number || "",
+          sim2Provider: status.sim2Provider || "",
+          sim2Number: status.sim2Number || "",
+          iemiNumber: status.iemiNumber || "",
+          bosVersion: status.bosVersion || "",
+          fccVersion: status.fccVersion || "",
+          wirelessSlave: status.wirelessSlave || "",
+          sftpConfig: status.sftpConfig || "",
+          adminPassword: status.adminPassword || "",
+          workCompletion: status.workCompletion || "",
+          earthingStatus: status.earthingStatus || "",
+          voltageReading: status.voltageReading || "",
+          duOffline: status.duOffline || "",
+          duRemark: status.duRemark || "",
+          locationField: status.locationField || "",
+          isVerified: status.isVerified || false,
+          taskGenerated: !!taskExists, // ✅ new field
+        };
+      })
+    );
 
     res.json(merged);
   } catch (err) {
