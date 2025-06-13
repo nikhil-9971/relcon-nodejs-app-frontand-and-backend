@@ -108,46 +108,6 @@ router.post("/saveStatus", async (req, res) => {
     // ✅ Mark DailyPlan as statusSaved = true
     await DailyPlan.findByIdAndUpdate(planId, { statusSaved: true });
 
-    // ✅ Auto-create task if condition matches
-    if (
-      earthingStatus === "NOT OK" ||
-      (duOffline && duOffline !== 0 && duOffline !== "ALL OK")
-    ) {
-      const plan = await DailyPlan.findById(planId);
-      if (plan) {
-        // 🔹 Determine full issue summary
-        const issues = [];
-        if (earthingStatus === "NOT OK") issues.push("Earthing NOT OK");
-        if (duOffline && duOffline !== 0 && duOffline !== "ALL OK")
-          issues.push(`DU Offline: ${duOffline}`);
-
-        const issueSummary = issues.join(" + ");
-
-        const task = new Task({
-          statusId: savedStatus._id,
-          roCode: plan.roCode,
-          roName: plan.roName,
-          date: plan.date,
-          engineer: plan.engineer,
-          issue: issueSummary,
-          emailContent: generateEmailContent({
-            roName: plan.roName,
-            roCode: plan.roCode,
-            earthingStatus,
-            voltageReading,
-            duOffline,
-            duRemark,
-          }),
-          earthingStatus,
-          voltageReading,
-          duOffline,
-          duRemark,
-        });
-
-        await task.save(); // ✅ Insert the new task
-      }
-    }
-
     res.send("Status saved");
   } catch (err) {
     res.status(500).send("Server error: " + err.message);
@@ -364,6 +324,46 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
       visitDate,
       engineerName,
     });
+
+    // ✅ Task Generation — only if admin + anurag.mishra
+    const { earthingStatus, duOffline, voltageReading, duRemark } = updated;
+
+    if (
+      (earthingStatus === "NOT OK" || (duOffline && duOffline !== "ALL OK")) &&
+      req.user?.username === "anurag.mishra" &&
+      req.user?.role === "admin"
+    ) {
+      const issues = [];
+      if (earthingStatus === "NOT OK") issues.push("Earthing NOT OK");
+      if (duOffline && duOffline !== "ALL OK")
+        issues.push(`DU Offline: ${duOffline}`);
+
+      const issueSummary = issues.join(" + ");
+
+      const task = new Task({
+        statusId: updated._id,
+        roCode: plan.roCode,
+        roName: plan.roName,
+        date: plan.date,
+        engineer: plan.engineer,
+        issue: issueSummary,
+        emailContent: generateEmailContent({
+          roName: plan.roName,
+          roCode: plan.roCode,
+          date: plan.date,
+          earthingStatus,
+          voltageReading,
+          duOffline,
+          duRemark,
+        }),
+        earthingStatus,
+        voltageReading,
+        duOffline,
+        duRemark,
+      });
+
+      await task.save();
+    }
 
     res.send("Status verified successfully");
   } catch (err) {
