@@ -115,14 +115,14 @@
             <td class="border px-3 py-2">${task.date}</td>
             <td class="border px-3 py-2 text-red-600 font-semibold text-[9px]">${issueFormatted}</td>
             <td class="border px-3 py-2">${task.engineer}</td>
-            <td class="border px-3 py-2 text-center">
-              <button onclick="toggleEmail('${
-                task._id
-              }')" class="text-blue-600 underline">Show/Hide</button>
-              <div id="email_${
-                task._id
-              }" class="email-content mt-1">${emailContent}</div>
-            </td>
+            <td class="border text-center px-2 py-1">
+  <button onclick="copyEmail('${
+    task._id
+  }')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">
+    📋 Copy Email
+  </button>
+</td>
+
             <td class="border px-3 py-2">
               <select onchange="updateTaskStatus('${
                 task._id
@@ -165,11 +165,18 @@
             task.mailReply || ""
           }</textarea>
             </td>
-            <td class="border px-3 py-2">
-              <button onclick="copyToClipboard('${
-                task._id
-              }')" class="bg-green-600 text-white px-2 py-1 rounded text-[11px]">📋 Copy Email</button>
-            </td>
+           <td class="border text-center px-2 py-1">
+  ${
+    isAdmin && task.status === "Mailed"
+      ? `
+    <button onclick="submitTask('${task._id}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">
+      ✅ Submit
+    </button>
+  `
+      : ""
+  }
+</td>
+
           `;
           tbody.appendChild(row);
         });
@@ -183,11 +190,16 @@
         }
       }
 
-      function copyToClipboard(taskId) {
-        const text = document.getElementById("email_" + taskId).innerText;
-        navigator.clipboard.writeText(text).then(() => {
-          alert("📋 Email content copied!");
+      async function copyEmail(id) {
+        const res = await fetch(`${baseUrl}/getTasks`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        const tasks = await res.json();
+        const task = tasks.find((t) => t._id === id);
+        if (task?.emailContent) {
+          await navigator.clipboard.writeText(task.emailContent);
+          alert("📋 Email copied!");
+        }
       }
 
       async function updateTaskStatus(id, status) {
@@ -210,6 +222,44 @@
           },
           body: JSON.stringify({ [field]: value }),
         });
+      }
+
+      async function submitTask(id) {
+        const row = document
+          .querySelector(`button[onclick="submitTask('${id}')"]`)
+          .closest("tr");
+        const statusSelect = row.querySelector("select");
+        const status = statusSelect ? statusSelect.value : "";
+
+        if (status !== "Mailed") {
+          alert("❌ You can only submit a task when its status is 'Mailed'.");
+          return;
+        }
+
+        const mailDate = row.querySelector('input[type="date"]').value;
+        const completedBy = row.querySelectorAll("select")[1].value;
+        const mailReply = row.querySelector("textarea").value;
+
+        const res = await fetch(`${baseUrl}/updateTask/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "Resolved",
+            mailDate,
+            completedBy,
+            mailReply,
+          }),
+        });
+
+        if (res.ok) {
+          alert("✅ Task submitted and marked as Resolved");
+          fetchTasks();
+        } else {
+          alert("❌ Failed to submit task");
+        }
       }
 
       window.onload = fetchTasks;
