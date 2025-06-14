@@ -10,6 +10,8 @@ const taskSchema = new mongoose.Schema({
   emailContent: String,
   status: { type: String, default: "Pending" }, // Pending, Mailed, Resolved
   mailReply: String,
+  mailDate: String, // ✅ add this
+  completedBy: String, // ✅ add this
   createdAt: { type: Date, default: Date.now },
   // ✅ Add these for UI display
   earthingStatus: String,
