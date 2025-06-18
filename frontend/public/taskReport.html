@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Task Report</title>
+    <title>Task Report | RELCON</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -35,7 +35,9 @@
             <th class="border px-2 py-1">Mail Date</th>
             <th class="border px-2 py-1">Completed By</th>
             <th class="border px-2 py-1">Mail Reply</th>
-            <th class="border px-2 py-1">Status</th>
+            <th class="border px-2 py-1">Previous Status</th>
+            <th class="border px-2 py-1">Current Status</th>
+            <th class="border px-2 py-1">Next Follow-up Date</th>
           </tr>
         </thead>
         <tbody id="taskTableBody"></tbody>
@@ -54,11 +56,27 @@
         const tbody = document.getElementById("taskTableBody");
         tbody.innerHTML = "";
 
-        const resolvedTasks = tasks.filter(
+        const todayStr = new Date().toISOString().split("T")[0];
+
+        const submittedTasks = tasks.filter(
           (task) => task.status === "Resolved"
         );
 
-        resolvedTasks.forEach((task) => {
+        submittedTasks.forEach((task) => {
+          const followUpDate = task.mailDate
+            ? new Date(
+                new Date(task.mailDate).getTime() + 7 * 24 * 60 * 60 * 1000
+              )
+            : null;
+          const followUpDateStr = followUpDate
+            ? followUpDate.toISOString().split("T")[0]
+            : "-";
+
+          // Auto-assign Follow-up if today is follow-up date
+          if (followUpDateStr === todayStr) {
+            updateTaskStatus(task._id, "Follow-up");
+          }
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td class="border px-2 py-1">${task.roCode}</td>
@@ -69,23 +87,18 @@
             <td class="border px-2 py-1">${task.mailDate || "-"}</td>
             <td class="border px-2 py-1">${task.completedBy || "-"}</td>
             <td class="border px-2 py-1">${task.mailReply || "-"}</td>
+            <td class="border px-2 py-1 text-green-600 font-medium">Mailed</td>
             <td class="border px-2 py-1">
-              <span class="text-green-600 font-semibold">Mailed</span>
-              <br />
               <select onchange="updateTaskStatus('${
                 task._id
-              }', this.value)" class="mt-1 text-xs border rounded">
-                <option value="Pending" ${
-                  task.status === "Pending" ? "selected" : ""
-                }>Pending</option>
-                <option value="Mailed" ${
-                  task.status === "Mailed" ? "selected" : ""
-                }>Mailed</option>
+              }', this.value)" class="border px-2 py-1 rounded">
+                <option value="Pending">Pending</option>
                 <option value="Resolved" ${
                   task.status === "Resolved" ? "selected" : ""
                 }>Resolved</option>
               </select>
             </td>
+            <td class="border px-2 py-1">${followUpDateStr}</td>
           `;
           tbody.appendChild(row);
         });
