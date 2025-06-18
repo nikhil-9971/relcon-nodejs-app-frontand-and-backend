@@ -161,26 +161,46 @@
         const trs = table.querySelectorAll("tr");
 
         trs.forEach((tr) => {
-          const tds = tr.querySelectorAll("td");
           const row = [];
-          tds.forEach((td) => row.push(td.innerText.replace(/\n/g, " ")));
+          const tds = tr.querySelectorAll("td");
+
+          tds.forEach((td, index) => {
+            let text = "";
+
+            // Handle select dropdown (Current Status)
+            const select = td.querySelector("select");
+            if (select) {
+              text = select.options[select.selectedIndex].text;
+            }
+            // Handle input
+            else if (td.querySelector("input")) {
+              text = td.querySelector("input").value;
+            }
+            // Handle textarea
+            else if (td.querySelector("textarea")) {
+              text = td.querySelector("textarea").value;
+            }
+            // Handle plain text or HTML
+            else {
+              text = td.textContent.trim().replace(/\n/g, " ");
+            }
+
+            row.push(text);
+          });
+
           rows.push(row);
         });
 
-        let csvContent = rows.map((e) => e.join(",")).join("\n");
+        const csvContent = rows.map((e) => e.join(",")).join("\n");
 
-        const blob = new Blob([`\ufeff${csvContent}`], {
+        const blob = new Blob(["\ufeff" + csvContent], {
           type: "text/csv;charset=utf-8;",
         });
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-
-        // 🟢 Filename: TaskReport-<today>.csv
         const today = new Date().toISOString().split("T")[0];
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
         a.download = `TaskReport-${today}.csv`;
-        a.style.display = "none";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
