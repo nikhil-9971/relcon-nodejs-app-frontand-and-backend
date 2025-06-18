@@ -48,6 +48,12 @@
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       const token = localStorage.getItem("token");
 
+      function addDays(dateStr, days) {
+        const d = new Date(dateStr);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split("T")[0];
+      }
+
       async function fetchTasks() {
         const res = await fetch(`${baseUrl}/getTasks`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -86,7 +92,17 @@
             <td class="border px-2 py-1 text-red-600">${task.issue}</td>
             <td class="border px-2 py-1">${task.mailDate || "-"}</td>
             <td class="border px-2 py-1">${task.completedBy || "-"}</td>
-            <td class="border px-2 py-1">${task.mailReply || "-"}</td>
+            <td class="border px-2 py-1">
+              ${
+                task.mailDate
+                  ? `
+                First Mail Date: ${task.mailDate}<br/>
+                1st Follow-up: ${addDays(task.mailDate, 7)}<br/>
+                2nd Follow-up: ${addDays(task.mailDate, 14)}
+              `
+                  : "-"
+              }
+            </td>
             <td class="border px-2 py-1 text-green-600 font-medium">Mailed</td>
             <td class="border px-2 py-1">
               <select onchange="updateTaskStatus('${
@@ -95,7 +111,7 @@
                 <option value="Pending">Pending</option>
                 <option value="Resolved" ${
                   task.status === "Resolved" ? "selected" : ""
-                }>Resolved</option>
+                }>In Process</option>
               </select>
             </td>
             <td class="border px-2 py-1">${followUpDateStr}</td>
