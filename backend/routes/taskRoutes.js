@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Task = require("../models/Task"); // MongoDB model
-const authMiddleware = require("../middleware/authMiddleware"); // JWT validation
+const Task = require("../models/Task");
+const authMiddleware = require("../middleware/authMiddleware");
 
 // ✅ GET /getTasks - return all tasks
 router.get("/getTasks", authMiddleware, async (req, res) => {
@@ -13,13 +13,31 @@ router.get("/getTasks", authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ PUT /updateTask/:id - update task status or reply
+// ✅ PUT /updateTask/:id - update task fields or track follow-ups
 router.put("/updateTask/:id", authMiddleware, async (req, res) => {
-  const updates = req.body;
+  const { status, mailDate, completedBy, mailReply, followUp } = req.body;
+
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, updates, {
-      new: true,
-    });
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    if (status) task.status = status;
+    if (mailDate) task.mailDate = mailDate;
+    if (completedBy) task.completedBy = completedBy;
+    if (mailReply) task.mailReply = mailReply;
+
+    // Track follow-up dates
+    const today = new Date().toISOString().split("T")[0];
+    if (!task.followUpDates) task.followUpDates = [];
+
+    if (
+      (status === "Resolved" || followUp === true) &&
+      !task.followUpDates.includes(today)
+    ) {
+      task.followUpDates.push(today);
+    }
+
+    await task.save();
     res.json({ message: "Task updated", task });
   } catch (err) {
     res.status(500).json({ error: "Failed to update task" });
