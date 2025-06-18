@@ -18,6 +18,7 @@ const taskSchema = new mongoose.Schema({
   voltageReading: String,
   duOffline: String,
   duRemark: String,
+  followUpDates: [String], // array to store each follow-up date as 'YYYY-MM-DD'
 });
 
 module.exports = mongoose.model("Task", taskSchema);
