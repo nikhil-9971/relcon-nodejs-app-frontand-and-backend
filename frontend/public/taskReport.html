@@ -83,6 +83,14 @@
             updateTaskStatus(task._id, "Follow-up");
           }
 
+          let mailReplyDisplay = "-";
+          if (task.mailDate) {
+            mailReplyDisplay = task.mailDate;
+            if (task.followUpDates && Array.isArray(task.followUpDates)) {
+              mailReplyDisplay += ", " + task.followUpDates.join(", ");
+            }
+          }
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td class="border px-2 py-1">${task.roCode}</td>
@@ -92,17 +100,7 @@
             <td class="border px-2 py-1 text-red-600">${task.issue}</td>
             <td class="border px-2 py-1">${task.mailDate || "-"}</td>
             <td class="border px-2 py-1">${task.completedBy || "-"}</td>
-            <td class="border px-2 py-1">
-              ${
-                task.mailDate
-                  ? `
-                First Mail Date: ${task.mailDate}<br/>
-                1st Follow-up: ${addDays(task.mailDate, 7)}<br/>
-                2nd Follow-up: ${addDays(task.mailDate, 14)}
-              `
-                  : "-"
-              }
-            </td>
+            <td class="border px-2 py-1">${mailReplyDisplay}</td>
             <td class="border px-2 py-1 text-green-600 font-medium">Mailed</td>
             <td class="border px-2 py-1">
               <select onchange="updateTaskStatus('${
@@ -112,6 +110,7 @@
                 <option value="Resolved" ${
                   task.status === "Resolved" ? "selected" : ""
                 }>In Process</option>
+                <option value="Done">Resolved</option>
               </select>
             </td>
             <td class="border px-2 py-1">${followUpDateStr}</td>
