@@ -24,6 +24,13 @@
         </button>
       </div>
 
+      <button
+        onclick="exportToCSV()"
+        class="bg-green-600 text-white px-4 py-1 rounded ml-2 text-[10px]"
+      >
+        ⬇️ Export CSV
+      </button>
+
       <table class="min-w-full table-auto border text-[11px]">
         <thead class="bg-gray-200">
           <tr>
@@ -132,6 +139,51 @@
           body: JSON.stringify({ status, followUp }),
         });
         fetchTasks();
+      }
+
+      function exportToCSV() {
+        const rows = [
+          [
+            "RO Code",
+            "RO Name",
+            "Date",
+            "Engineer",
+            "Issue",
+            "Mail Date",
+            "Completed By",
+            "Sent Mail Dates",
+            "Previous Status",
+            "Current Status",
+            "Next Follow-up Date",
+          ],
+        ];
+        const table = document.getElementById("taskTableBody");
+        const trs = table.querySelectorAll("tr");
+
+        trs.forEach((tr) => {
+          const tds = tr.querySelectorAll("td");
+          const row = [];
+          tds.forEach((td) => row.push(td.innerText.replace(/\n/g, " ")));
+          rows.push(row);
+        });
+
+        let csvContent = rows.map((e) => e.join(",")).join("\n");
+
+        const blob = new Blob([`\ufeff${csvContent}`], {
+          type: "text/csv;charset=utf-8;",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+
+        // 🟢 Filename: TaskReport-<today>.csv
+        const today = new Date().toISOString().split("T")[0];
+        a.download = `TaskReport-${today}.csv`;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
 
       window.onload = fetchTasks;
