@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Task Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f9fafb;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body class="p-6">
+    <div class="max-w-7xl mx-auto bg-white p-5 shadow rounded">
+      <div class="flex justify-between mb-4">
+        <h2 class="text-xl font-semibold">✅ Submitted Tasks Report</h2>
+        <button
+          onclick="fetchTasks()"
+          class="bg-blue-600 text-white px-4 py-1 rounded"
+        >
+          🔄 Refresh
+        </button>
+      </div>
+
+      <table class="min-w-full table-auto border text-[11px]">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border px-2 py-1">RO Code</th>
+            <th class="border px-2 py-1">RO Name</th>
+            <th class="border px-2 py-1">Date</th>
+            <th class="border px-2 py-1">Engineer</th>
+            <th class="border px-2 py-1">Issue</th>
+            <th class="border px-2 py-1">Mail Date</th>
+            <th class="border px-2 py-1">Completed By</th>
+            <th class="border px-2 py-1">Mail Reply</th>
+            <th class="border px-2 py-1">Status</th>
+          </tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      const token = localStorage.getItem("token");
+
+      async function fetchTasks() {
+        const res = await fetch(`${baseUrl}/getTasks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const tasks = await res.json();
+        const tbody = document.getElementById("taskTableBody");
+        tbody.innerHTML = "";
+
+        const resolvedTasks = tasks.filter(
+          (task) => task.status === "Resolved"
+        );
+
+        resolvedTasks.forEach((task) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="border px-2 py-1">${task.roCode}</td>
+            <td class="border px-2 py-1">${task.roName}</td>
+            <td class="border px-2 py-1">${task.date}</td>
+            <td class="border px-2 py-1">${task.engineer}</td>
+            <td class="border px-2 py-1 text-red-600">${task.issue}</td>
+            <td class="border px-2 py-1">${task.mailDate || "-"}</td>
+            <td class="border px-2 py-1">${task.completedBy || "-"}</td>
+            <td class="border px-2 py-1">${task.mailReply || "-"}</td>
+            <td class="border px-2 py-1">
+              <span class="text-green-600 font-semibold">Mailed</span>
+              <br />
+              <select onchange="updateTaskStatus('${
+                task._id
+              }', this.value)" class="mt-1 text-xs border rounded">
+                <option value="Pending" ${
+                  task.status === "Pending" ? "selected" : ""
+                }>Pending</option>
+                <option value="Mailed" ${
+                  task.status === "Mailed" ? "selected" : ""
+                }>Mailed</option>
+                <option value="Resolved" ${
+                  task.status === "Resolved" ? "selected" : ""
+                }>Resolved</option>
+              </select>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      async function updateTaskStatus(id, status) {
+        await fetch(`${baseUrl}/updateTask/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status }),
+        });
+        fetchTasks();
+      }
+
+      window.onload = fetchTasks;
+    </script>
+  </body>
+</html>
