@@ -144,21 +144,22 @@
       }
 
       function exportToCSV() {
-        const rows = [
-          [
-            "RO Code",
-            "RO Name",
-            "Date",
-            "Engineer",
-            "Issue",
-            "Mail Date",
-            "Completed By",
-            "Sent Mail Dates",
-            "Previous Status",
-            "Current Status",
-            "Next Follow-up Date",
-          ],
+        const headers = [
+          "RO Code",
+          "RO Name",
+          "Date",
+          "Engineer",
+          "Issue",
+          "Mail Date",
+          "Completed By",
+          "Sent Mail Dates",
+          "Previous Status",
+          "Current Status",
+          "Next Follow-up Date",
         ];
+
+        const rows = [headers];
+
         const table = document.getElementById("taskTableBody");
         const trs = table.querySelectorAll("tr");
 
@@ -166,29 +167,24 @@
           const row = [];
           const tds = tr.querySelectorAll("td");
 
-          tds.forEach((td, index) => {
+          // Extract only the first 11 columns safely
+          for (let i = 0; i < 11; i++) {
+            const td = tds[i];
             let text = "";
 
-            // Handle select dropdown (Current Status)
             const select = td.querySelector("select");
             if (select) {
               text = select.options[select.selectedIndex].text;
-            }
-            // Handle input
-            else if (td.querySelector("input")) {
+            } else if (td.querySelector("input")) {
               text = td.querySelector("input").value;
-            }
-            // Handle textarea
-            else if (td.querySelector("textarea")) {
+            } else if (td.querySelector("textarea")) {
               text = td.querySelector("textarea").value;
-            }
-            // Handle plain text or HTML
-            else {
+            } else {
               text = td.textContent.trim().replace(/\n/g, " ");
             }
 
-            row.push(text);
-          });
+            row.push(`"${text}"`); // Wrap in quotes to preserve commas
+          }
 
           rows.push(row);
         });
