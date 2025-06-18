@@ -236,6 +236,7 @@
         const row = document
           .querySelector(`button[onclick="submitTask('${id}')"]`)
           .closest("tr");
+
         const statusSelect = row.querySelector("select");
         const status = statusSelect ? statusSelect.value : "";
 
@@ -263,7 +264,7 @@
         });
 
         if (res.ok) {
-          alert("✅ Task submitted and marked as Resolved");
+          alert("✅ Task submitted and marked as In Process");
           fetchTasks();
         } else {
           alert("❌ Failed to submit task");

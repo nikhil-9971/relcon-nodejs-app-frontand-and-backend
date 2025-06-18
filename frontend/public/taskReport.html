@@ -79,8 +79,11 @@
             : "-";
 
           // Auto-assign Follow-up if today is follow-up date
-          if (followUpDateStr === todayStr) {
-            updateTaskStatus(task._id, "Follow-up");
+          if (
+            followUpDateStr === todayStr &&
+            (!task.followUpDates || !task.followUpDates.includes(todayStr))
+          ) {
+            updateTaskStatus(task._id, "Follow-up", true); // Add third param
           }
 
           let mailReplyDisplay = "-";
@@ -119,14 +122,14 @@
         });
       }
 
-      async function updateTaskStatus(id, status) {
+      async function updateTaskStatus(id, status, followUp = false) {
         await fetch(`${baseUrl}/updateTask/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({ status, followUp }),
         });
         fetchTasks();
       }
