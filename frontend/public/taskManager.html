@@ -77,43 +77,47 @@
       function renderTasks(tasks, isAdmin) {
         const tbody = document.getElementById("taskTableBody");
         tbody.innerHTML = "";
-        tasks.forEach((task) => {
-          const row = document.createElement("tr");
-          row.className = "border-b";
+        tasks
+          .filter(
+            (task) => task.status !== "Resolved" && task.status !== "Follow-up"
+          )
+          .forEach((task) => {
+            const row = document.createElement("tr");
+            row.className = "border-b";
 
-          let issueParts = [];
-          if (task.earthingStatus && task.earthingStatus !== "OK") {
-            let part = `Earthing Status → ${task.earthingStatus}`;
-            if (task.voltageReading)
-              part += ` (Voltage: ${task.voltageReading})`;
-            issueParts.push(part);
-          }
-          if (task.duOffline && task.duOffline !== "ALL OK") {
-            let part = `DU Offline → ${task.duOffline}`;
-            if (task.duRemark) part += ` (Remark: ${task.duRemark})`;
-            issueParts.push(part);
-          }
+            let issueParts = [];
+            if (task.earthingStatus && task.earthingStatus !== "OK") {
+              let part = `Earthing Status → ${task.earthingStatus}`;
+              if (task.voltageReading)
+                part += ` (Voltage: ${task.voltageReading})`;
+              issueParts.push(part);
+            }
+            if (task.duOffline && task.duOffline !== "ALL OK") {
+              let part = `DU Offline → ${task.duOffline}`;
+              if (task.duRemark) part += ` (Remark: ${task.duRemark})`;
+              issueParts.push(part);
+            }
 
-          const issueFormatted = issueParts.length
-            ? issueParts.join("<br>")
-            : "-";
+            const issueFormatted = issueParts.length
+              ? issueParts.join("<br>")
+              : "-";
 
-          let emailContent = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${task.date} at ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
-          if (task.earthingStatus && task.earthingStatus !== "OK") {
-            emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
-            if (task.voltageReading)
-              emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
-            emailContent += "\n";
-          }
-          if (task.duOffline && task.duOffline !== "ALL OK") {
-            emailContent += `➡️ DU Offline → ${task.duOffline}`;
-            if (task.duRemark)
-              emailContent += ` (Offline DU remark: ${task.duRemark})`;
-            emailContent += "\n";
-          }
-          emailContent += `\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.\n\nRegards,\nRELCON Systems`;
+            let emailContent = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${task.date} at ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
+            if (task.earthingStatus && task.earthingStatus !== "OK") {
+              emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
+              if (task.voltageReading)
+                emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
+              emailContent += "\n";
+            }
+            if (task.duOffline && task.duOffline !== "ALL OK") {
+              emailContent += `➡️ DU Offline → ${task.duOffline}`;
+              if (task.duRemark)
+                emailContent += ` (Offline DU remark: ${task.duRemark})`;
+              emailContent += "\n";
+            }
+            emailContent += `\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.\n\nRegards,\nRELCON Systems`;
 
-          row.innerHTML = `
+            row.innerHTML = `
                   <td class="border px-3 py-2">${task.roCode}</td>
                   <td class="border px-3 py-2">${task.roName}</td>
                   <td class="border px-3 py-2">${task.date}</td>
@@ -146,8 +150,8 @@
                     <input type="date" value="${
                       task.mailDate || ""
                     }" onchange="updateTaskField('${
-            task._id
-          }', 'mailDate', this.value)" class="border px-2 py-1 rounded w-full" />
+              task._id
+            }', 'mailDate', this.value)" class="border px-2 py-1 rounded w-full" />
                   </td>
                   <td class="border px-3 py-2">
                     <select onchange="updateTaskField('${
@@ -166,8 +170,8 @@
                     <textarea onchange="updateTaskField('${
                       task._id
                     }', 'mailReply', this.value)" class="border w-full p-1 rounded" rows="2">${
-            task.mailReply || ""
-          }</textarea>
+              task.mailReply || ""
+            }</textarea>
                   </td>
                  <td class="border text-center px-2 py-1">
         ${
@@ -182,8 +186,8 @@
       </td>
 
                 `;
-          tbody.appendChild(row);
-        });
+            tbody.appendChild(row);
+          });
       }
 
       function toggleEmail(taskId) {
