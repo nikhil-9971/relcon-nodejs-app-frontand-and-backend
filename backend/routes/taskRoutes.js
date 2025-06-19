@@ -44,4 +44,14 @@ router.put("/updateTask/:id", authMiddleware, async (req, res) => {
   }
 });
 
+router.get("/getTask/:id", authMiddleware, async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  res.json(task);
+});
+
+router.delete("/deleteTask/:id", authMiddleware, async (req, res) => {
+  await Task.findByIdAndDelete(req.params.id);
+  res.json({ message: "Task deleted" });
+});
+
 module.exports = router;
