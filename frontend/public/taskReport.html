@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>Task Report | RELCON</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -210,8 +214,8 @@
                 ${
                   isAdmin && isNikhilTrivedi
                     ? `
-                  <button onclick="editTask('${task._id}')" class="text-blue-600 underline text-xs mr-2">✏️ Edit</button>
-                  <button onclick="deleteTask('${task._id}')" class="text-red-600 underline text-xs">🗑️ Delete</button>`
+                  <button onclick="editTask('${task._id}')" class="bg-blue-500 text-white px-2 py-1 rounded mr-1">✏️</button>
+                  <button onclick="deleteTask('${task._id}')" class="bg-red-600 text-white px-2 py-1 rounded mr-1">🗑️</button>`
                     : "-"
                 }
               </td>
