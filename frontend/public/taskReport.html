@@ -125,7 +125,8 @@
         const res = await fetch(`${baseUrl}/getTasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const tasks = await res.json();
+        const raw = await res.json();
+        console.log("GET /getTasks response:", raw);
 
         const tbody = document.getElementById("taskTableBody");
         tbody.innerHTML = "";
