@@ -87,12 +87,36 @@
             ? followUpDate.toISOString().split("T")[0]
             : "-";
 
-          // Auto-assign Follow-up if today is follow-up date
+          let disableFollowup = false;
+          let currentStatusOption = `
+      <select onchange="updateTaskStatus('${
+        task._id
+      }', this.value)" class="border px-2 py-1 rounded">
+        <option value="Pending">Pending</option>
+        <option value="Resolved" ${
+          task.status === "Resolved" ? "selected" : ""
+        }>In Process</option>
+        <option value="Done">Resolved</option>
+      </select>
+    `;
+
+          // ✅ Disable dropdown if "Resolved" selected
+          if (task.status === "Done") {
+            disableFollowup = true;
+            currentStatusOption = `
+        <select disabled class="border px-2 py-1 rounded bg-gray-200 text-gray-500 cursor-not-allowed">
+          <option>Resolved</option>
+        </select>
+      `;
+          }
+
+          // ✅ Skip auto-follow-up for "Done" tasks
           if (
             followUpDateStr === todayStr &&
+            !disableFollowup &&
             (!task.followUpDates || !task.followUpDates.includes(todayStr))
           ) {
-            updateTaskStatus(task._id, "Follow-up", true); // Add third param
+            updateTaskStatus(task._id, "Follow-up", true);
           }
 
           let mailReplyDisplay = "-";
@@ -105,28 +129,18 @@
 
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td class="border px-2 py-1">${task.roCode}</td>
-            <td class="border px-2 py-1">${task.roName}</td>
-            <td class="border px-2 py-1">${task.date}</td>
-            <td class="border px-2 py-1">${task.engineer}</td>
-            <td class="border px-2 py-1 text-red-600">${task.issue}</td>
-            <td class="border px-2 py-1">${task.mailDate || "-"}</td>
-            <td class="border px-2 py-1">${task.completedBy || "-"}</td>
-            <td class="border px-2 py-1">${mailReplyDisplay}</td>
-            <td class="border px-2 py-1 text-green-600 font-medium">Mailed</td>
-            <td class="border px-2 py-1">
-              <select onchange="updateTaskStatus('${
-                task._id
-              }', this.value)" class="border px-2 py-1 rounded">
-                <option value="Pending">Pending</option>
-                <option value="Resolved" ${
-                  task.status === "Resolved" ? "selected" : ""
-                }>In Process</option>
-                <option value="Done">Resolved</option>
-              </select>
-            </td>
-            <td class="border px-2 py-1">${followUpDateStr}</td>
-          `;
+      <td class="border px-2 py-1">${task.roCode}</td>
+      <td class="border px-2 py-1">${task.roName}</td>
+      <td class="border px-2 py-1">${task.date}</td>
+      <td class="border px-2 py-1">${task.engineer}</td>
+      <td class="border px-2 py-1 text-red-600">${task.issue}</td>
+      <td class="border px-2 py-1">${task.mailDate || "-"}</td>
+      <td class="border px-2 py-1">${task.completedBy || "-"}</td>
+      <td class="border px-2 py-1">${mailReplyDisplay}</td>
+      <td class="border px-2 py-1 text-green-600 font-medium">Mailed</td>
+      <td class="border px-2 py-1">${currentStatusOption}</td>
+      <td class="border px-2 py-1">${followUpDateStr}</td>
+    `;
           tbody.appendChild(row);
         });
       }
