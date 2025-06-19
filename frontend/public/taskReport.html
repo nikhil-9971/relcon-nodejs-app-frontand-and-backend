@@ -74,7 +74,7 @@
         const todayStr = new Date().toISOString().split("T")[0];
 
         const submittedTasks = tasks.filter(
-          (task) => task.status === "Resolved"
+          (task) => task.status === "Resolved" || task.status === "Done"
         );
 
         submittedTasks.forEach((task) => {
