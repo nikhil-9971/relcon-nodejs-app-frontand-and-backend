@@ -154,6 +154,22 @@
           },
           body: JSON.stringify({ status, followUp }),
         });
+
+        // If status is Resolved, disable dropdown immediately
+        if (status === "Done") {
+          const dropdown = document.querySelector(
+            `select[onchange="updateTaskStatus('${id}', this.value)"]`
+          );
+          if (dropdown) {
+            dropdown.setAttribute("disabled", true);
+            dropdown.classList.add(
+              "bg-gray-200",
+              "text-gray-500",
+              "cursor-not-allowed"
+            );
+          }
+        }
+
         fetchTasks();
       }
 

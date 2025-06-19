@@ -79,8 +79,12 @@
         tbody.innerHTML = "";
         tasks
           .filter(
-            (task) => task.status !== "Resolved" && task.status !== "Follow-up"
+            (task) =>
+              task.status !== "Resolved" &&
+              task.status !== "Follow-up" &&
+              task.status !== "Done"
           )
+
           .forEach((task) => {
             const row = document.createElement("tr");
             row.className = "border-b";
@@ -256,7 +260,7 @@
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            status: "Resolved",
+            status: "Done",
             mailDate,
             completedBy,
             mailReply,
