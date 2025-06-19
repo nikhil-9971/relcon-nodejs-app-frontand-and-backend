@@ -125,8 +125,14 @@
         const res = await fetch(`${baseUrl}/getTasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const raw = await res.json();
-        console.log("GET /getTasks response:", raw);
+        const tasks = await res.json(); // ✅ Defined and scoped here
+        console.log("Loaded tasks:", tasks); // Should show an array
+        console.log("Trying filter:", tasks.filter); // Should be a function
+
+        if (!Array.isArray(tasks)) {
+          console.error("Invalid data received", tasks);
+          return;
+        }
 
         const tbody = document.getElementById("taskTableBody");
         tbody.innerHTML = "";
