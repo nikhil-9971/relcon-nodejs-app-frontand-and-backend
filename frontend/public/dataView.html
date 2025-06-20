@@ -866,21 +866,21 @@
           </div>
 
           <div>
-            <label class="font-semibold">Spare Requirement</label>
-            <select id="spareRequired" class="w-full p-2 mt-1 border rounded">
-              <option value="">Select</option>
-              <option>Yes</option>
-              <option>No</option>
-            </select>
-          </div>
-
-          <div>
             <label class="font-semibold">Observation (in Hours)</label>
             <input
               type="text"
               id="observationHours"
               class="w-full p-2 mt-1 border rounded"
             />
+          </div>
+
+          <div>
+            <label class="font-semibold">Spare Requirement</label>
+            <select id="spareRequired" class="w-full p-2 mt-1 border rounded">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
           </div>
 
           <div class="md:col-span-2">
@@ -1601,132 +1601,242 @@
       async function downloadPDF(planId) {
         try {
           const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`);
-          const resStatus = await fetch(`${baseUrl}/getStatusByPlan/${planId}`);
-
-          if (!resPlan.ok || !resStatus.ok) {
-            alert("❌ Failed to fetch visit or status data");
+          if (!resPlan.ok) {
+            alert("❌ Failed to fetch visit data");
             return;
           }
 
           const plan = await resPlan.json();
-          const status = await resStatus.json();
-
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
+          const pageWidth = doc.internal.pageSize.getWidth();
 
-          // Header Title
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(14);
-          doc.text("RELCON SYSTEMS", 105, 15, { align: "center" });
+          // 🔁 Jio BP Logic
+          if (plan.phase && plan.phase.includes("RBML")) {
+            const resStatus = await fetch(
+              `${baseUrl}/getJioBPStatusByPlan/${planId}`
+            );
+            if (!resStatus.ok) {
+              alert("❌ Failed to fetch Jio BP status data");
+              return;
+            }
 
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(12);
-          doc.text("Visit Report", 105, 22, { align: "center" });
+            const status = await resStatus.json();
 
-          // Draw a line below title
-          doc.setDrawColor(0);
-          doc.setLineWidth(0.5);
-          doc.line(15, 25, 195, 25);
+            // Add Jio BP logo
+            const logoUrl = "./assets/JioBP.png"; // adjust this path if needed
+            const imgBlob = await fetch(logoUrl).then((res) => res.blob());
+            const reader = new FileReader();
+            reader.readAsDataURL(imgBlob);
+            reader.onloadend = function () {
+              const base64data = reader.result;
+              doc.addImage(base64data, "PNG", pageWidth / 2 - 25, 10, 50, 20);
 
-          const visitData = [
-            ["Engineer", plan.engineer],
-            ["Region", plan.region],
-            ["Phase", plan.phase],
-            ["RO Code", plan.roCode],
-            ["RO Name", plan.roName],
-            ["Date", plan.date],
-            ["AMC Qtr", plan.amcQtr],
-            ["Purpose", plan.purpose],
-            ["Probe Make", status.probeMake],
-            ["Product & Probe Size", status.probeSize],
-            ["Low Product Lock", status.lowProductLock],
-            ["High water Lock", status.highWaterSet],
-            ["DU Serial Number Updated", status.duSerialNumber],
-            ["Outlet DG Status", status.dgStatus],
-            ["Connectivity Type", status.connectivityType],
-            ["Sim 1 Provider Name", status.sim1Provider],
-            ["Sim 1 Number", status.sim1Number],
-            ["Sim 2 Provider Name", status.sim2Provider],
-            ["Sim 2 Number", status.sim2Number],
-            ["IEMI Number", status.iemiNumber],
-            ["BOS Version", status.bosVersion],
-            ["FCC Version", status.fccVersion],
-            ["Wireless Slave Version", status.wirelessSlave],
-            ["SFTP Config", status.sftpConfig],
-            ["Admin Password Updated", status.adminPassword],
-            ["Work Completion Status", status.workCompletion],
-            ["Earthing Status", status.earthingStatus],
-            ["Voltage Reading", status.voltageReading],
-            ["No of DU offline", status.duOffline],
-            ["DU offline remark", status.duRemark],
-            ["Site Location", status.locationField],
-          ];
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(14);
+              doc.text("Jio BP Visit Report", pageWidth / 2, 40, {
+                align: "center",
+              });
 
-          doc.autoTable({
-            startY: 30,
-            head: [["Field", "Value"]],
-            body: visitData,
-            theme: "grid",
-            headStyles: {
-              fillColor: [22, 163, 74], // green header
-              textColor: 255,
-              fontSize: 10,
-              halign: "center",
-            },
-            bodyStyles: {
-              fontSize: 9,
-              textColor: 33,
-              cellPadding: 3,
-            },
-            alternateRowStyles: {
-              fillColor: [245, 245, 245],
-            },
-            styles: {
-              cellWidth: "wrap",
-              valign: "middle",
-              overflow: "linebreak",
-            },
-            columnStyles: {
-              0: { fontStyle: "bold", halign: "left" },
-              1: { halign: "left" },
-            },
-          });
+              const visitData = [
+                ["Engineer", plan.engineer],
+                ["Region", plan.region],
+                ["Phase", plan.phase],
+                ["RO Code", plan.roCode],
+                ["RO Name", plan.roName],
+                ["Date", plan.date],
+                ["AMC Qtr", plan.amcQtr],
+                ["Purpose", plan.purpose],
+                ["HPSD ID", status.hpsdId],
+                ["Solution", status.solution],
+                ["Active Material Used", status.activeMaterialUsed],
+                ["Used Material Name & Code", status.usedMaterialDetails],
+                ["Faulty Material Name & Code", status.faultyMaterialDetails],
+                ["Spare Requirement", status.spareRequired],
+                ["Observation (in Hours)", status.observationHours],
+                ["Material Requirement Name", status.materialRequirement],
+                ["Status", status.status],
+              ];
 
-          // Footer
-          // ✅ Get engineer name from localStorage
-          const userName =
-            localStorage.getItem("engineerName") || "Unknown User";
+              doc.autoTable({
+                startY: 50,
+                head: [["Field", "Value"]],
+                body: visitData,
+                theme: "grid",
+                headStyles: {
+                  fillColor: [22, 163, 74],
+                  textColor: 255,
+                  fontSize: 10,
+                  halign: "center",
+                },
+                bodyStyles: {
+                  fontSize: 9,
+                  textColor: 33,
+                  cellPadding: 3,
+                },
+                alternateRowStyles: {
+                  fillColor: [245, 245, 245],
+                },
+                styles: {
+                  cellWidth: "wrap",
+                  valign: "middle",
+                  overflow: "linebreak",
+                },
+                columnStyles: {
+                  0: { fontStyle: "bold", halign: "left" },
+                  1: { halign: "left" },
+                },
+              });
 
-          // ✅ Format current date and time
-          const now = new Date();
-          const formattedDate = now
-            .toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            .replace(/ /g, "-");
-          const formattedTime = now.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          });
+              // Footer
+              const userName =
+                localStorage.getItem("engineerName") || "Unknown User";
+              const now = new Date();
+              const formattedDate = now
+                .toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+                .replace(/ /g, "-");
+              const formattedTime = now.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              });
 
-          // ✅ Footer text
-          const footerText = `Generated by: ${userName} on ${formattedDate} at ${formattedTime}`;
+              const footerText = `Generated by: ${userName} on ${formattedDate} at ${formattedTime}`;
+              const pageCount = doc.internal.getNumberOfPages();
+              for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Page ${i} of ${pageCount}`, 195, 290, {
+                  align: "right",
+                });
+                doc.text(footerText, 15, 290);
+              }
 
-          // ✅ Add on each page
-          const pageCount = doc.internal.getNumberOfPages();
-          for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(`Page ${i} of ${pageCount}`, 195, 290, { align: "right" });
-            doc.text(footerText, 15, 290);
+              doc.save(`JioBP_Report_${plan.roCode}_${plan.date}.pdf`);
+            };
+          } else {
+            // ✅ Original HPCL/Status PDF Logic (unchanged)
+            const resStatus = await fetch(
+              `${baseUrl}/getStatusByPlan/${planId}`
+            );
+            if (!resStatus.ok) {
+              alert("❌ Failed to fetch status data");
+              return;
+            }
+
+            const status = await resStatus.json();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("RELCON SYSTEMS", 105, 15, { align: "center" });
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.text("Visit Report", 105, 22, { align: "center" });
+
+            doc.setDrawColor(0);
+            doc.setLineWidth(0.5);
+            doc.line(15, 25, 195, 25);
+
+            const visitData = [
+              ["Engineer", plan.engineer],
+              ["Region", plan.region],
+              ["Phase", plan.phase],
+              ["RO Code", plan.roCode],
+              ["RO Name", plan.roName],
+              ["Date", plan.date],
+              ["AMC Qtr", plan.amcQtr],
+              ["Purpose", plan.purpose],
+              ["Probe Make", status.probeMake],
+              ["Product & Probe Size", status.probeSize],
+              ["Low Product Lock", status.lowProductLock],
+              ["High water Lock", status.highWaterSet],
+              ["DU Serial Number Updated", status.duSerialNumber],
+              ["Outlet DG Status", status.dgStatus],
+              ["Connectivity Type", status.connectivityType],
+              ["Sim 1 Provider Name", status.sim1Provider],
+              ["Sim 1 Number", status.sim1Number],
+              ["Sim 2 Provider Name", status.sim2Provider],
+              ["Sim 2 Number", status.sim2Number],
+              ["IEMI Number", status.iemiNumber],
+              ["BOS Version", status.bosVersion],
+              ["FCC Version", status.fccVersion],
+              ["Wireless Slave Version", status.wirelessSlave],
+              ["SFTP Config", status.sftpConfig],
+              ["Admin Password Updated", status.adminPassword],
+              ["Work Completion Status", status.workCompletion],
+              ["Earthing Status", status.earthingStatus],
+              ["Voltage Reading", status.voltageReading],
+              ["No of DU offline", status.duOffline],
+              ["DU offline remark", status.duRemark],
+              ["Site Location", status.locationField],
+            ];
+
+            doc.autoTable({
+              startY: 30,
+              head: [["Field", "Value"]],
+              body: visitData,
+              theme: "grid",
+              headStyles: {
+                fillColor: [22, 163, 74],
+                textColor: 255,
+                fontSize: 10,
+                halign: "center",
+              },
+              bodyStyles: {
+                fontSize: 9,
+                textColor: 33,
+                cellPadding: 3,
+              },
+              alternateRowStyles: {
+                fillColor: [245, 245, 245],
+              },
+              styles: {
+                cellWidth: "wrap",
+                valign: "middle",
+                overflow: "linebreak",
+              },
+              columnStyles: {
+                0: { fontStyle: "bold", halign: "left" },
+                1: { halign: "left" },
+              },
+            });
+
+            const userName =
+              localStorage.getItem("engineerName") || "Unknown User";
+            const now = new Date();
+            const formattedDate = now
+              .toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              .replace(/ /g, "-");
+            const formattedTime = now.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+            const footerText = `Generated by: ${userName} on ${formattedDate} at ${formattedTime}`;
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+              doc.setPage(i);
+              doc.setFontSize(8);
+              doc.setTextColor(150);
+              doc.text(`Page ${i} of ${pageCount}`, 195, 290, {
+                align: "right",
+              });
+              doc.text(footerText, 15, 290);
+            }
+
+            doc.save(`Status_Report_${plan.roCode}_${plan.date}.pdf`);
           }
-
-          // Save the file
-          doc.save(`Status_Report_${plan.roCode}_${plan.date}.pdf`);
         } catch (err) {
           console.error("PDF Generation Error:", err);
           alert("❌ Error generating PDF");
