@@ -1615,7 +1615,8 @@
           const pageWidth = doc.internal.pageSize.getWidth();
 
           // 🔁 Jio BP Logic
-          if (plan.phase && plan.phase.includes("RBML")) {
+          // ✅ JioBP logic based on jioBPStatusSaved
+          if (plan.jioBPStatusSaved) {
             const resStatus = await fetch(
               `${baseUrl}/getJioBPStatusByPlan/${planId}`
             );
@@ -1627,7 +1628,7 @@
             const status = await resStatus.json();
 
             // Add Jio BP logo
-            const logoUrl = "/public/assets/JioBP.png"; // adjust this path if needed
+            const logoUrl = "./assets/JioBP.png"; // adjust this path if needed
             const imgBlob = await fetch(logoUrl).then((res) => res.blob());
             const reader = new FileReader();
             reader.readAsDataURL(imgBlob);
