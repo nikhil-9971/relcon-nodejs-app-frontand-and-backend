@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const JioBPStatus = require("../models/jioBPStatus");
+const DailyPlan = require("../models/DailyPlan"); // ✅ Fixed
 const authMiddleware = require("../middleware/authMiddleware");
 
 // POST /saveJioBPStatus
@@ -19,13 +20,11 @@ router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
     const newStatus = new JioBPStatus(req.body);
     await newStatus.save();
 
-    // Optionally update DailyPlan to mark JioBPStatus saved
-    await require("../models/DailyPlan").findByIdAndUpdate(planId, {
+    // ✅ Update DailyPlan to mark JioBPStatus and Status saved
+    await DailyPlan.findByIdAndUpdate(planId, {
+      statusSaved: true,
       jioBPStatusSaved: true,
     });
-
-    // ✅ Update the DailyPlan to mark statusSaved
-    await DailyPlan.findByIdAndUpdate(req.body.planId, { statusSaved: true });
 
     res.status(200).json({ message: "Jio BP status saved" });
   } catch (err) {
