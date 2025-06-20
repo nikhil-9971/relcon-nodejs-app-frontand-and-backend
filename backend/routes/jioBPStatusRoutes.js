@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const JioBPStatus = require("../models/jioBPStatus");
-const authMiddleware = require("../middleware/auth");
+const authMiddleware = require("../middleware/authMiddleware");
 
 // POST /saveJioBPStatus
 router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
