@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const JioBPStatus = require("../models/jioBPStatus");
+const authMiddleware = require("../middleware/auth");
 
 // POST /saveJioBPStatus
-router.post("/saveJioBPStatus", async (req, res) => {
+router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
   try {
     const { planId } = req.body;
 
@@ -19,7 +20,7 @@ router.post("/saveJioBPStatus", async (req, res) => {
     await newStatus.save();
 
     // Optionally update DailyPlan to mark JioBPStatus saved
-    await require("../models/dailyPlan").findByIdAndUpdate(planId, {
+    await require("../models/DailyPlan").findByIdAndUpdate(planId, {
       jioBPStatusSaved: true,
     });
 
