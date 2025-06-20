@@ -1916,6 +1916,7 @@
           status: document.getElementById("jioStatus").value,
         };
 
+        const token = localStorage.getItem("token");
         try {
           const res = await fetch(`${baseUrl}/saveJioBPStatus`, {
             method: "POST",
