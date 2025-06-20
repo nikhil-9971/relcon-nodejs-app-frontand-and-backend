@@ -1919,7 +1919,10 @@
         try {
           const res = await fetch(`${baseUrl}/saveJioBPStatus`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // ✅ ADD THIS
+            },
             credentials: "include",
             body: JSON.stringify(data),
           });
