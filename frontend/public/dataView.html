@@ -804,6 +804,121 @@
       </div>
     </div>
 
+    <!-- JIO BP Status Model -->
+    <div
+      id="jioBPModal"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white max-h-[90vh] overflow-y-auto rounded shadow-lg w-full max-w-2xl p-6 relative text-[11px]"
+      >
+        <h2 class="text-xl font-bold mb-4 text-center text-gray-800">
+          🚰️ Add Jio BP Visit Status
+        </h2>
+
+        <input type="hidden" id="jioBPPlanId" />
+        <form id="jioBPForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="font-semibold">HPSD ID</label>
+            <input
+              type="text"
+              id="hpsdId"
+              class="w-full p-2 mt-1 border rounded"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Solution</label>
+            <textarea
+              id="solution"
+              class="w-full p-2 mt-1 border rounded"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="font-semibold">Active Material Used</label>
+            <select
+              id="activeMaterialUsed"
+              class="w-full p-2 mt-1 border rounded"
+            >
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="font-semibold">Used Material Name & Code</label>
+            <input
+              type="text"
+              id="usedMaterialDetails"
+              class="w-full p-2 mt-1 border rounded"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Faulty Material Name & Code</label>
+            <input
+              type="text"
+              id="faultyMaterialDetails"
+              class="w-full p-2 mt-1 border rounded"
+            />
+          </div>
+
+          <div>
+            <label class="font-semibold">Spare Requirement</label>
+            <select id="spareRequired" class="w-full p-2 mt-1 border rounded">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="font-semibold">Observation (in Hours)</label>
+            <input
+              type="text"
+              id="observationHours"
+              class="w-full p-2 mt-1 border rounded"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Material Requirement Name</label>
+            <input
+              type="text"
+              id="materialRequirement"
+              class="w-full p-2 mt-1 border rounded"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Status</label>
+            <select id="jioStatus" class="w-full p-2 mt-1 border rounded">
+              <option value="">Select</option>
+              <option>Resolved</option>
+              <option>Unresolved</option>
+            </select>
+          </div>
+        </form>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            onclick="closeJioBPModal()"
+            class="bg-gray-300 px-4 py-2 rounded shadow"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveJioBPStatus()"
+            class="bg-green-600 text-white px-4 py-2 rounded shadow"
+          >
+            📏 Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div
       id="toast"
@@ -955,8 +1070,10 @@
             statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
           } else if (plan.phase && plan.phase.includes("HPCL/")) {
             statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> Status</button>`;
+          } else if (plan.phase && plan.phase.includes("RBML")) {
+            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
           } else {
-            statusBtn = `<span class="text-gray-400 ">Not required</span>`;
+            statusBtn = `<span class="text-gray-400">Not required</span>`;
           }
 
           //check ATG Status
@@ -1746,6 +1863,79 @@
         if (exists) return;
         allowATGModalOpen = true;
         openATGModal(planId);
+      }
+
+      //JIO BP JS
+
+      function openJioBPModal(planId) {
+        document.getElementById("jioBPPlanId").value = planId;
+        document.getElementById("jioBPModal").classList.remove("hidden");
+        document.getElementById("jioBPForm").reset();
+      }
+
+      function closeJioBPModal() {
+        document.getElementById("jioBPModal").classList.add("hidden");
+      }
+
+      async function saveJioBPStatus() {
+        const requiredFields = [
+          "hpsdId",
+          "solution",
+          "activeMaterialUsed",
+          "spareRequired",
+          "jioStatus",
+        ];
+        for (const id of requiredFields) {
+          const el = document.getElementById(id);
+          if (!el.value.trim()) {
+            alert(`Please fill in ${id}`);
+            el.focus();
+            return;
+          }
+        }
+
+        const data = {
+          planId: document.getElementById("jioBPPlanId").value,
+          hpsdId: document.getElementById("hpsdId").value.trim(),
+          solution: document.getElementById("solution").value.trim(),
+          activeMaterialUsed:
+            document.getElementById("activeMaterialUsed").value,
+          usedMaterialDetails: document
+            .getElementById("usedMaterialDetails")
+            .value.trim(),
+          faultyMaterialDetails: document
+            .getElementById("faultyMaterialDetails")
+            .value.trim(),
+          spareRequired: document.getElementById("spareRequired").value,
+          observationHours: document
+            .getElementById("observationHours")
+            .value.trim(),
+          materialRequirement: document
+            .getElementById("materialRequirement")
+            .value.trim(),
+          status: document.getElementById("jioStatus").value,
+        };
+
+        try {
+          const res = await fetch(`${baseUrl}/saveJioBPStatus`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(data),
+          });
+
+          if (res.ok) {
+            alert("✅ Jio BP Status saved successfully");
+            closeJioBPModal();
+            await fetchAndStoreData();
+            applyFilter(document.getElementById("applyBtn"));
+          } else {
+            alert("❌ Error saving Jio BP Status");
+          }
+        } catch (err) {
+          console.error("Save Error:", err);
+          alert("❌ Network or server error");
+        }
       }
     </script>
   </body>
