@@ -1070,7 +1070,10 @@
             statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
           } else if (plan.phase && plan.phase.includes("HPCL/")) {
             statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> Status</button>`;
-          } else if (plan.phase && plan.phase.includes("RBML")) {
+          } else if (
+            (plan.phase && plan.phase.includes("RBML")) ||
+            plan.jioBPStatusSaved
+          ) {
             statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
           } else {
             statusBtn = `<span class="text-gray-400">Not required</span>`;
@@ -1624,7 +1627,7 @@
             const status = await resStatus.json();
 
             // Add Jio BP logo
-            const logoUrl = "./assets/JioBP.png"; // adjust this path if needed
+            const logoUrl = "/public/assets/JioBP.png"; // adjust this path if needed
             const imgBlob = await fetch(logoUrl).then((res) => res.blob());
             const reader = new FileReader();
             reader.readAsDataURL(imgBlob);
