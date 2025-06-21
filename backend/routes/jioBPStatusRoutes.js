@@ -26,7 +26,8 @@ router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
       jioBPStatusSaved: true,
     });
 
-    res.status(200).json({ message: "Jio BP status saved" });
+    const updatedPlan = await DailyPlan.findById(planId);
+    res.status(200).json({ message: "Jio BP status saved", plan: updatedPlan });
   } catch (err) {
     console.error("Error saving Jio BP status:", err);
     res.status(500).json({ message: "Server error" });
