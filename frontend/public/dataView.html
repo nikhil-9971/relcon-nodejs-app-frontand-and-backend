@@ -1603,13 +1603,13 @@
 
       async function downloadPDF(planId) {
         try {
+          console.log("🔽 downloadPDF() STARTED for PlanID:", planId);
+
           const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`);
           if (!resPlan.ok) {
             alert("❌ Failed to fetch visit data");
             return;
           }
-
-          console.log("🔍 plan.jioBPStatusSaved =", plan.jioBPStatusSaved);
 
           const plan = await resPlan.json();
           const { jsPDF } = window.jspdf;
@@ -1618,6 +1618,9 @@
 
           // ✅ JioBP PDF generation
           if (plan.jioBPStatusSaved) {
+            console.log(
+              "✅ JioBP status detected, fetching status from backend..."
+            );
             const resStatus = await fetch(
               `${baseUrl}/getJioBPStatusByPlan/${planId}`
             );
@@ -1627,7 +1630,7 @@
             }
 
             const status = await resStatus.json();
-
+            console.log("📦 JioBP Status Response:", status);
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             doc.text("Jio BP Visit Report", pageWidth / 2, 20, {
@@ -1635,23 +1638,26 @@
             });
 
             const visitData = [
-              ["Engineer", plan.engineer],
-              ["Region", plan.region],
-              ["Phase", plan.phase],
-              ["RO Code", plan.roCode],
-              ["RO Name", plan.roName],
-              ["Date", plan.date],
-              ["AMC Qtr", plan.amcQtr],
-              ["Purpose", plan.purpose],
-              ["HPSD ID", status.hpsdId],
-              ["Solution", status.solution],
-              ["Active Material Used", status.activeMaterialUsed],
-              ["Used Material Name & Code", status.usedMaterialDetails],
-              ["Faulty Material Name & Code", status.faultyMaterialDetails],
-              ["Spare Requirement", status.spareRequired],
-              ["Observation (in Hours)", status.observationHours],
-              ["Material Requirement Name", status.materialRequirement],
-              ["Status", status.status],
+              ["Engineer", plan.engineer || ""],
+              ["Region", plan.region || ""],
+              ["Phase", plan.phase || ""],
+              ["RO Code", plan.roCode || ""],
+              ["RO Name", plan.roName || ""],
+              ["Date", plan.date || ""],
+              ["AMC Qtr", plan.amcQtr || ""],
+              ["Purpose", plan.purpose || ""],
+              ["HPSD ID", status.hpsdId || ""],
+              ["Solution", status.solution || ""],
+              ["Active Material Used", status.activeMaterialUsed || ""],
+              ["Used Material Name & Code", status.usedMaterialDetails || ""],
+              [
+                "Faulty Material Name & Code",
+                status.faultyMaterialDetails || "",
+              ],
+              ["Spare Requirement", status.spareRequired || ""],
+              ["Observation (in Hours)", status.observationHours || ""],
+              ["Material Requirement Name", status.materialRequirement || ""],
+              ["Status", status.status || ""],
             ];
 
             doc.autoTable({
