@@ -1609,6 +1609,8 @@
             return;
           }
 
+          console.log("🔍 plan.jioBPStatusSaved =", plan.jioBPStatusSaved);
+
           const plan = await resPlan.json();
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
