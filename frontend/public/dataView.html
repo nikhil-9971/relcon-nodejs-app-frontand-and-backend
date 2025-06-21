@@ -1603,7 +1603,7 @@
 
       async function downloadPDF(planId) {
         try {
-          console.log("🔽 downloadPDF() STARTED for PlanID:", planId);
+          console.log("🟢 downloadPDF() STARTED for PlanID:", planId);
 
           const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`);
           if (!resPlan.ok) {
@@ -1612,15 +1612,16 @@
           }
 
           const plan = await resPlan.json();
+          console.log("📦 Plan Data:", plan);
+
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
           const pageWidth = doc.internal.pageSize.getWidth();
 
-          // ✅ JioBP PDF generation
+          // ✅ JioBP PDF path
           if (plan.jioBPStatusSaved) {
-            console.log(
-              "✅ JioBP status detected, fetching status from backend..."
-            );
+            console.log("✅ Detected JioBP visit. Fetching JioBP status...");
+
             const resStatus = await fetch(
               `${baseUrl}/getJioBPStatusByPlan/${planId}`
             );
@@ -1630,7 +1631,8 @@
             }
 
             const status = await resStatus.json();
-            console.log("📦 JioBP Status Response:", status);
+            console.log("📄 JioBP Status Data:", status);
+
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             doc.text("Jio BP Visit Report", pageWidth / 2, 20, {
@@ -1659,6 +1661,8 @@
               ["Material Requirement Name", status.materialRequirement || ""],
               ["Status", status.status || ""],
             ];
+
+            console.log("📋 Generating PDF table with:", visitData);
 
             doc.autoTable({
               startY: 30,
@@ -1690,7 +1694,6 @@
               },
             });
 
-            // Footer
             const userName =
               localStorage.getItem("engineerName") || "Unknown User";
             const now = new Date();
@@ -1722,8 +1725,10 @@
             doc.save(`JioBP_Report_${plan.roCode}_${plan.date}.pdf`);
           }
 
-          // ✅ Else fallback to HPCL/Status model PDF
+          // ✅ HPCL/Status fallback PDF path
           else {
+            console.log("🔁 Falling back to HPCL status report");
+
             const resStatus = await fetch(
               `${baseUrl}/getStatusByPlan/${planId}`
             );
@@ -1733,6 +1738,7 @@
             }
 
             const status = await resStatus.json();
+            console.log("📄 HPCL Status Data:", status);
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
@@ -1747,37 +1753,37 @@
             doc.line(15, 25, 195, 25);
 
             const visitData = [
-              ["Engineer", plan.engineer],
-              ["Region", plan.region],
-              ["Phase", plan.phase],
-              ["RO Code", plan.roCode],
-              ["RO Name", plan.roName],
-              ["Date", plan.date],
-              ["AMC Qtr", plan.amcQtr],
-              ["Purpose", plan.purpose],
-              ["Probe Make", status.probeMake],
-              ["Product & Probe Size", status.probeSize],
-              ["Low Product Lock", status.lowProductLock],
-              ["High water Lock", status.highWaterSet],
-              ["DU Serial Number Updated", status.duSerialNumber],
-              ["Outlet DG Status", status.dgStatus],
-              ["Connectivity Type", status.connectivityType],
-              ["Sim 1 Provider Name", status.sim1Provider],
-              ["Sim 1 Number", status.sim1Number],
-              ["Sim 2 Provider Name", status.sim2Provider],
-              ["Sim 2 Number", status.sim2Number],
-              ["IEMI Number", status.iemiNumber],
-              ["BOS Version", status.bosVersion],
-              ["FCC Version", status.fccVersion],
-              ["Wireless Slave Version", status.wirelessSlave],
-              ["SFTP Config", status.sftpConfig],
-              ["Admin Password Updated", status.adminPassword],
-              ["Work Completion Status", status.workCompletion],
-              ["Earthing Status", status.earthingStatus],
-              ["Voltage Reading", status.voltageReading],
-              ["No of DU offline", status.duOffline],
-              ["DU offline remark", status.duRemark],
-              ["Site Location", status.locationField],
+              ["Engineer", plan.engineer || ""],
+              ["Region", plan.region || ""],
+              ["Phase", plan.phase || ""],
+              ["RO Code", plan.roCode || ""],
+              ["RO Name", plan.roName || ""],
+              ["Date", plan.date || ""],
+              ["AMC Qtr", plan.amcQtr || ""],
+              ["Purpose", plan.purpose || ""],
+              ["Probe Make", status.probeMake || ""],
+              ["Product & Probe Size", status.probeSize || ""],
+              ["Low Product Lock", status.lowProductLock || ""],
+              ["High water Lock", status.highWaterSet || ""],
+              ["DU Serial Number Updated", status.duSerialNumber || ""],
+              ["Outlet DG Status", status.dgStatus || ""],
+              ["Connectivity Type", status.connectivityType || ""],
+              ["Sim 1 Provider Name", status.sim1Provider || ""],
+              ["Sim 1 Number", status.sim1Number || ""],
+              ["Sim 2 Provider Name", status.sim2Provider || ""],
+              ["Sim 2 Number", status.sim2Number || ""],
+              ["IEMI Number", status.iemiNumber || ""],
+              ["BOS Version", status.bosVersion || ""],
+              ["FCC Version", status.fccVersion || ""],
+              ["Wireless Slave Version", status.wirelessSlave || ""],
+              ["SFTP Config", status.sftpConfig || ""],
+              ["Admin Password Updated", status.adminPassword || ""],
+              ["Work Completion Status", status.workCompletion || ""],
+              ["Earthing Status", status.earthingStatus || ""],
+              ["Voltage Reading", status.voltageReading || ""],
+              ["No of DU offline", status.duOffline || ""],
+              ["DU offline remark", status.duRemark || ""],
+              ["Site Location", status.locationField || ""],
             ];
 
             doc.autoTable({
@@ -1841,7 +1847,7 @@
             doc.save(`Status_Report_${plan.roCode}_${plan.date}.pdf`);
           }
         } catch (err) {
-          console.error("PDF Generation Error:", err);
+          console.error("❌ PDF Generation Error:", err);
           alert("❌ Error generating PDF");
         }
       }
