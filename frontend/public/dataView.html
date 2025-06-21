@@ -1074,7 +1074,7 @@
             (plan.phase && plan.phase.includes("RBML")) ||
             plan.jioBPStatusSaved
           ) {
-            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
+            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-500 hover:bg-purple-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
           } else {
             statusBtn = `<span class="text-gray-400">Not required</span>`;
           }
@@ -2034,10 +2034,17 @@
           });
 
           if (res.ok) {
+            const response = await res.json();
             alert("✅ Jio BP Status saved successfully");
+
+            // ✅ Update frontend table instantly
+            fullData = fullData.map((p) =>
+              p._id === response.plan._id ? response.plan : p
+            );
+            filteredData = [...fullData];
+            populateTable(filteredData);
+
             closeJioBPModal();
-            await fetchAndStoreData();
-            applyFilter(document.getElementById("applyBtn"));
           } else {
             alert("❌ Error saving Jio BP Status");
           }
