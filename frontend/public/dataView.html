@@ -2045,24 +2045,11 @@
           });
 
           if (res.ok) {
-            const response = await res.json();
             alert("✅ Jio BP Status saved successfully");
-
-            // ✅ Update table data with updated plan
-            fullData = fullData.map((p) =>
-              p._id === response.plan._id ? response.plan : p
-            );
-            filteredData = [...fullData];
-
-            // ✅ Reapply filter (prevent full data reset)
-            const selectedEngineer =
-              document.getElementById("engineerFilter").value;
-            const fromDate = document.getElementById("fromDate").value;
-            const toDate = document.getElementById("toDate").value;
-
-            applyFilter(null, selectedEngineer, fromDate, toDate);
-
             closeJioBPModal();
+
+            await fetchAndStoreData(); // ✅ fixes PDF button state issue
+            applyFilter(document.getElementById("applyBtn"));
           } else {
             alert("❌ Error saving Jio BP Status");
           }
