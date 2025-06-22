@@ -1636,6 +1636,8 @@
           const doc = new jsPDF();
           const pageWidth = doc.internal.pageSize.getWidth();
 
+          console.log("🔍 plan.jioBPStatusSaved:", plan.jioBPStatusSaved);
+
           // ✅ JioBP (RBML)
           if (!!plan.jioBPStatusSaved) {
             const resStatus = await fetch(
