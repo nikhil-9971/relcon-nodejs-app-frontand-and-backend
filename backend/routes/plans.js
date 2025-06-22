@@ -78,8 +78,18 @@ router.get("/getPlanById/:id", async (req, res) => {
   try {
     const plan = await DailyPlan.findById(req.params.id);
     if (!plan) return res.status(404).send("Plan not found");
-    res.json(plan);
+
+    // ✅ Enrich with status flags
+    const statusExists = await Status.exists({ planId: plan._id });
+    const jioStatusExists = await JioBPStatus.exists({ planId: plan._id });
+
+    const planObj = plan.toObject();
+    planObj.statusSaved = !!statusExists;
+    planObj.jioBPStatusSaved = !!jioStatusExists;
+
+    res.json(planObj);
   } catch (err) {
+    console.error("Error in /getPlanById/:id:", err);
     res.status(500).send("Server error");
   }
 });
