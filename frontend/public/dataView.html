@@ -1685,7 +1685,7 @@
 
             const status = await resStatus.json();
             const logo = await loadLogo("./assets/JioBP.png"); // or /images/JioBP.png
-            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
+            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 32, 20);
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             doc.text("Jio BP Visit Report", pageWidth / 2, 35, {
@@ -1732,7 +1732,8 @@
                 cellPadding: 3,
                 overflow: "linebreak",
                 cellWidth: "wrap",
-                valign: "top",
+                valign: "middle",
+                halign: "center",
               },
               columnStyles: {
                 0: { cellWidth: 95, fontStyle: "bold" }, // 50% of A4 width
@@ -1743,10 +1744,12 @@
                 textColor: 255,
                 fontSize: 10,
                 halign: "center",
+                valign: "middle",
               },
               bodyStyles: {
-                halign: "left",
                 textColor: 33,
+                halign: "center",
+                valign: "middle",
               },
               alternateRowStyles: {
                 fillColor: [245, 245, 245],
