@@ -1685,7 +1685,7 @@
 
             const status = await resStatus.json();
             const logo = await loadLogo("./assets/JioBP.png"); // or /images/JioBP.png
-            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 25);
+            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             doc.text("Jio BP Visit Report", pageWidth / 2, 35, {
@@ -1777,7 +1777,7 @@
 
             const status = await resStatus.json();
             const logo = await loadLogo("./assets/HPCL.png"); // or /images/relconLogo.png
-            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 25);
+            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
