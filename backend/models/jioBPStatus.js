@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
 
-const jioBPStatusSchema = new mongoose.Schema(
+const JioBPStatusSchema = new mongoose.Schema(
   {
     planId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "DailyPlan",
       required: true,
+      unique: true, // ❗Only one status per plan
     },
     hpsdId: {
       type: String,
@@ -17,35 +18,34 @@ const jioBPStatusSchema = new mongoose.Schema(
     },
     activeMaterialUsed: {
       type: String,
-      enum: ["Yes", "No"],
       required: true,
     },
     usedMaterialDetails: {
       type: String,
+      default: "",
     },
     faultyMaterialDetails: {
       type: String,
+      default: "",
     },
     spareRequired: {
       type: String,
-      enum: ["Yes", "No"],
       required: true,
     },
     observationHours: {
       type: String,
+      default: "",
     },
     materialRequirement: {
       type: String,
+      default: "",
     },
     status: {
       type: String,
-      enum: ["Resolved", "Unresolved"],
       required: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-module.exports = mongoose.model("JioBPStatus", jioBPStatusSchema);
+module.exports = mongoose.model("JioBPStatus", JioBPStatusSchema);
