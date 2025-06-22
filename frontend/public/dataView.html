@@ -1656,9 +1656,18 @@
           const doc = new jsPDF();
           const pageWidth = doc.internal.pageSize.getWidth();
 
-          console.log("🔍 plan.jioBPStatusSaved:", plan.jioBPStatusSaved);
+          // Load logo as base64 helper
+          const loadLogo = async (url) => {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            return await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(blob);
+            });
+          };
 
-          // ✅ JioBP (RBML)
+          // JioBP PDF
           if (!!plan.jioBPStatusSaved) {
             const resStatus = await fetch(
               `${baseUrl}/getJioBPStatusByPlan/${planId}`,
@@ -1675,10 +1684,12 @@
             }
 
             const status = await resStatus.json();
+            const logo = await loadLogo("./assets/JioBP.png"); // or /images/JioBP.png
+            doc.addImage(logo, "PNG", pageWidth / 2 - 25, 10, 50, 20);
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            doc.text("Jio BP Visit Report", pageWidth / 2, 20, {
+            doc.text("Jio BP Visit Report", pageWidth / 2, 35, {
               align: "center",
             });
 
@@ -1713,7 +1724,7 @@
             ];
 
             doc.autoTable({
-              startY: 30,
+              startY: 45,
               head: [["Field", "Value"]],
               body: visitData,
               theme: "grid",
@@ -1749,7 +1760,7 @@
             doc.save(`JioBP_Report_${plan.roCode}_${plan.date}.pdf`);
           }
 
-          // 🔁 HPCL fallback
+          // HPCL fallback
           else {
             const resStatus = await fetch(
               `${baseUrl}/getStatusByPlan/${planId}`,
@@ -1766,16 +1777,19 @@
             }
 
             const status = await resStatus.json();
+            const logo = await loadLogo("./assets/HPCL.png"); // or /images/relconLogo.png
+            doc.addImage(logo, "PNG", pageWidth / 2 - 25, 10, 50, 20);
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            doc.text("RELCON SYSTEMS", 105, 15, { align: "center" });
+            doc.text("RELCON SYSTEMS", 105, 35, { align: "center" });
             doc.setFont("helvetica", "normal");
             doc.setFontSize(12);
-            doc.text("Visit Report", 105, 22, { align: "center" });
+            doc.text("Visit Report", 105, 42, { align: "center" });
+
             doc.setDrawColor(0);
             doc.setLineWidth(0.5);
-            doc.line(15, 25, 195, 25);
+            doc.line(15, 45, 195, 45);
 
             const visitData = [
               ["Engineer", cleanText(plan.engineer)],
@@ -1812,7 +1826,7 @@
             ];
 
             doc.autoTable({
-              startY: 30,
+              startY: 50,
               head: [["Field", "Value"]],
               body: visitData,
               theme: "grid",
