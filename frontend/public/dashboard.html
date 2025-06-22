@@ -111,7 +111,7 @@
                 onclick="loadPage('statusRecords.html', this)"
                 class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
                 ><i class="fa-solid fa-file-excel"></i>
-                <span class="ml-1">Status Report</span></a
+                <span class="ml-1">HPCL Status Report</span></a
               >
             </li>
             <li>
@@ -124,6 +124,7 @@
             </li>
             <li>
               <a
+                id="tasklink"
                 href="#"
                 onclick="loadPage('taskReport.html', this)"
                 class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
@@ -214,9 +215,11 @@
           const text = `${user.engineerName || user.username} (${user.role})`;
           document.getElementById("userDetails").textContent = `👤 ${text}`;
 
-          // Only show Status Record to admin
+          // Only show Status Record & Task Report to admin
 
           document.getElementById("statusLink").style.display =
+            user.role === "admin" ? "flex" : "none";
+          document.getElementById("tasklink").style.display =
             user.role === "admin" ? "flex" : "none";
           // Show Audit Report only to admin + Nikhil Trivedi
           if (user.role === "admin" && user.engineerName === "Nikhil Trivedi") {
