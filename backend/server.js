@@ -46,7 +46,7 @@ app.use("/", statusRoutes);
 app.use("/", atgstatusRoutes);
 app.use("/audit", auditRoutes);
 app.use(taskRoutes);
-app.use(jioBPStatusRoutes);
+app.use("/", jioBPStatusRoutes);
 
 // ✅ Optional: redirect *.html to clean path
 app.use((req, res, next) => {
