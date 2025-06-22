@@ -3,6 +3,7 @@ const router = express.Router();
 const DailyPlan = require("../models/DailyPlan");
 const Status = require("../models/Status");
 const verifyToken = require("../middleware/authMiddleware");
+const JioBPStatus = require("../models/jioBPStatus");
 
 // ✅ Save Daily Plan
 router.post("/saveDailyPlan", async (req, res) => {
@@ -41,8 +42,8 @@ router.get("/checkDuplicate", async (req, res) => {
 
 // ✅ Get All Plans with statusSaved flag
 router.get("/getDailyPlans", verifyToken, async (req, res) => {
-  //const { role, engineerName } = req.session.user;
-  const { role, engineerName } = req.user; // 👈 Use JWT user info
+  const { role, engineerName } = req.user;
+
   try {
     const plans =
       role === "admin"
@@ -54,9 +55,15 @@ router.get("/getDailyPlans", verifyToken, async (req, res) => {
       statusList.map((s) => [s.planId.toString(), true])
     );
 
+    const jioStatusList = await JioBPStatus.find({});
+    const jioStatusMap = new Map(
+      jioStatusList.map((s) => [s.planId.toString(), true])
+    );
+
     const enrichedPlans = plans.map((plan) => {
       const planObj = plan.toObject();
       planObj.statusSaved = statusMap.has(plan._id.toString());
+      planObj.jioBPStatusSaved = jioStatusMap.has(plan._id.toString());
       return planObj;
     });
 
