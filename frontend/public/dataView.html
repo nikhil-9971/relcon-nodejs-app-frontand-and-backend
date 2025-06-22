@@ -1727,9 +1727,30 @@
               head: [["Field", "Value"]],
               body: visitData,
               theme: "grid",
-              styles: { fontSize: 9, cellPadding: 3 },
-              headStyles: { fillColor: [22, 163, 74], textColor: 255 },
-              alternateRowStyles: { fillColor: [245, 245, 245] },
+              styles: {
+                fontSize: 9,
+                cellPadding: 3,
+                overflow: "linebreak",
+                cellWidth: "wrap",
+                valign: "top",
+              },
+              columnStyles: {
+                0: { cellWidth: 95, fontStyle: "bold" }, // 50% of A4 width
+                1: { cellWidth: 95 },
+              },
+              headStyles: {
+                fillColor: [22, 163, 74],
+                textColor: 255,
+                fontSize: 10,
+                halign: "center",
+              },
+              bodyStyles: {
+                halign: "left",
+                textColor: 33,
+              },
+              alternateRowStyles: {
+                fillColor: [245, 245, 245],
+              },
             });
 
             const userName =
