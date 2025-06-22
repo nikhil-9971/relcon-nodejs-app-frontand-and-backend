@@ -1621,8 +1621,6 @@
 
       async function downloadPDF(planId) {
         try {
-          console.log("🟢 downloadPDF() STARTED for PlanID:", planId);
-
           const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`);
           if (!resPlan.ok) {
             alert("❌ Failed to fetch visit data");
@@ -1630,16 +1628,12 @@
           }
 
           const plan = await resPlan.json();
-          console.log("📦 Plan Data:", plan);
-
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
           const pageWidth = doc.internal.pageSize.getWidth();
 
-          // ✅ JioBP PDF logic
-          if (plan.jioBPStatusSaved) {
-            console.log("✅ Detected JioBP visit. Fetching JioBP status...");
-
+          // ✅ JioBP logic
+          if (!!plan.jioBPStatusSaved) {
             const resStatus = await fetch(
               `${baseUrl}/getJioBPStatusByPlan/${planId}`
             );
@@ -1649,7 +1643,6 @@
             }
 
             const status = await resStatus.json();
-            console.log("📄 JioBP Status Data:", status);
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
@@ -1686,35 +1679,21 @@
               ["Status", cleanText(status.status)],
             ];
 
-            console.log("📋 Generating PDF table with:", visitData);
-
             doc.autoTable({
               startY: 30,
               head: [["Field", "Value"]],
               body: visitData,
               theme: "grid",
+              styles: {
+                fontSize: 9,
+                cellPadding: 3,
+              },
               headStyles: {
                 fillColor: [22, 163, 74],
                 textColor: 255,
-                fontSize: 10,
-                halign: "center",
-              },
-              bodyStyles: {
-                fontSize: 9,
-                textColor: 33,
-                cellPadding: 3,
               },
               alternateRowStyles: {
                 fillColor: [245, 245, 245],
-              },
-              styles: {
-                cellWidth: "wrap",
-                valign: "middle",
-                overflow: "linebreak",
-              },
-              columnStyles: {
-                0: { fontStyle: "bold", halign: "left" },
-                1: { halign: "left" },
               },
             });
 
@@ -1722,11 +1701,7 @@
               localStorage.getItem("engineerName") || "Unknown User";
             const now = new Date();
             const formattedDate = now
-              .toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
+              .toLocaleDateString("en-GB")
               .replace(/ /g, "-");
             const formattedTime = now.toLocaleTimeString("en-US", {
               hour: "2-digit",
@@ -1748,7 +1723,6 @@
 
             doc.save(`JioBP_Report_${plan.roCode}_${plan.date}.pdf`);
           }
-
           // 🔁 HPCL fallback logic
           else {
             console.log("🔁 Falling back to HPCL status report");
