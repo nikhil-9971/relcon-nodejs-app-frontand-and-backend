@@ -1601,6 +1601,12 @@
 
       //pdf generation code
 
+      // 🔧 Helper function to clean special characters
+      function cleanText(text) {
+        if (!text) return "";
+        return String(text).replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+      }
+
       async function downloadPDF(planId) {
         try {
           console.log("🟢 downloadPDF() STARTED for PlanID:", planId);
@@ -1618,7 +1624,7 @@
           const doc = new jsPDF();
           const pageWidth = doc.internal.pageSize.getWidth();
 
-          // ✅ JioBP PDF path
+          // ✅ JioBP PDF logic
           if (plan.jioBPStatusSaved) {
             console.log("✅ Detected JioBP visit. Fetching JioBP status...");
 
@@ -1640,26 +1646,32 @@
             });
 
             const visitData = [
-              ["Engineer", plan.engineer || ""],
-              ["Region", plan.region || ""],
-              ["Phase", plan.phase || ""],
-              ["RO Code", plan.roCode || ""],
-              ["RO Name", plan.roName || ""],
-              ["Date", plan.date || ""],
-              ["AMC Qtr", plan.amcQtr || ""],
-              ["Purpose", plan.purpose || ""],
-              ["HPSD ID", status.hpsdId || ""],
-              ["Solution", status.solution || ""],
-              ["Active Material Used", status.activeMaterialUsed || ""],
-              ["Used Material Name & Code", status.usedMaterialDetails || ""],
+              ["Engineer", cleanText(plan.engineer)],
+              ["Region", cleanText(plan.region)],
+              ["Phase", cleanText(plan.phase)],
+              ["RO Code", cleanText(plan.roCode)],
+              ["RO Name", cleanText(plan.roName)],
+              ["Date", cleanText(plan.date)],
+              ["AMC Qtr", cleanText(plan.amcQtr)],
+              ["Purpose", cleanText(plan.purpose)],
+              ["HPSD ID", cleanText(status.hpsdId)],
+              ["Solution", cleanText(status.solution)],
+              ["Active Material Used", cleanText(status.activeMaterialUsed)],
+              [
+                "Used Material Name & Code",
+                cleanText(status.usedMaterialDetails),
+              ],
               [
                 "Faulty Material Name & Code",
-                status.faultyMaterialDetails || "",
+                cleanText(status.faultyMaterialDetails),
               ],
-              ["Spare Requirement", status.spareRequired || ""],
-              ["Observation (in Hours)", status.observationHours || ""],
-              ["Material Requirement Name", status.materialRequirement || ""],
-              ["Status", status.status || ""],
+              ["Spare Requirement", cleanText(status.spareRequired)],
+              ["Observation (in Hours)", cleanText(status.observationHours)],
+              [
+                "Material Requirement Name",
+                cleanText(status.materialRequirement),
+              ],
+              ["Status", cleanText(status.status)],
             ];
 
             console.log("📋 Generating PDF table with:", visitData);
@@ -1725,7 +1737,7 @@
             doc.save(`JioBP_Report_${plan.roCode}_${plan.date}.pdf`);
           }
 
-          // ✅ HPCL/Status fallback PDF path
+          // 🔁 HPCL fallback logic
           else {
             console.log("🔁 Falling back to HPCL status report");
 
@@ -1753,37 +1765,37 @@
             doc.line(15, 25, 195, 25);
 
             const visitData = [
-              ["Engineer", plan.engineer || ""],
-              ["Region", plan.region || ""],
-              ["Phase", plan.phase || ""],
-              ["RO Code", plan.roCode || ""],
-              ["RO Name", plan.roName || ""],
-              ["Date", plan.date || ""],
-              ["AMC Qtr", plan.amcQtr || ""],
-              ["Purpose", plan.purpose || ""],
-              ["Probe Make", status.probeMake || ""],
-              ["Product & Probe Size", status.probeSize || ""],
-              ["Low Product Lock", status.lowProductLock || ""],
-              ["High water Lock", status.highWaterSet || ""],
-              ["DU Serial Number Updated", status.duSerialNumber || ""],
-              ["Outlet DG Status", status.dgStatus || ""],
-              ["Connectivity Type", status.connectivityType || ""],
-              ["Sim 1 Provider Name", status.sim1Provider || ""],
-              ["Sim 1 Number", status.sim1Number || ""],
-              ["Sim 2 Provider Name", status.sim2Provider || ""],
-              ["Sim 2 Number", status.sim2Number || ""],
-              ["IEMI Number", status.iemiNumber || ""],
-              ["BOS Version", status.bosVersion || ""],
-              ["FCC Version", status.fccVersion || ""],
-              ["Wireless Slave Version", status.wirelessSlave || ""],
-              ["SFTP Config", status.sftpConfig || ""],
-              ["Admin Password Updated", status.adminPassword || ""],
-              ["Work Completion Status", status.workCompletion || ""],
-              ["Earthing Status", status.earthingStatus || ""],
-              ["Voltage Reading", status.voltageReading || ""],
-              ["No of DU offline", status.duOffline || ""],
-              ["DU offline remark", status.duRemark || ""],
-              ["Site Location", status.locationField || ""],
+              ["Engineer", cleanText(plan.engineer)],
+              ["Region", cleanText(plan.region)],
+              ["Phase", cleanText(plan.phase)],
+              ["RO Code", cleanText(plan.roCode)],
+              ["RO Name", cleanText(plan.roName)],
+              ["Date", cleanText(plan.date)],
+              ["AMC Qtr", cleanText(plan.amcQtr)],
+              ["Purpose", cleanText(plan.purpose)],
+              ["Probe Make", cleanText(status.probeMake)],
+              ["Product & Probe Size", cleanText(status.probeSize)],
+              ["Low Product Lock", cleanText(status.lowProductLock)],
+              ["High water Lock", cleanText(status.highWaterSet)],
+              ["DU Serial Number Updated", cleanText(status.duSerialNumber)],
+              ["Outlet DG Status", cleanText(status.dgStatus)],
+              ["Connectivity Type", cleanText(status.connectivityType)],
+              ["Sim 1 Provider Name", cleanText(status.sim1Provider)],
+              ["Sim 1 Number", cleanText(status.sim1Number)],
+              ["Sim 2 Provider Name", cleanText(status.sim2Provider)],
+              ["Sim 2 Number", cleanText(status.sim2Number)],
+              ["IEMI Number", cleanText(status.iemiNumber)],
+              ["BOS Version", cleanText(status.bosVersion)],
+              ["FCC Version", cleanText(status.fccVersion)],
+              ["Wireless Slave Version", cleanText(status.wirelessSlave)],
+              ["SFTP Config", cleanText(status.sftpConfig)],
+              ["Admin Password Updated", cleanText(status.adminPassword)],
+              ["Work Completion Status", cleanText(status.workCompletion)],
+              ["Earthing Status", cleanText(status.earthingStatus)],
+              ["Voltage Reading", cleanText(status.voltageReading)],
+              ["No of DU offline", cleanText(status.duOffline)],
+              ["DU offline remark", cleanText(status.duRemark)],
+              ["Site Location", cleanText(status.locationField)],
             ];
 
             doc.autoTable({
