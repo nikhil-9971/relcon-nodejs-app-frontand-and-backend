@@ -1621,7 +1621,11 @@
 
       async function downloadPDF(planId) {
         try {
-          const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`);
+          const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
           if (!resPlan.ok) {
             alert("❌ Failed to fetch visit data");
             return;
@@ -1632,11 +1636,17 @@
           const doc = new jsPDF();
           const pageWidth = doc.internal.pageSize.getWidth();
 
-          // ✅ If it's JioBP (RBML)
+          // ✅ JioBP (RBML)
           if (!!plan.jioBPStatusSaved) {
             const resStatus = await fetch(
-              `${baseUrl}/getJioBPStatusByPlan/${planId}`
+              `${baseUrl}/getJioBPStatusByPlan/${planId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
             );
+
             if (!resStatus.ok) {
               alert("❌ Failed to fetch Jio BP status data");
               return;
@@ -1719,10 +1729,16 @@
           // 🔁 HPCL fallback
           else {
             const resStatus = await fetch(
-              `${baseUrl}/getStatusByPlan/${planId}`
+              `${baseUrl}/getStatusByPlan/${planId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
             );
+
             if (!resStatus.ok) {
-              alert("❌ Failed to fetch status data");
+              alert("❌ Failed to fetch HPCL status data");
               return;
             }
 
