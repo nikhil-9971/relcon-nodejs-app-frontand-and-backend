@@ -805,6 +805,7 @@
     </div>
 
     <!-- JIO BP Status Model -->
+    <!-- ✅ Jio BP Modal Updated with Grid Layout and Icon -->
     <div
       id="jioBPModal"
       class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
@@ -812,8 +813,11 @@
       <div
         class="bg-white max-h-[90vh] overflow-y-auto rounded shadow-lg w-full max-w-2xl p-6 relative text-[11px]"
       >
+        <div class="flex items-center justify-center mb-4">
+          <img src="./assets/JioBP.png" alt="JioBP Logo" class="h-10 w-auto" />
+        </div>
         <h2 class="text-xl font-bold mb-4 text-center text-gray-800">
-          🚰️ Add Jio BP Visit Status
+          Add Jio BP Visit Status
         </h2>
 
         <input type="hidden" id="jioBPPlanId" />
@@ -828,10 +832,20 @@
           </div>
 
           <div class="md:col-span-2">
+            <label class="font-semibold">Diagnosis</label>
+            <textarea
+              id="diagnosis"
+              class="w-full p-2 mt-1 border rounded"
+              placeholder="Explain what is issue and which material faulty"
+            ></textarea>
+          </div>
+
+          <div class="md:col-span-2">
             <label class="font-semibold">Solution</label>
             <textarea
               id="solution"
               class="w-full p-2 mt-1 border rounded"
+              placeholder="Issue Resolved or not and share name of material you have changed"
             ></textarea>
           </div>
 
@@ -853,6 +867,7 @@
               type="text"
               id="usedMaterialDetails"
               class="w-full p-2 mt-1 border rounded"
+              placeholder="1-CARD READER (H0Q72506220)"
             />
           </div>
 
@@ -862,6 +877,7 @@
               type="text"
               id="faultyMaterialDetails"
               class="w-full p-2 mt-1 border rounded"
+              placeholder="1-CARD READER (J2Q72506220)"
             />
           </div>
 
@@ -889,6 +905,7 @@
               type="text"
               id="materialRequirement"
               class="w-full p-2 mt-1 border rounded"
+              placeholder="Share material name which have required"
             />
           </div>
 
@@ -1079,14 +1096,14 @@
           let statusBtn = "";
 
           if (plan.statusSaved || plan.jioBPStatusSaved) {
-            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
+            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
           } else if (plan.phase && plan.phase.includes("HPCL/")) {
-            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> Status</button>`;
+            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> HPCL</button>`;
           } else if (
             (plan.phase && plan.phase.includes("RBML")) ||
             plan.jioBPStatusSaved
           ) {
-            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-500 hover:bg-purple-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
+            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-500 hover:bg-green-600 text-yellow px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
           } else {
             statusBtn = `<span class="text-gray-400">Not required</span>`;
           }
@@ -1672,6 +1689,7 @@
               ["AMC Qtr", cleanText(plan.amcQtr)],
               ["Purpose", cleanText(plan.purpose)],
               ["HPSD ID", cleanText(status?.hpsdId)],
+              ["Diagnosis", cleanText(status?.diagnosis)],
               ["Solution", cleanText(status?.solution)],
               ["Active Material Used", cleanText(status?.activeMaterialUsed)],
               [
@@ -1996,6 +2014,7 @@
       async function saveJioBPStatus() {
         const requiredFields = [
           "hpsdId",
+          "diagnosis",
           "solution",
           "activeMaterialUsed",
           "spareRequired",
@@ -2013,6 +2032,7 @@
         const data = {
           planId: document.getElementById("jioBPPlanId").value,
           hpsdId: document.getElementById("hpsdId").value.trim(),
+          diagnosis: document.getElementById("diagnosis").value.trim(),
           solution: document.getElementById("solution").value.trim(),
           activeMaterialUsed:
             document.getElementById("activeMaterialUsed").value,
