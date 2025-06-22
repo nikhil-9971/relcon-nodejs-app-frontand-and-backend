@@ -1,51 +1,65 @@
 const express = require("express");
 const router = express.Router();
 const JioBPStatus = require("../models/jioBPStatus");
-const DailyPlan = require("../models/DailyPlan"); // ✅ Fixed
+const DailyPlan = require("../models/DailyPlan");
 const authMiddleware = require("../middleware/authMiddleware");
 
-// POST /saveJioBPStatus
+// ✅ SAVE or UPDATE Jio BP Status
 router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
   try {
     const { planId } = req.body;
 
-    // Prevent duplicate entry
+    let savedStatus;
+
     const existing = await JioBPStatus.findOne({ planId });
     if (existing) {
-      return res
-        .status(409)
-        .json({ message: "Status already exists for this plan" });
+      // 🔁 Update existing status
+      Object.assign(existing, req.body);
+      savedStatus = await existing.save();
+    } else {
+      // ➕ Create new status
+      const newStatus = new JioBPStatus(req.body);
+      savedStatus = await newStatus.save();
     }
 
-    const newStatus = new JioBPStatus(req.body);
-    await newStatus.save();
-
-    // ✅ Update DailyPlan to mark JioBPStatus and Status saved
+    // ✅ Mark status flags in DailyPlan
     await DailyPlan.findByIdAndUpdate(planId, {
-      statusSaved: true,
       jioBPStatusSaved: true,
+      statusSaved: true,
     });
 
     const updatedPlan = await DailyPlan.findById(planId);
-    res.status(200).json({ message: "Jio BP status saved", plan: updatedPlan });
+
+    res.status(200).json({
+      success: true,
+      message: "✅ Jio BP status saved successfully",
+      status: savedStatus,
+      plan: updatedPlan,
+    });
   } catch (err) {
-    console.error("Error saving Jio BP status:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Error saving Jio BP status:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// GET /getJioBPStatusByPlan/:planId
-router.get("/getJioBPStatusByPlan/:planId", async (req, res) => {
-  try {
-    const status = await JioBPStatus.findOne({ planId: req.params.planId });
-    if (!status) {
-      return res.status(404).json({ message: "Status not found" });
+// ✅ GET Jio BP Status by Plan ID
+router.get(
+  "/getJioBPStatusByPlan/:planId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const status = await JioBPStatus.findOne({ planId: req.params.planId });
+      if (!status) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Status not found" });
+      }
+      res.status(200).json(status);
+    } catch (err) {
+      console.error("❌ Error fetching Jio BP status:", err);
+      res.status(500).json({ success: false, message: "Server error" });
     }
-    res.status(200).json(status);
-  } catch (err) {
-    console.error("Error fetching Jio BP status:", err);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 module.exports = router;
