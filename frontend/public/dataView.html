@@ -996,22 +996,30 @@
         });
       }
 
-      function applyFilter(btnElement) {
-        const fromDate = document.getElementById("fromDate").value;
-        const toDate = document.getElementById("toDate").value;
+      function applyFilter(
+        btnElement = null,
+        selectedEngineer = "",
+        from = "",
+        to = ""
+      ) {
+        const fromDate = from || document.getElementById("fromDate").value;
+        const toDate = to || document.getElementById("toDate").value;
 
         if (new Date(fromDate) > new Date(toDate)) {
           alert("❌ From Date cannot be after To Date.");
           return;
         }
 
-        // Animate button
-        btnElement.classList.add("pulse");
-        btnElement.disabled = true;
-        document.getElementById("applyIcon").innerHTML = "⏳";
+        // Animate only if triggered from UI
+        if (btnElement) {
+          btnElement.classList.add("pulse");
+          btnElement.disabled = true;
+          document.getElementById("applyIcon").innerHTML = "⏳";
+        }
 
         setTimeout(() => {
-          const engineer = document.getElementById("engineerFilter").value;
+          const engineer =
+            selectedEngineer || document.getElementById("engineerFilter").value;
           filteredData = fullData;
 
           if (loggedInUser.role === "engineer") {
@@ -1020,7 +1028,7 @@
             );
           }
 
-          if (engineer && loggedInUser.role === "admin") {
+          if (engineer && loggedInUser.role === "admin" && engineer !== "All") {
             filteredData = filteredData.filter((p) => p.engineer === engineer);
           }
 
@@ -1036,11 +1044,15 @@
             );
           }
 
-          applySearch();
-          btnElement.disabled = false;
-          btnElement.classList.remove("pulse");
-          document.getElementById("applyIcon").innerHTML = "🔍";
-        }, 600); // Simulate short delay
+          applySearch(); // 🔍 text search if any
+
+          // Restore button only if it exists
+          if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.classList.remove("pulse");
+            document.getElementById("applyIcon").innerHTML = "🔍";
+          }
+        }, 600);
       }
 
       function applySearch() {
@@ -2053,7 +2065,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // ✅ ADD THIS
+              Authorization: `Bearer ${token}`,
             },
             credentials: "include",
             body: JSON.stringify(data),
@@ -2063,12 +2075,19 @@
             const response = await res.json();
             alert("✅ Jio BP Status saved successfully");
 
-            // ✅ Update frontend table instantly
+            // ✅ Update table data with updated plan
             fullData = fullData.map((p) =>
               p._id === response.plan._id ? response.plan : p
             );
             filteredData = [...fullData];
-            populateTable(filteredData);
+
+            // ✅ Reapply filter (prevent full data reset)
+            const selectedEngineer =
+              document.getElementById("engineerFilter").value;
+            const fromDate = document.getElementById("fromDate").value;
+            const toDate = document.getElementById("toDate").value;
+
+            applyFilter(null, selectedEngineer, fromDate, toDate);
 
             closeJioBPModal();
           } else {
