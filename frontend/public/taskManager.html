@@ -236,17 +236,28 @@
         const statusSelect = row.querySelector("select");
         const status = statusSelect ? statusSelect.value : "";
 
-        if (status !== "Mailed") {
-          alert("❌ You can only submit a task when its status is 'Mailed'.");
-          return;
-        }
-
         const mailDate = row.querySelector('input[type="date"]').value;
+
         const selects = row.querySelectorAll("select");
         const completedBy = selects.length > 1 ? selects[1].value : "";
 
-        const mailReply = row.querySelector("textarea").value;
+        // 🛑 Validation checks
+        if (status !== "Mailed") {
+          alert("❌ Set Status to 'Mailed' before submitting.");
+          return;
+        }
 
+        if (!mailDate) {
+          alert("❌ Please select Mail Date before submitting.");
+          return;
+        }
+
+        if (!completedBy) {
+          alert("❌ Please select who completed the task.");
+          return;
+        }
+
+        // ✅ Submit request
         const res = await fetch(`${baseUrl}/updateTask/${id}`, {
           method: "PUT",
           headers: {
@@ -254,16 +265,15 @@
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            status: "Done",
+            status: "Inprocess",
             mailDate,
             completedBy,
-            mailReply,
           }),
         });
 
         if (res.ok) {
           alert("✅ Task submitted and marked as Inprocess");
-          fetchTasks();
+          fetchTasks(); // Refresh UI
         } else {
           alert("❌ Failed to submit task");
         }
