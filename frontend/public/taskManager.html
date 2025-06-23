@@ -242,7 +242,9 @@
         }
 
         const mailDate = row.querySelector('input[type="date"]').value;
-        const completedBy = row.querySelectorAll("select")[1].value;
+        const selects = row.querySelectorAll("select");
+        const completedBy = selects.length > 1 ? selects[1].value : "";
+
         const mailReply = row.querySelector("textarea").value;
 
         const res = await fetch(`${baseUrl}/updateTask/${id}`, {
