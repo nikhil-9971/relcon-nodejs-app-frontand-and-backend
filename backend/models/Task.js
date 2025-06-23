@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const taskSchema = new mongoose.Schema({
   statusId: String, // Status Record ID (for traceability)
   roCode: String,
+  region: String,
   roName: String,
   date: String,
   engineer: String,
