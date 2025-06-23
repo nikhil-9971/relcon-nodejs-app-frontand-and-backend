@@ -49,7 +49,6 @@
               <th class="border px-2 py-1">Status</th>
               <th class="border px-2 py-1">Mail Date</th>
               <th class="border px-2 py-1">Task Completed By</th>
-              <th class="border px-2 py-1">Mail Reply</th>
               <th class="border px-2 py-1">Actions</th>
             </tr>
           </thead>
@@ -170,14 +169,7 @@
                       }>Nikhil Trivedi</option>
                     </select>
                   </td>
-                  <td class="border px-3 py-2">
-                    <textarea onchange="updateTaskField('${
-                      task._id
-                    }', 'mailReply', this.value)" class="border w-full p-1 rounded" rows="2">${
-              task.mailReply || ""
-            }</textarea>
-                  </td>
-                 <td class="border text-center px-2 py-1">
+                  <td class="border text-center px-2 py-1">
         ${
           isAdmin && task.status === "Mailed"
             ? `
@@ -268,7 +260,7 @@
         });
 
         if (res.ok) {
-          alert("✅ Task submitted and marked as In Process");
+          alert("✅ Task submitted and marked as Inprocess");
           fetchTasks();
         } else {
           alert("❌ Failed to submit task");
