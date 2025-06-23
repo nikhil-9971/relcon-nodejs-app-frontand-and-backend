@@ -148,7 +148,10 @@
         const todayStr = new Date().toISOString().split("T")[0];
 
         const submittedTasks = tasks.filter(
-          (task) => task.status === "Resolved" || task.status === "Done"
+          (task) =>
+            task.status === "Resolved" ||
+            task.status === "Done" ||
+            task.status === "Inprocess"
         );
 
         submittedTasks.forEach((task) => {
