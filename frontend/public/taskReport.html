@@ -167,9 +167,10 @@
           task._id
         }', this.value)" class="border px-2 py-1 rounded">
           <option value="Pending">Pending</option>
-          <option value="Resolved" ${
-            task.status === "Resolved" ? "selected" : ""
-          }>In Process</option>
+       <option value="Inprocess" ${
+         task.status === "Inprocess" ? "selected" : ""
+       }>In Process</option>
+
           <option value="Done">Resolved</option>
         </select>
       `;

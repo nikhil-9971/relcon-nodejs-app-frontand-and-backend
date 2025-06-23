@@ -81,7 +81,8 @@
             (task) =>
               task.status !== "Resolved" &&
               task.status !== "Follow-up" &&
-              task.status !== "Done"
+              task.status !== "Done" &&
+              task.status !== "Inprocess" // 👈 Add this line
           )
 
           .forEach((task) => {
