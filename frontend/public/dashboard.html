@@ -79,6 +79,16 @@
         >
           <i class="fa-solid fa-user-pen"></i> Create Daily Plan
         </a>
+
+        <a
+          href="#"
+          id="addSiteBtn"
+          onclick="openNewSiteModal()"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium text-green-700 hidden"
+        >
+          <i class="fa-solid fa-plus"></i> Add New Site
+        </a>
+
         <div>
           <!-- Toggle Button -->
           <button
@@ -168,6 +178,63 @@
       </div>
     </aside>
 
+    <!-- Add New Site Modal -->
+    <div
+      id="newSiteModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-5 rounded-lg w-[350px]">
+        <h2 class="text-lg font-semibold mb-3">➕ Add New Site</h2>
+        <input
+          id="newRoCode"
+          type="text"
+          placeholder="RO Code"
+          class="w-full border p-2 mb-2 rounded"
+        />
+        <input
+          id="newRoName"
+          type="text"
+          placeholder="RO Name"
+          class="w-full border p-2 mb-2 rounded"
+        />
+        <input
+          id="newRegion"
+          type="text"
+          placeholder="Region"
+          class="w-full border p-2 mb-2 rounded"
+        />
+        <input
+          id="newPhase"
+          type="text"
+          placeholder="Phase"
+          class="w-full border p-2 mb-2 rounded"
+        />
+        <input
+          id="newEngineer"
+          type="text"
+          placeholder="Engineer Name"
+          class="w-full border p-2 mb-2 rounded"
+        />
+        <input
+          id="newAmcQtr"
+          type="text"
+          placeholder="AMC Qtr"
+          class="w-full border p-2 mb-2 rounded"
+        />
+        <div class="flex justify-end mt-3">
+          <button onclick="closeNewSiteModal()" class="mr-2 text-gray-600">
+            Cancel
+          </button>
+          <button
+            onclick="submitNewSite()"
+            class="bg-green-600 text-white px-4 py-1 rounded"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content -->
     <main class="flex-1">
       <iframe id="contentFrame" src="dailyPlan.html"></iframe>
@@ -226,6 +293,11 @@
             document.getElementById("auditLink").style.display = "block";
           }
 
+          // Add Site Details
+          if (user.role === "admin") {
+            document.getElementById("addSiteBtn").classList.remove("hidden");
+          }
+
           // Show Task Management to admins only
           if (user.role === "admin") {
             document.getElementById("taskManagementLink").style.display =
@@ -262,6 +334,51 @@
       ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) =>
         window.addEventListener(evt, resetInactivityTimer)
       );
+
+      async function submitNewSite() {
+        const roCode = document
+          .getElementById("newRoCode")
+          .value.trim()
+          .toUpperCase();
+        const roName = document.getElementById("newRoName").value.trim();
+        const region = document.getElementById("newRegion").value.trim();
+        const phase = document.getElementById("newPhase").value.trim();
+        const engineer = document.getElementById("newEngineer").value.trim();
+        const amcQtr = document.getElementById("newAmcQtr").value.trim();
+
+        if (!roCode || !roName || !region || !phase || !engineer || !amcQtr) {
+          alert("❌ All fields are required");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${baseUrl}/romaster/add`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify({
+              roCode,
+              roName,
+              region,
+              phase,
+              engineer,
+              amcQtr,
+            }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            alert("✅ Site added successfully!");
+            closeNewSiteModal();
+          } else {
+            alert("❌ " + data.message);
+          }
+        } catch (err) {
+          alert("❌ Server error");
+        }
+      }
 
       window.onload = () => {
         fetchUser();
