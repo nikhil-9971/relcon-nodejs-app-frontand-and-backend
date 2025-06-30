@@ -11,6 +11,10 @@ const PlanSchema = new mongoose.Schema({
   amcQtr: String,
   purpose: String,
   completionStatus: String, // Add this field
+  arrivalTime: String,
+  leaveTime: String,
+  supportTakenFrom: String,
+  whatDone: String,
 });
 
 module.exports =
