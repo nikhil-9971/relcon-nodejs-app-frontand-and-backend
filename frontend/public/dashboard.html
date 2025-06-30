@@ -247,6 +247,9 @@
         return localStorage.getItem("token");
       }
 
+      function openNewSiteModal() {
+        document.getElementById("newSiteModal").classList.remove("hidden");
+      }
       function logout() {
         localStorage.removeItem("token");
         window.location.href = "login.html";
