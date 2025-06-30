@@ -1303,7 +1303,10 @@
         if (res.ok) {
           alert("✅ Record updated!");
           closeEditModal();
-          fetchData();
+          //fetchData();
+          // 👇 Table ko turant refresh karo
+          await fetchAndStoreData(); // 🔁 Fresh data laao
+          applyFilter(document.getElementById("applyBtn")); // 🧠 Current filter apply karo
         } else {
           alert("❌ Update failed");
         }
