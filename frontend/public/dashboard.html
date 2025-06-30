@@ -382,6 +382,8 @@
 
       window.onload = () => {
         fetchUser();
+        // Assign event handlers safely
+        document.getElementById("addSiteBtn").onclick = openNewSiteModal;
         resetInactivityTimer();
       };
     </script>
