@@ -40,7 +40,7 @@ app.use(express.static("public"));
 
 // ✅ Routes
 app.use("/", authRoutes);
-app.use("/", roRoutes);
+app.use("/romaster", roRoutes);
 app.use("/", planRoutes);
 app.use("/", statusRoutes);
 app.use("/", atgstatusRoutes);
