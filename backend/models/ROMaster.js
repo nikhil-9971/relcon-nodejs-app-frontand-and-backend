@@ -6,6 +6,7 @@ const ROMasterSchema = new mongoose.Schema({
   region: String,
   phase: String,
   engineer: String,
+  amcQtr: String,
 });
 
 module.exports =
