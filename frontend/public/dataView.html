@@ -1361,6 +1361,10 @@
             "AMC_QTR_DETAIL",
             "Date of Visit",
             "Completion Status",
+            "Arrival Time",
+            "Leave Time",
+            "Support Taken from",
+            "Whats has to be done",
           ],
         ];
 
@@ -1375,6 +1379,10 @@
           (d.amcQtr || "").trim(),
           (d.date || "").trim(),
           (d.completionStatus || "").trim(),
+          (d.arrivalTime || "").trim(),
+          (d.leaveTime || "").trim(),
+          (d.supportTakenFrom || "").trim(),
+          (d.whatDone || "").trim(),
         ]);
 
         const allRows = [...titleRow, ...headerRow, ...tableRows];
@@ -1387,7 +1395,7 @@
           const cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
           if (cell) {
             cell.s = {
-              font: { name: "Calibri", sz: 11, bold: true },
+              font: { name: "Calibri", sz: 10, bold: true },
               fill: { fgColor: { rgb: "00FF00" } },
               alignment: { vertical: "center", horizontal: "left" },
             };
