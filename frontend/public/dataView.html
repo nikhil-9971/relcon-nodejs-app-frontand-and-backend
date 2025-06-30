@@ -181,6 +181,10 @@
               <th class="px-1 py-1">Completion Status</th>
               <th class="px-1 py-1">Update Status</th>
               <th class="px-1 py-1" id="atgHeader">Update ATG Status</th>
+              <th class="px-1 py-1">Arrival Time</th>
+              <th class="px-1 py-1">Leave Time</th>
+              <th class="px-1 py-1">Support Taken From</th>
+              <th class="px-1 py-1">What has done at Site</th>
               <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
@@ -248,6 +252,30 @@
           <input
             id="editAmcQtr"
             placeholder="AMC Qtr"
+            class="border px-3 py-1 rounded"
+          />
+          <input
+            type="time"
+            id="editArrivalTime"
+            placeholder="Arrival Time"
+            class="border px-3 py-1 rounded"
+          />
+          <input
+            type="time"
+            id="editLeaveTime"
+            placeholder="Leave Time"
+            class="border px-3 py-1 rounded"
+          />
+          <input
+            type="text"
+            id="editSupportTakenFrom"
+            placeholder="Support Taken From"
+            class="border px-3 py-1 rounded"
+          />
+          <input
+            type="text"
+            id="editWhatDone"
+            placeholder="What has done at Site"
             class="border px-3 py-1 rounded"
           />
         </div>
@@ -1139,18 +1167,18 @@
 
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
-             <button onclick="handleATGButtonClick('${plan._id}', ${
+                 <button onclick="handleATGButtonClick('${plan._id}', ${
                 exists ? "true" : "false"
               })"
 
-        class="text-white px-2 py-1 rounded text-[10px] ${
-          exists
-            ? "bg-green-500 cursor-not-allowed"
-            : "bg-orange-500 hover:bg-orange-600"
-        }"
-        ${exists ? "disabled" : ""}>
-        ${exists ? "✅ Added" : "➕ Add ATG Status"}
-      </button>`;
+            class="text-white px-2 py-1 rounded text-[10px] ${
+              exists
+                ? "bg-green-500 cursor-not-allowed"
+                : "bg-orange-500 hover:bg-orange-600"
+            }"
+            ${exists ? "disabled" : ""}>
+            ${exists ? "✅ Added" : "➕ Add ATG Status"}
+          </button>`;
 
               const cell = row.querySelector(".atg-status-cell");
               if (cell) cell.innerHTML = btnHtml;
@@ -1158,50 +1186,60 @@
           }
 
           row.innerHTML = `
-                        <td class="border px-1 py-1">${plan.region}</td>
-                        <td class="border px-1 py-1">${plan.engineer}</td>
-                        <td class="border px-1 py-1">${plan.phase}</td>
-                        <td class="border px-1 py-1">${plan.roCode}</td>
-                        <td class="border px-1 py-1">${plan.roName}</td>
-                        <td class="border px-1 py-1">${plan.purpose}</td>
-                        <td class="border px-1 py-1">${plan.date}</td>
-                        <td class="border px-1 py-1">${plan.issueType}</td>
-                        <td class="border px-1 py-1">${plan.amcQtr}</td>
-                        <td class="border px-1 py-1">
-          ${
-            loggedInUser.role === "admin"
-              ? `<span class="text-blue-500  cursor-pointer" onclick="openCompletionModal('${
-                  plan._id
-                }', \`${plan.completionStatus || ""}\`)">
-           ${plan.completionStatus ? plan.completionStatus : "➕ Click to Add"}
-         </span>`
-              : plan.completionStatus || "-"
-          }
-       </td>
+                            <td class="border px-1 py-1">${plan.region}</td>
+                            <td class="border px-1 py-1">${plan.engineer}</td>
+                            <td class="border px-1 py-1">${plan.phase}</td>
+                            <td class="border px-1 py-1">${plan.roCode}</td>
+                            <td class="border px-1 py-1">${plan.roName}</td>
+                            <td class="border px-1 py-1">${plan.purpose}</td>
+                            <td class="border px-1 py-1">${plan.date}</td>
+                            <td class="border px-1 py-1">${plan.issueType}</td>
+                            <td class="border px-1 py-1">${plan.amcQtr}</td>
+                            <td class="border px-1 py-1">
+              ${
+                loggedInUser.role === "admin"
+                  ? `<span class="text-blue-500  cursor-pointer" onclick="openCompletionModal('${
+                      plan._id
+                    }', \`${plan.completionStatus || ""}\`)">
+               ${
+                 plan.completionStatus
+                   ? plan.completionStatus
+                   : "➕ Click to Add"
+               }
+             </span>`
+                  : plan.completionStatus || "-"
+              }
+           </td>
 
-                        <td class="border px-1 py-1 text-center">${statusBtn}</td>
-                        <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
+                            <td class="border px-1 py-1 text-center">${statusBtn}</td>
+                            <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
+                            <td class="border px-1 py-1">${
+                              plan.arrivalTime || "-"
+                            }</td>
+<td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
+<td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
+<td class="border px-1 py-1">${plan.whatDone || "-"}</td>
 
-                         <td class="border px-2 py-1 text-center space-x-1">
-        ${
-          loggedInUser?.role === "admin"
-            ? `
-            <button onclick='openEditModal(${JSON.stringify(plan)})'
-                    class="text-sm bg-blue-500 text-white px-1 py-1 rounded"
-                    title="Edit">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button onclick='confirmDelete("${plan._id}")'
-                    class="text-sm bg-red-500 text-white px-1 py-1 rounded"
-                    title="Delete">
-              <i class="fas fa-trash-alt"></i>
-            </button>`
-            : ""
-        }
-      </td>
+                             <td class="border px-2 py-1 text-center space-x-1">
+            ${
+              loggedInUser?.role === "admin"
+                ? `
+                <button onclick='openEditModal(${JSON.stringify(plan)})'
+                        class="text-sm bg-blue-500 text-white px-1 py-1 rounded"
+                        title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button onclick='confirmDelete("${plan._id}")'
+                        class="text-sm bg-red-500 text-white px-1 py-1 rounded"
+                        title="Delete">
+                  <i class="fas fa-trash-alt"></i>
+                </button>`
+                : ""
+            }
+          </td>
 
 
-                      `;
+                          `;
           tbody.appendChild(row);
         });
       }
@@ -1219,6 +1257,12 @@
         document.getElementById("editDate").value = plan.date || "";
         document.getElementById("editIssueType").value = plan.issueType || "";
         document.getElementById("editAmcQtr").value = plan.amcQtr || "";
+        document.getElementById("editArrivalTime").value =
+          plan.arrivalTime || "";
+        document.getElementById("editLeaveTime").value = plan.leaveTime || "";
+        document.getElementById("editSupportTakenFrom").value =
+          plan.supportTakenFrom || "";
+        document.getElementById("editWhatDone").value = plan.whatDone || "";
         document.getElementById("editModal").classList.remove("hidden");
       }
 
@@ -1239,6 +1283,11 @@
           date: document.getElementById("editDate").value,
           issueType: document.getElementById("editIssueType").value,
           amcQtr: document.getElementById("editAmcQtr").value,
+          arrivalTime: document.getElementById("editArrivalTime").value,
+          leaveTime: document.getElementById("editLeaveTime").value,
+          supportTakenFrom: document.getElementById("editSupportTakenFrom")
+            .value,
+          whatDone: document.getElementById("editWhatDone").value,
         };
 
         const res = await fetch(`${baseUrl}/updateDailyPlan/` + id, {
