@@ -1184,62 +1184,68 @@
               if (cell) cell.innerHTML = btnHtml;
             });
           }
-
           row.innerHTML = `
-                            <td class="border px-1 py-1">${plan.region}</td>
-                            <td class="border px-1 py-1">${plan.engineer}</td>
-                            <td class="border px-1 py-1">${plan.phase}</td>
-                            <td class="border px-1 py-1">${plan.roCode}</td>
-                            <td class="border px-1 py-1">${plan.roName}</td>
-                            <td class="border px-1 py-1">${plan.purpose}</td>
-                            <td class="border px-1 py-1">${plan.date}</td>
-                            <td class="border px-1 py-1">${plan.issueType}</td>
-                            <td class="border px-1 py-1">${plan.amcQtr}</td>
-                            <td class="border px-1 py-1">
-              ${
-                loggedInUser.role === "admin"
-                  ? `<span class="text-blue-500  cursor-pointer" onclick="openCompletionModal('${
-                      plan._id
-                    }', \`${plan.completionStatus || ""}\`)">
-               ${
-                 plan.completionStatus
-                   ? plan.completionStatus
-                   : "➕ Click to Add"
-               }
-             </span>`
-                  : plan.completionStatus || "-"
-              }
-           </td>
+  <td class="border px-1 py-1">${plan.region}</td>
+  <td class="border px-1 py-1">${plan.engineer}</td>
+  <td class="border px-1 py-1">${plan.phase}</td>
+  <td class="border px-1 py-1">${plan.roCode}</td>
+  <td class="border px-1 py-1">${plan.roName}</td>
+  <td class="border px-1 py-1">${plan.purpose}</td>
+  <td class="border px-1 py-1">${plan.date}</td>
+  <td class="border px-1 py-1">${plan.issueType}</td>
+  <td class="border px-1 py-1">${plan.amcQtr}</td>
+  <td class="border px-1 py-1">
+    ${
+      loggedInUser.role === "admin"
+        ? `<span class="text-blue-500 cursor-pointer" onclick="openCompletionModal('${
+            plan._id
+          }', \`${plan.completionStatus || ""}\`)">
+             ${
+               plan.completionStatus ? plan.completionStatus : "➕ Click to Add"
+             }
+           </span>`
+        : plan.completionStatus || "-"
+    }
+  </td>
 
-                            <td class="border px-1 py-1 text-center">${statusBtn}</td>
-                            <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
-                            <td class="border px-1 py-1">${
-                              plan.arrivalTime || "-"
-                            }</td>
-<td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
-<td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
-<td class="border px-1 py-1">${plan.whatDone || "-"}</td>
+  <!-- ✅ STATUS COLUMN is visible to all -->
+  <td class="border px-1 py-1 text-center">${statusBtn}</td>
 
-                             <td class="border px-2 py-1 text-center space-x-1">
-            ${
-              loggedInUser?.role === "admin"
-                ? `
-                <button onclick='openEditModal(${JSON.stringify(plan)})'
-                        class="text-sm bg-blue-500 text-white px-1 py-1 rounded"
-                        title="Edit">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button onclick='confirmDelete("${plan._id}")'
-                        class="text-sm bg-red-500 text-white px-1 py-1 rounded"
-                        title="Delete">
-                  <i class="fas fa-trash-alt"></i>
-                </button>`
-                : ""
-            }
-          </td>
+  <!-- ❌ ATG COLUMN: admin only -->
+  ${
+    loggedInUser.role === "admin"
+      ? `
+    <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
+  `
+      : ""
+  }
 
+  <td class="border px-1 py-1">${plan.arrivalTime || "-"}</td>
+  <td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
+  <td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
+  <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
 
-                          `;
+  <!-- ❌ ACTION COLUMN: admin only -->
+  ${
+    loggedInUser.role === "admin"
+      ? `
+    <td class="border px-2 py-1 text-center space-x-1">
+      <button onclick='openEditModal(${JSON.stringify(plan)})'
+              class="text-sm bg-blue-500 text-white px-1 py-1 rounded"
+              title="Edit">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button onclick='confirmDelete("${plan._id}")'
+              class="text-sm bg-red-500 text-white px-1 py-1 rounded"
+              title="Delete">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    </td>
+  `
+      : ""
+  }
+`;
+
           tbody.appendChild(row);
         });
       }
