@@ -41,6 +41,8 @@
           <thead class="bg-gray-200">
             <tr>
               <th class="border px-2 py-1">RO Code</th>
+              <th class="border px-2 py-1">Region</th>
+              <!-- 🔧 Add this -->
               <th class="border px-2 py-1">RO Name</th>
               <th class="border px-2 py-1">Date of Visit</th>
               <th class="border px-2 py-1">Issue</th>
@@ -123,6 +125,9 @@
 
             row.innerHTML = `
                   <td class="border px-3 py-2">${task.roCode}</td>
+                  <td class="border px-3 py-2">${
+                    task.region || "-"
+                  }</td> <!-- ✅ Added -->
                   <td class="border px-3 py-2">${task.roName}</td>
                   <td class="border px-3 py-2">${task.date}</td>
                   <td class="border px-3 py-2 text-red-600 font-semibold text-[9px]">${issueFormatted}</td>
