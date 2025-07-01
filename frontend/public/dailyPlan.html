@@ -367,7 +367,7 @@
         }
 
         try {
-          const res = await fetch(`${baseUrl}/getROInfo/${roCode}`, {
+          const res = await fetch(`${baseUrl}/romaster/getROInfo/${roCode}`, {
             credentials: "include",
           });
           if (!res.ok) throw new Error("RO Code not found");
