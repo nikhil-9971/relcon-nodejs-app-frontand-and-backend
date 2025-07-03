@@ -2141,24 +2141,24 @@
 
         const data = {
           planId: document.getElementById("jioBPPlanId").value,
-          hpsdId: document.getElementById("hpsdId").value.trim(),
-          diagnosis: document.getElementById("diagnosis").value.trim(),
-          solution: document.getElementById("solution").value.trim(),
+          hpsdId: document.getElementById("hpsdId").value.toUpperCase(),
+          diagnosis: document.getElementById("diagnosis").value.toUpperCase(),
+          solution: document.getElementById("solution").value.toUpperCase(),
           activeMaterialUsed:
             document.getElementById("activeMaterialUsed").value,
           usedMaterialDetails: document
             .getElementById("usedMaterialDetails")
-            .value.trim(),
+            .value.toUpperCase(),
           faultyMaterialDetails: document
             .getElementById("faultyMaterialDetails")
-            .value.trim(),
+            .value.toUpperCase(),
           spareRequired: document.getElementById("spareRequired").value,
           observationHours: document
             .getElementById("observationHours")
-            .value.trim(),
+            .value.toUpperCase(),
           materialRequirement: document
             .getElementById("materialRequirement")
-            .value.trim(),
+            .value.toUpperCase(),
           status: document.getElementById("jioStatus").value,
         };
 
