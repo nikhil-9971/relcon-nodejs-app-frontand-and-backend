@@ -1090,6 +1090,9 @@
           document.getElementById("applyIcon").innerHTML = "⏳";
         }
 
+        // Show loading overlay
+        document.getElementById("loadingOverlay").style.display = "flex";
+
         setTimeout(() => {
           const engineer =
             selectedEngineer || document.getElementById("engineerFilter").value;
@@ -1125,6 +1128,9 @@
             btnElement.classList.remove("pulse");
             document.getElementById("applyIcon").innerHTML = "🔍";
           }
+
+          // Hide loader after data is rendered
+          document.getElementById("loadingOverlay").style.display = "none";
         }, 600);
       }
 
@@ -1710,7 +1716,7 @@
 
       window.onload = async () => {
         // Show loader
-        document.getElementById("loadingOverlay").style.display = "flex";
+        //document.getElementById("loadingOverlay").style.display = "flex";
 
         try {
           const today = new Date().toISOString().split("T")[0];
@@ -1727,7 +1733,7 @@
           alert("❌ Failed to load data");
         } finally {
           // Hide loader after everything loads
-          document.getElementById("loadingOverlay").style.display = "none";
+          // document.getElementById("loadingOverlay").style.display = "none";
         }
       };
 
