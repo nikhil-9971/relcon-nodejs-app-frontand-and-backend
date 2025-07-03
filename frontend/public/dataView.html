@@ -1149,7 +1149,7 @@
           .trim();
 
         if (!query) {
-          renderVisitTable(filteredData);
+          populateTable(filteredData); // 👈 Corrected function call
           return;
         }
 
@@ -1160,8 +1160,9 @@
           })
         );
 
-        renderVisitTable(result);
+        populateTable(result); // 👈 Corrected function call
       }
+
       const debouncedSearch = debounce(applySearch, 300);
 
       function populateTable(data) {
