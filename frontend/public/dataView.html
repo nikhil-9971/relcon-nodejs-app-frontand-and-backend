@@ -69,6 +69,16 @@
       #statusModal label {
         font-size: 11px !important;
       }
+      .loader {
+        border-radius: 9999px;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
 
@@ -974,6 +984,20 @@
       class="fixed top-4 right-4 z-50 hidden rounded-lg px-4 py-2 text-white shadow-lg text-sm"
     ></div>
 
+    <!-- 🔄 Loading Spinner Overlay -->
+    <div
+      id="loadingOverlay"
+      class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-[9999]"
+      style="display: none"
+    >
+      <div class="flex flex-col items-center">
+        <div
+          class="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-3"
+        ></div>
+        <p class="text-sm text-gray-700 font-semibold">Loading data...</p>
+      </div>
+    </div>
+
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
@@ -1685,17 +1709,26 @@
       }
 
       window.onload = async () => {
-        const today = new Date().toISOString().split("T")[0];
-        document.getElementById("fromDate").value = today;
-        document.getElementById("toDate").value = today;
+        // Show loader
+        document.getElementById("loadingOverlay").style.display = "flex";
 
-        await fetchUserSession();
-        await fetchAndStoreData();
+        try {
+          const today = new Date().toISOString().split("T")[0];
+          document.getElementById("fromDate").value = today;
+          document.getElementById("toDate").value = today;
 
-        checkFilterValidity();
+          await fetchUserSession();
+          await fetchAndStoreData();
 
-        // 🔄 Auto-run the filter on page load
-        document.getElementById("applyBtn").click();
+          checkFilterValidity();
+          document.getElementById("applyBtn").click();
+        } catch (err) {
+          console.error("❌ Error during page load:", err);
+          alert("❌ Failed to load data");
+        } finally {
+          // Hide loader after everything loads
+          document.getElementById("loadingOverlay").style.display = "none";
+        }
       };
 
       //pdf generation code
