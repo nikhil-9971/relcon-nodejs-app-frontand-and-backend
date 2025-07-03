@@ -41,7 +41,16 @@ function generateEmailContent({
     ? observations.join("\n")
     : "➡️ No major issues reported.";
 
-  return `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${date} at ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${observationText}\n\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.\n\nRegards,\nRELCON Systems`;
+  let email = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${date} at ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${observationText}`;
+
+  // ✅ Add note if earthing is NOT OK
+  if (earthingStatus === "NOT OK") {
+    email += `\n\nNote: We request to resolve earthing issue at most priority basis. If any automation device failure due to earthing issue then it will be replaced on chargeable basis. `;
+  }
+
+  email += `\n\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.`;
+
+  return email;
 }
 
 // Save Status Route
