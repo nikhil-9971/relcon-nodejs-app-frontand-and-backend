@@ -52,4 +52,18 @@ const JioBPStatusSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// 🔠 Middleware to convert relevant fields to uppercase before saving
+JioBPStatusSchema.pre("save", function (next) {
+  if (this.hpsdId) this.hpsdId = this.hpsdId.toUpperCase();
+  if (this.diagnosis) this.diagnosis = this.diagnosis.toUpperCase();
+  if (this.solution) this.solution = this.solution.toUpperCase();
+  if (this.usedMaterialDetails)
+    this.usedMaterialDetails = this.usedMaterialDetails.toUpperCase();
+  if (this.faultyMaterialDetails)
+    this.faultyMaterialDetails = this.faultyMaterialDetails.toUpperCase();
+  if (this.materialRequirement)
+    this.materialRequirement = this.materialRequirement.toUpperCase();
+  next();
+});
+
 module.exports = mongoose.model("JioBPStatus", JioBPStatusSchema);
