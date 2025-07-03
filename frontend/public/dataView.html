@@ -150,7 +150,7 @@
         <input
           type="text"
           id="searchInput"
-          oninput="applySearch()"
+          oninput="debouncedSearch()"
           placeholder="🔎 Search anything..."
           class="w-full border px-3 py-2 rounded"
         />
@@ -1007,6 +1007,14 @@
       let currentPage = 1;
       const rowsPerPage = 10;
 
+      function debounce(func, delay = 300) {
+        let timeout;
+        return (...args) => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
+
       async function fetchUserSession() {
         const token = localStorage.getItem("token");
         const res = await fetch(`${baseUrl}/user`, {
@@ -1137,15 +1145,24 @@
       function applySearch() {
         const query = document
           .getElementById("searchInput")
-          .value.toLowerCase();
+          .value.toLowerCase()
+          .trim();
 
-        const finalFiltered = filteredData.filter((plan) =>
-          Object.values(plan).some((val) =>
-            String(val).toLowerCase().includes(query)
-          )
+        if (!query) {
+          renderVisitTable(filteredData);
+          return;
+        }
+
+        const result = filteredData.filter((plan) =>
+          Object.values(plan).some((val) => {
+            if (val == null) return false;
+            return String(val).toLowerCase().includes(query);
+          })
         );
-        populateTable(finalFiltered);
+
+        renderVisitTable(result);
       }
+      const debouncedSearch = debounce(applySearch, 300);
 
       function populateTable(data) {
         const tbody = document.getElementById("tableBody");
