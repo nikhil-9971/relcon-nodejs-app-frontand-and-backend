@@ -2131,7 +2131,10 @@
               ["No of DU offline", cleanText(status?.duOffline)],
               ["DU Dependency", cleanText(status?.duDependency)],
               ["DU offline remark", cleanText(status?.duRemark)],
-              ["Site Location", cleanText(status?.locationField)],
+              ["No Of Tank Offline", cleanText(status?.tankOffline)],
+              ["Tank Dependency", cleanText(status?.tankDependency)],
+              ["Tank Offline Remark", cleanText(status?.tankRemark)],
+              [("Site Location", cleanText(status?.locationField))],
             ];
 
             doc.autoTable({
