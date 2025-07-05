@@ -1677,10 +1677,10 @@
 
             document
               .getElementById("duDependency")
-              .setAttribute("readonly", true);
+              .setAttribute("disabled", true);
             document.getElementById("duRemark").setAttribute("readonly", true);
           } else {
-            document.getElementById("duDependency").removeAttribute("readonly");
+            document.getElementById("duDependency").removeAttribute("disabled");
             document.getElementById("duRemark").removeAttribute("readonly");
           }
 
@@ -1692,19 +1692,19 @@
 
             document
               .getElementById("tankDependency")
-              .setAttribute("readonly", true);
+              .setAttribute("disabled", true);
             document
               .getElementById("tankRemark")
               .setAttribute("readonly", true);
           } else {
             document
               .getElementById("tankDependency")
-              .removeAttribute("readonly");
+              .removeAttribute("disabled");
             document.getElementById("tankRemark").removeAttribute("readonly");
           }
 
           // Spare Used Logic
-          if (spareUsed === "NO") {
+          if (spareUsed === "No") {
             document.getElementById("activeSpare").value = "NA";
             document.getElementById("faultySpare").value = "NA";
 
@@ -1720,7 +1720,7 @@
           }
 
           // Spare Requirement Logic
-          if (spareRequirment === "NO") {
+          if (spareRequirment === "No") {
             document.getElementById("spareRequirmentname").value = "NA";
             document
               .getElementById("spareRequirmentname")
