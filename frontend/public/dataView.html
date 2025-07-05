@@ -1662,6 +1662,86 @@
         document.getElementById("statusPlanId").value = planId;
         document.getElementById("statusModal").classList.remove("hidden");
 
+        // 🔁 Apply logic to auto-fill & make fields readonly based on dropdown values
+        function applyAutoFieldLogic() {
+          const duOffline = document.getElementById("duOffline").value;
+          const tankOffline = document.getElementById("tankOffline").value;
+          const spareUsed = document.getElementById("spareUsed").value;
+          const spareRequirment =
+            document.getElementById("spareRequirment").value;
+
+          // DU Section Logic
+          if (duOffline === "ALL OK") {
+            document.getElementById("duDependency").value = "NO";
+            document.getElementById("duRemark").value = "ALL DU IN ONLINE MODE";
+
+            document
+              .getElementById("duDependency")
+              .setAttribute("readonly", true);
+            document.getElementById("duRemark").setAttribute("readonly", true);
+          } else {
+            document.getElementById("duDependency").removeAttribute("readonly");
+            document.getElementById("duRemark").removeAttribute("readonly");
+          }
+
+          // Tank Section Logic
+          if (tankOffline === "ALL OK") {
+            document.getElementById("tankDependency").value = "NO";
+            document.getElementById("tankRemark").value =
+              "ALL TANK IN ONLINE MODE";
+
+            document
+              .getElementById("tankDependency")
+              .setAttribute("readonly", true);
+            document
+              .getElementById("tankRemark")
+              .setAttribute("readonly", true);
+          } else {
+            document
+              .getElementById("tankDependency")
+              .removeAttribute("readonly");
+            document.getElementById("tankRemark").removeAttribute("readonly");
+          }
+
+          // Spare Used Logic
+          if (spareUsed === "NO") {
+            document.getElementById("activeSpare").value = "NA";
+            document.getElementById("faultySpare").value = "NA";
+
+            document
+              .getElementById("activeSpare")
+              .setAttribute("readonly", true);
+            document
+              .getElementById("faultySpare")
+              .setAttribute("readonly", true);
+          } else {
+            document.getElementById("activeSpare").removeAttribute("readonly");
+            document.getElementById("faultySpare").removeAttribute("readonly");
+          }
+
+          // Spare Requirement Logic
+          if (spareRequirment === "NO") {
+            document.getElementById("spareRequirmentname").value = "NA";
+            document
+              .getElementById("spareRequirmentname")
+              .setAttribute("readonly", true);
+          } else {
+            document
+              .getElementById("spareRequirmentname")
+              .removeAttribute("readonly");
+          }
+        }
+
+        // 👂 Add listeners for changes to trigger auto-fill logic
+        ["duOffline", "tankOffline", "spareUsed", "spareRequirment"].forEach(
+          (id) => {
+            document
+              .getElementById(id)
+              .addEventListener("change", applyAutoFieldLogic);
+          }
+        );
+
+        // Connectivity Auto feild
         document
           .getElementById("connectivityType")
           .addEventListener("change", function () {
