@@ -570,6 +570,74 @@
               </select>
             </div>
 
+            <!-- SPARE USED STATUS -->
+
+            <div>
+              <label class="text-sm font-semibold">Spare Used</label>
+              <select
+                id="spareUsed"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold"
+                >Used Spare Name & Code</label
+              >
+              <textarea
+                id="activeSpare"
+                required
+                placeholder="Example: 1- DIV1 (HOD12506241)"
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold"
+                >Faulty Spare Name & Code</label
+              >
+              <textarea
+                id="faultySpare"
+                required
+                placeholder="Example: 1- DIV1 (J0D12506240)"
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold"
+                >Any Requirment of Spare</label
+              >
+              <select
+                id="spareRequirment"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold"
+                >Name of Spare which Required</label
+              >
+              <textarea
+                id="spareRequirmentname"
+                required
+                placeholder="Example: 1- DIV1 (J0D12506240)"
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
+            <!-- EARTHING STATUS -->
+
             <div>
               <label class="text-sm font-semibold">Earthing Status</label>
               <select
@@ -614,11 +682,75 @@
             </div>
 
             <div>
+              <label class="text-sm font-semibold">DU Offline Dependency</label>
+              <select
+                id="duDependency"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>HPCL</option>
+                <option>RELCON</option>
+                <option>BOTH</option>
+              </select>
+            </div>
+
+            <div>
               <label class="text-sm font-semibold">Reason for DU Offline</label>
               <textarea
                 id="duRemark"
                 required
                 placeholder="Example: DU-01 POS Card Issue"
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
+            <!-- Tank Offline Section -->
+
+            <div>
+              <label class="text-sm font-semibold">No of Tank Offline</label>
+              <select
+                id="tankOffline"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>ALL OK</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>ALL Tank Offline</option>
+              </select>
+            </div>
+
+            <!-- TANK DEPENDENCY -->
+            <div>
+              <label class="text-sm font-semibold"
+                >Tank Offline Dependency</label
+              >
+              <select
+                id="tankDependency"
+                required
+                class="w-full p-2 mt-1 border rounded"
+              >
+                <option value="">Select</option>
+                <option>HPCL</option>
+                <option>RELCON</option>
+                <option>BOTH</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold"
+                >Reason for Tank Offline</label
+              >
+              <textarea
+                id="tankRemark"
+                required
+                placeholder="Example: TANK-1 : TANK CABLE FAULTY/ SI PROBE FAULTY"
                 class="w-full p-2 mt-1 border rounded"
               ></textarea>
             </div>
@@ -1215,84 +1347,86 @@
 
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
-                 <button onclick="handleATGButtonClick('${plan._id}', ${
+                       <button onclick="handleATGButtonClick('${plan._id}', ${
                 exists ? "true" : "false"
               })"
 
-            class="text-white px-2 py-1 rounded text-[10px] ${
-              exists
-                ? "bg-green-500 cursor-not-allowed"
-                : "bg-orange-500 hover:bg-orange-600"
-            }"
-            ${exists ? "disabled" : ""}>
-            ${exists ? "✅ Added" : "➕ Add ATG Status"}
-          </button>`;
+                  class="text-white px-2 py-1 rounded text-[10px] ${
+                    exists
+                      ? "bg-green-500 cursor-not-allowed"
+                      : "bg-orange-500 hover:bg-orange-600"
+                  }"
+                  ${exists ? "disabled" : ""}>
+                  ${exists ? "✅ Added" : "➕ Add ATG Status"}
+                </button>`;
 
               const cell = row.querySelector(".atg-status-cell");
               if (cell) cell.innerHTML = btnHtml;
             });
           }
           row.innerHTML = `
-  <td class="border px-1 py-1">${plan.region}</td>
-  <td class="border px-1 py-1">${plan.engineer}</td>
-  <td class="border px-1 py-1">${plan.phase}</td>
-  <td class="border px-1 py-1">${plan.roCode}</td>
-  <td class="border px-1 py-1">${plan.roName}</td>
-  <td class="border px-1 py-1">${plan.purpose}</td>
-  <td class="border px-1 py-1">${plan.date}</td>
-  <td class="border px-1 py-1">${plan.issueType}</td>
-  <td class="border px-1 py-1">${plan.amcQtr}</td>
-  <td class="border px-1 py-1">
-    ${
-      loggedInUser.role === "admin"
-        ? `<span class="text-blue-500 cursor-pointer" onclick="openCompletionModal('${
-            plan._id
-          }', \`${plan.completionStatus || ""}\`)">
-             ${
-               plan.completionStatus ? plan.completionStatus : "➕ Click to Add"
-             }
-           </span>`
-        : plan.completionStatus || "-"
-    }
-  </td>
+        <td class="border px-1 py-1">${plan.region}</td>
+        <td class="border px-1 py-1">${plan.engineer}</td>
+        <td class="border px-1 py-1">${plan.phase}</td>
+        <td class="border px-1 py-1">${plan.roCode}</td>
+        <td class="border px-1 py-1">${plan.roName}</td>
+        <td class="border px-1 py-1">${plan.purpose}</td>
+        <td class="border px-1 py-1">${plan.date}</td>
+        <td class="border px-1 py-1">${plan.issueType}</td>
+        <td class="border px-1 py-1">${plan.amcQtr}</td>
+        <td class="border px-1 py-1">
+          ${
+            loggedInUser.role === "admin"
+              ? `<span class="text-blue-500 cursor-pointer" onclick="openCompletionModal('${
+                  plan._id
+                }', \`${plan.completionStatus || ""}\`)">
+                   ${
+                     plan.completionStatus
+                       ? plan.completionStatus
+                       : "➕ Click to Add"
+                   }
+                 </span>`
+              : plan.completionStatus || "-"
+          }
+        </td>
 
-  <!-- ✅ STATUS COLUMN is visible to all -->
-  <td class="border px-1 py-1 text-center">${statusBtn}</td>
+        <!-- ✅ STATUS COLUMN is visible to all -->
+        <td class="border px-1 py-1 text-center">${statusBtn}</td>
 
-  <!-- ❌ ATG COLUMN: admin only -->
-  ${
-    loggedInUser.role === "admin"
-      ? `
-    <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
-  `
-      : ""
-  }
+        <!-- ❌ ATG COLUMN: admin only -->
+        ${
+          loggedInUser.role === "admin"
+            ? `
+          <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
+        `
+            : ""
+        }
 
-  <td class="border px-1 py-1">${plan.arrivalTime || "-"}</td>
-  <td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
-  <td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
-  <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
+        <td class="border px-1 py-1">${plan.arrivalTime || "-"}</td>
+        <td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
+        <td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
+        <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
 
-  <!-- ❌ ACTION COLUMN: admin only -->
-  ${
-    loggedInUser.role === "admin"
-      ? `
-    <td class="border px-2 py-1 text-center space-x-1">
-      <button onclick='openEditModal(${JSON.stringify(plan)})'
-              class="text-sm bg-blue-500 text-white px-1 py-1 rounded"
-              title="Edit">
-        <i class="fas fa-edit"></i>
-      </button>
-      <button onclick='confirmDelete("${plan._id}")'
-              class="text-sm bg-red-500 text-white px-1 py-1 rounded"
-              title="Delete">
-        <i class="fas fa-trash-alt"></i>
-      </button>
-    </td>
-  `
-      : ""
-  }
-`;
+        <!-- ❌ ACTION COLUMN: admin only -->
+        ${
+          loggedInUser.role === "admin"
+            ? `
+          <td class="border px-2 py-1 text-center space-x-1">
+            <button onclick='openEditModal(${JSON.stringify(plan)})'
+                    class="text-sm bg-blue-500 text-white px-1 py-1 rounded"
+                    title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick='confirmDelete("${plan._id}")'
+                    class="text-sm bg-red-500 text-white px-1 py-1 rounded"
+                    title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        `
+            : ""
+        }
+      `;
 
           tbody.appendChild(row);
         });
@@ -1618,10 +1752,19 @@
           "sftpConfig",
           "adminPassword",
           "workCompletion",
+          "spareUsed",
+          "activeSpare",
+          "faultySpare",
+          "spareRequirment",
+          "spareRequirmentname",
           "earthingStatus",
           "voltageReading",
           "duOffline",
+          "duDependency",
           "duRemark",
+          "tankOffline",
+          "tankDependency",
+          "tankRemark",
           "locationField",
         ];
         // ⛔ Check if location is valid before save
@@ -1667,10 +1810,20 @@
           sftpConfig: document.getElementById("sftpConfig").value,
           adminPassword: document.getElementById("adminPassword").value,
           workCompletion: document.getElementById("workCompletion").value,
+          spareUsed: document.getElementById("spareUsed").value,
+          activeSpare: document.getElementById("activeSpare").value,
+          faultySpare: document.getElementById("faultySpare").value,
+          spareRequirment: document.getElementById("spareRequirment").value,
+          spareRequirmentname: document.getElementById("spareRequirmentname")
+            .value,
           earthingStatus: document.getElementById("earthingStatus").value,
           voltageReading: document.getElementById("voltageReading").value,
           duOffline: document.getElementById("duOffline").value,
+          duDependency: document.getElementById("duDependency").value,
           duRemark: document.getElementById("duRemark").value,
+          tankOffline: document.getElementById("tankOffline").value,
+          tankDependency: document.getElementById("tankDependency").value,
+          tankRemark: document.getElementById("tankRemark").value,
           locationField: document.getElementById("locationField").value,
         };
 
@@ -1968,9 +2121,15 @@
               ["SFTP Config", cleanText(status?.sftpConfig)],
               ["Admin Password Updated", cleanText(status?.adminPassword)],
               ["Work Completion Status", cleanText(status?.workCompletion)],
+              ["Spare Used in Site", cleanText(status?.spareUsed)],
+              ["Used active Spare Name & Code", cleanText(status?.activeSpare)],
+              ["Faulty Spare Name & Code", cleanText(status?.faultySpare)],
+              ["Any Spare Requirment", cleanText(status?.spareRequirment)],
+              ["Required Spare Name", cleanText(status?.spareRequirmentname)],
               ["Earthing Status", cleanText(status?.earthingStatus)],
               ["Voltage Reading", cleanText(status?.voltageReading)],
               ["No of DU offline", cleanText(status?.duOffline)],
+              ["DU Dependency", cleanText(status?.duDependency)],
               ["DU offline remark", cleanText(status?.duRemark)],
               ["Site Location", cleanText(status?.locationField)],
             ];
