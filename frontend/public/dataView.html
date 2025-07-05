@@ -2412,10 +2412,60 @@
 
       //JIO BP JS
 
+      function applyJioBPLogic() {
+        const activeMaterialUsed =
+          document.getElementById("activeMaterialUsed").value;
+        const spareRequired = document.getElementById("spareRequired").value;
+
+        // ✅ If Active Material Used = No
+        if (activeMaterialUsed === "No") {
+          document.getElementById("usedMaterialDetails").value =
+            "NO MATERIAL USED";
+          document.getElementById("faultyMaterialDetails").value =
+            "NO MATERIAL FAULTY CREATED";
+
+          document
+            .getElementById("usedMaterialDetails")
+            .setAttribute("readonly", true);
+          document
+            .getElementById("faultyMaterialDetails")
+            .setAttribute("readonly", true);
+        } else {
+          document
+            .getElementById("usedMaterialDetails")
+            .removeAttribute("readonly");
+          document
+            .getElementById("faultyMaterialDetails")
+            .removeAttribute("readonly");
+          document.getElementById("usedMaterialDetails").value = "";
+          document.getElementById("faultyMaterialDetails").value = "";
+        }
+
+        // ✅ If Spare Required = No
+        if (spareRequired === "No") {
+          document.getElementById("materialRequirement").value =
+            "NO MATERIAL REQUIRED";
+          document
+            .getElementById("materialRequirement")
+            .setAttribute("readonly", true);
+        } else {
+          document
+            .getElementById("materialRequirement")
+            .removeAttribute("readonly");
+          document.getElementById("materialRequirement").value = "";
+        }
+      }
+
       function openJioBPModal(planId) {
         document.getElementById("jioBPPlanId").value = planId;
         document.getElementById("jioBPModal").classList.remove("hidden");
         document.getElementById("jioBPForm").reset();
+        document
+          .getElementById("activeMaterialUsed")
+          .addEventListener("change", applyJioBPLogic);
+        document
+          .getElementById("spareRequired")
+          .addEventListener("change", applyJioBPLogic);
       }
 
       function closeJioBPModal() {
