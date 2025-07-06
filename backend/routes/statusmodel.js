@@ -450,9 +450,11 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
         earthingStatus,
         voltageReading,
         duOffline,
+        duDependency,
         duRemark,
         tankOffline,
         tankRemark,
+        tankDependency,
       });
 
       await task.save();
