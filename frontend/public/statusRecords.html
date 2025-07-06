@@ -646,7 +646,7 @@ if (!("isVerified" in updated)) {
         deleteTargetId = null;
       }
 
-      async function verifyRecord(id) {
+     async function verifyRecord(id) {
   const confirmed = confirm("Are you sure you want to mark this record as VERIFIED?");
   if (!confirmed) return;
 
@@ -659,39 +659,42 @@ if (!("isVerified" in updated)) {
     body: JSON.stringify({ isVerified: true }),
   });
 
- if (res.ok) {
-  showToast("Record marked as Verified ✅");
-  const responseText = await res.text();
+  if (res.ok) {
+    showToast("Record marked as Verified ✅");
 
-  if (isAnurag && responseText.includes("successfully")) {
-    showToast("📌 Task created after verification");
-  }
+    const responseText = await res.text();
+    const user = JSON.parse(localStorage.getItem("user")) || {};
 
-  // ✅ Optimistically update UI without full fetch
-  const index = allStatusData.findIndex((r) => r._id === id);
-  if (index !== -1) {
-    allStatusData[index].isVerified = true;
-    allStatusData[index].taskGenerated = true; // optional if expected
-  }
+    // ✅ Task toast
+    if (
+      user.username === "anurag.mishra" &&
+      user.role === "admin" &&
+      responseText.includes("successfully")
+    ) {
+      showToast("📌 Task created after verification");
+    }
 
-  // ✅ Refresh UI with updated data
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const username = user.username;
-  const role = user.role;
+    // ✅ Update data locally
+    const updatedIndex = allStatusData.findIndex((r) => r._id === id);
+    if (updatedIndex !== -1) {
+      allStatusData[updatedIndex].isVerified = true;
+      allStatusData[updatedIndex].taskGenerated = true;
+    }
 
-  if (role === "admin" && username === "anurag.mishra") {
-    filteredData = allStatusData;
+    // ✅ Rebuild filtered data and UI
+    if (user.role === "admin" && user.username === "anurag.mishra") {
+      filteredData = allStatusData;
+    } else {
+      filteredData = allStatusData.filter(
+        (r) => r.isVerified === true || r.isVerified === "true"
+      );
+    }
+
+    renderTable(filteredData);
   } else {
-    filteredData = allStatusData.filter((record) => record.isVerified);
+    alert("Verification failed.");
   }
-
-  renderTable(filteredData);
-} else {
-  alert("Verification failed.");
 }
-
-}
-
 
       fetchStatusRecords();
 
