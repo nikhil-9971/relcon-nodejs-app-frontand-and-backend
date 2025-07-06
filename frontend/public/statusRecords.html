@@ -659,17 +659,37 @@ if (!("isVerified" in updated)) {
     body: JSON.stringify({ isVerified: true }),
   });
 
-  if (res.ok) {
-    showToast("Record marked as Verified ✅");
-      // ✅ Notify task generation if it's Anurag verifying a problematic status
-    const responseText = await res.text();
-    if (isAnurag && responseText.includes("successfully")) {
-      showToast("📌 Task created after verification");
-    }
-    await fetchStatusRecords();
-  } else {
-    alert("Verification failed.");
+ if (res.ok) {
+  showToast("Record marked as Verified ✅");
+  const responseText = await res.text();
+
+  if (isAnurag && responseText.includes("successfully")) {
+    showToast("📌 Task created after verification");
   }
+
+  // ✅ Optimistically update UI without full fetch
+  const index = allStatusData.findIndex((r) => r._id === id);
+  if (index !== -1) {
+    allStatusData[index].isVerified = true;
+    allStatusData[index].taskGenerated = true; // optional if expected
+  }
+
+  // ✅ Refresh UI with updated data
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const username = user.username;
+  const role = user.role;
+
+  if (role === "admin" && username === "anurag.mishra") {
+    filteredData = allStatusData;
+  } else {
+    filteredData = allStatusData.filter((record) => record.isVerified);
+  }
+
+  renderTable(filteredData);
+} else {
+  alert("Verification failed.");
+}
+
 }
 
 
