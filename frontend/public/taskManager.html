@@ -90,6 +90,7 @@
             const row = document.createElement("tr");
             row.className = "border-b";
 
+            let issueParts = [];
             if (task.earthingStatus && task.earthingStatus !== "OK") {
               let part = `Earthing Status → ${task.earthingStatus}`;
               if (task.voltageReading)
