@@ -19,6 +19,10 @@ const taskSchema = new mongoose.Schema({
   voltageReading: String,
   duOffline: String,
   duRemark: String,
+  duDependency: String,
+  tankOffline: String,
+  tankRemark: String,
+  tankDependency: String,
   followUpDates: [String], // array to store each follow-up date as 'YYYY-MM-DD'
 });
 
