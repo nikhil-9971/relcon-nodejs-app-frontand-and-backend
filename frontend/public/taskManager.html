@@ -41,6 +41,7 @@
           <thead class="bg-gray-200">
             <tr>
               <th class="border px-2 py-1">RO Code</th>
+              <th class="border px-2 py-1">Region</th>
               <th class="border px-2 py-1">RO Name</th>
               <th class="border px-2 py-1">Date of Visit</th>
               <th class="border px-2 py-1">Issue</th>
@@ -89,16 +90,30 @@
             const row = document.createElement("tr");
             row.className = "border-b";
 
-            let issueParts = [];
             if (task.earthingStatus && task.earthingStatus !== "OK") {
               let part = `Earthing Status → ${task.earthingStatus}`;
               if (task.voltageReading)
                 part += ` (Voltage: ${task.voltageReading})`;
               issueParts.push(part);
             }
-            if (task.duOffline && task.duOffline !== "ALL OK") {
+
+            if (
+              task.duOffline &&
+              task.duOffline !== "ALL OK" &&
+              (task.duDependency === "HPCL" || task.duDependency === "BOTH")
+            ) {
               let part = `DU Offline → ${task.duOffline}`;
               if (task.duRemark) part += ` (Remark: ${task.duRemark})`;
+              issueParts.push(part);
+            }
+
+            if (
+              task.tankOffline &&
+              task.tankOffline !== "ALL OK" &&
+              (task.tankDependency === "HPCL" || task.tankDependency === "BOTH")
+            ) {
+              let part = `Tank Offline → ${task.tankOffline}`;
+              if (task.tankRemark) part += ` (Remark: ${task.tankRemark})`;
               issueParts.push(part);
             }
 
@@ -113,12 +128,28 @@
                 emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
               emailContent += "\n";
             }
-            if (task.duOffline && task.duOffline !== "ALL OK") {
+            if (
+              task.duOffline &&
+              task.duOffline !== "ALL OK" &&
+              (task.duDependency === "HPCL" || task.duDependency === "BOTH")
+            ) {
               emailContent += `➡️ DU Offline → ${task.duOffline}`;
               if (task.duRemark)
                 emailContent += ` (Offline DU remark: ${task.duRemark})`;
               emailContent += "\n";
             }
+
+            if (
+              task.tankOffline &&
+              task.tankOffline !== "ALL OK" &&
+              (task.tankDependency === "HPCL" || task.tankDependency === "BOTH")
+            ) {
+              emailContent += `➡️ Tank Offline → ${task.tankOffline}`;
+              if (task.tankRemark)
+                emailContent += ` (Offline Tank remark: ${task.tankRemark})`;
+              emailContent += "\n";
+            }
+
             // ✅ Add NOTE if earthing is not OK
             if (task.earthingStatus && task.earthingStatus !== "OK") {
               emailContent += `\n\nNote: We request to resolve earthing issue at most priority basis. If any automation device failure due to earthing issue then it will be replaced on chargeable basis.\n\n Please resolve HPCL dependencies at the earliest and confirm on mail after resolution.`;
@@ -128,6 +159,7 @@
 
             row.innerHTML = `
                   <td class="border px-3 py-2">${task.roCode}</td>
+                  <td class="border px-3 py-2">${task.region}</td>
                   <td class="border px-3 py-2">${task.roName}</td>
                   <td class="border px-3 py-2">${task.date}</td>
                   <td class="border px-3 py-2 text-red-600 font-semibold text-[9px]">${issueFormatted}</td>
