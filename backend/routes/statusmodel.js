@@ -19,9 +19,13 @@ function generateEmailContent({
   roCode,
   date,
   earthingStatus,
-  duOffline,
   voltageReading,
+  duOffline,
   duRemark,
+  duDependency,
+  tankOffline,
+  tankRemark,
+  tankDependency,
 }) {
   let observations = [];
 
@@ -29,12 +33,28 @@ function generateEmailContent({
     observations.push(`➡️ Earthing is NOT OK (${voltageReading || "N/A"}V)`);
   }
 
-  if (duOffline && duOffline !== 0 && duOffline !== "ALL OK") {
+  if (
+    duOffline &&
+    duOffline !== "ALL OK" &&
+    (duDependency === "HPCL" || duDependency === "BOTH")
+  ) {
     let duLine = `➡️ DU Offline Count: ${duOffline}`;
     if (duRemark) {
       duLine += `\n   🔹 Remark: ${duRemark}`;
     }
     observations.push(duLine);
+  }
+
+  if (
+    tankOffline &&
+    tankOffline !== "ALL OK" &&
+    (tankDependency === "HPCL" || tankDependency === "BOTH")
+  ) {
+    let tankLine = `➡️ Tank Offline Count: ${tankOffline}`;
+    if (tankRemark) {
+      tankLine += `\n   🔹 Remark: ${tankRemark}`;
+    }
+    observations.push(tankLine);
   }
 
   const observationText = observations.length
@@ -43,7 +63,6 @@ function generateEmailContent({
 
   let email = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${date} at ${roName} (RO Code: ${roCode}), the engineer observed:\n\n${observationText}`;
 
-  // ✅ Add note if earthing is NOT OK
   if (earthingStatus === "NOT OK") {
     email += `\n\nNote: We request to resolve earthing issue at most priority basis. If any automation device failure due to earthing issue then it will be replaced on chargeable basis. `;
   }
@@ -368,23 +387,49 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
     });
 
     // ✅ Task Generation — only if admin + anurag.mishra
-    const { earthingStatus, duOffline, voltageReading, duRemark } = updated;
+    const {
+      earthingStatus,
+      duOffline,
+      voltageReading,
+      duRemark,
+      duDependency,
+      tankOffline,
+      tankRemark,
+      tankDependency,
+    } = updated;
 
     if (
-      (earthingStatus === "NOT OK" || (duOffline && duOffline !== "ALL OK")) &&
+      (earthingStatus === "NOT OK" ||
+        (duOffline &&
+          duOffline !== "ALL OK" &&
+          (duDependency === "HPCL" || duDependency === "BOTH")) ||
+        (tankOffline &&
+          tankOffline !== "ALL OK" &&
+          (tankDependency === "HPCL" || tankDependency === "BOTH"))) &&
       req.user?.username === "anurag.mishra" &&
       req.user?.role === "admin"
     ) {
       const issues = [];
       if (earthingStatus === "NOT OK") issues.push("Earthing NOT OK");
-      if (duOffline && duOffline !== "ALL OK")
+      if (
+        duOffline &&
+        duOffline !== "ALL OK" &&
+        (duDependency === "HPCL" || duDependency === "BOTH")
+      )
         issues.push(`DU Offline: ${duOffline}`);
+      if (
+        tankOffline &&
+        tankOffline !== "ALL OK" &&
+        (tankDependency === "HPCL" || tankDependency === "BOTH")
+      )
+        issues.push(`Tank Offline: ${tankOffline}`);
 
       const issueSummary = issues.join(" + ");
 
       const task = new Task({
         statusId: updated._id,
         roCode: plan.roCode,
+        region: plan.region,
         roName: plan.roName,
         date: plan.date,
         engineer: plan.engineer,
@@ -397,11 +442,17 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
           voltageReading,
           duOffline,
           duRemark,
+          duDependency,
+          tankOffline,
+          tankRemark,
+          tankDependency,
         }),
         earthingStatus,
         voltageReading,
         duOffline,
         duRemark,
+        tankOffline,
+        tankRemark,
       });
 
       await task.save();
