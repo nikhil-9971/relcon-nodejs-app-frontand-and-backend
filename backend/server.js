@@ -5,13 +5,12 @@ const cors = require("cors");
 const path = require("path");
 
 const connectDB = require("./config/db");
-//const authRoutes = require("./routes/auth");
+const { router: authRoutes } = require("./routes/auth");
 const planRoutes = require("./routes/plans");
 const roRoutes = require("./routes/romaster");
 const statusRoutes = require("./routes/statusmodel");
 const atgstatusRoutes = require("./routes/atgStatusRoutes");
 const auditRoutes = require("./routes/audit");
-const { router: authRoutes } = require("./routes/auth");
 const taskRoutes = require("./routes/taskRoutes");
 const jioBPStatusRoutes = require("./routes/jioBPStatusRoutes");
 
@@ -20,10 +19,21 @@ const app = express();
 // ✅ Connect to MongoDB
 connectDB();
 
-// ✅ CORS setup for frontend → Netlify
+// ✅ Allow only these origins
+const allowedOrigins = [
+  "https://relconecz1.netlify.app",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
-    origin: "https://relconecz1.netlify.app",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -32,13 +42,17 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ✅ Trust proxy for HTTPS (still useful)
+// ✅ Trust proxy (for Render / Heroku)
 app.set("trust proxy", true);
 
-// ✅ Static files (optional)
+// ✅ Serve static files (optional)
 app.use(express.static("public"));
 
 // ✅ Routes
+app.get("/", (req, res) => {
+  res.send("✅ RELCON Backend is running");
+});
+
 app.use("/", authRoutes);
 app.use("/romaster", roRoutes);
 app.use("/", planRoutes);
@@ -48,7 +62,7 @@ app.use("/audit", auditRoutes);
 app.use(taskRoutes);
 app.use("/", jioBPStatusRoutes);
 
-// ✅ Optional: redirect *.html to clean path
+// ✅ Redirect *.html to clean path
 app.use((req, res, next) => {
   if (req.path.endsWith(".html")) {
     const cleanPath = req.path.slice(0, -5);
