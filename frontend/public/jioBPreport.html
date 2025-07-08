@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Jio BP Status Records</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-6 bg-gray-100 text-sm">
+    <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">📄 Jio BP Status Report</h1>
+        <button
+          onclick="exportToExcel()"
+          class="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          📤 Export
+        </button>
+      </div>
+
+      <!-- Filter -->
+      <div class="flex gap-4 mb-4">
+        <input
+          type="date"
+          id="fromDate"
+          onchange="applyFilters()"
+          class="border rounded px-2 py-1"
+        />
+        <input
+          type="date"
+          id="toDate"
+          onchange="applyFilters()"
+          class="border rounded px-2 py-1"
+        />
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="🔍 Search..."
+          oninput="applyFilters()"
+          class="flex-1 border rounded px-2 py-1"
+        />
+      </div>
+
+      <div
+        class="overflow-x-auto max-h-[70vh] overflow-y-auto border border-gray-300 rounded"
+      >
+        <table class="min-w-full text-xs" id="jioTable">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="px-3 py-2 border">Engineer</th>
+              <th class="px-3 py-2 border">Region</th>
+              <th class="px-3 py-2 border">RO Code</th>
+              <th class="px-3 py-2 border">RO Name</th>
+              <th class="px-3 py-2 border">Purpose of Visit</th>
+              <th class="px-3 py-2 border">Date</th>
+              <th class="px-3 py-2 border">HPSD ID</th>
+              <th class="px-3 py-2 border">Diagnosis</th>
+              <th class="px-3 py-2 border">Solution</th>
+              <th class="px-3 py-2 border">Active Material Used</th>
+              <th class="px-3 py-2 border">Used Material Name & Code</th>
+              <th class="px-3 py-2 border">Faulty Material Name & Code</th>
+              <th class="px-3 py-2 border">Spare Requirement</th>
+              <th class="px-3 py-2 border">Observation (in Hours)</th>
+              <th class="px-3 py-2 border">Material Requirement Name</th>
+              <th class="px-3 py-2 border">Status</th>
+            </tr>
+          </thead>
+          <tbody id="jioBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      let jioData = [];
+      let currentUser = {};
+
+      async function fetchData() {
+        const token = localStorage.getItem("token");
+        currentUser = JSON.parse(localStorage.getItem("user")) || {};
+
+        const res = await fetch(`${baseUrl}/getAllJioBPStatus`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        // 👷 Only show engineer's own data
+        if (currentUser.role === "engineer") {
+          jioData = data.filter((d) => d.createdBy === currentUser.username);
+        } else {
+          jioData = data.map((d) => ({ ...d, ...d.planId }));
+        }
+
+        renderTable(jioData);
+      }
+
+      function renderTable(data) {
+        const tbody = document.getElementById("jioBody");
+        tbody.innerHTML = data
+          .map((row) => {
+            return `
+              <tr>
+                <td class="border px-2 py-1">${row.engineer || ""}</td>
+                <td class="border px-2 py-1">${row.region || ""}</td>
+                <td class="border px-2 py-1">${row.roCode || ""}</td>
+                <td class="border px-2 py-1">${row.roName || ""}</td>
+                <td class="border px-2 py-1">${row.purpose || ""}</td>
+                <td class="border px-2 py-1">${row.date || ""}</td>
+                <td class="border px-2 py-1">${row.hpsdId || ""}</td>
+                <td class="border px-2 py-1">${row.diagnosis || ""}</td>
+                <td class="border px-2 py-1">${row.solution || ""}</td>
+                <td class="border px-2 py-1">${
+                  row.activeMaterialUsed || ""
+                }</td>
+                <td class="border px-2 py-1">${
+                  row.usedMaterialDetails || ""
+                }</td>
+                <td class="border px-2 py-1">${
+                  row.faultyMaterialDetails || ""
+                }</td>
+                <td class="border px-2 py-1">${row.spareRequired || ""}</td>
+                <td class="border px-2 py-1">${row.observation || ""}</td>
+                <td class="border px-2 py-1">${
+                  row.materialRequirement || ""
+                }</td>
+                <td class="border px-2 py-1">${row.status || ""}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function applyFilters() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+        const search = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+
+        const filtered = jioData.filter((row) => {
+          const rowDate = new Date(row.date);
+          const dateMatch =
+            (!fromDate || rowDate >= fromDate) &&
+            (!toDate || rowDate <= toDate);
+          const searchMatch = Object.values(row).some((val) =>
+            String(val).toLowerCase().includes(search)
+          );
+          return dateMatch && searchMatch;
+        });
+
+        renderTable(filtered);
+      }
+
+      function exportToExcel() {
+        const ws = XLSX.utils.table_to_sheet(
+          document.getElementById("jioTable")
+        );
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "JioBP Status");
+        XLSX.writeFile(
+          wb,
+          `JioBP_Report_${new Date().toISOString().slice(0, 10)}.xlsx`
+        );
+      }
+
+      fetchData();
+    </script>
+  </body>
+</html>
