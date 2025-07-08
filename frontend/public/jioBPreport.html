@@ -3,13 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <title>Jio BP Status Records</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f1f5f9;
+        font-size: 12px;
+      }
+      th,
+      td {
+        white-space: nowrap;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f3f4f6;
+        z-index: 1;
+      }
+    </style>
   </head>
-  <body class="p-6 bg-gray-100 text-sm">
+  <body class="p-6 bg-gray-100 text-[9px]">
     <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">📄 Jio BP Status Report</h1>
+        <div class="flex items-center gap-2">
+          <img src="./assets/JioBP.png" alt="JIO BP" class="h-16" />
+        </div>
         <button
           onclick="exportToExcel()"
           class="bg-green-600 text-white px-4 py-2 rounded"
@@ -19,25 +43,51 @@
       </div>
 
       <!-- Filter -->
-      <div class="flex gap-4 mb-4">
-        <input
-          type="date"
-          id="fromDate"
-          onchange="applyFilters()"
-          class="border rounded px-2 py-1"
-        />
-        <input
-          type="date"
-          id="toDate"
-          onchange="applyFilters()"
-          class="border rounded px-2 py-1"
-        />
+      <div class="flex flex-wrap items-center gap-4 mb-4">
+        <div>
+          <label
+            for="fromDate"
+            class="block text-[12px] font-medium text-gray-700"
+            >📅 From:</label
+          >
+          <input
+            type="date"
+            id="fromDate"
+            class="border border-gray-300 rounded px-2 py-1 text-[12px]"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div>
+          <label
+            for="toDate"
+            class="block text-[12px] font-medium text-gray-700"
+            >📅 To:</label
+          >
+          <input
+            type="date"
+            id="toDate"
+            class="border border-gray-300 rounded px-2 py-1 text-[12px]"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div class="self-end">
+          <button
+            onclick="clearDateRangeFilter()"
+            class="bg-yellow-500 text-white px-4 py-2 rounded"
+          >
+            ♻️ Clear Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- ✅ Search Bar -->
+      <div class="mb-4">
         <input
           type="text"
           id="searchInput"
-          placeholder="🔍 Search..."
-          oninput="applyFilters()"
-          class="flex-1 border rounded px-2 py-1"
+          oninput="applySearch()"
+          placeholder="🔎 Search anything..."
+          class="w-full border px-3 py-2 rounded"
         />
       </div>
 
@@ -133,28 +183,45 @@
           .join("");
       }
 
-      function applyFilters() {
-        const from = document.getElementById("fromDate").value;
-        const to = document.getElementById("toDate").value;
-        const search = document
-          .getElementById("searchInput")
-          .value.toLowerCase();
+      function applyDateRangeFilter() {
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+        const rows = document.querySelectorAll("table tbody tr");
 
-        const fromDate = from ? new Date(from) : null;
-        const toDate = to ? new Date(to) : null;
+        rows.forEach((row) => {
+          const dateCell = row.querySelector("td[data-date]"); // Add this attribute in your date <td>
+          if (!dateCell) return;
 
-        const filtered = jioData.filter((row) => {
-          const rowDate = new Date(row.date);
-          const dateMatch =
+          const rowDate = dateCell.getAttribute("data-date");
+
+          if (
             (!fromDate || rowDate >= fromDate) &&
-            (!toDate || rowDate <= toDate);
-          const searchMatch = Object.values(row).some((val) =>
-            String(val).toLowerCase().includes(search)
-          );
-          return dateMatch && searchMatch;
+            (!toDate || rowDate <= toDate)
+          ) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
         });
+      }
 
-        renderTable(filtered);
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        applyDateRangeFilter(); // Reset filters
+      }
+
+      function applySearch() {
+        const searchValue = document
+          .getElementById("searchInput")
+          .value.toLowerCase()
+          .trim();
+        const rows = document.querySelectorAll("table tbody tr");
+
+        rows.forEach((row) => {
+          const rowText = row.textContent.toLowerCase();
+          row.style.display = rowText.includes(searchValue) ? "" : "none";
+        });
       }
 
       function exportToExcel() {
