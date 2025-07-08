@@ -8,7 +8,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
   try {
     const { planId } = req.body;
-
     let savedStatus;
 
     const existing = await JioBPStatus.findOne({ planId });
@@ -18,11 +17,14 @@ router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
       savedStatus = await existing.save();
     } else {
       // ➕ Create new status
-      const newStatus = new JioBPStatus(req.body);
+      const newStatus = new JioBPStatus({
+        ...req.body,
+        createdBy: req.user?.username || "unknown",
+      });
       savedStatus = await newStatus.save();
     }
 
-    // ✅ Mark status flags in DailyPlan
+    // ✅ Update DailyPlan status flags
     await DailyPlan.findByIdAndUpdate(planId, {
       jioBPStatusSaved: true,
       statusSaved: true,
@@ -61,5 +63,23 @@ router.get(
     }
   }
 );
+
+// ✅ GET All Jio BP Status with Role-Based Access
+router.get("/getAllJioBPStatus", authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+    let query = {};
+
+    if (user.role === "engineer") {
+      query = { createdBy: user.username };
+    }
+
+    const statuses = await JioBPStatus.find(query).populate("planId");
+    res.status(200).json(statuses);
+  } catch (err) {
+    console.error("❌ Error fetching Jio BP statuses:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 module.exports = router;
