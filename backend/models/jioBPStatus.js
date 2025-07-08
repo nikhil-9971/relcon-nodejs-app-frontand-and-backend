@@ -48,6 +48,10 @@ const JioBPStatusSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    createdBy: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );
