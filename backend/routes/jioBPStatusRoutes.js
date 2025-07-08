@@ -82,4 +82,45 @@ router.get("/getAllJioBPStatus", authMiddleware, async (req, res) => {
   }
 });
 
+// ✅ UPDATE Jio BP Status by ID
+router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
+  try {
+    const updated = await JioBPStatus.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    res.status(200).json({ success: true, data: updated });
+  } catch (err) {
+    console.error("❌ Error updating Jio BP status:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ✅ DELETE Jio BP Status by ID
+router.delete("/deleteJioBPStatus/:id", authMiddleware, async (req, res) => {
+  try {
+    const deleted = await JioBPStatus.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    // Optional: also update DailyPlan flag (set to false)
+    await DailyPlan.findByIdAndUpdate(deleted.planId, {
+      jioBPStatusSaved: false,
+      statusSaved: false,
+    });
+
+    res.status(200).json({ success: true, message: "Record deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting Jio BP status:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 module.exports = router;
