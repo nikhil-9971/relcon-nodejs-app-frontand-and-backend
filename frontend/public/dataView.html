@@ -1705,15 +1705,17 @@
 
           // Spare Used Logic
           if (spareUsed === "No") {
-            document.getElementById("activeSpare").value = "NA";
-            document.getElementById("faultySpare").value = "NA";
+            document.getElementById("activeSpare").value =
+              "NO ACTIVE MATERIAL USED";
+            document.getElementById("faultySpare").value =
+              "NO MATERIAL CREATED";
 
             document
               .getElementById("activeSpare")
               .setAttribute("readonly", true);
-            document
-              .getElementById("faultySpare")
-              .setAttribute("readonly", true);
+            // document
+            // .getElementById("faultySpare")
+            // .setAttribute("readonly", true);
           } else {
             document.getElementById("activeSpare").removeAttribute("readonly");
             document.getElementById("faultySpare").removeAttribute("readonly");
@@ -1721,7 +1723,8 @@
 
           // Spare Requirement Logic
           if (spareRequirment === "No") {
-            document.getElementById("spareRequirmentname").value = "NA";
+            document.getElementById("spareRequirmentname").value =
+              "NO SPARE REQUIRE";
             document
               .getElementById("spareRequirmentname")
               .setAttribute("readonly", true);
