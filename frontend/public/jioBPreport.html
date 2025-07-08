@@ -158,7 +158,9 @@
                 <td class="border px-2 py-1">${row.roCode || ""}</td>
                 <td class="border px-2 py-1">${row.roName || ""}</td>
                 <td class="border px-2 py-1">${row.purpose || ""}</td>
-                <td class="border px-2 py-1">${row.date || ""}</td>
+                <td class="border px-2 py-1" data-date="${row.date || ""}">${
+              row.date || ""
+            }</td>
                 <td class="border px-2 py-1">${row.hpsdId || ""}</td>
                 <td class="border px-2 py-1">${row.diagnosis || ""}</td>
                 <td class="border px-2 py-1">${row.solution || ""}</td>
