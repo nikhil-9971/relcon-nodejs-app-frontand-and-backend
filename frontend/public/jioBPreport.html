@@ -321,7 +321,24 @@
         const form = document.getElementById("editForm");
         const formData = new FormData(form);
         const updated = {};
-        formData.forEach((val, key) => (updated[key] = val));
+
+        formData.forEach((val, key) => {
+          if (key === "planId") {
+            try {
+              const parsed = JSON.parse(val);
+              updated[key] = parsed._id || val; // if object, get its _id
+            } catch (e) {
+              updated[key] = val; // fallback if it's already a string
+            }
+          } else if (
+            key !== "__v" &&
+            key !== "createdAt" &&
+            key !== "updatedAt"
+          ) {
+            updated[key] = val;
+          }
+        });
+
         const token = localStorage.getItem("token");
         const res = await fetch(`${baseUrl}/updateJioBPStatus/${updated._id}`, {
           method: "PUT",
@@ -331,6 +348,7 @@
           },
           body: JSON.stringify(updated),
         });
+
         if (res.ok) {
           closeModal();
           fetchData();
