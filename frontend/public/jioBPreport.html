@@ -92,30 +92,13 @@
       </div>
 
       <div
-        class="overflow-x-auto max-h-[70vh] overflow-y-auto border border-gray-300 rounded"
+        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded"
       >
-        <table class="min-w-max table-auto w-full text-[10px]" id="jioTable">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="px-3 py-2 border">Engineer</th>
-              <th class="px-3 py-2 border">Region</th>
-              <th class="px-3 py-2 border">RO Code</th>
-              <th class="px-3 py-2 border">RO Name</th>
-              <th class="px-3 py-2 border">Purpose of Visit</th>
-              <th class="px-3 py-2 border">Date</th>
-              <th class="px-3 py-2 border">HPSD ID</th>
-              <th class="px-3 py-2 border">Diagnosis</th>
-              <th class="px-3 py-2 border">Solution</th>
-              <th class="px-3 py-2 border">Active Material Used</th>
-              <th class="px-3 py-2 border">Used Material Name & Code</th>
-              <th class="px-3 py-2 border">Faulty Material Name & Code</th>
-              <th class="px-3 py-2 border">Spare Requirement</th>
-              <th class="px-3 py-2 border">Observation (in Hours)</th>
-              <th class="px-3 py-2 border">Material Requirement Name</th>
-              <th class="px-3 py-2 border">Status</th>
-            </tr>
+        <table id="statusTable" class="min-w-max table-auto w-full text-[10px]">
+          <thead class="bg-gray-200 sticky top-0 z-10">
+            <tr id="tableHeader"></tr>
           </thead>
-          <tbody id="jioBody"></tbody>
+          <tbody id="tableBody"></tbody>
         </table>
       </div>
     </div>
