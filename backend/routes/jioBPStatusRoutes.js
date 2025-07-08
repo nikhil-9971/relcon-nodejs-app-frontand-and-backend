@@ -83,22 +83,62 @@ router.get("/getAllJioBPStatus", authMiddleware, async (req, res) => {
 });
 
 // ✅ UPDATE Jio BP Status by ID
+
+// ✅ UPDATE Jio BP Status by ID
 router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
   try {
+    // Sanitize planId: if object, extract _id
+    if (typeof req.body.planId === "object" && req.body.planId._id) {
+      req.body.planId = req.body.planId._id;
+    }
+
+    // Optional: Remove any fields not in schema
+    const allowedFields = [
+      "engineer",
+      "region",
+      "roCode",
+      "roName",
+      "purpose",
+      "date",
+      "hpsdId",
+      "diagnosis",
+      "solution",
+      "activeMaterialUsed",
+      "usedMaterialDetails",
+      "faultyMaterialDetails",
+      "spareRequired",
+      "observationHours",
+      "materialRequirement",
+      "status",
+      "planId",
+      "createdBy",
+    ];
+
+    const updateData = {};
+    allowedFields.forEach((key) => {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    });
+
     const updated = await JioBPStatus.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
 
     if (!updated) {
-      return res.status(404).json({ success: false, message: "Not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Record not found" });
     }
 
     res.status(200).json({ success: true, data: updated });
   } catch (err) {
     console.error("❌ Error updating Jio BP status:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 });
 
