@@ -343,6 +343,7 @@
         const formData = new FormData(form);
         const updated = {};
 
+        // ✅ Extract all fields properly
         formData.forEach((val, key) => {
           if (key === "planId") {
             try {
@@ -353,16 +354,16 @@
             }
           } else if (key === "isVerified") {
             updated.isVerified = val === "true" || val === true;
-          } else {
+          } else if (key !== "_id") {
             updated[key] = val;
           }
         });
 
-        const id = updated._id;
-        delete updated._id; // ✅ REMOVE _id from payload
-
+        // ✅ Properly extract _id for the URL
+        const id = formData.get("_id");
         const token = localStorage.getItem("token");
 
+        // ✅ Send PUT request to update
         const res = await fetch(`${baseUrl}/updateJioBPStatus/${id}`, {
           method: "PUT",
           headers: {
