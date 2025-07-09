@@ -2335,42 +2335,39 @@
           document.getElementById("activeMaterialUsed").value;
         const spareRequired = document.getElementById("spareRequired").value;
 
-        // ✅ If Active Material Used = No
-        if (activeMaterialUsed === "No") {
-          document.getElementById("usedMaterialDetails").value =
-            "NO MATERIAL USED";
-          document.getElementById("faultyMaterialDetails").value =
-            "NO MATERIAL FAULTY CREATED";
+        // ✅ Independent handling for Active Material Used
+        const usedMaterialField = document.getElementById(
+          "usedMaterialDetails"
+        );
+        const faultyMaterialField = document.getElementById(
+          "faultyMaterialDetails"
+        );
 
-          document
-            .getElementById("usedMaterialDetails")
-            .setAttribute("readonly", true);
-          document
-            .getElementById("faultyMaterialDetails")
-            .setAttribute("readonly", true);
-        } else {
-          document
-            .getElementById("usedMaterialDetails")
-            .removeAttribute("readonly");
-          document
-            .getElementById("faultyMaterialDetails")
-            .removeAttribute("readonly");
-          document.getElementById("usedMaterialDetails").value = "";
-          document.getElementById("faultyMaterialDetails").value = "";
+        if (activeMaterialUsed === "No") {
+          usedMaterialField.value = "NO MATERIAL USED";
+          faultyMaterialField.value = "NO MATERIAL FAULTY CREATED";
+          usedMaterialField.setAttribute("readonly", true);
+          faultyMaterialField.setAttribute("readonly", true);
+        } else if (activeMaterialUsed === "Yes") {
+          usedMaterialField.removeAttribute("readonly");
+          faultyMaterialField.removeAttribute("readonly");
+          // ❌ Don't clear values here unless specifically needed
+          // usedMaterialField.value = "";
+          // faultyMaterialField.value = "";
         }
 
-        // ✅ If Spare Required = No
+        // ✅ Independent handling for Spare Required
+        const materialRequirementField = document.getElementById(
+          "materialRequirement"
+        );
+
         if (spareRequired === "No") {
-          document.getElementById("materialRequirement").value =
-            "NO MATERIAL REQUIRED";
-          document
-            .getElementById("materialRequirement")
-            .setAttribute("readonly", true);
-        } else {
-          document
-            .getElementById("materialRequirement")
-            .removeAttribute("readonly");
-          document.getElementById("materialRequirement").value = "";
+          materialRequirementField.value = "NO MATERIAL REQUIRED";
+          materialRequirementField.setAttribute("readonly", true);
+        } else if (spareRequired === "Yes") {
+          materialRequirementField.removeAttribute("readonly");
+          // ❌ Don't clear unless needed
+          // materialRequirementField.value = "";
         }
       }
 
