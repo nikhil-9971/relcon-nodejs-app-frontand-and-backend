@@ -44,6 +44,14 @@ const JioBPStatusSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    relconsupport: {
+      type: String,
+      default: "",
+    },
+    rbmlperson: {
+      type: String,
+      default: "",
+    },
     status: {
       type: String,
       required: true,
@@ -67,6 +75,8 @@ JioBPStatusSchema.pre("save", function (next) {
     this.faultyMaterialDetails = this.faultyMaterialDetails.toUpperCase();
   if (this.materialRequirement)
     this.materialRequirement = this.materialRequirement.toUpperCase();
+  if (this.relconsupport) this.relconsupport = this.relconsupport.toUpperCase();
+  if (this.rbmlperson) this.rbmlperson = this.rbmlperson.toUpperCase();
   next();
 });
 
