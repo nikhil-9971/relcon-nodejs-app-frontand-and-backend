@@ -60,6 +60,17 @@ const JioBPStatusSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verifiedBy: {
+      type: String,
+      default: "",
+    },
+    verifiedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
