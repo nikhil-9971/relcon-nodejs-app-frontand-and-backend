@@ -1086,6 +1086,26 @@
           </div>
 
           <div class="md:col-span-2">
+            <label class="font-semibold">Support taken from</label>
+            <input
+              type="text"
+              id="relconsupport"
+              class="w-full p-2 mt-1 border uppercase rounded"
+              placeholder="Example: YES/SHIV"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Inform to RBML Person</label>
+            <input
+              type="text"
+              id="rbmlperson"
+              class="w-full p-2 mt-1 border uppercase rounded"
+              placeholder="Example: YES/Vishnu"
+            />
+          </div>
+
+          <div class="md:col-span-2">
             <label class="font-semibold">Status</label>
             <select id="jioStatus" class="w-full p-2 mt-1 border rounded">
               <option value="">Select</option>
@@ -2085,6 +2105,11 @@
                 "Material Requirement Name",
                 cleanText(status.materialRequirement),
               ],
+              [
+                "Support Taken from Relcon Person",
+                cleanText(status.relconsupport),
+              ],
+              ["Inform to RBML Person", cleanText(status.rbmlperson)],
               ["Status", cleanText(status.jioStatus)]
             );
           } else {
@@ -2394,6 +2419,8 @@
           "solution",
           "activeMaterialUsed",
           "spareRequired",
+          "relconsupport",
+          "rbmlperson",
           "jioStatus",
         ];
         for (const id of requiredFields) {
@@ -2425,6 +2452,10 @@
           materialRequirement: document
             .getElementById("materialRequirement")
             .value.toUpperCase(),
+          relconsupport: document
+            .getElementById("relconsupport")
+            .value.toUpperCase(),
+          rbmlperson: document.getElementById("rbmlperson").value.toUpperCase(),
           status: document.getElementById("jioStatus").value,
         };
 
