@@ -2003,278 +2003,193 @@
 
       async function downloadPDF(planId) {
         try {
-          const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-          if (!resPlan.ok) {
-            alert("❌ Failed to fetch visit data");
-            return;
-          }
-
-          const plan = await resPlan.json();
           const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
+          const doc = new jsPDF({ orientation: "landscape" });
           const pageWidth = doc.internal.pageSize.getWidth();
 
-          // Load logo as base64 helper
+          const token = localStorage.getItem("token");
+
+          const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!resPlan.ok) return alert("❌ Failed to fetch visit plan");
+
+          const plan = await resPlan.json();
+
           const loadLogo = async (url) => {
             const res = await fetch(url);
             const blob = await res.blob();
-            return await new Promise((resolve) => {
+            return new Promise((resolve) => {
               const reader = new FileReader();
               reader.onloadend = () => resolve(reader.result);
               reader.readAsDataURL(blob);
             });
           };
 
-          // JioBP PDF
-          if (!!plan.jioBPStatusSaved) {
+          let status = null;
+          let isJioBP = !!plan.jioBPStatusSaved;
+          const logoPath = isJioBP ? "./assets/JioBP.png" : "./assets/HPCL.png";
+          const logo = await loadLogo(logoPath);
+          doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(14);
+          doc.text(
+            isJioBP ? "Jio BP Visit Report" : "HPCL Visit Report",
+            pageWidth / 2,
+            35,
+            { align: "center" }
+          );
+
+          doc.setDrawColor(0);
+          doc.setLineWidth(0.5);
+          doc.line(15, 43, pageWidth - 15, 43);
+
+          const visitRows = [
+            ["Engineer", cleanText(plan.engineer)],
+            ["Region", cleanText(plan.region)],
+            ["Phase", cleanText(plan.phase)],
+            ["RO Code", cleanText(plan.roCode)],
+            ["RO Name", cleanText(plan.roName)],
+            ["Date", cleanText(plan.date)],
+            ["AMC Qtr", cleanText(plan.amcQtr)],
+            ["Purpose", cleanText(plan.purpose)],
+          ];
+
+          if (isJioBP) {
             const resStatus = await fetch(
               `${baseUrl}/getJioBPStatusByPlan/${planId}`,
               {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
               }
             );
+            if (!resStatus.ok) return alert("❌ Failed to fetch JioBP status");
+            status = await resStatus.json();
 
-            if (!resStatus.ok) {
-              alert("❌ Failed to fetch Jio BP status data");
-              return;
-            }
-
-            const status = await resStatus.json();
-            const logo = await loadLogo("./assets/JioBP.png"); // or /images/JioBP.png
-            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 32, 20);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.text("Jio BP Visit Report", pageWidth / 2, 35, {
-              align: "center",
-            });
-
-            doc.setDrawColor(0);
-            doc.setLineWidth(0.5);
-            doc.line(15, 43, 195, 43);
-
-            const visitData = [
-              ["Engineer", cleanText(plan.engineer)],
-              ["Region", cleanText(plan.region)],
-              ["Phase", cleanText(plan.phase)],
-              ["RO Code", cleanText(plan.roCode)],
-              ["RO Name", cleanText(plan.roName)],
-              ["Date", cleanText(plan.date)],
-              ["AMC Qtr", cleanText(plan.amcQtr)],
-              ["Purpose", cleanText(plan.purpose)],
-              ["HPSD ID", cleanText(status?.hpsdId)],
-              ["Diagnosis", cleanText(status?.diagnosis)],
-              ["Solution", cleanText(status?.solution)],
-              ["Active Material Used", cleanText(status?.activeMaterialUsed)],
+            visitRows.push(
+              ["HPSD ID", cleanText(status.hpsdId)],
+              ["Diagnosis", cleanText(status.diagnosis)],
+              ["Solution", cleanText(status.solution)],
+              ["Active Material Used", cleanText(status.activeMaterialUsed)],
               [
                 "Used Material Name & Code",
-                cleanText(status?.usedMaterialDetails),
+                cleanText(status.usedMaterialDetails),
               ],
               [
                 "Faulty Material Name & Code",
-                cleanText(status?.faultyMaterialDetails),
+                cleanText(status.faultyMaterialDetails),
               ],
-              ["Spare Requirement", cleanText(status?.spareRequired)],
-              ["Observation (in Hours)", cleanText(status?.observationHours)],
+              ["Spare Requirement", cleanText(status.spareRequired)],
+              ["Observation (Hours)", cleanText(status.observationHours)],
               [
                 "Material Requirement Name",
-                cleanText(status?.materialRequirement),
+                cleanText(status.materialRequirement),
               ],
-              ["Status", cleanText(status?.status)],
-            ];
-
-            doc.autoTable({
-              startY: 45,
-              head: [["Field", "Value"]],
-              body: visitData,
-              theme: "grid",
-              styles: {
-                fontSize: 9,
-                cellPadding: 3,
-                overflow: "linebreak",
-                cellWidth: "wrap",
-                valign: "middle",
-                halign: "center",
-              },
-              columnStyles: {
-                0: { cellWidth: 95 }, // 50% of A4 width
-                1: { cellWidth: 95 },
-              },
-              headStyles: {
-                fillColor: [22, 163, 74],
-                textColor: 255,
-                fontSize: 10,
-                halign: "center",
-                valign: "middle",
-              },
-              bodyStyles: {
-                textColor: 33,
-                halign: "center",
-                valign: "middle",
-              },
-              alternateRowStyles: {
-                fillColor: [245, 245, 245],
-              },
-            });
-
-            const userName =
-              localStorage.getItem("engineerName") || "Unknown User";
-            const now = new Date();
-            const formattedDate = now
-              .toLocaleDateString("en-GB")
-              .replace(/ /g, "-");
-            const formattedTime = now.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            });
-
-            const footerText = `Generated by: ${userName} on ${formattedDate} at ${formattedTime}`;
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-              doc.setPage(i);
-              doc.setFontSize(8);
-              doc.setTextColor(150);
-              doc.text(`Page ${i} of ${pageCount}`, 195, 290, {
-                align: "right",
-              });
-              doc.text(footerText, 15, 290);
-            }
-
-            doc.save(`JioBP_Report_${plan.roCode}_${plan.date}.pdf`);
-          }
-
-          // HPCL fallback
-          else {
+              ["Status", cleanText(status.jioStatus)]
+            );
+          } else {
             const resStatus = await fetch(
               `${baseUrl}/getStatusByPlan/${planId}`,
               {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
               }
             );
+            if (!resStatus.ok) return alert("❌ Failed to fetch HPCL status");
+            status = await resStatus.json();
 
-            if (!resStatus.ok) {
-              alert("❌ Failed to fetch HPCL status data");
-              return;
-            }
-
-            const status = await resStatus.json();
-            const logo = await loadLogo("./assets/HPCL.png"); // or /images/relconLogo.png
-            doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.text("HPCL Visit Report", pageWidth / 2, 35, {
-              align: "center",
-            });
-
-            doc.setDrawColor(0);
-            doc.setLineWidth(0.5);
-            doc.line(15, 45, 195, 45);
-
-            const visitData = [
-              ["Engineer", cleanText(plan.engineer)],
-              ["Region", cleanText(plan.region)],
-              ["Phase", cleanText(plan.phase)],
-              ["RO Code", cleanText(plan.roCode)],
-              ["RO Name", cleanText(plan.roName)],
-              ["Date", cleanText(plan.date)],
-              ["AMC Qtr", cleanText(plan.amcQtr)],
-              ["Purpose", cleanText(plan.purpose)],
-              ["Probe Make", cleanText(status?.probeMake)],
-              ["Product & Probe Size", cleanText(status?.probeSize)],
-              ["Low Product Lock", cleanText(status?.lowProductLock)],
-              ["High water Lock", cleanText(status?.highWaterSet)],
-              ["DU Serial Number Updated", cleanText(status?.duSerialNumber)],
-              ["Outlet DG Status", cleanText(status?.dgStatus)],
-              ["Connectivity Type", cleanText(status?.connectivityType)],
-              ["Sim 1 Provider Name", cleanText(status?.sim1Provider)],
-              ["Sim 1 Number", cleanText(status?.sim1Number)],
-              ["Sim 2 Provider Name", cleanText(status?.sim2Provider)],
-              ["Sim 2 Number", cleanText(status?.sim2Number)],
-              ["IEMI Number", cleanText(status?.iemiNumber)],
-              ["BOS Version", cleanText(status?.bosVersion)],
-              ["FCC Version", cleanText(status?.fccVersion)],
-              ["Wireless Slave Version", cleanText(status?.wirelessSlave)],
-              ["SFTP Config", cleanText(status?.sftpConfig)],
-              ["Admin Password Updated", cleanText(status?.adminPassword)],
-              ["Work Completion Status", cleanText(status?.workCompletion)],
-              ["Spare Used in Site", cleanText(status?.spareUsed)],
-              ["Used active Spare Name & Code", cleanText(status?.activeSpare)],
-              ["Faulty Spare Name & Code", cleanText(status?.faultySpare)],
-              ["Any Spare Requirment", cleanText(status?.spareRequirment)],
-              ["Required Spare Name", cleanText(status?.spareRequirmentname)],
-              ["Earthing Status", cleanText(status?.earthingStatus)],
-              ["Voltage Reading", cleanText(status?.voltageReading)],
-              ["No of DU offline", cleanText(status?.duOffline)],
-              ["DU Dependency", cleanText(status?.duDependency)],
-              ["DU offline remark", cleanText(status?.duRemark)],
-              ["No Of Tank Offline", cleanText(status?.tankOffline)],
-              ["Tank Dependency", cleanText(status?.tankDependency)],
-              ["Tank Offline Remark", cleanText(status?.tankRemark)],
-              ["Site Location", cleanText(status?.locationField)],
-            ];
-
-            doc.autoTable({
-              startY: 50,
-              head: [["Field", "Value"]],
-              body: visitData,
-              theme: "grid",
-              headStyles: {
-                fillColor: [22, 163, 74],
-                textColor: 255,
-                fontSize: 10,
-              },
-              bodyStyles: { fontSize: 9, cellPadding: 3 },
-              alternateRowStyles: { fillColor: [245, 245, 245] },
-              styles: {
-                cellWidth: "wrap",
-                valign: "middle",
-                overflow: "linebreak",
-              },
-              columnStyles: {
-                0: { fontStyle: "bold", halign: "left" },
-                1: { halign: "left" },
-              },
-            });
-
-            const userName =
-              localStorage.getItem("engineerName") || "Unknown User";
-            const now = new Date();
-            const formattedDate = now
-              .toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-              .replace(/ /g, "-");
-            const formattedTime = now.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            });
-
-            const footerText = `Generated by: ${userName} on ${formattedDate} at ${formattedTime}`;
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-              doc.setPage(i);
-              doc.setFontSize(8);
-              doc.setTextColor(150);
-              doc.text(`Page ${i} of ${pageCount}`, 195, 290, {
-                align: "right",
-              });
-              doc.text(footerText, 15, 290);
-            }
-
-            doc.save(`HPCL_Report_${plan.roCode}_${plan.date}.pdf`);
+            visitRows.push(
+              ["Probe Make", cleanText(status.probeMake)],
+              ["Product & Probe Size", cleanText(status.probeSize)],
+              ["Low Product Lock", cleanText(status.lowProductLock)],
+              ["High Water Lock", cleanText(status.highWaterSet)],
+              ["DU Serial Number Updated", cleanText(status.duSerialNumber)],
+              ["Outlet DG Status", cleanText(status.dgStatus)],
+              ["Connectivity Type", cleanText(status.connectivityType)],
+              [
+                "SIM 1 (Provider / Number)",
+                `${cleanText(status.sim1Provider)} / ${cleanText(
+                  status.sim1Number
+                )}`,
+              ],
+              [
+                "SIM 2 (Provider / Number)",
+                `${cleanText(status.sim2Provider)} / ${cleanText(
+                  status.sim2Number
+                )}`,
+              ],
+              ["IEMI Number", cleanText(status.iemiNumber)],
+              ["BOS Version", cleanText(status.bosVersion)],
+              ["FCC Version", cleanText(status.fccVersion)],
+              ["Wireless Slave Version", cleanText(status.wirelessSlave)],
+              ["SFTP Config", cleanText(status.sftpConfig)],
+              ["Admin Password Updated", cleanText(status.adminPassword)],
+              ["Work Completion Status", cleanText(status.workCompletion)],
+              ["Spare Used in Site", cleanText(status.spareUsed)],
+              ["Used active Spare Name & Code", cleanText(status.activeSpare)],
+              ["Faulty Spare Name & Code", cleanText(status.faultySpare)],
+              ["Any Spare Requirement", cleanText(status.spareRequirment)],
+              ["Required Spare Name", cleanText(status.spareRequirmentname)],
+              ["Earthing Status", cleanText(status.earthingStatus)],
+              ["Voltage Reading", cleanText(status.voltageReading)],
+              ["No of DU Offline", cleanText(status.duOffline)],
+              ["DU Dependency", cleanText(status.duDependency)],
+              ["DU offline remark", cleanText(status.duRemark)],
+              ["No Of Tank Offline", cleanText(status.tankOffline)],
+              ["Tank Dependency", cleanText(status.tankDependency)],
+              ["Tank Offline Remark", cleanText(status.tankRemark)],
+              ["Site Location", cleanText(status.locationField)]
+            );
           }
+
+          doc.autoTable({
+            startY: 48,
+            head: [["Field", "Value"]],
+            body: visitRows,
+            styles: {
+              fontSize: 9,
+              cellPadding: 3,
+              cellWidth: "wrap",
+              overflow: "linebreak",
+              valign: "middle",
+              halign: "left",
+            },
+            columnStyles: {
+              0: { fontStyle: "bold", cellWidth: 60 },
+              1: { cellWidth: 200 },
+            },
+            headStyles: {
+              fillColor: [22, 163, 74],
+              textColor: 255,
+              fontSize: 10,
+            },
+            alternateRowStyles: {
+              fillColor: [245, 245, 245],
+            },
+            theme: "grid",
+          });
+
+          // Footer
+          const username = loggedInUser?.engineerName || "Unknown User";
+          const now = new Date();
+          const footerText = `Generated by: ${username} on ${now.toLocaleDateString()} at ${now.toLocaleTimeString(
+            [],
+            { hour: "2-digit", minute: "2-digit" }
+          )}`;
+          const pageCount = doc.internal.getNumberOfPages();
+          for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Page ${i} of ${pageCount}`, pageWidth - 15, 200, {
+              align: "right",
+            });
+            doc.text(footerText, 15, 200);
+          }
+
+          const fileName = `${isJioBP ? "JioBP" : "HPCL"}_Report_${
+            plan.roCode
+          }_${plan.date}.pdf`;
+          doc.save(fileName);
         } catch (err) {
           console.error("❌ PDF Generation Error:", err);
           alert("❌ Error generating PDF");
