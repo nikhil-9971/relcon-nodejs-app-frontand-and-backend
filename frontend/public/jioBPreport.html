@@ -222,17 +222,27 @@
             const encoded = btoa(
               unescape(encodeURIComponent(JSON.stringify(record)))
             );
+            const isVerified =
+              record.isVerified === true || record.isVerified === "true";
             const row = columns
               .map((col) => {
                 if (col.key === "actions" && currentUser.role === "admin") {
-                  return `<td class="border text-center px-2 py-1">
-          <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-          <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record._id}")'>🗑️</button>
-        </td>`;
+                  if (isVerified) {
+                    return `<td class="border text-center px-2 py-1"><span class="locked-badge">🔒 Verified</span></td>`;
+                  } else if (currentUser.username === "nikhil.trivedi") {
+                    return `<td class="border text-center px-2 py-1">
+                      <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                      <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteRecord("${record._id}")'>🗑️</button>
+                      <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>
+                    </td>`;
+                  }
+                  return `<td class="border text-center px-2 py-1 text-gray-400 italic">Not allowed</td>`;
                 }
-                const value = record[col.key] || "";
-                const attr = col.key === "date" ? `data-date='${value}'` : "";
-                return `<td class='border text-center px-2 py-1' ${attr}>${value}</td>`;
+                let value = record[col.key] || "";
+                if (col.key === "roCode" && isVerified) {
+                  value += " <span class='locked-badge'>🔒</span>";
+                }
+                return `<td class='border text-center px-2 py-1'>${value}</td>`;
               })
               .join("");
             return `<tr>${row}</tr>`;
@@ -404,6 +414,28 @@
         setTimeout(() => toast.classList.add("hidden"), 3000);
       }
 
+      async function verifyRecord(id) {
+        const confirmed = confirm(
+          "Are you sure you want to mark this record as VERIFIED?"
+        );
+        if (!confirmed) return;
+
+        const res = await fetch(`${baseUrl}/verifyStatus/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ isVerified: true }),
+        });
+
+        if (res.ok) {
+          showToast("Record marked as Verified ✅");
+          fetchData();
+        } else {
+          alert("Verification failed");
+        }
+      }
       fetchData();
     </script>
   </body>
