@@ -12,11 +12,9 @@ router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
 
     const existing = await JioBPStatus.findOne({ planId });
     if (existing) {
-      // 🔁 Update existing status
       Object.assign(existing, req.body);
       savedStatus = await existing.save();
     } else {
-      // ➕ Create new status
       const newStatus = new JioBPStatus({
         ...req.body,
         createdBy: req.user?.username || "unknown",
@@ -24,7 +22,6 @@ router.post("/saveJioBPStatus", authMiddleware, async (req, res) => {
       savedStatus = await newStatus.save();
     }
 
-    // ✅ Update DailyPlan status flags
     await DailyPlan.findByIdAndUpdate(planId, {
       jioBPStatusSaved: true,
       statusSaved: true,
@@ -83,16 +80,19 @@ router.get("/getAllJioBPStatus", authMiddleware, async (req, res) => {
 });
 
 // ✅ UPDATE Jio BP Status by ID
-
-// ✅ UPDATE Jio BP Status by ID
 router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
   try {
-    // Sanitize planId: if object, extract _id
     if (typeof req.body.planId === "object" && req.body.planId._id) {
       req.body.planId = req.body.planId._id;
     }
 
-    // Optional: Remove any fields not in schema
+    const oldData = await JioBPStatus.findById(req.params.id);
+    if (oldData?.isVerified && req.user?.username !== "nikhil.trivedi") {
+      return res
+        .status(403)
+        .send("Verified records can only be updated by Nikhil.");
+    }
+
     const allowedFields = [
       "engineer",
       "region",
@@ -114,6 +114,7 @@ router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
       "status",
       "planId",
       "createdBy",
+      "isVerified",
     ];
 
     const updateData = {};
@@ -152,7 +153,6 @@ router.delete("/deleteJioBPStatus/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ success: false, message: "Not found" });
     }
 
-    // Optional: also update DailyPlan flag (set to false)
     await DailyPlan.findByIdAndUpdate(deleted.planId, {
       jioBPStatusSaved: false,
       statusSaved: false,
@@ -161,6 +161,34 @@ router.delete("/deleteJioBPStatus/:id", authMiddleware, async (req, res) => {
     res.status(200).json({ success: true, message: "Record deleted" });
   } catch (err) {
     console.error("❌ Error deleting Jio BP status:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ✅ VERIFY endpoint
+router.put("/verifyStatus/:id", authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+    if (user.username !== "nikhil.trivedi" || user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    const updated = await JioBPStatus.findByIdAndUpdate(
+      req.params.id,
+      { isVerified: true },
+      { new: true }
+    );
+    if (!updated) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Record not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Status verified", data: updated });
+  } catch (err) {
+    console.error("❌ Error verifying Jio BP status:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
