@@ -179,7 +179,10 @@
         jioData =
           currentUser.role === "engineer"
             ? data.filter((d) => d.createdBy === currentUser.username)
-            : data.map((d) => ({ ...d, ...d.planId }));
+            : data.map((d) => ({
+                ...d.planId, // only add plan fields
+                ...d, // keep original JioBPStatus fields (especially _id)
+              }));
 
         renderTable(jioData);
       }
