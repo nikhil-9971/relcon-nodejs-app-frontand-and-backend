@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const JioBPStatus = require("../models/jioBPStatus");
 const DailyPlan = require("../models/DailyPlan");
@@ -80,17 +81,35 @@ router.get("/getAllJioBPStatus", authMiddleware, async (req, res) => {
 });
 
 // ✅ UPDATE Jio BP Status by ID
+// ⬅️ make sure this is imported
+
 router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
   try {
+    const id = req.params.id;
+
+    // ✅ Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid ObjectId format." });
+    }
+
     if (typeof req.body.planId === "object" && req.body.planId._id) {
       req.body.planId = req.body.planId._id;
     }
 
-    const oldData = await JioBPStatus.findById(req.params.id);
-    if (oldData?.isVerified && req.user?.username !== "nikhil.trivedi") {
+    const oldData = await JioBPStatus.findById(id);
+    if (!oldData) {
       return res
-        .status(403)
-        .send("Verified records can only be updated by Nikhil.");
+        .status(404)
+        .json({ success: false, message: "Record not found" });
+    }
+
+    if (oldData.isVerified && req.user?.username !== "nikhil.trivedi") {
+      return res.status(403).json({
+        success: false,
+        message: "Verified records can only be updated by Nikhil.",
+      });
     }
 
     const allowedFields = [
@@ -124,17 +143,9 @@ router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
       }
     });
 
-    const updated = await JioBPStatus.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
-
-    if (!updated) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Record not found" });
-    }
+    const updated = await JioBPStatus.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     res.status(200).json({ success: true, data: updated });
   } catch (err) {
