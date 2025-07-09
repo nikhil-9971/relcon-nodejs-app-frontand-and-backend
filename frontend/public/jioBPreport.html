@@ -338,7 +338,6 @@
       function closeModal() {
         document.getElementById("editModal").classList.add("hidden");
       }
-
       async function saveEdit() {
         const form = document.getElementById("editForm");
         const formData = new FormData(form);
@@ -357,9 +356,12 @@
           }
         });
 
+        const id = updated._id;
+        delete updated._id; // ✅ REMOVE _id from payload
+
         const token = localStorage.getItem("token");
 
-        const res = await fetch(`${baseUrl}/updateJioBPStatus/${updated._id}`, {
+        const res = await fetch(`${baseUrl}/updateJioBPStatus/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -373,6 +375,8 @@
           fetchData();
           showToast("✅ Record updated successfully");
         } else {
+          const errText = await res.text();
+          console.error("❌ Update failed:", errText);
           alert("❌ Failed to update record");
         }
       }
