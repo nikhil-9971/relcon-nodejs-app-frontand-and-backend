@@ -109,6 +109,8 @@ router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
       "spareRequired",
       "observationHours",
       "materialRequirement",
+      "relconsupport",
+      "rbmlperson",
       "status",
       "planId",
       "createdBy",
