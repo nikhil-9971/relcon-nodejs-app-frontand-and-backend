@@ -198,12 +198,18 @@
 
         jioData = data
           .map((d) => ({ ...d.planId, ...d }))
-          .filter((d) =>
-            currentUser.role === "admin"
+          .filter((d) => {
+            console.log(
+              "Comparing:",
+              d.engineer,
+              "<=>",
+              currentUser.engineerName
+            );
+            return currentUser.role === "admin"
               ? true
               : (d.engineer || "").toLowerCase().trim() ===
-                (currentUser.engineerName || "").toLowerCase().trim()
-          );
+                  (currentUser.engineerName || "").toLowerCase().trim();
+          });
 
         renderTable(jioData);
       }
