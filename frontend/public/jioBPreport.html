@@ -176,13 +176,16 @@
         });
         const data = await res.json();
 
-        jioData =
-          currentUser.role === "engineer"
-            ? data.filter((d) => d.createdBy === currentUser.username)
-            : data.map((d) => ({
-                ...d.planId, // only add plan fields
-                ...d, // keep original JioBPStatus fields (especially _id)
-              }));
+        jioData = data
+          .map((d) => ({
+            ...d.planId, // flatten plan data
+            ...d, // keep original JioBPStatus fields
+          }))
+          .filter((d) =>
+            currentUser.role === "admin"
+              ? true
+              : (d.engineer || "").toLowerCase().trim() === currentUser.username
+          );
 
         renderTable(jioData);
       }
