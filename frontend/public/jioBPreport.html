@@ -162,54 +162,46 @@
 
     <script>
       // jioBPreport.js
+
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      const token = localStorage.getItem("token");
 
       let jioData = [];
       let currentUser = {};
       let deleteTargetId = null;
 
-      async function fetchData() {
-        const token = localStorage.getItem("token");
-
-        const userRes = await fetch(`${baseUrl}/user`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!userRes.ok) {
-          alert("Please log in again.");
-          window.location.href = "login.html";
-          return;
+      // ✅ Extract user from token like atgRecords.html
+      function getUserFromToken(token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          return {
+            username: (payload.engineerName || payload.name || "")
+              .trim()
+              .toLowerCase(),
+            role: (payload.role || "").trim().toLowerCase(),
+          };
+        } catch (e) {
+          console.error("Invalid token format", e);
+          return { username: "", role: "" };
         }
+      }
 
-        currentUser = await userRes.json();
-
+      async function fetchData() {
         const res = await fetch(`${baseUrl}/getAllJioBPStatus`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
 
-        const engineerKey = (
-          currentUser.engineerName ||
-          currentUser.username ||
-          ""
-        )
-          .toLowerCase()
-          .trim();
+        // ✅ decode current user like in atgRecords
+        const { username: engineerKey, role } = getUserFromToken(token);
 
         jioData = data
           .map((d) => ({ ...d.planId, ...d }))
-          .filter((d) => {
-            console.log(
-              "Comparing:",
-              d.engineer,
-              "<=>",
-              currentUser.engineerName
-            );
-            return currentUser.role === "admin"
+          .filter((d) =>
+            role === "admin"
               ? true
-              : (d.engineer || "").toLowerCase().trim() ===
-                  (currentUser.engineerName || "").toLowerCase().trim();
-          });
+              : (d.engineer || "").toLowerCase().trim() === engineerKey
+          );
 
         renderTable(jioData);
       }
