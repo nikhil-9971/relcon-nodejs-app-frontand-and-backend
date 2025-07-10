@@ -65,14 +65,8 @@ router.get(
 // ✅ GET All Jio BP Status with Role-Based Access
 router.get("/getAllJioBPStatus", authMiddleware, async (req, res) => {
   try {
-    const user = req.user;
-    let query = {};
-
-    if (user.role === "engineer") {
-      query = { createdBy: user.username };
-    }
-
-    const statuses = await JioBPStatus.find(query).populate("planId");
+    // 🔓 No role-based restriction here — frontend will filter
+    const statuses = await JioBPStatus.find({}).populate("planId");
     res.status(200).json(statuses);
   } catch (err) {
     console.error("❌ Error fetching Jio BP statuses:", err);
