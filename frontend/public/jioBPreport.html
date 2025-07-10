@@ -163,13 +163,25 @@
     <script>
       // jioBPreport.js
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
+
       let jioData = [];
       let currentUser = {};
       let deleteTargetId = null;
 
       async function fetchData() {
         const token = localStorage.getItem("token");
-        currentUser = JSON.parse(localStorage.getItem("user")) || {};
+
+        const userRes = await fetch(`${baseUrl}/user`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!userRes.ok) {
+          alert("Please log in again.");
+          window.location.href = "login.html";
+          return;
+        }
+
+        currentUser = await userRes.json();
 
         const res = await fetch(`${baseUrl}/getAllJioBPStatus`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -185,20 +197,13 @@
           .trim();
 
         jioData = data
-          .map((d) => ({
-            ...d.planId,
-            ...d,
-          }))
+          .map((d) => ({ ...d.planId, ...d }))
           .filter((d) =>
             currentUser.role === "admin"
               ? true
-              : (d.engineer || "").toLowerCase().trim() === engineerKey
+              : (d.engineer || "").toLowerCase().trim() ===
+                (currentUser.engineerName || "").toLowerCase().trim()
           );
-
-        console.log("Current User:", currentUser);
-        console.log("Engineer key:", engineerKey);
-        console.log("All records:", data.length);
-        console.log("Filtered records:", jioData.length);
 
         renderTable(jioData);
       }
