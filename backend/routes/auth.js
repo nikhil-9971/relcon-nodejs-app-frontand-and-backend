@@ -66,7 +66,15 @@ router.post("/login", async (req, res) => {
     console.error("📛 LoginLog error:", logErr.message);
   }
 
-  res.json({ token });
+  //res.json({ token });
+  res.json({
+    token,
+    user: {
+      username: user.username,
+      role: user.role,
+      engineerName: user.engineerName,
+    },
+  });
 });
 
 // 🔒 Middleware: Verify token
