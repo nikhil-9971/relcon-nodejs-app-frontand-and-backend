@@ -130,14 +130,18 @@
       ${
         trail.before && Object.keys(trail.before).length
           ? `<b class="text-red-600">Before:</b>${Object.entries(trail.before)
-              .map(([k, v]) => `<div class="ml-2">${k}: ${v}</div>`)
+              .map(
+                ([k, v]) => `<div class="ml-2 text-red-400">${k}: ${v}</div>`
+              )
               .join("")}`
           : ""
       }
       ${
         trail.after && Object.keys(trail.after).length
           ? `<b class="text-green-700">After:</b>${Object.entries(trail.after)
-              .map(([k, v]) => `<div class="ml-2">${k}: ${v}</div>`)
+              .map(
+                ([k, v]) => `<div class="ml-2 text-green-600">${k}: ${v}</div>`
+              )
               .join("")}`
           : ""
       }
