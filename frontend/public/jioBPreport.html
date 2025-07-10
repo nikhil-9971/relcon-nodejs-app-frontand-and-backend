@@ -176,7 +176,14 @@
         });
         const data = await res.json();
 
-        // ✅ Flatten + filter
+        const engineerKey = (
+          currentUser.engineerName ||
+          currentUser.username ||
+          ""
+        )
+          .toLowerCase()
+          .trim();
+
         jioData = data
           .map((d) => ({
             ...d.planId,
@@ -185,9 +192,13 @@
           .filter((d) =>
             currentUser.role === "admin"
               ? true
-              : (d.engineer || "").toLowerCase().trim() ===
-                (currentUser.engineerName || "").toLowerCase().trim()
+              : (d.engineer || "").toLowerCase().trim() === engineerKey
           );
+
+        console.log("Current User:", currentUser);
+        console.log("Engineer key:", engineerKey);
+        console.log("All records:", data.length);
+        console.log("Filtered records:", jioData.length);
 
         renderTable(jioData);
       }
