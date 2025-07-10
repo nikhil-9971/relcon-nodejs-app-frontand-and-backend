@@ -178,13 +178,14 @@
 
         jioData = data
           .map((d) => ({
-            ...d.planId, // flatten plan data
-            ...d, // keep original JioBPStatus fields
+            ...d.planId,
+            ...d,
           }))
           .filter((d) =>
             currentUser.role === "admin"
               ? true
-              : (d.engineer || "").toLowerCase().trim() === currentUser.username
+              : (d.engineer || "").toLowerCase().trim() ===
+                (currentUser.username || "").toLowerCase().trim()
           );
 
         renderTable(jioData);
