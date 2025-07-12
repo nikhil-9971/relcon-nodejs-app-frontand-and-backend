@@ -60,7 +60,7 @@ app.use("/", statusRoutes);
 app.use("/", atgstatusRoutes);
 app.use("/audit", auditRoutes);
 app.use(taskRoutes);
-app.use("/", jioBPStatusRoutes);
+app.use("/jioBP", jioBPStatusRoutes);
 
 // ✅ Redirect *.html to clean path
 app.use((req, res, next) => {
