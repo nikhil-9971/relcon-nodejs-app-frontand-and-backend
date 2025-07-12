@@ -999,7 +999,7 @@
         <input type="hidden" id="jioBPPlanId" />
         <form id="jioBPForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="font-semibold">HPSD ID</label>
+            <label class="font-semibold">HPSM ID</label>
             <input
               type="text"
               id="hpsdId"
@@ -2078,7 +2078,7 @@
 
           if (isJioBP) {
             const resStatus = await fetch(
-              `${baseUrl}/getJioBPStatusByPlan/${planId}`,
+              `${baseUrl}/jioBP/getJioBPStatusByPlan/${planId}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
@@ -2461,7 +2461,7 @@
 
         const token = localStorage.getItem("token");
         try {
-          const res = await fetch(`${baseUrl}/saveJioBPStatus`, {
+          const res = await fetch(`${baseUrl}/jioBP/saveJioBPStatus`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
