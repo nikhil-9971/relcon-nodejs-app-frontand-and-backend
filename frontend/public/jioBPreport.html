@@ -202,7 +202,14 @@
         currentUser = { username: engineerKey, role }; // ✅ Fix: Store current user
 
         jioData = data
-          .map((d) => ({ ...d.planId, ...d, jioBPStatusId: d._id }))
+          .map((d) => ({
+            ...d.planId,
+            ...d,
+            jioBPStatusId: d._id,
+            engineer: (d.engineer || d.planId?.engineer || "")
+              .toLowerCase()
+              .trim(),
+          }))
           .filter((d) =>
             role === "admin"
               ? true
