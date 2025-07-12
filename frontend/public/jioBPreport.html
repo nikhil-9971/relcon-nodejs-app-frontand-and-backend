@@ -194,6 +194,7 @@
 
         // ✅ decode current user like in atgRecords
         const { username: engineerKey, role } = getUserFromToken(token);
+        currentUser = { username: engineerKey, role }; // ✅ Fix: Store current user
 
         jioData = data
           .map((d) => ({ ...d.planId, ...d }))
