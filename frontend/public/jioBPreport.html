@@ -197,20 +197,17 @@
         });
         const data = await res.json();
 
-        // ✅ decode current user like in atgRecords
-        const { username: engineerKey, role } = getUserFromToken(token);
-        currentUser = { username: engineerKey, role }; // ✅ Fix: Store current user
+        const { username, role } = getUserFromToken(token);
+        currentUser = { username, role };
 
         jioData = data
           .map((d) => ({
             ...d.planId,
             ...d,
             jioBPStatusId: d._id,
-            engineer: (d.engineer || d.planId?.engineer || "").trim(),
+            createdBy: (d.createdBy || "").trim().toLowerCase(),
           }))
-          .filter((d) =>
-            role === "admin" ? true : (d.engineer || "").trim() === engineerKey
-          );
+          .filter((d) => (role === "admin" ? true : d.createdBy === username));
 
         renderTable(jioData);
       }
