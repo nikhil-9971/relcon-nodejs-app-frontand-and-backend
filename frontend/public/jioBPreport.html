@@ -470,7 +470,7 @@
         );
         if (!confirmed) return;
 
-        const res = await fetch(`${baseUrl}/verifyStatus/${id}`, {
+        const res = await fetch(`${baseUrl}/jioBP/verifyStatus/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
