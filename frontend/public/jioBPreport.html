@@ -202,7 +202,7 @@
         currentUser = { username: engineerKey, role }; // ✅ Fix: Store current user
 
         jioData = data
-          .map((d) => ({ ...d.planId, ...d }))
+          .map((d) => ({ ...d.planId, ...d, jioBPStatusId: d._id }))
           .filter((d) =>
             role === "admin"
               ? true
@@ -265,7 +265,7 @@
                       return `<td class="border text-center px-2 py-1">
         <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
         <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteRecord("${record._id}")'>🗑️</button>
-        <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>
+        <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record.jioBPStatusId}")'>✅ Verify</button>
       </td>`;
                     }
                   } else {
