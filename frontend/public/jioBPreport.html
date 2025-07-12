@@ -206,9 +206,7 @@
             ...d.planId,
             ...d,
             jioBPStatusId: d._id,
-            engineer: (d.engineer || d.planId?.engineer || "")
-              .toLowerCase()
-              .trim(),
+            engineer: (d.engineer || d.planId?.engineer || "").trim(),
           }))
           .filter((d) =>
             role === "admin"
