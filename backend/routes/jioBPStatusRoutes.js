@@ -174,6 +174,8 @@ router.delete("/deleteJioBPStatus/:id", authMiddleware, async (req, res) => {
 router.put("/verifyStatus/:id", authMiddleware, async (req, res) => {
   try {
     const user = req.user;
+    console.log("🔍 VERIFY API: Requesting user", user);
+
     if (user.username !== "nikhil.trivedi" || user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
