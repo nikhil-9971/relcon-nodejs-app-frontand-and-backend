@@ -252,38 +252,42 @@
             );
             const isVerified =
               record.isVerified === true || record.isVerified === "true";
+
             const row = columns
               .map((col) => {
                 if (col.key === "actions") {
+                  // ✅ For admin Nikhil
                   if (currentUser.username === "nikhil.trivedi") {
                     if (isVerified) {
                       return `<td class="border text-center px-2 py-1">
-        <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-        <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record._id}")'>🗑️</button>
-      </td>`;
+                  <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                  <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record.jioBPStatusId}")'>🗑️</button>
+                </td>`;
                     } else {
                       return `<td class="border text-center px-2 py-1">
-        <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-        <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteRecord("${record._id}")'>🗑️</button>
-        <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record.jioBPStatusId}")'>✅ Verify</button>
-      </td>`;
+                  <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                  <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteRecord("${record.jioBPStatusId}")'>🗑️</button>
+                  <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record.jioBPStatusId}")'>✅ Verify</button>
+                </td>`;
                     }
                   } else {
+                    // ✅ Other users
                     return isVerified
                       ? `<td class="border text-center px-2 py-1 text-green-700 font-semibold">🟢 Verified</td>`
                       : `<td class="border text-center px-2 py-1 text-gray-400 italic">Not allowed</td>`;
                   }
                 }
 
+                // ✅ RO Code me verified badge
                 let value = record[col.key] || "";
                 if (col.key === "roCode" && isVerified) {
-                  value +=
-                    " <span class='text-green-600 font-semibold'>🟢 Verified</span>";
+                  value += ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`;
                 }
 
                 return `<td class='border text-center px-2 py-1'>${value}</td>`;
               })
               .join("");
+
             return `<tr>${row}</tr>`;
           })
           .join("");
