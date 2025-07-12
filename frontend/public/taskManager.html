@@ -124,7 +124,7 @@
 
             let emailContent = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${task.date} at ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
             if (task.earthingStatus && task.earthingStatus !== "OK") {
-              emailContent += `➡️ Earthing Status → ${task.earthingStatus}`;
+              emailContent += `⚡Earthing Status → ${task.earthingStatus}`;
               if (task.voltageReading)
                 emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
               emailContent += "\n";
@@ -134,7 +134,7 @@
               task.duOffline !== "ALL OK" &&
               (task.duDependency === "HPCL" || task.duDependency === "BOTH")
             ) {
-              emailContent += `➡️ DU Offline → ${task.duOffline}`;
+              emailContent += `⛽ DU Offline → ${task.duOffline}`;
               if (task.duRemark)
                 emailContent += ` (Offline DU remark: ${task.duRemark})`;
               emailContent += "\n";
@@ -145,7 +145,7 @@
               task.tankOffline !== "ALL OK" &&
               (task.tankDependency === "HPCL" || task.tankDependency === "BOTH")
             ) {
-              emailContent += `➡️ Tank Offline → ${task.tankOffline}`;
+              emailContent += `🛢️Tank Offline → ${task.tankOffline}`;
               if (task.tankRemark)
                 emailContent += ` (Offline Tank remark: ${task.tankRemark})`;
               emailContent += "\n";
