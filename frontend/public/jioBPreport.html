@@ -205,9 +205,11 @@
             ...d.planId,
             ...d,
             jioBPStatusId: d._id,
-            createdBy: (d.createdBy || "").trim().toLowerCase(),
+            engineer: d.engineer || d.planId?.engineer || "",
           }))
-          .filter((d) => (role === "admin" ? true : d.createdBy === username));
+          .filter((d) =>
+            role === "admin" ? true : (d.engineer || "").trim() === username
+          );
 
         renderTable(jioData);
       }
