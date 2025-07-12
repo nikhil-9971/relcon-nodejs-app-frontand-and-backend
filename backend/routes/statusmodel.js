@@ -30,7 +30,7 @@ function generateEmailContent({
   let observations = [];
 
   if (earthingStatus === "NOT OK") {
-    observations.push(`➡️ Earthing is NOT OK (${voltageReading || "N/A"}V)`);
+    observations.push(`⚡Earthing is NOT OK (${voltageReading || "N/A"})`);
   }
 
   if (
@@ -38,7 +38,7 @@ function generateEmailContent({
     duOffline !== "ALL OK" &&
     (duDependency === "HPCL" || duDependency === "BOTH")
   ) {
-    let duLine = `➡️ DU Offline Count: ${duOffline}`;
+    let duLine = `⛽ DU Offline Count: ${duOffline}`;
     if (duRemark) {
       duLine += `\n   🔹 Remark: ${duRemark}`;
     }
@@ -50,7 +50,7 @@ function generateEmailContent({
     tankOffline !== "ALL OK" &&
     (tankDependency === "HPCL" || tankDependency === "BOTH")
   ) {
-    let tankLine = `➡️ Tank Offline Count: ${tankOffline}`;
+    let tankLine = `🛢️ Tank Offline Count: ${tankOffline}`;
     if (tankRemark) {
       tankLine += `\n   🔹 Remark: ${tankRemark}`;
     }
