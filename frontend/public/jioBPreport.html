@@ -209,9 +209,7 @@
             engineer: (d.engineer || d.planId?.engineer || "").trim(),
           }))
           .filter((d) =>
-            role === "admin"
-              ? true
-              : (d.engineer || "").toLowerCase().trim() === engineerKey
+            role === "admin" ? true : (d.engineer || "").trim() === engineerKey
           );
 
         renderTable(jioData);
