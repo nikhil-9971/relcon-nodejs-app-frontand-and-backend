@@ -197,22 +197,19 @@
         });
         const data = await res.json();
 
-        // ✅ Extract current user from token
+        // ✅ decode current user like in atgRecords
         const { username: engineerKey, role } = getUserFromToken(token);
-        currentUser = { username: engineerKey, role };
+        currentUser = { username: engineerKey, role }; // ✅ Fix: Store current user
 
-        // ✅ Normalize engineer field for reliable filtering
         jioData = data
           .map((d) => ({
             ...d.planId,
             ...d,
             jioBPStatusId: d._id,
-            engineer: (d.engineer || d.planId?.engineer || "")
-              .toLowerCase()
-              .trim(),
+            engineer: (d.engineer || d.planId?.engineer || "").trim(),
           }))
           .filter((d) =>
-            role === "admin" ? true : d.engineer === engineerKey
+            role === "admin" ? true : (d.engineer || "").trim() === engineerKey
           );
 
         renderTable(jioData);
