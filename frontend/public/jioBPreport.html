@@ -303,7 +303,13 @@
                   }
 
                   if (col.key === "date") {
-                    return `<td class='border text-center px-2 py-1' data-date="${value}">${value}</td>`;
+                    // Convert to yyyy-mm-dd if possible
+                    let parsedDate = new Date(value);
+                    const isValidDate = !isNaN(parsedDate);
+                    const iso = isValidDate
+                      ? parsedDate.toISOString().slice(0, 10)
+                      : "";
+                    return `<td class='border text-center px-2 py-1' data-date="${iso}">${value}</td>`;
                   }
                 })
                 .join("");
@@ -335,19 +341,24 @@
       function applyDateRangeFilter() {
         showLoader();
         setTimeout(() => {
-          const fromDate = document.getElementById("fromDate").value;
-          const toDate = document.getElementById("toDate").value;
+          const fromDate = new Date(document.getElementById("fromDate").value);
+          const toDate = new Date(document.getElementById("toDate").value);
           const rows = document.querySelectorAll("#statusTable tbody tr");
 
           rows.forEach((row) => {
             const dateCell = row.querySelector("td[data-date]");
             if (!dateCell) return;
-            const rowDate = dateCell.getAttribute("data-date");
-            row.style.display =
-              (!fromDate || rowDate >= fromDate) &&
-              (!toDate || rowDate <= toDate)
-                ? ""
-                : "none";
+
+            const rowDateStr = dateCell.getAttribute("data-date");
+            if (!rowDateStr) return;
+
+            const rowDate = new Date(rowDateStr);
+
+            const isInRange =
+              (!isNaN(fromDate) ? rowDate >= fromDate : true) &&
+              (!isNaN(toDate) ? rowDate <= toDate : true);
+
+            row.style.display = isInRange ? "" : "none";
           });
 
           hideLoader();
