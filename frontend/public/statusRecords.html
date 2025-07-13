@@ -704,13 +704,16 @@ if (!("isVerified" in updated)) {
     const user = JSON.parse(localStorage.getItem("user")) || {};
 
     // ✅ Task toast
-    if (
-      user.username === "anurag.mishra" &&
-      user.role === "admin" &&
-      responseText.includes("successfully")
-    ) {
-      showToast("📌 Task created after verification");
-    }
+   if (
+  user.username === "anurag.mishra" &&
+  user.role === "admin" &&
+  responseText.includes("task generated")
+) {
+  showToast("📌 Task created after verification");
+} else {
+  showToast("Record marked as Verified ✅");
+}
+
 
     // ✅ Update data locally
     const updatedIndex = allStatusData.findIndex((r) => r._id === id);
