@@ -183,7 +183,7 @@
           };
         } catch (e) {
           console.error("Invalid token format", e);
-          return { username: "", role: "" };
+          return { username: "", engineerName: "", role: "" };
         }
       }
 
@@ -193,7 +193,7 @@
         });
         const data = await res.json();
 
-        const { username, role } = getUserFromToken(token);
+        const { username, engineerName, role } = getUserFromToken(token);
         currentUser = { username, role };
         console.log("🔍 Logged in as:", username, "| Role:", role);
 
