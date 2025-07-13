@@ -579,7 +579,10 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
   
 
 if (key === "actions") return;
-if (!allowSystemFields && (key === "taskGenerated" || key === "isVerified")) return;
+
+// Ensure isVerified always shows up for editing when needed
+if ((key === "isVerified" || key === "taskGenerated") && !allowSystemFields) return;
+
 
 
           // Make planId field readonly
@@ -623,7 +626,7 @@ if (!allowSystemFields && (key === "taskGenerated" || key === "isVerified")) ret
         // Preserve isVerified if present (checkbox may not exist)
 if (!("isVerified" in updated)) {
   const record = allStatusData.find((r) => r._id === updated._id);
-  updated.isVerified = record?.isVerified || false;
+  updated.isVerified = record?.isVerified || true;
 }
 
         const updateId = updated._id;
