@@ -468,8 +468,9 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
     }
 
     res.send(
-      "Status verified successfully" +
-        (taskCreated ? " and task generated" : "")
+      taskCreated
+        ? "Status verified successfully and task generated"
+        : "Status verified successfully"
     );
   } catch (err) {
     console.error("Verify error:", err);
