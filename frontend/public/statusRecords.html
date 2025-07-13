@@ -568,7 +568,9 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
             return;
           }
 
-          if (key === "actions") return;
+         // if (key === "actions") return;
+         if (key === "actions" || key === "taskGenerated" || key === "isVerified") return;
+
 
           // Make planId field readonly
           const isReadonly = key === "planId" ? "readonly" : "";
