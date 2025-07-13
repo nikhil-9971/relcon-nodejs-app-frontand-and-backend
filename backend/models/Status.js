@@ -39,6 +39,7 @@ const StatusSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  taskGenerated: { type: Boolean, default: false },
 });
 
 module.exports =
