@@ -299,7 +299,11 @@
 
                   let value = record[col.key] || "";
                   if (col.key === "roCode" && isVerified) {
-                    value += ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`;
+                    //value += ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`;
+                    value +=
+                      currentUser.username === "nikhil.trivedi"
+                        ? ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`
+                        : "";
                   }
 
                   if (col.key === "date") {
@@ -373,15 +377,42 @@
       }
 
       function exportToExcel() {
-        const ws = XLSX.utils.table_to_sheet(
-          document.getElementById("statusTable")
-        );
+        const table = document.getElementById("statusTable");
+
+        // Clone table and clean HTML
+        const clone = table.cloneNode(true);
+        clone.querySelectorAll("td").forEach((td) => {
+          td.innerHTML = td.innerText; // strip badges, icons
+        });
+
+        // Remove hidden rows (filtered by date or search)
+        const rows = clone.querySelectorAll("tbody tr");
+        rows.forEach((row) => {
+          if (row.style.display === "none") {
+            row.remove();
+          }
+        });
+
+        // Build dynamic filename with optional date filter info
+        const today = new Date().toISOString().slice(0, 10);
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+
+        let filename = "JioBP_Report";
+        if (fromDate && toDate) {
+          filename += `_${fromDate}_to_${toDate}`;
+        } else if (fromDate) {
+          filename += `_from_${fromDate}`;
+        } else if (toDate) {
+          filename += `_upto_${toDate}`;
+        } else {
+          filename += `_${today}`;
+        }
+
+        const ws = XLSX.utils.table_to_sheet(clone);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "JioBP Status");
-        XLSX.writeFile(
-          wb,
-          `JioBP_Report_${new Date().toISOString().slice(0, 10)}.xlsx`
-        );
+        XLSX.writeFile(wb, `${filename}.xlsx`);
       }
 
       function handleEditClick(encoded) {
