@@ -302,7 +302,9 @@
                     value += ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`;
                   }
 
-                  return `<td class='border text-center px-2 py-1'>${value}</td>`;
+                  if (col.key === "date") {
+                    return `<td class='border text-center px-2 py-1' data-date="${value}">${value}</td>`;
+                  }
                 })
                 .join("");
 
