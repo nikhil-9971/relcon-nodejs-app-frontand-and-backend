@@ -350,11 +350,16 @@
         const form = document.getElementById("editForm");
         form.innerHTML = "";
 
+        // ✅ Inject jioBPStatusId as _id
+        form.innerHTML += `<input type="hidden" name="_id" value="${record.jioBPStatusId}" />`;
+
         for (const [key, value] of Object.entries(record)) {
-          if (key === "jioBPStatusId") {
-            form.innerHTML += `<input type="hidden" name="_id" value="${value}" />`;
+          if (
+            ["__v", "createdAt", "updatedAt", "_id", "jioBPStatusId"].includes(
+              key
+            )
+          )
             continue;
-          }
 
           // ✅ Convert planId object to string
           let safeValue =
@@ -363,10 +368,10 @@
               : value || "";
 
           // ✅ Skip Mongo internal fields
-          if (["__v", "createdAt", "updatedAt"].includes(key)) continue;
 
           form.innerHTML += `
-      <div>
+ 
+        <div>
         <label class="block text-gray-700 font-medium mb-1">${key}</label>
         <input type="text" name="${key}" value="${safeValue}" class="w-full border px-2 py-1 rounded" />
       </div>`;
