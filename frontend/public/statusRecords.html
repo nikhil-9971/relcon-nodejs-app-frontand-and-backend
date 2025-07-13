@@ -562,6 +562,11 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
         const form = document.getElementById("editForm");
         form.innerHTML = "";
 
+            const user = JSON.parse(localStorage.getItem("user")) || {};
+          const username = user.username;
+         const role = user.role;
+         const allowSystemFields = role === "admin" && username === "nikhil.trivedi";
+
         Object.entries(record).forEach(([key, value]) => {
           if (key === "_id") {
             form.innerHTML += `<input type="hidden" name="${key}" value="${value}" />`;
@@ -569,7 +574,12 @@ return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
           }
 
          // if (key === "actions") return;
-         if (key === "actions" || key === "taskGenerated" || key === "isVerified") return;
+        // if (key === "actions" || key === "taskGenerated" || key === "isVerified") return;
+
+  
+
+if (key === "actions") return;
+if (!allowSystemFields && (key === "taskGenerated" || key === "isVerified")) return;
 
 
           // Make planId field readonly
