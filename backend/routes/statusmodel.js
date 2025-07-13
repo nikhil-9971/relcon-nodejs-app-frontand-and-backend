@@ -266,7 +266,51 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
         .send("Verified records can only be updated by Nikhil.");
     }
 
-    const updated = await Status.findByIdAndUpdate(id, req.body, {
+    const allowedFields = [
+      "probeMake",
+      "probeSize",
+      "lowProductLock",
+      "highWaterSet",
+      "duSerialNumber",
+      "dgStatus",
+      "connectivityType",
+      "sim1Provider",
+      "sim1Number",
+      "sim2Provider",
+      "sim2Number",
+      "iemiNumber",
+      "bosVersion",
+      "fccVersion",
+      "wirelessSlave",
+      "sftpConfig",
+      "adminPassword",
+      "workCompletion",
+      "spareUsed",
+      "activeSpare",
+      "faultySpare",
+      "spareRequirment",
+      "spareRequirmentname",
+      "earthingStatus",
+      "voltageReading",
+      "duOffline",
+      "duDependency",
+      "duRemark",
+      "tankOffline",
+      "tankDependency",
+      "tankRemark",
+      "locationField",
+      "isVerified",
+      "taskGenerated",
+    ];
+
+    const updates = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    const updated = await Status.findByIdAndUpdate(id, updates, {
       new: true,
     }).populate("planId");
 
