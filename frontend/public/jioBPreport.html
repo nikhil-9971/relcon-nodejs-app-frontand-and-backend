@@ -379,21 +379,33 @@
       function exportToExcel() {
         const table = document.getElementById("statusTable");
 
-        // Clone table and clean HTML
+        // Clone and clean the table
         const clone = table.cloneNode(true);
-        clone.querySelectorAll("td").forEach((td) => {
-          td.innerHTML = td.innerText; // strip badges, icons
-        });
-
-        // Remove hidden rows (filtered by date or search)
         const rows = clone.querySelectorAll("tbody tr");
+
         rows.forEach((row) => {
           if (row.style.display === "none") {
-            row.remove();
+            row.remove(); // remove hidden rows (date/search filtered)
+            return;
           }
+
+          const cells = row.querySelectorAll("td");
+
+          // Assuming RO Code is in 3rd column (index 2) — adjust if needed
+          const roCodeCell = cells[2];
+          if (roCodeCell && roCodeCell.innerText.includes("🟢 Verified")) {
+            roCodeCell.innerText = roCodeCell.innerText
+              .replace("🟢 Verified", "")
+              .trim();
+          }
+
+          // Optional: remove any other emojis or formatting from cells
+          cells.forEach((td) => {
+            td.innerHTML = td.innerText;
+          });
         });
 
-        // Build dynamic filename with optional date filter info
+        // Build dynamic filename
         const today = new Date().toISOString().slice(0, 10);
         const fromDate = document.getElementById("fromDate").value;
         const toDate = document.getElementById("toDate").value;
@@ -412,6 +424,7 @@
         const ws = XLSX.utils.table_to_sheet(clone);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "JioBP Status");
+
         XLSX.writeFile(wb, `${filename}.xlsx`);
       }
 
