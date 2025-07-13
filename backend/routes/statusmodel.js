@@ -348,6 +348,7 @@ router.delete("/deleteStatus/:id", verifyToken, async (req, res) => {
 });
 
 // ✅ VERIFY a status by ID
+// ✅ VERIFY a status by ID
 router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -397,6 +398,8 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
       tankRemark,
       tankDependency,
     } = updated;
+
+    let taskCreated = false;
 
     if (
       (earthingStatus === "NOT OK" ||
@@ -458,9 +461,16 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
       });
 
       await task.save();
+      taskCreated = true;
+
+      // ✅ Save taskGenerated: true in Status
+      await Status.findByIdAndUpdate(updated._id, { taskGenerated: true });
     }
 
-    res.send("Status verified successfully");
+    res.send(
+      "Status verified successfully" +
+        (taskCreated ? " and task generated" : "")
+    );
   } catch (err) {
     console.error("Verify error:", err);
     res.status(500).send("Verify error: " + err.message);
