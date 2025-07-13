@@ -161,16 +161,16 @@
     ></div>
 
     <!-- Loader Spinner -->
-    <!-- <div
+    <div
       id="loader"
       class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden"
     >
       <div
         class="w-12 h-12 border-4 border-white border-t-blue-600 rounded-full animate-spin"
       ></div>
-    </div> -->
+    </div>
 
-    <div
+    <!-- <div
       id="loader"
       class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-[9999]"
       style="display: none"
@@ -181,7 +181,7 @@
         ></div>
         <p class="text-sm text-gray-700 font-semibold">Loading data...</p>
       </div>
-    </div>
+    </div> -->
 
     <script>
       // jioBPreport.js
@@ -227,7 +227,7 @@
 
         const { username, engineerName, role } = getUserFromToken(token);
         currentUser = { username, role };
-        console.log("🔍 Logged in as:", username, "| Role:", role);
+        //console.log("🔍 Logged in as:", username, "| Role:", role);
 
         jioData = data
           .map((d) => ({
