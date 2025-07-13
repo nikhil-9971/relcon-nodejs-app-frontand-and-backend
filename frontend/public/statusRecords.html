@@ -615,13 +615,18 @@ if ((key === "isVerified" || key === "taskGenerated") && !allowSystemFields) ret
         const form = document.getElementById("editForm");
         const formData = new FormData(form);
         const updated = {};
+       
         formData.forEach((val, key) => {
   if (key === "isVerified") {
+    updated[key] = val === "true" || val === true;
+  } else if (key === "taskGenerated") {
+    // Prevent "" from being sent
     updated[key] = val === "true" || val === true;
   } else {
     updated[key] = val;
   }
 });
+
 
         // Preserve isVerified if present (checkbox may not exist)
 if (!("isVerified" in updated)) {
