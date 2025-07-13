@@ -199,13 +199,13 @@
 
         const { username, role } = getUserFromToken(token);
         currentUser = { username, role };
+        console.log("🔍 Logged in as:", username, "| Role:", role);
 
         jioData = data
           .map((d) => ({
-            ...d.planId,
             ...d,
+            ...d.planId,
             jioBPStatusId: d._id,
-            engineer: d.engineer || d.planId?.engineer || "",
           }))
           .filter((d) =>
             role === "admin" ? true : (d.engineer || "").trim() === username
