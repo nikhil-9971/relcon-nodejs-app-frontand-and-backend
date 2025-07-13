@@ -160,6 +160,16 @@
       class="fixed top-5 right-5 hidden bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm"
     ></div>
 
+    <!-- Loader Spinner -->
+    <div
+      id="loader"
+      class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="w-12 h-12 border-4 border-white border-t-blue-600 rounded-full animate-spin"
+      ></div>
+    </div>
+
     <script>
       // jioBPreport.js
 
@@ -187,7 +197,16 @@
         }
       }
 
+      function showLoader() {
+        document.getElementById("loader").classList.remove("hidden");
+      }
+
+      function hideLoader() {
+        document.getElementById("loader").classList.add("hidden");
+      }
+
       async function fetchData() {
+        showLoader(); // ✅ show spinner
         const res = await fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -208,114 +227,129 @@
           );
 
         renderTable(jioData);
+        hideLoader(); // ✅ hide after render
       }
 
       function renderTable(data) {
-        const columns = [
-          { key: "engineer", label: "Engineer" },
-          { key: "region", label: "Region" },
-          { key: "roCode", label: "RO Code" },
-          { key: "roName", label: "RO Name" },
-          { key: "purpose", label: "Purpose of Visit" },
-          { key: "date", label: "Date" },
-          { key: "hpsdId", label: "HPSM ID" },
-          { key: "diagnosis", label: "Diagnosis" },
-          { key: "solution", label: "Solution" },
-          { key: "activeMaterialUsed", label: "Active Material Used" },
-          { key: "usedMaterialDetails", label: "Used Material Name & Code" },
-          {
-            key: "faultyMaterialDetails",
-            label: "Faulty Material Name & Code",
-          },
-          { key: "spareRequired", label: "Spare Requirement" },
-          { key: "observationHours", label: "Observation (in Hours)" },
-          { key: "materialRequirement", label: "Material Requirement Name" },
-          { key: "relconsupport", label: "Support Taken from RELCON Person" },
-          { key: "rbmlperson", label: "Inform to RBML Person" },
-          { key: "status", label: "Status" },
-          { key: "actions", label: "Actions" },
-        ];
+        showLoader(); // ✅ show spinner
 
-        document.getElementById("tableHeader").innerHTML = columns
-          .map(
-            (col) =>
-              `<th class='border px-3 py-2 bg-blue-400 text-center font-semibold text-white'>${col.label}</th>`
-          )
-          .join("");
+        setTimeout(() => {
+          const columns = [
+            { key: "engineer", label: "Engineer" },
+            { key: "region", label: "Region" },
+            { key: "roCode", label: "RO Code" },
+            { key: "roName", label: "RO Name" },
+            { key: "purpose", label: "Purpose of Visit" },
+            { key: "date", label: "Date" },
+            { key: "hpsdId", label: "HPSM ID" },
+            { key: "diagnosis", label: "Diagnosis" },
+            { key: "solution", label: "Solution" },
+            { key: "activeMaterialUsed", label: "Active Material Used" },
+            { key: "usedMaterialDetails", label: "Used Material Name & Code" },
+            {
+              key: "faultyMaterialDetails",
+              label: "Faulty Material Name & Code",
+            },
+            { key: "spareRequired", label: "Spare Requirement" },
+            { key: "observationHours", label: "Observation (in Hours)" },
+            { key: "materialRequirement", label: "Material Requirement Name" },
+            { key: "relconsupport", label: "Support Taken from RELCON Person" },
+            { key: "rbmlperson", label: "Inform to RBML Person" },
+            { key: "status", label: "Status" },
+            { key: "actions", label: "Actions" },
+          ];
 
-        document.getElementById("tableBody").innerHTML = data
-          .map((record) => {
-            const encoded = btoa(
-              unescape(encodeURIComponent(JSON.stringify(record)))
-            );
-            const isVerified =
-              record.isVerified === true || record.isVerified === "true";
+          document.getElementById("tableHeader").innerHTML = columns
+            .map(
+              (col) =>
+                `<th class='border px-3 py-2 bg-blue-400 text-center font-semibold text-white'>${col.label}</th>`
+            )
+            .join("");
 
-            const row = columns
-              .map((col) => {
-                if (col.key === "actions") {
-                  // ✅ For admin Nikhil
-                  if (currentUser.username === "nikhil.trivedi") {
-                    if (isVerified) {
-                      return `<td class="border text-center px-2 py-1">
-                  <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-                  <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record.jioBPStatusId}")'>🗑️</button>
-                </td>`;
+          document.getElementById("tableBody").innerHTML = data
+            .map((record) => {
+              const encoded = btoa(
+                unescape(encodeURIComponent(JSON.stringify(record)))
+              );
+              const isVerified =
+                record.isVerified === true || record.isVerified === "true";
+
+              const row = columns
+                .map((col) => {
+                  if (col.key === "actions") {
+                    if (currentUser.username === "nikhil.trivedi") {
+                      if (isVerified) {
+                        return `<td class="border text-center px-2 py-1">
+                    <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                    <button class="bg-red-600 text-white px-2 py-1 rounded" onclick='deleteRecord("${record.jioBPStatusId}")'>🗑️</button>
+                  </td>`;
+                      } else {
+                        return `<td class="border text-center px-2 py-1">
+                    <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                    <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteRecord("${record.jioBPStatusId}")'>🗑️</button>
+                    <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record.jioBPStatusId}")'>✅ Verify</button>
+                  </td>`;
+                      }
                     } else {
-                      return `<td class="border text-center px-2 py-1">
-                  <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-                  <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteRecord("${record.jioBPStatusId}")'>🗑️</button>
-                  <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record.jioBPStatusId}")'>✅ Verify</button>
-                </td>`;
+                      return isVerified
+                        ? `<td class="border text-center px-2 py-1 text-green-700 font-semibold">🟢 Verified</td>`
+                        : `<td class="border text-center px-2 py-1 text-gray-400 italic">Not allowed</td>`;
                     }
-                  } else {
-                    // ✅ Other users
-                    return isVerified
-                      ? `<td class="border text-center px-2 py-1 text-green-700 font-semibold">🟢 Verified</td>`
-                      : `<td class="border text-center px-2 py-1 text-gray-400 italic">Not allowed</td>`;
                   }
-                }
 
-                // ✅ RO Code me verified badge
-                let value = record[col.key] || "";
-                if (col.key === "roCode" && isVerified) {
-                  value += ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`;
-                }
+                  let value = record[col.key] || "";
+                  if (col.key === "roCode" && isVerified) {
+                    value += ` <span class='text-green-600 font-semibold'>🟢 Verified</span>`;
+                  }
 
-                return `<td class='border text-center px-2 py-1'>${value}</td>`;
-              })
-              .join("");
+                  return `<td class='border text-center px-2 py-1'>${value}</td>`;
+                })
+                .join("");
 
-            return `<tr>${row}</tr>`;
-          })
-          .join("");
+              return `<tr>${row}</tr>`;
+            })
+            .join("");
+
+          hideLoader(); // ✅ hide loader after render completes
+        }, 100); // short delay to show spinner
       }
 
       function applySearch() {
-        const searchValue = document
-          .getElementById("searchInput")
-          .value.toLowerCase()
-          .trim();
-        const rows = document.querySelectorAll("#statusTable tbody tr");
-        rows.forEach((row) => {
-          const rowText = row.textContent.toLowerCase();
-          row.style.display = rowText.includes(searchValue) ? "" : "none";
-        });
+        showLoader();
+        setTimeout(() => {
+          const searchValue = document
+            .getElementById("searchInput")
+            .value.toLowerCase()
+            .trim();
+          const rows = document.querySelectorAll("#statusTable tbody tr");
+          rows.forEach((row) => {
+            const rowText = row.textContent.toLowerCase();
+            row.style.display = rowText.includes(searchValue) ? "" : "none";
+          });
+          hideLoader();
+        }, 100); // short delay to show spinner
       }
 
       function applyDateRangeFilter() {
-        const fromDate = document.getElementById("fromDate").value;
-        const toDate = document.getElementById("toDate").value;
-        const rows = document.querySelectorAll("#statusTable tbody tr");
-        rows.forEach((row) => {
-          const dateCell = row.querySelector("td[data-date]");
-          if (!dateCell) return;
-          const rowDate = dateCell.getAttribute("data-date");
-          row.style.display =
-            (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate)
-              ? ""
-              : "none";
-        });
+        showLoader();
+        setTimeout(() => {
+          const fromDate = document.getElementById("fromDate").value;
+          const toDate = document.getElementById("toDate").value;
+          const rows = document.querySelectorAll("#statusTable tbody tr");
+
+          rows.forEach((row) => {
+            const dateCell = row.querySelector("td[data-date]");
+            if (!dateCell) return;
+            const rowDate = dateCell.getAttribute("data-date");
+            row.style.display =
+              (!fromDate || rowDate >= fromDate) &&
+              (!toDate || rowDate <= toDate)
+                ? ""
+                : "none";
+          });
+
+          hideLoader();
+        }, 100);
       }
 
       function clearDateRangeFilter() {
