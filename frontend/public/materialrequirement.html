@@ -2,65 +2,75 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Material Requirement Summary</title>
+    <title>Material Requirement Table View</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <style>
       body {
         font-family: "Poppins", sans-serif;
       }
+      table {
+        font-size: 11px;
+        table-layout: auto;
+      }
+      th,
+      td {
+        white-space: nowrap;
+        padding: 6px 10px;
+        text-align: center;
+      }
     </style>
   </head>
-  <body class="bg-gray-50 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <h1 class="text-3xl font-bold text-green-800">
-          📦 Combined Material Requirement Summary
+  <body class="bg-gray-100 p-6">
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded shadow">
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+        <h1 class="text-2xl font-bold text-green-800">
+          📊 Material Requirement Table View
         </h1>
         <button
           onclick="exportToExcel()"
-          class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded shadow-md transition"
+          class="bg-green-600 text-white px-4 py-2 rounded shadow"
         >
           📤 Export to Excel
         </button>
       </div>
 
-      <!-- Filters -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <select
-          id="regionFilter"
-          class="border border-gray-300 rounded p-2 w-full"
-        >
-          <option value="">🌍 All Regions</option>
-        </select>
-        <select
-          id="engineerFilter"
-          class="border border-gray-300 rounded p-2 w-full"
-        >
-          <option value="">👷 All Engineers</option>
-        </select>
+      <!-- Filter Controls -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input type="date" id="fromDate" class="border rounded p-2" />
+        <input type="date" id="toDate" class="border rounded p-2" />
         <input
           type="text"
           id="searchInput"
-          placeholder="🔎 Search material, site, or engineer..."
-          class="border border-gray-300 px-3 py-2 rounded w-full"
+          placeholder="🔍 Search..."
+          class="border rounded p-2"
           oninput="applyFilters()"
         />
       </div>
 
-      <!-- Data Grid -->
-      <div
-        id="detailsSection"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-      ></div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-300 bg-white">
+          <thead class="bg-gray-200">
+            <tr>
+              <th>Engineer</th>
+              <th>Region</th>
+              <th>RO Code</th>
+              <th>RO Name</th>
+              <th>Phase</th>
+              <th>Date Of Visit</th>
+              <th>Required Material</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       const token = localStorage.getItem("token");
-      let allData = [];
-      let filtered = [];
+      let allData = [],
+        filtered = [];
 
       async function fetchData() {
         const [hpclRes, jioRes, planRes] = await Promise.all([
@@ -79,138 +89,93 @@
         const jioData = await jioRes.json();
         const planData = await planRes.json();
 
-        // ✅ Prepare plan lookup map
         const planMap = {};
         planData.forEach((p) => (planMap[p._id?.toString()] = p));
 
-        // ✅ Handle both object and string planId properly
         allData = [...hpclData, ...jioData].map((record) => {
           const planKey =
             typeof record.planId === "object" && record.planId._id
               ? record.planId._id.toString()
               : record.planId?.toString();
-
           const plan = planMap[planKey];
-
           return {
             ...record,
-            engineer: plan?.engineer || "N/A",
-            region: plan?.region || "N/A",
-            roCode: plan?.roCode || "N/A",
-            roName: plan?.roName || "N/A",
-            phase: plan?.phase || "N/A",
+            engineer: plan?.engineer || "",
+            region: plan?.region || "",
+            roCode: plan?.roCode || "",
+            roName: plan?.roName || "",
+            phase: plan?.phase || "",
+            date: plan?.date || "",
+            material:
+              record.materialRequirement || record.spareRequirmentname || "",
           };
         });
 
-        populateFilters();
         applyFilters();
       }
 
       function applyFilters() {
-        const region = document.getElementById("regionFilter").value;
-        const engineer = document.getElementById("engineerFilter").value;
         const searchText = document
           .getElementById("searchInput")
           .value.toLowerCase();
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
 
         filtered = allData.filter((item) => {
-          const isVerified =
-            item.isVerified === true || item.isVerified === "true";
+          const matchDate =
+            (!fromDate || new Date(item.date) >= new Date(fromDate)) &&
+            (!toDate || new Date(item.date) <= new Date(toDate));
+          const matchSearch = Object.values(item).some((val) =>
+            val?.toLowerCase?.().includes(searchText)
+          );
 
           const isJio =
             item.spareRequired === "Yes" && item.materialRequirement?.trim();
           const isHpcl =
             item.spareRequirment === "Yes" && item.spareRequirmentname?.trim();
+          const isVerified =
+            item.isVerified === true || item.isVerified === "true";
 
-          const materialName =
-            item.materialRequirement || item.spareRequirmentname;
-
-          const regionMatch = !region || item.region === region;
-          const engineerMatch = !engineer || item.engineer === engineer;
-          const searchMatch =
-            materialName?.toLowerCase().includes(searchText) ||
-            item.roCode?.toLowerCase().includes(searchText) ||
-            item.roName?.toLowerCase().includes(searchText) ||
-            item.engineer?.toLowerCase().includes(searchText);
-
-          return (
-            isVerified &&
-            (isJio || isHpcl) &&
-            regionMatch &&
-            engineerMatch &&
-            searchMatch
-          );
+          return matchDate && matchSearch && (isJio || isHpcl) && isVerified;
         });
 
-        renderDetails();
+        renderTable();
       }
 
-      function renderDetails() {
-        const container = document.getElementById("detailsSection");
-        container.innerHTML = "";
-        if (filtered.length === 0) {
-          container.innerHTML =
-            '<p class="text-gray-500 text-center col-span-full">No matching records found.</p>';
-          return;
-        }
-
-        filtered.forEach((item) => {
-          const div = document.createElement("div");
-          div.className =
-            "bg-white rounded-xl shadow hover:shadow-lg transition p-5 border border-green-100";
-          div.innerHTML = `
-        <h3 class="text-lg font-semibold text-green-700 mb-2">👷 ${
-          item.engineer
-        }</h3>
-        <ul class="space-y-1 text-sm text-gray-700">
-          <li><strong>📍 Region:</strong> ${item.region}</li>
-          <li><strong>🏷️ RO Code:</strong> ${item.roCode}</li>
-          <li><strong>🏠 RO Name:</strong> ${item.roName}</li>
-          <li><strong>🏗️ Phase:</strong> ${item.phase}</li>
-          <li><strong>📦 Material:</strong> <span class="font-medium text-blue-800">${
-            item.materialRequirement || item.spareRequirmentname
-          }</span></li>
-        </ul>
-      `;
-          container.appendChild(div);
-        });
-      }
-
-      function populateFilters() {
-        const regionSet = new Set();
-        const engineerSet = new Set();
-        allData.forEach((item) => {
-          if (item.region && item.region !== "N/A") regionSet.add(item.region);
-          if (item.engineer && item.engineer !== "N/A")
-            engineerSet.add(item.engineer);
-        });
-
-        const regionSelect = document.getElementById("regionFilter");
-        regionSet.forEach((r) => {
-          regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
-        });
-
-        const engineerSelect = document.getElementById("engineerFilter");
-        engineerSet.forEach((e) => {
-          engineerSelect.innerHTML += `<option value="${e}">${e}</option>`;
-        });
+      function renderTable() {
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = filtered
+          .map(
+            (row) => `
+          <tr class="border-b">
+            <td>${row.engineer}</td>
+            <td>${row.region}</td>
+            <td>${row.roCode}</td>
+            <td>${row.roName}</td>
+            <td>${row.phase}</td>
+            <td>${row.date}</td>
+            <td>${row.material}</td>
+          </tr>
+        `
+          )
+          .join("");
       }
 
       function exportToExcel() {
         if (filtered.length === 0) return alert("No data to export");
-        const rows = filtered.map((r) => ({
-          Engineer: r.engineer,
-          Region: r.region,
-          "RO Code": r.roCode,
-          "RO Name": r.roName,
-          Phase: r.phase,
-          "Required Material": r.materialRequirement || r.spareRequirmentname,
+        const rows = filtered.map((row) => ({
+          Engineer: row.engineer,
+          Region: row.region,
+          "RO Code": row.roCode,
+          "RO Name": row.roName,
+          Phase: row.phase,
+          Date: row.date,
+          "Required Material": row.material,
         }));
-
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Combined Material");
-        XLSX.writeFile(wb, `Combined_Material_Requirements.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Material Requirement");
+        XLSX.writeFile(wb, "Material_Requirement_Report.xlsx");
       }
 
       fetchData();
