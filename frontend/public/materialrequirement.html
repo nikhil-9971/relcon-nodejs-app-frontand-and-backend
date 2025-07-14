@@ -63,19 +63,37 @@
       let filtered = [];
 
       async function fetchData() {
-        const [hpclRes, jioRes] = await Promise.all([
+        const [hpclRes, jioRes, planRes] = await Promise.all([
           fetch(`${baseUrl}/getMergedStatusRecords`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch(`${baseUrl}/getDailyPlans`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         const hpclData = await hpclRes.json();
         const jioData = await jioRes.json();
+        const planData = await planRes.json();
 
-        allData = [...hpclData, ...jioData];
+        const planMap = {};
+        planData.forEach((p) => (planMap[p._id] = p));
+
+        allData = [...hpclData, ...jioData].map((record) => {
+          const plan = planMap[record.planId];
+          return {
+            ...record,
+            engineer: plan?.engineer || "",
+            region: plan?.region || "",
+            roCode: plan?.roCode || "",
+            roName: plan?.roName || "",
+            phase: plan?.phase || "",
+          };
+        });
+
         populateFilters();
         applyFilters();
       }
