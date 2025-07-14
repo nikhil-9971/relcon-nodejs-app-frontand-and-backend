@@ -80,17 +80,17 @@
         const planData = await planRes.json();
 
         const planMap = {};
-        planData.forEach((p) => (planMap[p._id] = p));
+        planData.forEach((p) => (planMap[p._id?.toString()] = p));
 
         allData = [...hpclData, ...jioData].map((record) => {
-          const plan = planMap[record.planId];
+          const plan = planMap[record.planId?.toString()];
           return {
             ...record,
-            engineer: plan?.engineer || "",
-            region: plan?.region || "",
-            roCode: plan?.roCode || "",
-            roName: plan?.roName || "",
-            phase: plan?.phase || "",
+            engineer: plan?.engineer || "N/A",
+            region: plan?.region || "N/A",
+            roCode: plan?.roCode || "N/A",
+            roName: plan?.roName || "N/A",
+            phase: plan?.phase || "N/A",
           };
         });
 
