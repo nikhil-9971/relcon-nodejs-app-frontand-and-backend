@@ -81,7 +81,8 @@
         filtered = allData.filter((item) => {
           const isVerified =
             item.isVerified === true || item.isVerified === "true";
-          const requiresSpare = item.spareRequirment === "Yes";
+          const requiresSpare =
+            item.spareRequired === "Yes" || item.spareRequirment === "Yes";
           const materialName =
             item.materialRequirement || item.spareRequirmentname;
 
