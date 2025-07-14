@@ -63,10 +63,19 @@
       let filtered = [];
 
       async function fetchData() {
-        const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        allData = await res.json();
+        const [hpclRes, jioRes] = await Promise.all([
+          fetch(`${baseUrl}/getMergedStatusRecords`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const hpclData = await hpclRes.json();
+        const jioData = await jioRes.json();
+
+        allData = [...hpclData, ...jioData];
         populateFilters();
         applyFilters();
       }
@@ -81,8 +90,12 @@
         filtered = allData.filter((item) => {
           const isVerified =
             item.isVerified === true || item.isVerified === "true";
-          const requiresSpare =
-            item.spareRequired === "Yes" || item.spareRequirment === "Yes";
+
+          const isJio =
+            item.spareRequired === "Yes" && item.materialRequirement?.trim();
+          const isHpcl =
+            item.spareRequirment === "Yes" && item.spareRequirmentname?.trim();
+
           const materialName =
             item.materialRequirement || item.spareRequirmentname;
 
@@ -96,8 +109,7 @@
 
           return (
             isVerified &&
-            requiresSpare &&
-            materialName &&
+            (isJio || isHpcl) &&
             regionMatch &&
             engineerMatch &&
             searchMatch
