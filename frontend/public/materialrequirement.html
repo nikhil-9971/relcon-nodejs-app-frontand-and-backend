@@ -79,11 +79,19 @@
         const jioData = await jioRes.json();
         const planData = await planRes.json();
 
+        // ✅ Prepare plan lookup map
         const planMap = {};
         planData.forEach((p) => (planMap[p._id?.toString()] = p));
 
+        // ✅ Handle both object and string planId properly
         allData = [...hpclData, ...jioData].map((record) => {
-          const plan = planMap[record.planId?.toString()];
+          const planKey =
+            typeof record.planId === "object" && record.planId._id
+              ? record.planId._id.toString()
+              : record.planId?.toString();
+
+          const plan = planMap[planKey];
+
           return {
             ...record,
             engineer: plan?.engineer || "N/A",
@@ -151,19 +159,19 @@
           div.className =
             "bg-white rounded-xl shadow hover:shadow-lg transition p-5 border border-green-100";
           div.innerHTML = `
-          <h3 class="text-lg font-semibold text-green-700 mb-2">👷 ${
-            item.engineer
-          }</h3>
-          <ul class="space-y-1 text-sm text-gray-700">
-            <li><strong>📍 Region:</strong> ${item.region}</li>
-            <li><strong>🏷️ RO Code:</strong> ${item.roCode}</li>
-            <li><strong>🏠 RO Name:</strong> ${item.roName}</li>
-            <li><strong>🏗️ Phase:</strong> ${item.phase}</li>
-            <li><strong>📦 Material:</strong> <span class="font-medium text-blue-800">${
-              item.materialRequirement || item.spareRequirmentname
-            }</span></li>
-          </ul>
-        `;
+        <h3 class="text-lg font-semibold text-green-700 mb-2">👷 ${
+          item.engineer
+        }</h3>
+        <ul class="space-y-1 text-sm text-gray-700">
+          <li><strong>📍 Region:</strong> ${item.region}</li>
+          <li><strong>🏷️ RO Code:</strong> ${item.roCode}</li>
+          <li><strong>🏠 RO Name:</strong> ${item.roName}</li>
+          <li><strong>🏗️ Phase:</strong> ${item.phase}</li>
+          <li><strong>📦 Material:</strong> <span class="font-medium text-blue-800">${
+            item.materialRequirement || item.spareRequirmentname
+          }</span></li>
+        </ul>
+      `;
           container.appendChild(div);
         });
       }
@@ -172,8 +180,9 @@
         const regionSet = new Set();
         const engineerSet = new Set();
         allData.forEach((item) => {
-          regionSet.add(item.region);
-          engineerSet.add(item.engineer);
+          if (item.region && item.region !== "N/A") regionSet.add(item.region);
+          if (item.engineer && item.engineer !== "N/A")
+            engineerSet.add(item.engineer);
         });
 
         const regionSelect = document.getElementById("regionFilter");
