@@ -46,6 +46,18 @@
         font-size: 11px;
         display: block;
       }
+
+      /* Stylish Top Progress Bar */
+      #progressBar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 0%;
+        background-color: #16a34a; /* green-600 */
+        z-index: 1000;
+        transition: width 0.4s ease, opacity 0.3s ease;
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
@@ -335,6 +347,8 @@
       ></div>
     </div>
 
+    <div id="progressBar"></div>
+
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
@@ -356,21 +370,22 @@
       }
 
       function loadPage(page, linkElement) {
-        showGlobalLoader(); // ⬅️ Show loader immediately
+        showGlobalLoader(); // Start progress
 
         const iframe = document.getElementById("contentFrame");
         iframe.src = page;
 
         iframe.onload = () => {
-          hideGlobalLoader(); // ⬅️ Hide only after iframe fully loads
+          hideGlobalLoader(); // Finish progress
         };
 
-        // Manage active styling
+        // Set active class
         document
           .querySelectorAll("nav a")
           .forEach((link) => link.classList.remove("active-link"));
         if (linkElement) linkElement.classList.add("active-link");
 
+        // Auto close sidebar on mobile
         if (window.innerWidth < 768) {
           document.getElementById("sidebar").classList.add("hidden");
         }
@@ -509,11 +524,21 @@
       };
 
       function showGlobalLoader() {
-        document.getElementById("globalLoader").classList.remove("hidden");
+        const bar = document.getElementById("progressBar");
+        bar.style.width = "0%";
+        bar.style.opacity = "1";
+        setTimeout(() => {
+          bar.style.width = "70%";
+        }, 100);
       }
 
       function hideGlobalLoader() {
-        document.getElementById("globalLoader").classList.add("hidden");
+        const bar = document.getElementById("progressBar");
+        bar.style.width = "100%";
+        setTimeout(() => {
+          bar.style.opacity = "0";
+          bar.style.width = "0%";
+        }, 500); // Wait for animation to finish
       }
     </script>
   </body>
