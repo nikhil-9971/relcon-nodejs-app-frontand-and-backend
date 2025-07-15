@@ -81,7 +81,7 @@
           .filter(
             (task) =>
               task.status !== "Resolved" &&
-              task.status !== "Follow-up" &&
+              // task.status !== "Follow-up" &&
               task.status !== "Done" &&
               task.status !== "Inprocess" // 👈 Add this line
           )
@@ -307,6 +307,7 @@
             status: "Inprocess",
             mailDate,
             completedBy,
+            followUp: true,
           }),
         });
 
