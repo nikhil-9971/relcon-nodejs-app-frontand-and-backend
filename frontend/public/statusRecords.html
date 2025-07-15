@@ -28,6 +28,11 @@
         z-index: 1;
       }
 
+      tbody {
+  will-change: transform;
+}
+
+
       .verified-badge {
     display: inline-block;
     background-color: #d1fae5;
@@ -149,7 +154,7 @@
       </div>
       
 
-    <div class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded">
+    <div class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded will-change-transform rounded">
   <table id="statusTable" class="min-w-max table-auto w-full text-[10px]">
     <thead class="bg-gray-200 sticky top-0 z-10">
       <tr id="tableHeader"></tr>
@@ -411,141 +416,144 @@
 }
 
 
-      function renderTable(data) {
-        showLoader();
-        setTimeout(()=>{
 
-                const user = JSON.parse(localStorage.getItem("user")) || {};
-       const username = user.username;
-        const role = user.role;
-        const columns = [
-          { key: "engineer", label: "Engineer Name" },
-          { key: "region", label: "Region" },
-          { key: "phase", label: "Phase" },
-          { key: "roCode", label: "RO Code" },
-          { key: "roName", label: "RO Name" },
-          { key: "date", label: "Date" },
-          { key: "amcQtr", label: "AMC Qtr" },
-          { key: "purpose", label: "Purpose of Visit" },
-          { key: "probeMake", label: "Probe Make" },
-          { key: "probeSize", label: "Product & Probe Size" },
-          { key: "lowProductLock", label: "Low Product Lock" },
-          { key: "highWaterSet", label: "Highwater Lock Set" },
-          { key: "duSerialNumber", label: "DU Serial Number Updated" },
-          { key: "dgStatus", label: "DG Status" },
-          { key: "connectivityType", label: "Connectivity Type" },
-          { key: "sim1Provider", label: "SIM1 Provider" },
-          { key: "sim1Number", label: "SIM1 Number" },
-          { key: "sim2Provider", label: "SIM2 Provider" },
-          { key: "sim2Number", label: "SIM2 Number" },
-          { key: "iemiNumber", label: "IEMI Number" },
-          { key: "bosVersion", label: "BOS Version" },
-          { key: "fccVersion", label: "FCC Version" },
-          { key: "wirelessSlave", label: "Wireless Slave Version" },
-          { key: "sftpConfig", label: "SFTP Config" },
-          { key: "adminPassword", label: "Admin Password Updated" },
-          { key: "workCompletion", label: "Work Completion" },
-          { key: "spareUsed", label: "Any Spare Used" },
-          { key: "activeSpare", label: "Used Spare Name" },
-          { key: "faultySpare", label: "faulty Spare Name & Code" },
-          { key: "spareRequirment", label: "Any Spare Requirment" },
-           { key: "spareRequirmentname", label: "Required Spare Name" },
-          { key: "earthingStatus", label: "Earthing Status" },
-          {key: "voltageReading", label: "Voltage Reading"},
-          { key: "duOffline", label: "DU Offline" },
-          { key: "duDependency", label: "DU Dependency" },
-          { key: "duRemark", label: "DU Remark" },
-           { key: "tankOffline", label: "Tank Offline" },
-          { key: "tankDependency", label: "Tank Dependency" },
-          { key: "tankRemark", label: "Tank Remark" },
-          { key: "locationField", label: "Location Field" },
-          { key: "actions", label: "Actions" },
-        ];
+       function renderTable(data) {
+  showLoader();
 
-        const headerRow = document.getElementById("tableHeader");
-        headerRow.innerHTML = columns
-          .map(
-            (col) =>
-              `<th class="border px-3 py-2 bg-gray-100 text-center font-semibold text-gray-700">${col.label}</th>`
-          )
-          .join("");
-
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML = data
-          .map((record) => {
-            const encoded = btoa(
-              unescape(encodeURIComponent(JSON.stringify(record)))
-            );
-            const isVerified = record.isVerified === true || record.isVerified === "true";
-            const row = columns
-              .map((col) => {
-               
-if (col.key === "actions") {
-  let actionsHTML = "";
-
-  // ✅ Allow edit/delete if not verified AND user is anurag.mishra
-  if (
-    role === "admin" &&
-    username === "anurag.mishra" &&
-    !record.isVerified
-  ) {
-    actionsHTML += `
-      <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-      <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
-      <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>
-    `;
-  }
-
-  // ✅ Allow verified record edit/delete only for nikhil.trivedi
-  if (
-    role === "admin" &&
-    username === "nikhil.trivedi" &&
-    (record.isVerified === true || record.isVerified === "true")
-  ) {
-    actionsHTML += `
-      <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
-      <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
-    `;
-  }
-
-   // ✅ Anurag sees 🔒 Verified in place of buttons if already verified
-  if (
-    role === "admin" &&
-    username === "anurag.mishra" &&
-    isVerified
-  ) {
-    actionsHTML = `<span class="locked-badge" title="Verified record - actions disabled">🔒 Verified</span>`;
-  }
-
-  return `<td class="border text-center px-2 py-1">${actionsHTML}</td>`;
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      _renderTableNow(data);
+      hideLoader(); // Hide only after table is painted
+    }, 0);
+  });
 }
 
+function _renderTableNow(data) {
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const username = user.username;
+  const role = user.role;
 
- 
+  const columns = [
+    { key: "engineer", label: "Engineer Name" },
+    { key: "region", label: "Region" },
+    { key: "phase", label: "Phase" },
+    { key: "roCode", label: "RO Code" },
+    { key: "roName", label: "RO Name" },
+    { key: "date", label: "Date" },
+    { key: "amcQtr", label: "AMC Qtr" },
+    { key: "purpose", label: "Purpose of Visit" },
+    { key: "probeMake", label: "Probe Make" },
+    { key: "probeSize", label: "Product & Probe Size" },
+    { key: "lowProductLock", label: "Low Product Lock" },
+    { key: "highWaterSet", label: "Highwater Lock Set" },
+    { key: "duSerialNumber", label: "DU Serial Number Updated" },
+    { key: "dgStatus", label: "DG Status" },
+    { key: "connectivityType", label: "Connectivity Type" },
+    { key: "sim1Provider", label: "SIM1 Provider" },
+    { key: "sim1Number", label: "SIM1 Number" },
+    { key: "sim2Provider", label: "SIM2 Provider" },
+    { key: "sim2Number", label: "SIM2 Number" },
+    { key: "iemiNumber", label: "IEMI Number" },
+    { key: "bosVersion", label: "BOS Version" },
+    { key: "fccVersion", label: "FCC Version" },
+    { key: "wirelessSlave", label: "Wireless Slave Version" },
+    { key: "sftpConfig", label: "SFTP Config" },
+    { key: "adminPassword", label: "Admin Password Updated" },
+    { key: "workCompletion", label: "Work Completion" },
+    { key: "spareUsed", label: "Any Spare Used" },
+    { key: "activeSpare", label: "Used Spare Name" },
+    { key: "faultySpare", label: "faulty Spare Name & Code" },
+    { key: "spareRequirment", label: "Any Spare Requirment" },
+    { key: "spareRequirmentname", label: "Required Spare Name" },
+    { key: "earthingStatus", label: "Earthing Status" },
+    { key: "voltageReading", label: "Voltage Reading" },
+    { key: "duOffline", label: "DU Offline" },
+    { key: "duDependency", label: "DU Dependency" },
+    { key: "duRemark", label: "DU Remark" },
+    { key: "tankOffline", label: "Tank Offline" },
+    { key: "tankDependency", label: "Tank Dependency" },
+    { key: "tankRemark", label: "Tank Remark" },
+    { key: "locationField", label: "Location Field" },
+    { key: "actions", label: "Actions" },
+  ];
 
-                let cellContent = record[col.key] || "";
+  const headerRow = document.getElementById("tableHeader");
+  headerRow.innerHTML = columns
+    .map(
+      (col) =>
+        `<th class="border px-3 py-2 bg-gray-100 text-center font-semibold text-gray-700">${col.label}</th>`
+    )
+    .join("");
 
-// ✅ Add badge for verified record (on 'roCode' column or wherever appropriate)
-if (col.key === "roCode" && (record.isVerified === true || record.isVerified === "true")) {
-  cellContent += ` <span class="verified-badge">✔ Verified</span>`;
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = data
+    .map((record) => {
+      const encoded = btoa(
+        unescape(encodeURIComponent(JSON.stringify(record)))
+      );
+      const isVerified =
+        record.isVerified === true || record.isVerified === "true";
 
-  if (record.taskGenerated) {
-    cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
-  }
+      const row = columns
+        .map((col) => {
+          if (col.key === "actions") {
+            let actionsHTML = "";
+
+            if (
+              role === "admin" &&
+              username === "anurag.mishra" &&
+              !record.isVerified
+            ) {
+              actionsHTML += `
+                <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
+                <button class="bg-green-600 text-white px-2 py-1 rounded" onclick='verifyRecord("${record._id}")'>✅ Verify</button>
+              `;
+            }
+
+            if (
+              role === "admin" &&
+              username === "nikhil.trivedi" &&
+              isVerified
+            ) {
+              actionsHTML += `
+                <button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick='handleEditClick("${encoded}")'>✏️</button>
+                <button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick='deleteStatus("${record._id}")'>🗑️</button>
+              `;
+            }
+
+            if (
+              role === "admin" &&
+              username === "anurag.mishra" &&
+              isVerified
+            ) {
+              actionsHTML = `<span class="locked-badge" title="Verified record - actions disabled">🔒 Verified</span>`;
+            }
+
+            return `<td class="border text-center px-2 py-1">${actionsHTML}</td>`;
+          }
+
+          let cellContent = record[col.key] || "";
+
+          if (
+            col.key === "roCode" &&
+            (record.isVerified === true || record.isVerified === "true")
+          ) {
+            cellContent += ` <span class="verified-badge">✔ Verified</span>`;
+            if (record.taskGenerated) {
+              cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
+            }
+          }
+
+          return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
+        })
+        .join("");
+
+      return `<tr>${row}</tr>`;
+    })
+    .join("");
 }
 
-
-return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
-
-              })
-              .join("");
-            return `<tr>${row}</tr>`;
-          })
-          .join("");
-          hideLoader();
-        },100);
-  
-      }
 
       function handleEditClick(encoded) {
         try {
