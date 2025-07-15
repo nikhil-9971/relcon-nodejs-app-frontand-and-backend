@@ -631,8 +631,9 @@ if ((key === "isVerified" || key === "taskGenerated") && !allowSystemFields) ret
         // Preserve isVerified if present (checkbox may not exist)
 if (!("isVerified" in updated)) {
   const record = allStatusData.find((r) => r._id === updated._id);
-  updated.isVerified = record?.isVerified || true;
+  updated.isVerified = typeof record?.isVerified === "boolean" ? record.isVerified : false;
 }
+
 
         const updateId = updated._id;
 
