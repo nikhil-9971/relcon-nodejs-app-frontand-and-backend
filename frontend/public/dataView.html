@@ -79,6 +79,9 @@
           transform: rotate(360deg);
         }
       }
+      tbody {
+        will-change: transform;
+      }
     </style>
   </head>
 
@@ -165,7 +168,7 @@
       <br />
 
       <div
-        class="overflow-x-auto max-h-[500px] border border-gray-300 rounded-lg"
+        class="overflow-x-auto max-h-[500px] overflow-y-auto border border-gray-300 rounded-lg will-change-transform"
       >
         <table
           id="dataTable"
