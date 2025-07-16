@@ -25,6 +25,14 @@
         background-color: #f3f4f6;
         z-index: 1;
       }
+      table th,
+      table td {
+        white-space: nowrap !important; /* wrap band */
+        text-align: center !important; /* ✅ center align */
+        vertical-align: middle !important;
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+      }
     </style>
   </head>
   <body class="p-6 bg-gray-100 text-[9px]">
@@ -92,7 +100,7 @@
       <div
         class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded"
       >
-        <table class="min-w-max table-auto w-full text-[10px]">
+        <table class="min-w-full bg-white border border-gray-300 table-auto">
           <thead class="bg-blue-400 sticky top-0 z-10">
             <tr>
               <th>Engineer</th>
@@ -267,6 +275,24 @@
         document.getElementById("toDate").value = "";
         applyFilters();
       }
+
+      function editRow(id) {
+        alert("Edit clicked for ID: " + id);
+        // You can open a modal form and send a PUT request to backend
+      }
+
+      function deleteRow(id) {
+        if (confirm("Are you sure you want to delete this entry?")) {
+          fetch(`${baseUrl}/materialRequirement/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((res) => res.json())
+            .then(() => fetchData())
+            .catch((err) => alert("Delete failed"));
+        }
+      }
+
       fetchData();
     </script>
   </body>
