@@ -102,8 +102,15 @@
               <th>Phase</th>
               <th>Date Of Visit</th>
               <th>Required Material</th>
+              <th>Material Dispatch Status</th>
+              <th>Material Request To</th>
+              <th>Material Request Date</th>
+              <th>Material Arrange From</th>
+              <th>Material Received Date</th>
+              <th>Action</th>
             </tr>
           </thead>
+
           <tbody id="tableBody"></tbody>
         </table>
       </div>
@@ -220,6 +227,16 @@
             <td>${row.phase}</td>
             <td>${row.date}</td>
             <td class="text-red-900 font-bold">${row.material}</td>
+            <td>${row.materialRequestTo || "-"}</td>
+    <td>${row.materialRequestDate || "-"}</td>
+    <td>${row.materialArrangeFrom || "-"}</td>
+    <td>${row.materialReceivedDate || "-"}</td>
+      <td>
+      <button class="text-blue-600" onclick="editRow('${row._id}')">✏️</button>
+      <button class="text-red-600 ml-2" onclick="deleteRow('${
+        row._id
+      }')">🗑️</button>
+    </td>
           </tr>
         `
             )
