@@ -124,6 +124,62 @@
       </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50"
+    >
+      <div class="bg-white p-6 rounded shadow-lg w-[90%] max-w-md">
+        <h2 class="text-lg font-semibold mb-4 text-green-700">
+          Edit Material Entry
+        </h2>
+        <input type="hidden" id="editId" />
+        <div class="grid grid-cols-1 gap-3">
+          <input
+            id="editDispatchStatus"
+            class="border p-2 rounded"
+            placeholder="Material Dispatch Status"
+          />
+          <input
+            id="editRequestTo"
+            class="border p-2 rounded"
+            placeholder="Material Request To"
+          />
+          <input
+            type="date"
+            id="editRequestDate"
+            class="border p-2 rounded"
+            placeholder="Material Request Date"
+          />
+          <input
+            id="editArrangeFrom"
+            class="border p-2 rounded"
+            placeholder="Material Arrange From"
+          />
+          <input
+            type="date"
+            id="editReceivedDate"
+            class="border p-2 rounded"
+            placeholder="Material Received Date"
+          />
+        </div>
+        <div class="flex justify-end gap-3 mt-4">
+          <button
+            onclick="closeModal()"
+            class="bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveEdit()"
+            class="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Loader Spinner -->
     <div
       id="loader"
@@ -278,8 +334,57 @@
       }
 
       function editRow(id) {
-        alert("Edit clicked for ID: " + id);
-        // You can open a modal form and send a PUT request to backend
+        const row = filtered.find((r) => r._id === id);
+        if (!row) return alert("Row not found!");
+
+        document.getElementById("editId").value = row._id;
+        document.getElementById("editDispatchStatus").value =
+          row.materialDispatchStatus || "";
+        document.getElementById("editRequestTo").value =
+          row.materialRequestTo || "";
+        document.getElementById("editRequestDate").value =
+          row.materialRequestDate || "";
+        document.getElementById("editArrangeFrom").value =
+          row.materialArrangeFrom || "";
+        document.getElementById("editReceivedDate").value =
+          row.materialReceivedDate || "";
+
+        document.getElementById("editModal").classList.remove("hidden");
+      }
+
+      function closeModal() {
+        document.getElementById("editModal").classList.add("hidden");
+      }
+
+      function saveEdit() {
+        const id = document.getElementById("editId").value;
+        const updatedData = {
+          materialDispatchStatus:
+            document.getElementById("editDispatchStatus").value,
+          materialRequestTo: document.getElementById("editRequestTo").value,
+          materialRequestDate: document.getElementById("editRequestDate").value,
+          materialArrangeFrom: document.getElementById("editArrangeFrom").value,
+          materialReceivedDate:
+            document.getElementById("editReceivedDate").value,
+        };
+
+        fetch(`${baseUrl}/materialRequirement/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedData),
+        })
+          .then((res) => res.json())
+          .then(() => {
+            closeModal();
+            fetchData(); // Refresh table
+          })
+          .catch((err) => {
+            alert("Failed to update entry");
+            console.error(err);
+          });
       }
 
       function deleteRow(id) {
