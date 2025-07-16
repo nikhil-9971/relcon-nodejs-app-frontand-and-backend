@@ -8,6 +8,8 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+
     <style>
       body {
         font-family: "Poppins", sans-serif;
@@ -28,6 +30,13 @@
     <div class="max-w-7xl mx-auto bg-white shadow p-6 rounded">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">📌 Task Management</h1>
+        <button
+          onclick="exportTasksToExcel()"
+          class="bg-green-600 text-white px-3 py-1 rounded text-[-10px] mt-2 mb-4"
+        >
+          ⬇️ Export
+        </button>
+
         <button
           onclick="fetchTasks()"
           class="bg-blue-600 text-white px-4 py-2 rounded"
@@ -173,10 +182,10 @@
         </button>
       </td>
 
-      <td class="border px-3 py-2 text-center">
+      <td class="border px-3 py-2 text-center" id="statusCell-${task._id}">
   ${
     task.status === "Follow-up"
-      ? `<span class="bg-yellow-300 text-yellow-900 font-semibold text-[10px] px-2 py-1 rounded">🔁 Follow-up</span>`
+      ? `<span class="bg-yellow-300 text-yellow-900 font-semibold text-[10px] px-2 py-1 rounded cursor-pointer" onclick="convertToDropdown('${task._id}')">🔁 Follow-up</span>`
       : `
     <select onchange="updateTaskStatus('${
       task._id
@@ -193,6 +202,7 @@
     </select>`
   }
 </td>
+
      
 
                   <td class="border px-3 py-2">
@@ -327,6 +337,61 @@
       }
 
       window.onload = fetchTasks;
+
+      function convertToDropdown(taskId) {
+        const cell = document.getElementById(`statusCell-${taskId}`);
+        if (!cell) return;
+
+        cell.innerHTML = `
+    <select onchange="updateTaskStatus('${taskId}', this.value)" class="border px-2 py-1 rounded text-[11px]">
+      <option value="Pending">Pending</option>
+      <option value="Mailed">Mailed</option>
+      <option value="Resolved">Resolved</option>
+    </select>
+  `;
+      }
+
+      function exportTasksToExcel() {
+        const table = document.getElementById("taskTableBody");
+        const rows = table.querySelectorAll("tr");
+        const data = [];
+
+        const headers = [
+          "RO Code",
+          "Region",
+          "RO Name",
+          "Date",
+          "Engineer",
+          "Issue",
+          "Mail Date",
+          "Completed By",
+          "Mail Reply",
+          "Previous Status",
+          "Current Status",
+          "Follow-up Date",
+        ];
+
+        data.push(headers);
+
+        rows.forEach((tr) => {
+          const cells = tr.querySelectorAll("td");
+          const row = [];
+
+          for (let i = 0; i < 12; i++) {
+            let text = cells[i]?.innerText?.trim() || "";
+            row.push(text.replace(/\s+/g, " "));
+          }
+
+          data.push(row);
+        });
+
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+
+        const today = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(workbook, `Task_Manager_${today}.xlsx`);
+      }
     </script>
   </body>
 </html>
