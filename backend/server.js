@@ -13,6 +13,7 @@ const atgstatusRoutes = require("./routes/atgStatusRoutes");
 const auditRoutes = require("./routes/audit");
 const taskRoutes = require("./routes/taskRoutes");
 const jioBPStatusRoutes = require("./routes/jioBPStatusRoutes");
+const materialRoutes = require("./routes/materialRequirement");
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use("/", atgstatusRoutes);
 app.use("/audit", auditRoutes);
 app.use(taskRoutes);
 app.use("/jioBP", jioBPStatusRoutes);
+app.use("/materialRequirement", materialRoutes);
 
 // ✅ Redirect *.html to clean path
 app.use((req, res, next) => {
