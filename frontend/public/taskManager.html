@@ -173,21 +173,28 @@
         </button>
       </td>
 
-                  <td class="border px-3 py-2">
-                    <select onchange="updateTaskStatus('${
-                      task._id
-                    }', this.value)" class="border px-2 py-1 rounded">
-                      <option value="Pending" ${
-                        task.status === "Pending" ? "selected" : ""
-                      }>Pending</option>
-                      <option value="Mailed" ${
-                        task.status === "Mailed" ? "selected" : ""
-                      }>Mailed</option>
-                      <option value="Resolved" ${
-                        task.status === "Resolved" ? "selected" : ""
-                      }>Resolved</option>
-                    </select>
-                  </td>
+      <td class="border px-3 py-2 text-center">
+  ${
+    task.status === "Follow-up"
+      ? `<span class="bg-yellow-300 text-yellow-900 font-semibold text-[10px] px-2 py-1 rounded">🔁 Follow-up</span>`
+      : `
+    <select onchange="updateTaskStatus('${
+      task._id
+    }', this.value)" class="border px-2 py-1 rounded text-[11px]">
+      <option value="Pending" ${
+        task.status === "Pending" ? "selected" : ""
+      }>Pending</option>
+      <option value="Mailed" ${
+        task.status === "Mailed" ? "selected" : ""
+      }>Mailed</option>
+      <option value="Resolved" ${
+        task.status === "Resolved" ? "selected" : ""
+      }>Resolved</option>
+    </select>`
+  }
+</td>
+     
+
                   <td class="border px-3 py-2">
                     <input type="date" value="${
                       task.mailDate || ""
