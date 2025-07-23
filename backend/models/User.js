@@ -4,6 +4,7 @@ const UserSchema = new mongoose.Schema({
   password: String,
   role: String,
   engineerName: String,
+  empId: String,
 });
 module.exports =
   mongoose.model.UserSchema || mongoose.model("User", UserSchema, "users");
