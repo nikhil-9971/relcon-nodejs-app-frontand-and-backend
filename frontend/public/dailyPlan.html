@@ -526,7 +526,7 @@
 
           try {
             const res = await fetch(
-              `${baseUrl}/plans/getEmpId/${encodeURIComponent(engineer)}`
+              `${baseUrl}/getEmpId/${encodeURIComponent(engineer)}`
             );
             if (res.ok) {
               const data = await res.json();
