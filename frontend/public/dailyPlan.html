@@ -518,27 +518,33 @@
         }
       });
 
-      document
-        .getElementById("engineer")
-        .addEventListener("change", async function () {
-          const engineer = this.value.trim();
-          if (!engineer) return;
+      async function fetchEmpIdIfEngineerExists() {
+        const engineer = document.getElementById("engineer")?.value?.trim();
+        if (!engineer) return;
 
-          try {
-            const res = await fetch(
-              `${baseUrl}/getEmpId/${encodeURIComponent(engineer)}`
-            );
-            if (res.ok) {
-              const data = await res.json();
-              document.getElementById("empId").value = data.empId || "";
-            } else {
-              document.getElementById("empId").value = "";
-            }
-          } catch (err) {
-            console.error("Error fetching empId:", err);
+        try {
+          const res = await fetch(
+            `${baseUrl}/getEmpId/${encodeURIComponent(engineer)}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            document.getElementById("empId").value = data.empId || "";
+          } else {
             document.getElementById("empId").value = "";
           }
-        });
+        } catch (err) {
+          console.error("Error fetching empId:", err);
+          document.getElementById("empId").value = "";
+        }
+      }
+
+      // ✅ On dropdown change
+      document
+        .getElementById("engineer")
+        .addEventListener("change", fetchEmpIdIfEngineerExists);
+
+      // ✅ On page load if engineer already selected
+      window.addEventListener("DOMContentLoaded", fetchEmpIdIfEngineerExists);
 
       // Validate form
       function validateForm() {
