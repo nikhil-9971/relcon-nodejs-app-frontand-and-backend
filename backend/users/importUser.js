@@ -37,6 +37,7 @@ fs.createReadStream("users detail.csv")
         username: user.username,
         password: hashedPassword,
         role: user.role,
+        empId: user.empId,
       });
     }
 
