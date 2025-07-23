@@ -16,6 +16,7 @@ const UserSchema = new mongoose.Schema({
   password: String,
   role: String,
   engineerName: String,
+  empId: String,
 });
 
 const User = mongoose.model("User", UserSchema);
