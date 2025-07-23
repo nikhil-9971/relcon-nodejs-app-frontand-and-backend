@@ -4,6 +4,7 @@ const DailyPlan = require("../models/DailyPlan");
 const Status = require("../models/Status");
 const verifyToken = require("../middleware/authMiddleware");
 const JioBPStatus = require("../models/jioBPStatus");
+const User = require("../models/User");
 
 // ✅ Save Daily Plan
 router.post("/saveDailyPlan", async (req, res) => {
@@ -142,6 +143,22 @@ router.put("/updateCompletion/:id", async (req, res) => {
     res.send("✅ Completion status updated");
   } catch (err) {
     res.status(500).send("Server error");
+  }
+});
+
+// ✅ Get empId by engineer name
+router.get("/getEmpId/:engineerName", async (req, res) => {
+  try {
+    const { engineerName } = req.params;
+    const user = await User.findOne({ engineerName: engineerName.trim() });
+    if (user) {
+      res.json({ empId: user.empId || "" });
+    } else {
+      res.status(404).json({ empId: "" });
+    }
+  } catch (err) {
+    console.error("❌ Error fetching empId:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
