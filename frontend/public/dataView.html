@@ -1577,13 +1577,14 @@
 
         const headerRow = [
           [
+            "Customer",
+            "Phase",
             "Region",
-            "Engineer Name",
-            "Customer/Phase",
             "RO Code",
             "RO Name",
             "Employee Id",
-            "Plan/Remarks/Comp.ID",
+            "Engineer Name",
+            "Issue Report/Visit Schedule For",
             "Issue Type",
             "AMC_QTR_DETAIL",
             "Date of Visit",
@@ -1595,23 +1596,28 @@
           ],
         ];
 
-        const tableRows = filteredData.map((d) => [
-          (d.region || "").trim(),
-          (d.engineer || "").trim(),
-          (d.phase || "").trim(),
-          (d.roCode || "").trim(),
-          (d.roName || "").trim(),
-          (d.empId || "").trim(),
-          (d.purpose || "").trim(),
-          (d.issueType || "").trim(),
-          (d.amcQtr || "").trim(),
-          (d.date || "").trim(),
-          (d.completionStatus || "").trim(),
-          (d.arrivalTime || "").trim(),
-          (d.leaveTime || "").trim(),
-          (d.supportTakenFrom || "").trim(),
-          (d.whatDone || "").trim(),
-        ]);
+        const tableRows = filteredData.map((d) => {
+          const [customer, phasePart] = (d.phase || "").split("/") || ["", ""];
+
+          return [
+            customer.trim(), // ✅ Customer
+            phasePart?.trim() || "", // ✅ Phase
+            (d.region || "").trim(),
+            (d.roCode || "").trim(),
+            (d.roName || "").trim(),
+            (d.empId || "").trim(),
+            (d.engineer || "").trim(),
+            (d.purpose || "").trim(),
+            (d.issueType || "").trim(),
+            (d.amcQtr || "").trim(),
+            (d.date || "").trim(),
+            (d.completionStatus || "").trim(),
+            (d.arrivalTime || "").trim(),
+            (d.leaveTime || "").trim(),
+            (d.supportTakenFrom || "").trim(),
+            (d.whatDone || "").trim(),
+          ];
+        });
 
         const allRows = [...titleRow, ...headerRow, ...tableRows];
         const ws = XLSX.utils.aoa_to_sheet(allRows);
