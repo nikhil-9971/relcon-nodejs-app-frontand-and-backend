@@ -187,6 +187,7 @@
               <th class="px-1 py-1">Phase</th>
               <th class="px-1 py-1">RO Code</th>
               <th class="px-1 py-1">RO Name</th>
+              <th class="px-1 py-1">Employee Code</th>
               <th class="px-1 py-1">Purpose</th>
               <th class="px-1 py-1">Date</th>
               <th class="px-1 py-1">Issue Type</th>
@@ -247,6 +248,13 @@
             placeholder="RO Name"
             class="border px-3 py-1 rounded"
           />
+
+          <input
+            id="editempId"
+            placeholder="Employee Id"
+            class="border px-3 py-1 rounded"
+          />
+
           <input
             id="editPurpose"
             placeholder="Purpose"
@@ -1395,6 +1403,7 @@
         <td class="border px-1 py-1">${plan.phase}</td>
         <td class="border px-1 py-1">${plan.roCode}</td>
         <td class="border px-1 py-1">${plan.roName}</td>
+        <td class="border px-1 py-1">${plan.empId}</td>
         <td class="border px-1 py-1">${plan.purpose}</td>
         <td class="border px-1 py-1">${plan.date}</td>
         <td class="border px-1 py-1">${plan.issueType}</td>
@@ -1466,6 +1475,7 @@
         document.getElementById("editPhase").value = plan.phase || "";
         document.getElementById("editRoCode").value = plan.roCode || "";
         document.getElementById("editRoName").value = plan.roName || "";
+        document.getElementById("editempId").value = plan.roName || "";
         document.getElementById("editPurpose").value = plan.purpose || "";
         document.getElementById("editDate").value = plan.date || "";
         document.getElementById("editIssueType").value = plan.issueType || "";
@@ -1572,6 +1582,7 @@
             "Customer/Phase",
             "RO Code",
             "RO Name",
+            "Employee Id",
             "Plan/Remarks/Comp.ID",
             "Issue Type",
             "AMC_QTR_DETAIL",

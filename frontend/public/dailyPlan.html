@@ -205,6 +205,18 @@
                 <option>Vinit Kumar</option>
               </select>
             </div>
+
+            <div>
+              <label class="label"
+                ><i class="fa-solid fa-city"></i> Employee Id:</label
+              ><input
+                id="empId"
+                type="text"
+                class="form-input rounded-lg"
+                readonly
+              />
+            </div>
+
             <div>
               <label class="label"
                 ><i class="fa-brands fa-get-pocket"></i> AMC Year_Qtr:</label
@@ -269,6 +281,7 @@
           phase: document.getElementById("phase").value,
           issueType: document.getElementById("issueType").value,
           engineer: document.getElementById("engineer").value,
+          empId: document.getElementById("empId").value,
           amcQtr: document.getElementById("amcQtr").value,
           purpose: document.getElementById("purpose").value.toUpperCase(),
         };
@@ -504,6 +517,29 @@
       `;
         }
       });
+
+      document
+        .getElementById("engineer")
+        .addEventListener("change", async function () {
+          const engineer = this.value.trim();
+          if (!engineer) return;
+
+          try {
+            const res = await fetch(
+              `${baseUrl}/plans/getEmpId/${encodeURIComponent(engineer)}`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              document.getElementById("empId").value = data.empId || "";
+            } else {
+              document.getElementById("empId").value = "";
+            }
+          } catch (err) {
+            console.error("Error fetching empId:", err);
+            document.getElementById("empId").value = "";
+          }
+        });
+
       // Validate form
       function validateForm() {
         const requiredFields = [
