@@ -8,6 +8,7 @@ const PlanSchema = new mongoose.Schema({
   date: String,
   issueType: String,
   engineer: String,
+  empId: String,
   amcQtr: String,
   purpose: String,
   completionStatus: String, // Add this field
