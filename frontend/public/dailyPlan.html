@@ -222,6 +222,18 @@
                 ><i class="fa-brands fa-get-pocket"></i> AMC Year_Qtr:</label
               ><input id="amcQtr" type="text" class="form-input rounded-lg" />
             </div>
+
+            <div>
+              <label class="label"
+                ><i class="fa-brands fa-get-pocket"></i> Incident Id/ Complaint
+                Id:</label
+              ><input
+                id="incidentId"
+                type="text"
+                class="form-input rounded-lg"
+              />
+            </div>
+
             <div>
               <label class="label"
                 ><i class="fa-solid fa-list-check"></i> PURPOSE OF VISIT:</label
@@ -283,6 +295,7 @@
           engineer: document.getElementById("engineer").value,
           empId: document.getElementById("empId").value,
           amcQtr: document.getElementById("amcQtr").value,
+          incidentId: document.getElementById("incidentId").value,
           purpose: document.getElementById("purpose").value.toUpperCase(),
         };
 
@@ -559,7 +572,9 @@
           "phase",
           "issueType",
           "engineer",
+          "empId",
           "amcQtr",
+          "incidentId",
           "purpose",
         ];
 
