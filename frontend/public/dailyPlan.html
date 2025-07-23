@@ -394,6 +394,9 @@
           document.getElementById("phase").value = data.phase || "";
           document.getElementById("engineer").value = data.engineer || "";
 
+          // ✅ Manually trigger empId fetch after setting engineer
+          await fetchEmpIdIfEngineerExists();
+
           // Make fields readonly
           document.getElementById("roName").readOnly = true;
           document.getElementById("region").readOnly = true;
