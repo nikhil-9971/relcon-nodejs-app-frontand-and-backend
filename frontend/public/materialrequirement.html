@@ -323,12 +323,15 @@
     <td>${row.materialRequestDate || "-"}</td>
     <td>${row.materialArrangeFrom || "-"}</td>
     <td>${row.materialReceivedDate || "-"}</td>
-      <td>
-      <button class="text-blue-600" onclick="editRow('${row._id}')">✏️</button>
-      <button class="text-red-600 ml-2" onclick="deleteRow('${
-        row._id
-      }')">🗑️</button>
-    </td>
+    <td>
+  <button class="text-blue-600" onclick="editRow('${
+    row._id || ""
+  }')">✏️</button>
+  <button class="text-red-600 ml-2" onclick="deleteRow('${
+    row._id || ""
+  }')">🗑️</button>
+</td>
+
           </tr>
         `
             )
@@ -359,12 +362,22 @@
         document.getElementById("toDate").value = "";
         applyFilters();
       }
-
       function editRow(id) {
-        const row = filtered.find((r) => r._id === id);
-        if (!row) return alert("Row not found!");
+        let row;
+        if (id) {
+          row = filtered.find((r) => r._id === id);
+        } else {
+          // Try to get row based on other unique values
+          alert("This entry is not editable until it is saved.");
+          return;
+        }
 
-        document.getElementById("editId").value = row._id;
+        if (!row) {
+          alert("Row not found!");
+          return;
+        }
+
+        document.getElementById("editId").value = row._id || "";
         document.getElementById("editDispatchStatus").value =
           row.materialDispatchStatus || "";
         document.getElementById("editRequestTo").value =
