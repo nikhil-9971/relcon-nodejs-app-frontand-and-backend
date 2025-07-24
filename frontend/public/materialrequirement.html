@@ -206,7 +206,8 @@
 
       async function fetchData() {
         showLoader();
-        const [hpclRes, jioRes, planRes] = await Promise.all([
+
+        const [hpclRes, jioRes, planRes, materialRes] = await Promise.all([
           fetch(`${baseUrl}/getMergedStatusRecords`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
@@ -216,21 +217,37 @@
           fetch(`${baseUrl}/getDailyPlans`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch(`${baseUrl}/materialRequirement`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         const hpclData = await hpclRes.json();
         const jioData = await jioRes.json();
         const planData = await planRes.json();
+        const materialData = await materialRes.json();
 
         const planMap = {};
-        planData.forEach((p) => (planMap[p._id?.toString()] = p));
+        planData.forEach((p) => {
+          const key = p._id?.toString();
+          if (key) planMap[key] = p;
+        });
 
-        allData = [...hpclData, ...jioData].map((record) => {
+        const mergedData = [...hpclData, ...jioData].map((record) => {
           const planKey =
             typeof record.planId === "object" && record.planId._id
               ? record.planId._id.toString()
               : record.planId?.toString();
+
           const plan = planMap[planKey];
+
+          const matchedMaterial = materialData.find(
+            (mat) =>
+              mat.roCode === plan?.roCode &&
+              mat.date === plan?.date &&
+              mat.engineer === plan?.engineer
+          );
+
           return {
             ...record,
             engineer: plan?.engineer || "",
@@ -241,9 +258,19 @@
             date: plan?.date || "",
             material:
               record.materialRequirement || record.spareRequirmentname || "",
+
+            // 🔗 Add backend ID for update
+            _id: matchedMaterial?._id || null,
+            materialDispatchStatus:
+              matchedMaterial?.materialDispatchStatus || "",
+            materialRequestTo: matchedMaterial?.materialRequestTo || "",
+            materialRequestDate: matchedMaterial?.materialRequestDate || "",
+            materialArrangeFrom: matchedMaterial?.materialArrangeFrom || "",
+            materialReceivedDate: matchedMaterial?.materialReceivedDate || "",
           };
         });
 
+        allData = mergedData;
         applyFilters();
       }
 
