@@ -13,8 +13,28 @@ router.get("/", async (req, res) => {
 });
 
 // 🔹 POST new
+// 🔹 POST new (overwrite if same engineer + roCode + date exists)
 router.post("/", async (req, res) => {
   try {
+    const { engineer, roCode, date } = req.body;
+
+    // check if entry already exists for this engineer + roCode + date
+    const existing = await MaterialRequirement.findOne({
+      engineer,
+      roCode,
+      date,
+    });
+
+    if (existing) {
+      const updated = await MaterialRequirement.findByIdAndUpdate(
+        existing._id,
+        req.body,
+        { new: true }
+      );
+      return res.json(updated);
+    }
+
+    // else insert new
     const newItem = new MaterialRequirement(req.body);
     await newItem.save();
     res.json(newItem);
