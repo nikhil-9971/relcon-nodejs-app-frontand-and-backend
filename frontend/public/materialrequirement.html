@@ -393,10 +393,18 @@
           materialArrangeFrom: document.getElementById("editArrangeFrom").value,
           materialReceivedDate:
             document.getElementById("editReceivedDate").value,
+          engineer: filtered.find((row) => row._id === id)?.engineer || "",
+          roCode: filtered.find((row) => row._id === id)?.roCode || "",
+          date: filtered.find((row) => row._id === id)?.date || "",
         };
 
-        fetch(`${baseUrl}/materialRequirement/${id}`, {
-          method: "PUT",
+        const method = id ? "PUT" : "POST";
+        const url = id
+          ? `${baseUrl}/materialRequirement/${id}`
+          : `${baseUrl}/materialRequirement`;
+
+        fetch(url, {
+          method,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -406,10 +414,10 @@
           .then((res) => res.json())
           .then(() => {
             closeModal();
-            fetchData(); // Refresh table
+            fetchData();
           })
           .catch((err) => {
-            alert("Failed to update entry");
+            alert("Failed to save entry");
             console.error(err);
           });
       }
