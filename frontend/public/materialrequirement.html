@@ -363,21 +363,18 @@
         applyFilters();
       }
       function editRow(id) {
-        let row;
-        if (id) {
-          row = filtered.find((r) => r._id === id);
-        } else {
-          // Try to get row based on other unique values
-          alert("This entry is not editable until it is saved.");
-          return;
-        }
+        let row = id ? filtered.find((r) => r._id === id) : null;
 
+        // Agar id nhi mila, fir bhi filtered row find karo (date+engineer match)
         if (!row) {
-          alert("Row not found!");
-          return;
+          alert("No backend entry found. Creating new...");
+          // fallback: row without _id
+          row = filtered.find((r) => r.material && r.material.trim());
         }
 
-        document.getElementById("editId").value = row._id || "";
+        if (!row) return alert("Row not found!");
+
+        document.getElementById("editId").value = row._id || ""; // empty for new
         document.getElementById("editDispatchStatus").value =
           row.materialDispatchStatus || "";
         document.getElementById("editRequestTo").value =
@@ -389,6 +386,7 @@
         document.getElementById("editReceivedDate").value =
           row.materialReceivedDate || "";
 
+        // ✅ Show modal
         document.getElementById("editModal").classList.remove("hidden");
       }
 
@@ -398,6 +396,12 @@
 
       function saveEdit() {
         const id = document.getElementById("editId").value;
+
+        // Row identify by date+engineer+roCode
+        const fallbackRow =
+          filtered.find((r) => r._id === id) ||
+          filtered.find((r) => r.material && r.material.trim());
+
         const updatedData = {
           materialDispatchStatus:
             document.getElementById("editDispatchStatus").value,
@@ -406,9 +410,13 @@
           materialArrangeFrom: document.getElementById("editArrangeFrom").value,
           materialReceivedDate:
             document.getElementById("editReceivedDate").value,
-          engineer: filtered.find((row) => row._id === id)?.engineer || "",
-          roCode: filtered.find((row) => row._id === id)?.roCode || "",
-          date: filtered.find((row) => row._id === id)?.date || "",
+          engineer: fallbackRow?.engineer || "",
+          region: fallbackRow?.region || "",
+          roCode: fallbackRow?.roCode || "",
+          roName: fallbackRow?.roName || "",
+          phase: fallbackRow?.phase || "",
+          date: fallbackRow?.date || "",
+          material: fallbackRow?.material || "",
         };
 
         const method = id ? "PUT" : "POST";
@@ -427,7 +435,7 @@
           .then((res) => res.json())
           .then(() => {
             closeModal();
-            fetchData();
+            fetchData(); // refresh table
           })
           .catch((err) => {
             alert("Failed to save entry");
