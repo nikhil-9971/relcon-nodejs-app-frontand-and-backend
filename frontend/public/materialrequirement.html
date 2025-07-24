@@ -243,9 +243,9 @@
 
           const matchedMaterial = materialData.find(
             (mat) =>
-              mat.roCode === plan?.roCode &&
-              mat.date === plan?.date &&
-              mat.engineer === plan?.engineer
+              mat.roCode?.trim() === plan?.roCode?.trim() &&
+              mat.date?.trim() === plan?.date?.trim() &&
+              mat.engineer?.trim() === plan?.engineer?.trim()
           );
 
           return {
