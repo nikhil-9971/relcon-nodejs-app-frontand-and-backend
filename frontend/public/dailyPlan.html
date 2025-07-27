@@ -133,6 +133,12 @@
                 ><i class="fa-solid fa-gas-pump"></i> RO NAME:</label
               ><input id="roName" type="text" class="form-input rounded-lg" />
             </div>
+
+            <div>
+              <label class="label"><i class="fa-solid fa-city"></i> ZONE:</label
+              ><input id="zone" type="text" class="form-input rounded-lg" />
+            </div>
+
             <div>
               <label class="label"
                 ><i class="fa-solid fa-city"></i> REGION:</label
@@ -262,7 +268,7 @@
             </div>
           </div>
           <p class="text-center text-gray-500 text-xs mt-4">
-            👨‍💻 Developed By Advit Software| Version: 22.06.25
+            👨‍💻 Developed By Advit Software| Version: 27.07.25
           </p>
         </div>
       </form>
@@ -288,6 +294,7 @@
         const data = {
           roCode: document.getElementById("roCode").value.trim().toUpperCase(),
           date: document.getElementById("date").value,
+          zone: document.getElementById("zone").value,
           roName: document.getElementById("roName").value,
           region: document.getElementById("region").value,
           phase: document.getElementById("phase").value,
@@ -403,6 +410,7 @@
 
           const data = await res.json();
           document.getElementById("roName").value = data.roName || "";
+          document.getElementById("zone").value = data.zone || "";
           document.getElementById("region").value = data.region || "";
           document.getElementById("phase").value = data.phase || "";
           document.getElementById("engineer").value = data.engineer || "";
@@ -412,6 +420,7 @@
 
           // Make fields readonly
           document.getElementById("roName").readOnly = true;
+          document.getElementById("zone").readOnly = true;
           document.getElementById("region").readOnly = true;
 
           // For <select> disable the dropdown
@@ -465,72 +474,66 @@
       document.getElementById("phase").addEventListener("change", function () {
         const selectedPhase = this.value;
 
+        const setRegionDropdown = () => {
+          const regionContainer =
+            document.getElementById("region").parentElement;
+          regionContainer.innerHTML = `
+      <label class="label">🌍 REGION:</label>
+      <select id="region" class="form-select rounded-lg">
+        <option>BEGUSARAI RET RO</option>
+        <option>PATNA RET RO</option>
+        <option>JHARKHAND</option>
+        <option>LUCKNOW RET RO</option>
+      </select>
+    `;
+
+          // Attach change listener to new region dropdown
+          document
+            .getElementById("region")
+            .addEventListener("change", function () {
+              const region = this.value;
+              if (
+                region === "BEGUSARAI RET RO" ||
+                region === "PATNA RET RO" ||
+                region === "JHARKHAND"
+              ) {
+                document.getElementById("zone").value = "ECZ";
+              } else if (region === "LUCKNOW RET RO") {
+                document.getElementById("zone").value = "NCZ";
+              } else {
+                document.getElementById("zone").value = "";
+              }
+            });
+        };
+
         if (selectedPhase === "NO PLAN") {
-          // Set fields
           document.getElementById("roCode").value = "N/A";
           document.getElementById("roName").value = "NO PLAN";
           document.getElementById("issueType").value = "NO PLAN";
           document.getElementById("purpose").value = "NO PLAN";
           document.getElementById("amcQtr").value = "NO PLAN";
-
-          // Replace REGION input with dropdown
-          const regionContainer =
-            document.getElementById("region").parentElement;
-          regionContainer.innerHTML = `
-        <label class="label">🌍 REGION:</label>
-        <select id="region" class="form-select rounded-lg">
-          <option>BEGUSARAI RET RO</option>
-          <option>PATNA RET RO</option>
-          <option>JHARKHAND</option>
-          <option>LUCKNOW RET RO</option>
-        </select>
-      `;
+          setRegionDropdown();
         } else if (selectedPhase === "IN LEAVE") {
-          // Set fields
           document.getElementById("roCode").value = "N/A";
           document.getElementById("roName").value = "IN LEAVE";
           document.getElementById("issueType").value = "IN LEAVE";
           document.getElementById("purpose").value = "IN LEAVE";
           document.getElementById("amcQtr").value = "IN LEAVE";
-
-          // Replace REGION input with dropdown
-          const regionContainer =
-            document.getElementById("region").parentElement;
-          regionContainer.innerHTML = `
-        <label class="label">🌍 REGION:</label>
-        <select id="region" class="form-select rounded-lg">
-          <option>BEGUSARAI RET RO</option>
-          <option>PATNA RET RO</option>
-          <option>JHARKHAND</option>
-          <option>LUCKNOW RET RO</option>
-        </select>
-      `;
+          setRegionDropdown();
         } else if (selectedPhase === "HPCL OFFICE") {
-          // Set fields
           document.getElementById("roCode").value = "N/A";
           document.getElementById("roName").value = "HPCL OFFICE";
           document.getElementById("issueType").value = "HPCL OFFICE";
           document.getElementById("amcQtr").value = "HPCL OFFICE";
-
-          // Replace REGION input with dropdown
-          const regionContainer =
-            document.getElementById("region").parentElement;
-          regionContainer.innerHTML = `
-        <label class="label">🌍 REGION:</label>
-        <select id="region" class="form-select rounded-lg">
-          <option>BEGUSARAI RET RO</option>
-          <option>PATNA RETAIL RO</option>
-          <option>JHARKHAND</option>
-        </select>
-      `;
+          setRegionDropdown();
         } else {
-          // If phase is not NO PLAN, reload form section to restore original REGION input
+          // Reset to original REGION input
           const regionContainer =
             document.getElementById("region").parentElement;
           regionContainer.innerHTML = `
-        <label class="label">🌍 REGION:</label>
-        <input id="region" type="text" class="form-input rounded-lg" />
-      `;
+      <label class="label">🌍 REGION:</label>
+      <input id="region" type="text" class="form-input rounded-lg" />
+    `;
         }
       });
 
