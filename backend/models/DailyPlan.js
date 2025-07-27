@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const PlanSchema = new mongoose.Schema({
   roCode: String,
   roName: String,
+  zone: String,
   region: String,
   phase: String,
   date: String,
