@@ -176,6 +176,7 @@
         >
           <thead class="bg-gray-200 sticky top-0 z-10 shadow text-[11px]">
             <tr>
+              <th class="px-1 py-1">Zone</th>
               <th class="px-1 py-1">Region</th>
               <th
                 class="px-1 py-1 cursor-pointer"
@@ -224,6 +225,11 @@
         <h2 class="text-lg font-bold mb-4">✏️ Edit Visit Record</h2>
         <input type="hidden" id="editPlanId" />
         <div class="grid grid-cols-2 gap-4 text-sm">
+          <input
+            id="editzone"
+            placeholder="Zone"
+            class="border px-3 py-1 rounded"
+          />
           <input
             id="editRegion"
             placeholder="Region"
@@ -364,7 +370,7 @@
               <textarea
                 id="probeSize"
                 required
-                placeholder="Example: T1-MS-16KL, T2-HSD-35KL....."
+                placeholder="Example: T1-MS-16KL-Serial No, T2-HSD-35KL-Serial No....."
                 class="w-full p-2 mt-1 border rounded"
               ></textarea>
             </div>
@@ -1405,6 +1411,7 @@
             });
           }
           row.innerHTML = `
+        <td class="border px-1 py-1">${plan.zone}</td>
         <td class="border px-1 py-1">${plan.region}</td>
         <td class="border px-1 py-1">${plan.engineer}</td>
         <td class="border px-1 py-1">${plan.phase}</td>
@@ -1478,6 +1485,7 @@
 
       function openEditModal(plan) {
         document.getElementById("editPlanId").value = plan._id;
+        document.getElementById("editzone").value = plan.region || "";
         document.getElementById("editRegion").value = plan.region || "";
         document.getElementById("editEngineer").value = plan.engineer || "";
         document.getElementById("editPhase").value = plan.phase || "";
@@ -1507,6 +1515,7 @@
         const token = localStorage.getItem("token");
         const id = document.getElementById("editPlanId").value;
         const updated = {
+          zone: document.getElementById("editzone").value,
           region: document.getElementById("editRegion").value,
           engineer: document.getElementById("editEngineer").value,
           phase: document.getElementById("editPhase").value,
@@ -1591,6 +1600,7 @@
           [
             "Customer",
             "Phase",
+            "Zone",
             "Region",
             "RO Code",
             "RO Name",
@@ -1615,6 +1625,7 @@
           return [
             customer.trim(), // ✅ Customer
             phasePart?.trim() || "", // ✅ Phase
+            (d.zone || "").trim(),
             (d.region || "").trim(),
             (d.roCode || "").trim(),
             (d.roName || "").trim(),
@@ -1655,7 +1666,7 @@
           const cell = ws[XLSX.utils.encode_cell({ r: 1, c })];
           if (cell) {
             cell.s = {
-              font: { name: "Calibri", sz: 11, bold: true },
+              font: { name: "Calibri", sz: 10, bold: true },
               fill: { fgColor: { rgb: "FFFF00" } },
               border: {
                 top: { style: "thin", color: { rgb: "000000" } },
@@ -1674,7 +1685,7 @@
             const cell = ws[XLSX.utils.encode_cell({ r, c })];
             if (cell) {
               cell.s = {
-                font: { name: "Calibri", sz: 9 },
+                font: { name: "Calibri Light", sz: 8 },
                 alignment: {
                   vertical: "center",
                   horizontal: "left",
@@ -2102,6 +2113,7 @@
 
           const visitRows = [
             ["Engineer", cleanText(plan.engineer)],
+            ["Zone", cleanText(plan.zone)],
             ["Region", cleanText(plan.region)],
             ["Phase", cleanText(plan.phase)],
             ["RO Code", cleanText(plan.roCode)],
