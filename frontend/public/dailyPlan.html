@@ -487,23 +487,30 @@
       </select>
     `;
 
-          // Attach change listener to new region dropdown
-          document
-            .getElementById("region")
-            .addEventListener("change", function () {
-              const region = this.value;
-              if (
-                region === "BEGUSARAI RET RO" ||
-                region === "PATNA RET RO" ||
-                region === "JHARKHAND"
-              ) {
-                document.getElementById("zone").value = "ECZ";
-              } else if (region === "LUCKNOW RET RO") {
-                document.getElementById("zone").value = "NCZ";
-              } else {
-                document.getElementById("zone").value = "";
-              }
-            });
+          const regionDropdown = document.getElementById("region");
+
+          // 🔁 Common zone setting function
+          const setZoneFromRegion = (region) => {
+            if (
+              region === "BEGUSARAI RET RO" ||
+              region === "PATNA RET RO" ||
+              region === "JHARKHAND"
+            ) {
+              document.getElementById("zone").value = "ECZ";
+            } else if (region === "LUCKNOW RET RO") {
+              document.getElementById("zone").value = "NCZ";
+            } else {
+              document.getElementById("zone").value = "";
+            }
+          };
+
+          // ✅ Call immediately on default selected value
+          setZoneFromRegion(regionDropdown.value);
+
+          // 🌀 Also call on change
+          regionDropdown.addEventListener("change", function () {
+            setZoneFromRegion(this.value);
+          });
         };
 
         if (selectedPhase === "NO PLAN") {
@@ -512,6 +519,7 @@
           document.getElementById("issueType").value = "NO PLAN";
           document.getElementById("purpose").value = "NO PLAN";
           document.getElementById("amcQtr").value = "NO PLAN";
+          document.getElementById("incidentId").value = "NA";
           setRegionDropdown();
         } else if (selectedPhase === "IN LEAVE") {
           document.getElementById("roCode").value = "N/A";
@@ -519,15 +527,17 @@
           document.getElementById("issueType").value = "IN LEAVE";
           document.getElementById("purpose").value = "IN LEAVE";
           document.getElementById("amcQtr").value = "IN LEAVE";
+          document.getElementById("incidentId").value = "NA";
           setRegionDropdown();
         } else if (selectedPhase === "HPCL OFFICE") {
           document.getElementById("roCode").value = "N/A";
           document.getElementById("roName").value = "HPCL OFFICE";
           document.getElementById("issueType").value = "HPCL OFFICE";
           document.getElementById("amcQtr").value = "HPCL OFFICE";
+          document.getElementById("incidentId").value = "NA";
           setRegionDropdown();
         } else {
-          // Reset to original REGION input
+          // Reset REGION input
           const regionContainer =
             document.getElementById("region").parentElement;
           regionContainer.innerHTML = `
@@ -571,6 +581,7 @@
           "roCode",
           "date",
           "roName",
+          "zone",
           "region",
           "phase",
           "issueType",
