@@ -177,6 +177,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
           _id: status._id?.toString() || "",
           planId: status.planId?._id?.toString() || "",
           engineer: plan.engineer || "",
+          zone: plan.zone || "",
           region: plan.region || "",
           phase: plan.phase || "",
           roCode: plan.roCode || "",
