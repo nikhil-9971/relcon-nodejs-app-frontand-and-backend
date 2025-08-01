@@ -3,7 +3,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
-
 const connectDB = require("./config/db");
 const { router: authRoutes } = require("./routes/auth");
 const planRoutes = require("./routes/plans");
@@ -14,7 +13,8 @@ const auditRoutes = require("./routes/audit");
 const taskRoutes = require("./routes/taskRoutes");
 const jioBPStatusRoutes = require("./routes/jioBPStatusRoutes");
 const materialRoutes = require("./routes/materialRequirement");
-
+const chatRoutes = require("./routes/chatRoutes");
+const setupWebsocket = require("./chat.ws"); // path adjust
 const app = express();
 
 // ✅ Connect to MongoDB
@@ -63,6 +63,10 @@ app.use("/audit", auditRoutes);
 app.use(taskRoutes);
 app.use("/jioBP", jioBPStatusRoutes);
 app.use("/materialRequirement", materialRoutes);
+app.use("/chat", chatRoutes);
+
+const server = http.createServer(app);
+setupWebsocket(server); // attach WS logic
 
 // ✅ Redirect *.html to clean path
 app.use((req, res, next) => {
