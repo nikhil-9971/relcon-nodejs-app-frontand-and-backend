@@ -16,21 +16,6 @@ function verifyToken(token) {
   }
 }
 
-function makeRoomId(a, b) {
-  return [a, b].sort().join("__");
-}
-
-function broadcastPresence() {
-  // broadcast online users list to all
-  const online = Array.from(clients.keys());
-  const payload = JSON.stringify({ type: "presence", online });
-  for (const conns of clients.values()) {
-    for (const ws of conns) {
-      if (ws.readyState === WebSocket.OPEN) ws.send(payload);
-    }
-  }
-}
-
 function setupWebsocket(server) {
   const wss = new WebSocket.Server({ noServer: true });
 
@@ -59,15 +44,11 @@ function setupWebsocket(server) {
     const user = ws.user;
     if (!clients.has(user)) clients.set(user, new Set());
     clients.get(user).add(ws);
-    broadcastPresence();
 
-    // welcome
     ws.send(
       JSON.stringify({
         type: "system",
-        from: "System",
-        text: `Connected as ${user}`,
-        timestamp: new Date(),
+        text: `✅ Connected as ${user}`,
       })
     );
 
@@ -78,76 +59,31 @@ function setupWebsocket(server) {
       } catch {
         return;
       }
-      // message structure expected: { to, text, type? }
-      if (msg.type === "mark-read") {
-        // mark room messages as read
-        const roomId = makeRoomId(user, msg.from); // msg.from is other side
-        await Chat.updateMany(
-          { roomId, to: user, read: false },
-          { read: true }
-        );
-        // notify sender about read receipt
-        const receipt = {
-          type: "read-receipt",
+
+      // 📦 Handle group chat
+      if (msg.type === "group") {
+        const messageDoc = await Chat.create({
           from: user,
-          to: msg.from,
-          roomId,
+          to: "group",
+          roomId: "group",
+          text: msg.text,
+          delivered: true,
+          read: false,
+        });
+
+        const payloadMessage = {
+          type: "group",
+          from: user,
+          text: msg.text,
+          createdAt: messageDoc.createdAt,
         };
-        if (clients.has(msg.from)) {
-          for (const s of clients.get(msg.from)) {
-            if (s.readyState === WebSocket.OPEN)
-              s.send(JSON.stringify(receipt));
-          }
-        }
-        return;
-      }
 
-      if (!msg.to || !msg.text) return;
-      const toUser = msg.to.trim();
-      const text = msg.text;
-      const roomId = makeRoomId(user, toUser);
-
-      // save message
-      const messageDoc = await Chat.create({
-        from: user,
-        to: toUser,
-        text,
-        roomId,
-        delivered: false,
-        read: false,
-      });
-
-      const payloadMessage = {
-        type: "chat",
-        from: user,
-        to: toUser,
-        text,
-        roomId,
-        _id: messageDoc._id,
-        createdAt: messageDoc.createdAt,
-      };
-
-      // deliver to recipient
-      if (clients.has(toUser)) {
-        for (const clientWs of clients.get(toUser)) {
-          if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(
-              JSON.stringify({ ...payloadMessage, delivered: true })
-            );
-          }
-        }
-      }
-
-      // update delivered flag in DB
-      await Chat.findByIdAndUpdate(messageDoc._id, { delivered: true });
-
-      // echo back to sender with delivery info
-      if (clients.has(user)) {
-        for (const clientWs of clients.get(user)) {
-          if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(
-              JSON.stringify({ ...payloadMessage, delivered: true })
-            );
+        // 🚀 Broadcast to all users
+        for (const conns of clients.values()) {
+          for (const s of conns) {
+            if (s.readyState === WebSocket.OPEN) {
+              s.send(JSON.stringify(payloadMessage));
+            }
           }
         }
       }
@@ -158,7 +94,6 @@ function setupWebsocket(server) {
         clients.get(user).delete(ws);
         if (clients.get(user).size === 0) clients.delete(user);
       }
-      broadcastPresence();
     });
   });
 }
