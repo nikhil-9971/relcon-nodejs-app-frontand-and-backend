@@ -406,6 +406,14 @@
 
     <div id="progressBar"></div>
 
+    <!-- Sidebar / user list -->
+    <div
+      id="chatSidebar"
+      class="absolute top-16 right-4 w-60 bg-white border rounded shadow p-2 text-sm"
+    >
+      <div class="font-semibold mb-2">Conversations</div>
+      <div id="userList" class="space-y-1 overflow-y-auto max-h-64"></div>
+    </div>
     <!-- Chat Box -->
     <div id="chatBox" class="shadow-lg">
       <div
@@ -631,53 +639,154 @@
         }, 500); // Wait for animation to finish
       }
 
-      function parseTokenUser() {
+      function parseUser() {
         try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          return payload.engineerName || payload.name || "";
+          const p = JSON.parse(atob(token.split(".")[1]));
+          return (p.engineerName || p.name || p.username || "").trim();
         } catch {
           return "";
         }
       }
-
-      const currentUser = parseTokenUser();
-      const receiver = "admin"; // default admin or selected user
+      const currentUser = parseUser();
+      let activePeer = null;
       const chatMessages = document.getElementById("chatMessages");
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const userListEl = document.getElementById("userList");
 
-      async function loadChat() {
+      // WebSocket setup
+      let ws;
+      function initWS() {
+        ws = new WebSocket(
+          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
+            token
+          )}`
+        );
+
+        ws.onopen = () => {
+          console.log("WS connected");
+        };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "presence") {
+            renderUserList(msg.online);
+          } else if (msg.type === "chat") {
+            handleIncoming(msg);
+          } else if (msg.type === "read-receipt") {
+            // mark messages as read in UI for that room
+            // you can decorate with a small tick
+            console.log("Read receipt from", msg.from);
+          }
+        };
+
+        ws.onclose = () => {
+          setTimeout(initWS, 3000);
+        };
+      }
+
+      function makeRoomId(a, b) {
+        return [a, b].sort().join("__");
+      }
+
+      // track unread counts
+      const unread = {}; // { peer: count }
+
+      function renderUserList(onlineUsers) {
+        // assume you have list of all possible peers from some source; for demo include admin + online
+        const peers = new Set([...onlineUsers, "admin"]); // you can fetch all users separately
+        userListEl.innerHTML = "";
+        peers.forEach((user) => {
+          if (user === currentUser) return;
+          const isOnline = onlineUsers.includes(user);
+          const badge = unread[user]
+            ? `<span class="ml-1 bg-red-600 text-white rounded-full px-2 text-xs">${unread[user]}</span>`
+            : "";
+          const dot = isOnline ? "🟢" : "⚪";
+          const div = document.createElement("div");
+          div.className =
+            "flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 rounded";
+          div.innerHTML = `<div><span>${dot}</span> <strong>${user}</strong></div><div>${badge}</div>`;
+          div.addEventListener("click", () => {
+            activePeer = user;
+            unread[user] = 0;
+            loadHistory(user);
+          });
+          userListEl.appendChild(div);
+        });
+      }
+
+      async function loadHistory(peer) {
+        if (!peer) return;
+        activePeer = peer;
         const res = await fetch(
-          `${baseUrl}/chat/history/${currentUser}/${receiver}`
+          `${baseUrl}/chat/history/${encodeURIComponent(
+            currentUser
+          )}/${encodeURIComponent(peer)}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         const data = await res.json();
         chatMessages.innerHTML = "";
         data.forEach((m) => {
-          const el = document.createElement("div");
-          el.className = "msg " + (m.from === currentUser ? "me" : "them");
-          el.innerText = m.text;
-          chatMessages.appendChild(el);
+          const isOwn = m.from === currentUser;
+          const div = document.createElement("div");
+          div.className = "msg " + (isOwn ? "me" : "them");
+          div.innerHTML = `<div style="font-size:10px;"><b>${m.from}</b></div><div>${m.text}</div>`;
+          chatMessages.appendChild(div);
         });
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        // send read receipt
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "mark-read", from: peer }));
+        }
       }
 
-      async function sendMessage() {
-        const text = document.getElementById("chatInput").value.trim();
+      function handleIncoming(msg) {
+        const peer = msg.from === currentUser ? msg.to : msg.from;
+        const isOwn = msg.from === currentUser;
+        // if not active room, increment unread
+        if (peer !== activePeer) {
+          unread[peer] = (unread[peer] || 0) + 1;
+          renderUserList([]); // you can cache onlineUsers separately
+        } else {
+          const div = document.createElement("div");
+          div.className = "msg " + (isOwn ? "me" : "them");
+          div.innerHTML = `<div style="font-size:10px;"><b>${msg.from}</b></div><div>${msg.text}</div>`;
+          chatMessages.appendChild(div);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          // send read receipt back
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "mark-read", from: msg.from }));
+          }
+        }
+      }
+
+      function sendMessage() {
+        if (!activePeer) return alert("Select a user to chat with.");
+        const text = chatInput.value.trim();
         if (!text) return;
-        await fetch(`${baseUrl}/chat/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ from: currentUser, to: receiver, text }),
-        });
-        document.getElementById("chatInput").value = "";
-        loadChat();
+        const payload = { to: activePeer, text };
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(payload));
+          // optimistic UI
+          const div = document.createElement("div");
+          div.className = "msg me";
+          div.innerHTML = `<div style="font-size:10px;"><b>${currentUser}</b></div><div>${text}</div>`;
+          chatMessages.appendChild(div);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          chatInput.value = "";
+        }
       }
 
-      document.getElementById("sendBtn").addEventListener("click", sendMessage);
-      document.getElementById("chatInput").addEventListener("keydown", (e) => {
+      sendBtn.addEventListener("click", sendMessage);
+      chatInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") sendMessage();
       });
 
-      // Initial load and polling every 5 sec
-      loadChat();
+      initWS();
+
       setInterval(loadChat, 5000);
     </script>
   </body>
