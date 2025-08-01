@@ -409,7 +409,7 @@
     <!-- Sidebar / user list -->
     <div
       id="chatSidebar"
-      class="absolute top-16 right-4 w-60 bg-white border rounded shadow p-2 text-sm"
+      class="hidden absolute top-16 right-4 w-60 bg-white border rounded shadow p-2 text-sm z-50"
     >
       <div class="font-semibold mb-2">Conversations</div>
       <div id="userList" class="space-y-1 overflow-y-auto max-h-64"></div>
@@ -447,6 +447,12 @@
       💬
     </button>
 
+    <button
+      onclick="toggleChatSidebar()"
+      class="fixed bottom-20 right-6 bg-white border border-gray-300 text-gray-800 text-sm px-2 py-1 rounded shadow z-50"
+    >
+      👥 Chat Users
+    </button>
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
@@ -647,6 +653,12 @@
           return "";
         }
       }
+
+      function toggleChatSidebar() {
+        const sidebar = document.getElementById("chatSidebar");
+        sidebar.classList.toggle("hidden");
+      }
+
       const currentUser = parseUser();
       let activePeer = null;
       const chatMessages = document.getElementById("chatMessages");
