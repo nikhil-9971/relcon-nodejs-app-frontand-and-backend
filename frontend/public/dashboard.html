@@ -652,8 +652,11 @@
       const chatMessages = document.getElementById("chatMessages");
       const chatInput = document.getElementById("chatInput");
       const sendBtn = document.getElementById("sendBtn");
+      const typingEl = document.getElementById("typingIndicator");
 
+      let typingTimeout;
       let ws;
+
       function initWS() {
         ws = new WebSocket(
           `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
@@ -669,21 +672,23 @@
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
 
+          // 🟡 Typing indicator
           if (msg.type === "typing" && msg.from !== currentUser) {
             typingEl.textContent = `${msg.from} is typing...`;
-
             clearTimeout(typingTimeout);
             typingTimeout = setTimeout(() => {
               typingEl.textContent = "";
             }, 2000);
           }
 
+          // 💬 Chat message
           if (msg.type === "group" && msg.from !== currentUser) {
             renderMessage(msg);
           }
         };
 
         ws.onclose = () => {
+          console.warn("⚠️ WS closed, reconnecting...");
           setTimeout(initWS, 3000);
         };
       }
@@ -692,10 +697,16 @@
         const text = chatInput.value.trim();
         if (!text) return;
 
-        const payload = { type: "group", from: currentUser, text };
+        const payload = {
+          type: "group",
+          from: currentUser,
+          text: text,
+          createdAt: new Date().toISOString(), // for local optimistic render
+        };
+
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(payload));
-          renderMessage(payload);
+          renderMessage(payload); // Optimistic render
           chatInput.value = "";
         }
       }
@@ -706,7 +717,6 @@
         const div = document.createElement("div");
         div.className = "msg " + (isOwn ? "me" : "them");
 
-        // Format timestamp
         const date = msg.createdAt ? new Date(msg.createdAt) : new Date();
         const time = date.toLocaleTimeString([], {
           hour: "2-digit",
@@ -723,20 +733,6 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
 
-      let typingTimeout;
-      const typingEl = document.getElementById("typingIndicator");
-
-      chatInput.addEventListener("input", () => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: "typing", from: currentUser }));
-        }
-
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-          typingEl.textContent = "";
-        }, 2000);
-      });
-
       async function loadGroupHistory() {
         try {
           const res = await fetch(`${baseUrl}/chat/history/group`, {
@@ -746,15 +742,28 @@
           chatMessages.innerHTML = "";
           data.forEach(renderMessage);
         } catch (err) {
-          console.error("Failed to load group history", err);
+          console.error("❌ Failed to load chat", err);
         }
       }
 
+      // 📡 Send typing event
+      chatInput.addEventListener("input", () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "typing", from: currentUser }));
+        }
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          typingEl.textContent = "";
+        }, 2000);
+      });
+
+      // 📩 Send on click or Enter
       sendBtn.addEventListener("click", sendMessage);
       chatInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") sendMessage();
       });
 
+      // 🚀 Start
       initWS();
     </script>
   </body>
