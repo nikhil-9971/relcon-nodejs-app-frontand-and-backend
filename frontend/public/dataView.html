@@ -1703,7 +1703,12 @@
         const safeName = userName.replace(/\s+/g, "_");
 
         XLSX.utils.book_append_sheet(wb, ws, "Visit Records");
-        XLSX.writeFile(wb, `${safeName}_VisitRecords_${date}.xlsx`);
+        XLSX.writeFile(
+          wb,
+          `${safeName}_VisitRecords_${date}_${Math.floor(
+            1000 + Math.random() * 9000
+          )}.xlsx`
+        );
       }
 
       function logout() {
