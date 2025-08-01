@@ -1,7 +1,7 @@
 // routes/chat.routes.js
 const express = require("express");
 const router = express.Router();
-const Chat = require("../models/chat.model");
+const Chat = require("../models/Chat");
 
 // 📨 Send a message
 router.post("/send", async (req, res) => {
