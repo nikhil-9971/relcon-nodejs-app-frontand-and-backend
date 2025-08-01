@@ -288,11 +288,12 @@
       // Export excel file
       function exportAll() {
         const customHeaderMap = {
+          sno: "SNO", // नया पहला कॉलम
           zone: "Zone",
           region: "Region",
           roCode: "RO Code",
-          customer: "Customer", // new column
-          phase: "Phase", // new column
+          customer: "Customer",
+          phase: "Phase",
           roName: "RO Name",
           atgIssuetype: "ATG Related Issue",
           date: "Scheduled Visit Date",
@@ -310,7 +311,7 @@
 
         const headers = Object.values(customHeaderMap);
 
-        const rows = filteredData.map((record) => {
+        const rows = filteredData.map((record, index) => {
           // Split phase into customer and phase
           let customer = "",
             phase = "";
@@ -321,6 +322,7 @@
           }
 
           return Object.keys(customHeaderMap).map((key) => {
+            if (key === "sno") return index + 1; // SNO starting from 1
             if (key === "customer") return customer;
             if (key === "phase") return phase;
             return record[key] || "";
