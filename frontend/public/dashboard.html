@@ -663,7 +663,9 @@
 
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
-          if (msg.type === "group") renderMessage(msg);
+          if (msg.type === "group" && msg.from !== currentUser) {
+            renderMessage(msg);
+          }
         };
 
         ws.onclose = () => {
