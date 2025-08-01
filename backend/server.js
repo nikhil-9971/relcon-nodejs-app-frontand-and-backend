@@ -85,6 +85,10 @@ app.use((req, res) => {
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+// app.listen(PORT, () => {
+//   console.log(`✅ Server running at http://localhost:${PORT}`);
+// });
+
+server.listen(PORT, () => {
+  console.log(`✅ Server + WebSocket running on http://localhost:${PORT}`);
 });
