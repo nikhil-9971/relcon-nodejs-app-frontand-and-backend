@@ -406,6 +406,11 @@
 
     <div id="progressBar"></div>
 
+    <div
+      id="typingIndicator"
+      class="text-xs text-gray-500 italic mb-1 px-2"
+    ></div>
+
     <!-- Chat Box -->
     <div id="chatBox" class="shadow-lg">
       <div
@@ -663,6 +668,16 @@
 
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
+
+          if (msg.type === "typing" && msg.from !== currentUser) {
+            typingEl.textContent = `${msg.from} is typing...`;
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+              typingEl.textContent = "";
+            }, 2000);
+          }
+
           if (msg.type === "group" && msg.from !== currentUser) {
             renderMessage(msg);
           }
@@ -687,12 +702,40 @@
 
       function renderMessage(msg) {
         const isOwn = msg.from === currentUser;
+
         const div = document.createElement("div");
         div.className = "msg " + (isOwn ? "me" : "them");
-        div.innerHTML = `<div style="font-size:10px;"><b>${msg.from}</b></div><div>${msg.text}</div>`;
+
+        // Format timestamp
+        const date = msg.createdAt ? new Date(msg.createdAt) : new Date();
+        const time = date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        div.innerHTML = `
+    <div style="font-size:10px;"><b>${msg.from}</b></div>
+    <div>${msg.text}</div>
+    <div style="font-size:9px; text-align:right; color:#999">${time}</div>
+  `;
+
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
+
+      let typingTimeout;
+      const typingEl = document.getElementById("typingIndicator");
+
+      chatInput.addEventListener("input", () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "typing", from: currentUser }));
+        }
+
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          typingEl.textContent = "";
+        }, 2000);
+      });
 
       async function loadGroupHistory() {
         try {
