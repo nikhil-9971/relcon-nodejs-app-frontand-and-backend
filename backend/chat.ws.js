@@ -60,6 +60,24 @@ function setupWebsocket(server) {
         return;
       }
 
+      if (msg.type === "typing") {
+        // Broadcast typing status to all except the sender
+        const payload = {
+          type: "typing",
+          from: user,
+        };
+
+        for (const [username, conns] of clients.entries()) {
+          if (username === user) continue;
+          for (const s of conns) {
+            if (s.readyState === WebSocket.OPEN)
+              s.send(JSON.stringify(payload));
+          }
+        }
+
+        return;
+      }
+
       // 📦 Handle group chat
       if (msg.type === "group") {
         const messageDoc = await Chat.create({
