@@ -406,14 +406,6 @@
 
     <div id="progressBar"></div>
 
-    <!-- Sidebar / user list -->
-    <div
-      id="chatSidebar"
-      class="hidden absolute top-16 right-4 w-60 bg-white border rounded shadow p-2 text-sm z-50"
-    >
-      <div class="font-semibold mb-2">Conversations</div>
-      <div id="userList" class="space-y-1 overflow-y-auto max-h-64"></div>
-    </div>
     <!-- Chat Box -->
     <div id="chatBox" class="shadow-lg">
       <div
@@ -441,12 +433,6 @@
 
     <!-- Chat Toggle Button -->
 
-    <button
-      onclick="toggleChatSidebar()"
-      class="fixed bottom-20 right-6 bg-white border border-gray-300 text-gray-800 text-sm px-2 py-1 rounded shadow z-50"
-    >
-      👥 Chat Users
-    </button>
     <button
       onclick="document.getElementById('chatBox').style.display='flex'"
       class="fixed bottom-6 right-6 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg"
@@ -645,30 +631,23 @@
           bar.style.width = "0%";
         }, 500); // Wait for animation to finish
       }
+      const token = getToken();
+      if (!token) logout();
 
       function parseUser() {
         try {
           const p = JSON.parse(atob(token.split(".")[1]));
-          return (p.engineerName || p.name || p.username || "").trim();
+          return (p.engineerName || p.username || "").trim();
         } catch {
           return "";
         }
       }
-
-      function toggleChatSidebar() {
-        const sidebar = document.getElementById("chatSidebar");
-        sidebar.classList.toggle("hidden");
-      }
-
-      const token = getToken(); // add this line before parseUser
       const currentUser = parseUser();
-      let activePeer = null;
+
       const chatMessages = document.getElementById("chatMessages");
       const chatInput = document.getElementById("chatInput");
       const sendBtn = document.getElementById("sendBtn");
-      const userListEl = document.getElementById("userList");
 
-      // WebSocket setup
       let ws;
       function initWS() {
         ws = new WebSocket(
@@ -678,20 +657,13 @@
         );
 
         ws.onopen = () => {
-          console.log("WS connected");
+          console.log("✅ Connected to group chat");
+          loadGroupHistory();
         };
 
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
-          if (msg.type === "presence") {
-            renderUserList(msg.online);
-          } else if (msg.type === "chat") {
-            handleIncoming(msg);
-          } else if (msg.type === "read-receipt") {
-            // mark messages as read in UI for that room
-            // you can decorate with a small tick
-            console.log("Read receipt from", msg.from);
-          }
+          if (msg.type === "group") renderMessage(msg);
         };
 
         ws.onclose = () => {
@@ -699,98 +671,37 @@
         };
       }
 
-      function makeRoomId(a, b) {
-        return [a, b].sort().join("__");
-      }
-
-      // track unread counts
-      const unread = {}; // { peer: count }
-
-      function renderUserList(onlineUsers) {
-        // assume you have list of all possible peers from some source; for demo include admin + online
-        const peers = new Set([...onlineUsers, "admin"]); // you can fetch all users separately
-        userListEl.innerHTML = "";
-        peers.forEach((user) => {
-          if (user === currentUser) return;
-          const isOnline = onlineUsers.includes(user);
-          const badge = unread[user]
-            ? `<span class="ml-1 bg-red-600 text-white rounded-full px-2 text-xs">${unread[user]}</span>`
-            : "";
-          const dot = isOnline ? "🟢" : "⚪";
-          const div = document.createElement("div");
-          div.className =
-            "flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 rounded";
-          div.innerHTML = `<div><span>${dot}</span> <strong>${user}</strong></div><div>${badge}</div>`;
-          div.addEventListener("click", () => {
-            activePeer = user;
-            unread[user] = 0;
-            loadHistory(user);
-          });
-          userListEl.appendChild(div);
-        });
-      }
-
-      async function loadHistory(peer) {
-        if (!peer) return;
-        activePeer = peer;
-        const res = await fetch(
-          `${baseUrl}/chat/history/${encodeURIComponent(
-            currentUser
-          )}/${encodeURIComponent(peer)}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await res.json();
-        chatMessages.innerHTML = "";
-        data.forEach((m) => {
-          const isOwn = m.from === currentUser;
-          const div = document.createElement("div");
-          div.className = "msg " + (isOwn ? "me" : "them");
-          div.innerHTML = `<div style="font-size:10px;"><b>${m.from}</b></div><div>${m.text}</div>`;
-          chatMessages.appendChild(div);
-        });
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        // send read receipt
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: "mark-read", from: peer }));
-        }
-      }
-
-      function handleIncoming(msg) {
-        const peer = msg.from === currentUser ? msg.to : msg.from;
-        const isOwn = msg.from === currentUser;
-        // if not active room, increment unread
-        if (peer !== activePeer) {
-          unread[peer] = (unread[peer] || 0) + 1;
-          renderUserList([]); // you can cache onlineUsers separately
-        } else {
-          const div = document.createElement("div");
-          div.className = "msg " + (isOwn ? "me" : "them");
-          div.innerHTML = `<div style="font-size:10px;"><b>${msg.from}</b></div><div>${msg.text}</div>`;
-          chatMessages.appendChild(div);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-          // send read receipt back
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: "mark-read", from: msg.from }));
-          }
-        }
-      }
-
       function sendMessage() {
-        if (!activePeer) return alert("Select a user to chat with.");
         const text = chatInput.value.trim();
         if (!text) return;
-        const payload = { to: activePeer, text };
+
+        const payload = { type: "group", from: currentUser, text };
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(payload));
-          // optimistic UI
-          const div = document.createElement("div");
-          div.className = "msg me";
-          div.innerHTML = `<div style="font-size:10px;"><b>${currentUser}</b></div><div>${text}</div>`;
-          chatMessages.appendChild(div);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
+          renderMessage(payload);
           chatInput.value = "";
+        }
+      }
+
+      function renderMessage(msg) {
+        const isOwn = msg.from === currentUser;
+        const div = document.createElement("div");
+        div.className = "msg " + (isOwn ? "me" : "them");
+        div.innerHTML = `<div style="font-size:10px;"><b>${msg.from}</b></div><div>${msg.text}</div>`;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      async function loadGroupHistory() {
+        try {
+          const res = await fetch(`${baseUrl}/chat/history/group`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          chatMessages.innerHTML = "";
+          data.forEach(renderMessage);
+        } catch (err) {
+          console.error("Failed to load group history", err);
         }
       }
 
@@ -800,8 +711,6 @@
       });
 
       initWS();
-
-      setInterval(loadChat, 5000);
     </script>
   </body>
 </html>
