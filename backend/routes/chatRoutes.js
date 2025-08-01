@@ -50,4 +50,18 @@ router.post("/mark-read", async (req, res) => {
   }
 });
 
+// 📜 Get group chat history
+router.get("/history/group", async (req, res) => {
+  try {
+    const messages = await Chat.find({ roomId: "group" }).sort({
+      createdAt: 1,
+    });
+    res.json(messages);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to load chat", details: err.message });
+  }
+});
+
 module.exports = router;
