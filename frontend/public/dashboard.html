@@ -112,6 +112,9 @@
         padding: 8px 12px;
         cursor: pointer;
       }
+      #mentionBox div:hover {
+        background: #f0f0f0;
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
@@ -762,8 +765,91 @@
         if (e.key === "Enter") sendMessage();
       });
 
+      //MENTER USER DETAIL
+
+      let mentionList = [];
+      let mentionBox;
+
+      // Load once at page load
+      async function fetchUserListForMention() {
+        try {
+          const res = await fetch(`${baseUrl}/chat/userlist`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          mentionList = await res.json();
+        } catch (err) {
+          console.error("Failed to load mention list", err);
+        }
+      }
+
+      // Create mention UI
+      function createMentionBox() {
+        mentionBox = document.createElement("div");
+        mentionBox.id = "mentionBox";
+        mentionBox.style.position = "absolute";
+        mentionBox.style.bottom = "50px";
+        mentionBox.style.right = "30px";
+        mentionBox.style.background = "#fff";
+        mentionBox.style.border = "1px solid #ccc";
+        mentionBox.style.borderRadius = "6px";
+        mentionBox.style.maxHeight = "120px";
+        mentionBox.style.overflowY = "auto";
+        mentionBox.style.zIndex = 9999;
+        mentionBox.style.fontSize = "12px";
+        mentionBox.style.display = "none";
+        document.body.appendChild(mentionBox);
+      }
+
+      // Show mention dropdown
+      function showMentionDropdown(searchTerm) {
+        if (!mentionList.length) return;
+        const matches = mentionList.filter((u) =>
+          u.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        mentionBox.innerHTML = "";
+
+        if (matches.length === 0) return (mentionBox.style.display = "none");
+
+        matches.forEach((name) => {
+          const item = document.createElement("div");
+          item.textContent = name;
+          item.style.padding = "5px 10px";
+          item.style.cursor = "pointer";
+          item.onclick = () => {
+            const val = chatInput.value;
+            const atIndex = val.lastIndexOf("@");
+            chatInput.value = val.slice(0, atIndex + 1) + name + " ";
+            chatInput.focus();
+            mentionBox.style.display = "none";
+          };
+          mentionBox.appendChild(item);
+        });
+
+        mentionBox.style.display = "block";
+      }
+
+      // Hook into input field
+      chatInput.addEventListener("input", () => {
+        const val = chatInput.value;
+        const cursorPos = val.lastIndexOf("@");
+        if (cursorPos >= 0) {
+          const term = val.slice(cursorPos + 1);
+          if (term.length >= 1) {
+            showMentionDropdown(term);
+          } else {
+            mentionBox.style.display = "none";
+          }
+        } else {
+          mentionBox.style.display = "none";
+        }
+      });
+
       // 🚀 Start
       initWS();
+      window.addEventListener("DOMContentLoaded", () => {
+        fetchUserListForMention();
+        createMentionBox();
+      });
     </script>
   </body>
 </html>
