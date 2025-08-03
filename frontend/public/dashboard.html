@@ -742,11 +742,12 @@
           .trim();
 
         const highlightedText = msg.text.replace(
-          /@(\w[\w\s]*)/g,
+          /@([^\s@]+)/g,
           (match, name) => {
             return `<span style="color:#2563eb; font-weight:500;">@${name}</span>`;
           }
         );
+
         div.innerHTML = `
     <div style="font-size:10px;"><b>${msg.from}</b></div>
     <div>${highlightedText}</div>
