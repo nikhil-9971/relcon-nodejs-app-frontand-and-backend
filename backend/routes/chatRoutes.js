@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Chat = require("../models/Chat");
+const User = require("../models/User");
 
 // Send a message (fallback if not using WS)
 router.post("/send", async (req, res) => {
@@ -61,6 +62,16 @@ router.get("/history/group", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to load chat", details: err.message });
+  }
+});
+
+router.get("/userlist", async (req, res) => {
+  try {
+    const users = await User.find({}, "username engineerName").lean();
+    const list = users.map((u) => u.engineerName || u.username);
+    res.json([...new Set(list)].sort()); // remove duplicates, sort alphabetically
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get user list" });
   }
 });
 
