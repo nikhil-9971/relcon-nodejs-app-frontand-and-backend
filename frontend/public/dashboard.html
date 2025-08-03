@@ -791,22 +791,50 @@
 
       //MENTER USER DETAIL
 
-      let mentionList = [];
+      let mentionList = []; // full roster
+      let presenceOnlineSet = new Set(); // currently online
       let mentionBox;
 
-      // Load once at page load
+      // 🔹 Load full roster
       async function fetchUserListForMention() {
         try {
           const res = await fetch(`${baseUrl}/chat/userlist`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          mentionList = await res.json();
+          const data = await res.json();
+          mentionList = data.map((u) => {
+            const name =
+              typeof u === "string"
+                ? u
+                : u.name || u.engineerName || u.username || "";
+            return { name: name.trim(), online: false };
+          });
         } catch (err) {
           console.error("Failed to load mention list", err);
         }
       }
 
-      // Create mention UI
+      // 🔹 Update roster with presence info
+      function syncMentionListStatus() {
+        mentionList = mentionList.map((u) => ({
+          name: u.name,
+          online: presenceOnlineSet.has(u.name),
+        }));
+        const term = extractCurrentAtQuery();
+        if (term !== null) showMentionDropdown(term);
+      }
+
+      function extractCurrentAtQuery() {
+        const cursorPos = chatInput.selectionStart;
+        const val = chatInput.value.slice(0, cursorPos);
+        const atIndex = val.lastIndexOf("@");
+        if (atIndex === -1) return null;
+        const prefix = val[atIndex - 1];
+        if (atIndex > 0 && !/\s/.test(prefix)) return null;
+        return val.slice(atIndex + 1);
+      }
+
+      // 🔹 Create mention UI
       function createMentionBox() {
         mentionBox = document.createElement("div");
         mentionBox.id = "mentionBox";
@@ -816,7 +844,7 @@
         mentionBox.style.background = "#fff";
         mentionBox.style.border = "1px solid #ccc";
         mentionBox.style.borderRadius = "6px";
-        mentionBox.style.maxHeight = "120px";
+        mentionBox.style.maxHeight = "160px";
         mentionBox.style.overflowY = "auto";
         mentionBox.style.zIndex = 9999;
         mentionBox.style.fontSize = "12px";
@@ -824,21 +852,37 @@
         document.body.appendChild(mentionBox);
       }
 
-      // Show mention dropdown
+      // 🔹 Show mention dropdown with colored dots
       function showMentionDropdown(searchTerm) {
         if (!mentionList.length) return;
         const matches = mentionList.filter((u) =>
-          u.toLowerCase().includes(searchTerm.toLowerCase())
+          u.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         mentionBox.innerHTML = "";
-
         if (matches.length === 0) return (mentionBox.style.display = "none");
 
-        matches.forEach((name) => {
+        matches.forEach(({ name, online }) => {
           const item = document.createElement("div");
-          item.textContent = name;
           item.style.padding = "5px 10px";
           item.style.cursor = "pointer";
+          item.style.display = "flex";
+          item.style.alignItems = "center";
+          item.style.gap = "8px";
+
+          const dot = document.createElement("span");
+          dot.style.display = "inline-block";
+          dot.style.width = "10px";
+          dot.style.height = "10px";
+          dot.style.borderRadius = "50%";
+          dot.style.flexShrink = "0";
+          dot.style.backgroundColor = online ? "#22c55e" : "#ef4444";
+
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = name;
+
+          item.appendChild(dot);
+          item.appendChild(nameSpan);
+
           item.onclick = () => {
             const val = chatInput.value;
             const atIndex = val.lastIndexOf("@");
@@ -852,28 +896,76 @@
         mentionBox.style.display = "block";
       }
 
-      // Hook into input field
+      // 🔹 Hook input for @ mentions
       chatInput.addEventListener("input", () => {
-        const val = chatInput.value;
-        const cursorPos = val.lastIndexOf("@");
-        if (cursorPos >= 0) {
-          const term = val.slice(cursorPos + 1);
-          if (term.length >= 1) {
-            showMentionDropdown(term);
-          } else {
-            mentionBox.style.display = "none";
-          }
-        } else {
+        const term = extractCurrentAtQuery();
+        if (term === null) {
           mentionBox.style.display = "none";
+          return;
         }
+        if (term.length >= 1) showMentionDropdown(term);
+        else mentionBox.style.display = "none";
       });
 
+      // 🔹 WS integration for presence
+      function initWS() {
+        ws = new WebSocket(
+          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
+            token
+          )}`
+        );
+
+        ws.onopen = () => {
+          console.log("✅ Connected to group chat");
+          loadGroupHistory();
+          // ask for presence on connect
+          ws.send(JSON.stringify({ type: "get_presence" }));
+        };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+
+          if (msg.type === "presence" && Array.isArray(msg.users)) {
+            presenceOnlineSet.clear();
+            msg.users.forEach((u) => {
+              const uname = (
+                u.name ||
+                u.engineerName ||
+                u.username ||
+                ""
+              ).trim();
+              if (uname) presenceOnlineSet.add(uname);
+            });
+            syncMentionListStatus();
+          }
+
+          if (msg.type === "typing" && msg.from !== currentUser) {
+            typingEl.textContent = `${msg.from} is typing...`;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+              typingEl.textContent = "";
+            }, 2000);
+          }
+
+          if (msg.type === "group" && msg.from !== currentUser) {
+            renderMessage(msg);
+          }
+        };
+
+        ws.onclose = () => {
+          console.warn("⚠️ WS closed, reconnecting...");
+          setTimeout(initWS, 3000);
+        };
+      }
+
       // 🚀 Start
-      initWS();
       window.addEventListener("DOMContentLoaded", () => {
         fetchUserListForMention();
         createMentionBox();
       });
+
+      // 🚀 Start
+      initWS();
     </script>
   </body>
 </html>
