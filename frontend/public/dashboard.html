@@ -725,10 +725,16 @@
           minute: "2-digit",
         });
 
+        const highlightedText = msg.text.replace(
+          /@(\w[\w\s]*)/g,
+          (match, name) => {
+            return `<span style="color:#2563eb; font-weight:500;">@${name}</span>`;
+          }
+        );
         div.innerHTML = `
     <div style="font-size:10px;"><b>${msg.from}</b></div>
-    <div>${msg.text}</div>
-    <div style="font-size:9px; text-align:right; color:#999">${time}</div>
+    <div>${highlightedText}</div>
+    <div style="font-size:9px; text-align:right; color:#999">${date} : ${time}</div>
   `;
 
         chatMessages.appendChild(div);
