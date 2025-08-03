@@ -855,11 +855,25 @@
       // 🔹 Show mention dropdown with colored dots
       function showMentionDropdown(searchTerm) {
         if (!mentionList.length) return;
-        const matches = mentionList.filter((u) =>
-          u.name.toLowerCase().includes(searchTerm.toLowerCase())
+        const term = searchTerm.toLowerCase();
+
+        // filter matching
+        let matches = mentionList.filter((u) =>
+          u.name.toLowerCase().includes(term)
         );
+
+        if (matches.length === 0) {
+          mentionBox.style.display = "none";
+          return;
+        }
+
+        // sort: online first, then by name
+        matches.sort((a, b) => {
+          if (a.online !== b.online) return a.online ? -1 : 1; // online before offline
+          return a.name.localeCompare(b.name);
+        });
+
         mentionBox.innerHTML = "";
-        if (matches.length === 0) return (mentionBox.style.display = "none");
 
         matches.forEach(({ name, online }) => {
           const item = document.createElement("div");
