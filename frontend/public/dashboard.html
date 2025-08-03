@@ -742,9 +742,9 @@
           .trim();
 
         const highlightedText = msg.text.replace(
-          /@([^\s@]+)/g,
-          (match, name) => {
-            return `<span style="color:#2563eb; font-weight:500;">@${name}</span>`;
+          /@([^\s@]+(?:\s[^\s@]+)*)/g,
+          (match) => {
+            return `<span style="color:#2563eb; font-weight:500;">${match}</span>`;
           }
         );
 
