@@ -16,6 +16,27 @@ function verifyToken(token) {
   }
 }
 
+function broadcastPresence() {
+  // build list of currently online users
+  const users = Array.from(clients.keys()).map((name) => ({
+    name,
+    online: true,
+  }));
+
+  const payload = {
+    type: "presence",
+    users,
+  };
+
+  for (const conns of clients.values()) {
+    for (const s of conns) {
+      if (s.readyState === WebSocket.OPEN) {
+        s.send(JSON.stringify(payload));
+      }
+    }
+  }
+}
+
 function setupWebsocket(server) {
   const wss = new WebSocket.Server({ noServer: true });
 
@@ -45,6 +66,7 @@ function setupWebsocket(server) {
     if (!clients.has(user)) clients.set(user, new Set());
     clients.get(user).add(ws);
 
+    // Notify the new socket
     ws.send(
       JSON.stringify({
         type: "system",
@@ -52,11 +74,29 @@ function setupWebsocket(server) {
       })
     );
 
+    // Broadcast updated presence to everyone
+    broadcastPresence();
+
     ws.on("message", async (raw) => {
       let msg;
       try {
         msg = JSON.parse(raw);
       } catch {
+        return;
+      }
+
+      // Client asking for current presence explicitly
+      if (msg.type === "get_presence") {
+        const users = Array.from(clients.keys()).map((name) => ({
+          name,
+          online: true,
+        }));
+        ws.send(
+          JSON.stringify({
+            type: "presence",
+            users,
+          })
+        );
         return;
       }
 
@@ -112,6 +152,8 @@ function setupWebsocket(server) {
         clients.get(user).delete(ws);
         if (clients.get(user).size === 0) clients.delete(user);
       }
+      // Update presence after someone disconnects
+      broadcastPresence();
     });
   });
 }
