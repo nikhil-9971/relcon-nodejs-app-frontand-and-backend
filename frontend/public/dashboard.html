@@ -420,40 +420,11 @@
     <div id="progressBar"></div>
 
     <!-- Chat Box -->
-    <div id="chatBox" class="shadow-lg">
-      <div
-        style="
-          background: #16a34a;
-          color: white;
-          padding: 10px;
-          border-top-left-radius: 10px;
-          border-top-right-radius: 10px;
-        "
-      >
-        <b>Chat</b>
-        <span
-          style="float: right; cursor: pointer"
-          onclick="document.getElementById('chatBox').style.display='none'"
-          >×</span
-        >
-      </div>
-      <div
-        id="typingIndicator"
-        class="text-xs text-gray-500 italic mb-1 px-2"
-      ></div>
-      <div id="chatMessages" class="flex flex-col"></div>
-      <div id="chatInputSection">
-        <input type="text" id="chatInput" placeholder="Type..." />
-        <button id="sendBtn">Send</button>
-      </div>
-    </div>
-
-    <!-- Chat Toggle Button -->
-
+    <!-- 💬 Chat Toggle Button -->
     <button
       id="chatToggleBtn"
       onclick="openChatBox()"
-      class="fixed bottom-6 right-6 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg relative"
+      class="fixed bottom-6 right-6 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg z-[9999]"
     >
       💬
       <span
@@ -472,6 +443,60 @@
         >0</span
       >
     </button>
+
+    <!-- 🧾 Chat Box -->
+    <div
+      id="chatBox"
+      class="shadow-lg flex flex-col fixed bottom-24 right-6 bg-white border border-gray-300 rounded-lg w-80 max-w-full z-[9999]"
+      style="display: none"
+    >
+      <!-- Header -->
+      <div
+        style="
+          background: #16a34a;
+          color: white;
+          padding: 10px;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+        "
+        class="flex justify-between items-center"
+      >
+        <b>Chat</b>
+        <span
+          style="cursor: pointer"
+          onclick="document.getElementById('chatBox').style.display='none'"
+          >×</span
+        >
+      </div>
+
+      <!-- Typing Indicator -->
+      <div
+        id="typingIndicator"
+        class="text-xs text-gray-500 italic mb-1 px-2"
+      ></div>
+
+      <!-- Messages -->
+      <div
+        id="chatMessages"
+        class="flex-1 overflow-y-auto p-2 text-sm max-h-60"
+      ></div>
+
+      <!-- Input -->
+      <div id="chatInputSection" class="p-2 flex gap-2 border-t">
+        <input
+          type="text"
+          id="chatInput"
+          placeholder="Type..."
+          class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+        />
+        <button
+          id="sendBtn"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded"
+        >
+          Send
+        </button>
+      </div>
+    </div>
 
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
