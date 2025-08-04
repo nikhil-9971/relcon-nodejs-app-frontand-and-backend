@@ -60,9 +60,9 @@
       }
 
       #chatBox {
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
+        position: fixed !important;
+        bottom: 80px !important;
+        right: 20px !important;
         width: 300px;
         max-height: 400px;
         background: #fff;
@@ -72,7 +72,7 @@
         flex-direction: column;
         font-family: "Poppins", sans-serif;
         z-index: 9999;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* add shadow for visibility */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
 
       #chatMessages {
@@ -117,6 +117,13 @@
       }
       #mentionBox div:hover {
         background: #f0f0f0;
+      }
+      @media (max-width: 500px) {
+        #chatBox {
+          width: 90% !important;
+          right: 5% !important;
+          bottom: 70px !important;
+        }
       }
     </style>
   </head>
