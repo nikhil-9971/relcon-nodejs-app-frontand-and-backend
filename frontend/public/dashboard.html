@@ -18,23 +18,8 @@
       href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.css"
     />
     <!-- ✅ Include emoji-button UMD build -->
+
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const picker = new EmojiButton(); // now defined
-        const emojiBtn = document.getElementById("emojiBtn");
-        const chatInput = document.getElementById("chatInput");
-
-        emojiBtn.addEventListener("click", () => {
-          picker.togglePicker(emojiBtn);
-        });
-
-        picker.on("emoji", (emoji) => {
-          chatInput.value += emoji;
-        });
-      });
-    </script>
 
     <style>
       body {
@@ -558,6 +543,20 @@
 
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const picker = new EmojiButton(); // ✅ now defined globally
+        const emojiBtn = document.getElementById("emojiBtn");
+        const chatInput = document.getElementById("chatInput");
+
+        emojiBtn.addEventListener("click", () => {
+          picker.togglePicker(emojiBtn);
+        });
+
+        picker.on("emoji", (emoji) => {
+          chatInput.value += emoji;
+        });
+      });
 
       function getToken() {
         return localStorage.getItem("token");
