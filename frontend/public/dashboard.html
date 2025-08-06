@@ -13,11 +13,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.css"
-    />
-
+    <!-- Emoji button must come BEFORE the above code uses EmojiButton -->
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script>
     <style>
       body {
         font-family: "Poppins", sans-serif;
@@ -1185,7 +1182,5 @@
       // 🚀 Start
       initWS();
     </script>
-    <!-- Emoji button must come BEFORE the above code uses EmojiButton -->
-    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script>
   </body>
 </html>
