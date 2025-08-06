@@ -1159,6 +1159,8 @@
         }
       });
       const micBtn = document.getElementById("micBtn");
+      const micIcon = micBtn.querySelector("i"); // target the icon inside the button
+
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -1167,18 +1169,30 @@
       recognition.interimResults = false;
       recognition.lang = "en-IN";
 
+      let isListening = false;
+
       micBtn.addEventListener("click", () => {
-        recognition.start();
-        micBtn.textContent = "🛑";
+        if (!isListening) {
+          recognition.start();
+          micIcon.className = "fa-solid fa-circle-stop"; // show stop icon
+          isListening = true;
+        } else {
+          recognition.stop();
+          micIcon.className = "fa-solid fa-microphone-lines"; // back to mic icon
+          isListening = false;
+        }
       });
 
       recognition.onresult = (event) => {
+        const chatInput = document.getElementById("chatInput");
         chatInput.value += event.results[0][0].transcript + " ";
-        micBtn.textContent = "🎤";
+        micIcon.className = "fa-solid fa-microphone-lines";
+        isListening = false;
       };
 
       recognition.onerror = () => {
-        micBtn.textContent = "🎤";
+        micIcon.className = "fa-solid fa-microphone-lines";
+        isListening = false;
       };
 
       // 🚀 Start
