@@ -7,8 +7,14 @@ const ChatSchema = new mongoose.Schema(
     roomId: { type: String, required: true }, // private room identifier (e.g., sorted combination of users)
     text: { type: String, required: true },
     delivered: { type: Boolean, default: false }, // delivery receipt
-    read: { type: Boolean, default: false }, // read receipt
+    read: { type: Boolean, default: false }, // read
+    // receipt
+    replyTo: {
+      from: String,
+      text: String,
+    },
   },
+
   { timestamps: true }
 );
 
