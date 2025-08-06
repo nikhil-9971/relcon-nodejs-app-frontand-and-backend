@@ -60,21 +60,20 @@
       }
 
       #chatBox {
-        position: fixed !important;
-        bottom: 80px !important;
-        right: 20px !important;
-        width: 300px;
-        max-height: 400px;
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        width: 50vw; /* ✅ Half of screen width */
+        height: 60vh; /* ✅ Good height (60% of viewport) */
         background: #fff;
-        border: 1px solid #ccc;
-        border-radius: 10px;
+        border-left: 1px solid #ccc;
+        border-top: 1px solid #ccc;
         display: none;
         flex-direction: column;
         font-family: "Poppins", sans-serif;
         z-index: 9999;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        resize: both;
-        overflow: auto;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        border-top-left-radius: 12px;
       }
 
       #chatMessages {
@@ -85,10 +84,15 @@
         padding: 10px;
         font-size: 12px;
       }
+      #chatToggleBtn {
+        bottom: 70px;
+        right: 20px;
+      }
+
       .msg {
         padding: 8px 12px;
         border-radius: 10px;
-        max-width: 75%;
+        max-width: 90%;
         word-wrap: break-word;
         display: inline-block;
       }
