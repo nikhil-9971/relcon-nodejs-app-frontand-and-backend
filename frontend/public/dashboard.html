@@ -13,6 +13,12 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+
     <style>
       body {
         font-family: "Poppins", sans-serif;
@@ -502,14 +508,28 @@
       <!-- Messages -->
       <div id="chatMessages" class="flex-1 overflow-y-auto p-2 text-sm"></div>
 
+      <div
+        id="replyBox"
+        style="
+          display: none;
+          background: #fef9c3;
+          padding: 6px 10px;
+          font-size: 11px;
+          border-left: 4px solid #facc15;
+        "
+      ></div>
+
       <!-- Input -->
-      <div id="chatInputSection" class="p-2 flex gap-2 border-t">
+      <div id="chatInputSection" class="p-2 flex gap-2 border-t relative">
+        <button id="emojiBtn" title="Emoji" class="text-lg">😊</button>
         <input
           type="text"
           id="chatInput"
           placeholder="Type..."
           class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
         />
+        <button id="micBtn" title="Speak" class="text-lg">🎤</button>
+
         <button
           id="sendBtn"
           class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded"
@@ -767,21 +787,32 @@
         };
       }
 
+      div.querySelector(".replyBtn")?.addEventListener("click", () => {
+        document.getElementById("replyBox").style.display = "block";
+        document.getElementById(
+          "replyBox"
+        ).textContent = `"${msg.text}" by ${msg.from}`;
+        chatInput.focus();
+      });
+
       function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
 
+        const replyText = document.getElementById("replyBox").textContent || "";
+
         const payload = {
           type: "group",
           from: currentUser,
-          text: text,
-          createdAt: new Date().toISOString(), // for local optimistic render
+          text: replyText ? `${replyText}\n➡️ ${text}` : text,
+          createdAt: new Date().toISOString(),
         };
 
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(payload));
-          renderMessage(payload); // Optimistic render
+          renderMessage(payload);
           chatInput.value = "";
+          document.getElementById("replyBox").style.display = "none";
         }
       }
 
@@ -875,10 +906,15 @@
         );
 
         div.innerHTML = `
-    <div style="font-size:10px;"><b>${msg.from}</b></div>
-    <div>${highlightedText}</div>
-    <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
-  `;
+  <div style="font-size:10px;"><b>${msg.from}</b></div>
+  <div>${highlightedText}</div>
+  <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
+  ${
+    isOwn || currentUser === "admin"
+      ? `<button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>`
+      : ""
+  }
+`;
 
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1096,6 +1132,42 @@
           setTimeout(initWS, 3000);
         };
       }
+
+      const emojiBtn = document.getElementById("emojiBtn");
+      const picker = new EmojiButton({
+        position: "top-start",
+        theme: "auto",
+        zIndex: 9999,
+      });
+      picker.on("emoji", (emoji) => {
+        chatInput.value += emoji;
+      });
+      emojiBtn.addEventListener("click", () => {
+        picker.togglePicker(emojiBtn);
+      });
+
+      const micBtn = document.getElementById("micBtn");
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-IN";
+
+      micBtn.addEventListener("click", () => {
+        recognition.start();
+        micBtn.textContent = "🛑";
+      });
+
+      recognition.onresult = (event) => {
+        chatInput.value += event.results[0][0].transcript + " ";
+        micBtn.textContent = "🎤";
+      };
+
+      recognition.onerror = () => {
+        micBtn.textContent = "🎤";
+      };
 
       // 🚀 Start
       window.addEventListener("DOMContentLoaded", () => {
