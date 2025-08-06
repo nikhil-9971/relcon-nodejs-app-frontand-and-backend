@@ -543,6 +543,8 @@
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
+      let replyContext = null;
+
       function getToken() {
         return localStorage.getItem("token");
       }
@@ -791,25 +793,36 @@
           setTimeout(initWS, 3000);
         };
       }
-
       function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        const replyText = document.getElementById("replyBox").textContent || "";
+        const replyBox = document.getElementById("replyBox");
 
         const payload = {
           type: "group",
           from: currentUser,
-          text: replyText ? `${replyText}\n➡️ ${text}` : text,
+          text: text,
           createdAt: new Date().toISOString(),
         };
 
+        // Check if there's a quoted message in replyContext
+        if (replyContext) {
+          payload.replyTo = {
+            from: replyContext.from,
+            text: replyContext.text,
+          };
+
+          // Clear reply state
+          replyContext = null;
+          replyBox.style.display = "none";
+          replyBox.textContent = "";
+        }
+
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(payload));
-          renderMessage(payload);
+          renderMessage(payload); // Optional: render locally
           chatInput.value = "";
-          document.getElementById("replyBox").style.display = "none";
         }
       }
 
@@ -898,15 +911,23 @@
           }
         );
 
+        let replyHTML = "";
+        if (msg.replyTo) {
+          replyHTML = `
+    <div style="font-size:9px; background:#f3f4f6; border-left: 3px solid #15803d; padding: 4px 8px; margin-bottom:4px;">
+      <span style="font-weight:600;">${msg.replyTo.from}:</span>
+      <span style="color:#4b5563;"> ${msg.replyTo.text}</span>
+    </div>
+  `;
+        }
         div.innerHTML = `
   <div style="font-size:10px;"><b>${msg.from}</b></div>
+  ${replyHTML}
   <div>${highlightedText}</div>
   <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
-  ${
-    isOwn || currentUser === "admin"
-      ? `<button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>`
-      : ""
-  }
+  <button class="replyBtn" style="font-size:10px; color:#15803d; display:${
+    isOwn || currentUser === "admin" ? "inline" : "none"
+  }">↩️ Reply</button>
 `;
 
         chatMessages.appendChild(div);
@@ -917,6 +938,7 @@
           replyBtn.addEventListener("click", () => {
             const replyBox = document.getElementById("replyBox");
             const chatInput = document.getElementById("chatInput");
+            replyContext = { text: msg.text, from: msg.from }; // store context
             replyBox.style.display = "block";
             replyBox.textContent = `"${msg.text}" by ${msg.from}`;
             chatInput.focus();
