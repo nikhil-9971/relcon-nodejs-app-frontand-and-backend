@@ -61,19 +61,18 @@
 
       #chatBox {
         position: fixed;
-        bottom: 0;
-        right: 0;
-        width: 50vw; /* ✅ Half of screen width */
-        height: 60vh; /* ✅ Good height (60% of viewport) */
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60vw;
+        height: 65vh;
         background: #fff;
-        border-left: 1px solid #ccc;
-        border-top: 1px solid #ccc;
+        border-radius: 12px;
         display: none;
         flex-direction: column;
-        font-family: "Poppins", sans-serif;
         z-index: 9999;
-        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-        border-top-left-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
       }
 
       #chatMessages {
@@ -90,49 +89,66 @@
       }
 
       .msg {
-        padding: 8px 12px;
-        border-radius: 10px;
-        max-width: 90%;
-        word-wrap: break-word;
-        display: inline-block;
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        word-break: break-word;
       }
 
       .msg.me {
-        background-color: #dcfce7;
+        background: #dcfce7;
         align-self: flex-end;
-        text-align: left;
+        border-bottom-right-radius: 0;
       }
+
       .msg.them {
-        background-color: #e5e7eb;
+        background: #f1f5f9;
         align-self: flex-start;
-        text-align: left;
+        border-bottom-left-radius: 0;
       }
+
       #chatInputSection {
         display: flex;
-        border-top: 1px solid #ccc;
+        align-items: center;
+        padding: 10px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
       }
+
       #chatInput {
         flex: 1;
-        border: none;
-        padding: 8px;
+        padding: 10px 15px;
+        border-radius: 25px;
+        border: 1px solid #ccc;
+        font-size: 13px;
         outline: none;
-        font-size: 12px;
+        background: white;
       }
+
       #sendBtn {
         background: #16a34a;
         color: white;
         border: none;
-        padding: 8px 12px;
+        padding: 10px 18px;
+        border-radius: 25px;
+        margin-left: 10px;
+        font-weight: 500;
         cursor: pointer;
+        transition: background 0.2s ease;
       }
+
+      #sendBtn:hover {
+        background: #15803d;
+      }
+
       #mentionBox div:hover {
         background: #f0f0f0;
       }
-      @media (max-width: 500px) {
+      @media (max-width: 768px) {
         #chatBox {
-          width: 90% !important;
-          right: 5% !important;
-          bottom: 70px !important;
+          width: 95vw;
+          height: 70vh;
         }
       }
     </style>
