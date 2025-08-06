@@ -16,7 +16,8 @@
     <!-- Emoji button must come BEFORE the above code uses EmojiButton -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script> -->
     <!-- FIX: Load correct EmojiButton version -->
-    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/emoji-button.min.js"></script>
+
     <style>
       body {
         font-family: "Poppins", sans-serif;
@@ -1139,7 +1140,7 @@
         const emojiBtn = document.getElementById("emojiBtn");
         const chatInput = document.getElementById("chatInput");
 
-        const picker = new window.EmojiButton({
+        const picker = new EmojiButton({
           position: "top-start",
           theme: "auto",
           zIndex: 9999,
@@ -1153,7 +1154,6 @@
           picker.togglePicker(emojiBtn);
         });
       });
-
       const micBtn = document.getElementById("micBtn");
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
