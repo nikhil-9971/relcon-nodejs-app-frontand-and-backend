@@ -285,6 +285,24 @@
           fetchATGStatus();
         } else alert("Delete failed.");
       }
+
+      let engineerContacts = {
+        "Abhishek Pathak": "9135899823",
+        "Amit Kumar": "9508678595",
+        "Banti Kumar": "6203080133",
+        "Gautam Kumar": "7672888872",
+        "Gautam Kumar (Purnia)": "8292508905",
+        "Kaushal Pandey": "6205749826",
+        "Kuldeep Kumar": "9721500781",
+        "Prerak Singh": "9794902392",
+        "Rajan Pandey": "9128194677",
+        "Raushan Kumar": "8083210951",
+        "RAVI PRATAP": "9415050890",
+        "Shaurav Kumar": "7870430722",
+        "Shubhendu Giri": "9005038182",
+        "Vinit Kumar": "7070431947",
+      };
+
       // Export excel file
       function exportAll() {
         const customHeaderMap = {
@@ -298,6 +316,7 @@
           atgIssuetype: "ATG Related Issue",
           date: "Scheduled Visit Date",
           engineer: "Engineer Name",
+          contactNumber: "Engineer Contact Number",
           startTime: "TIME TO REACH ENG",
           bfrStatus: "STATUS OF SITE BEFORE VISIT",
           actionSite: "Action on site",
@@ -325,6 +344,10 @@
             if (key === "sno") return index + 1; // SNO starting from 1
             if (key === "customer") return customer;
             if (key === "phase") return phase;
+            if (key === "contactNumber") {
+              return engineerContacts[record.engineer?.trim()] || ""; // 👈 Safe lookup
+            }
+
             return record[key] || "";
           });
         });
@@ -372,7 +395,7 @@
           wb,
           `ATG_Visit_${visitDate}_${Math.floor(
             1000 + Math.random() * 9000
-          )}.xlsx`,
+          )}_Nikhil Trivedi.xlsx`,
           { bookType: "xlsx", cellStyles: true }
         );
       }
