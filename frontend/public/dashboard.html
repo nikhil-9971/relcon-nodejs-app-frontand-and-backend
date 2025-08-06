@@ -743,6 +743,10 @@
       }
       const currentUser = parseUser();
 
+      let unreadsMentionCount = 0;
+      const badgeEl = document.getElementById("mentionBadge");
+      const chatBoxEl = document.getElementById("chatBox");
+      const chatToggleBtn = document.getElementById("chatToggleBtn");
       const chatMessages = document.getElementById("chatMessages");
       const chatInput = document.getElementById("chatInput");
       const sendBtn = document.getElementById("sendBtn");
@@ -817,10 +821,6 @@
       }
 
       // ---------- mention notification state ----------
-      let unreadsMentionCount = 0;
-      const badgeEl = document.getElementById("mentionBadge");
-      const chatBoxEl = document.getElementById("chatBox");
-      const chatToggleBtn = document.getElementById("chatToggleBtn");
 
       // Utility: update badge display
       function updateMentionBadge() {
