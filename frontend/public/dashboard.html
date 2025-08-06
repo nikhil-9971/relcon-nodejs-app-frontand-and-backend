@@ -22,21 +22,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script>
 
     <!-- ✅ Use it only after it's defined -->
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const picker = new EmojiButton(); // ✅ No error now
-        const emojiBtn = document.getElementById("emojiBtn");
-        const chatInput = document.getElementById("chatInput");
-
-        emojiBtn.addEventListener("click", () => {
-          picker.togglePicker(emojiBtn);
-        });
-
-        picker.on("emoji", (emoji) => {
-          chatInput.value += emoji;
-        });
-      });
-    </script>
 
     <style>
       body {
