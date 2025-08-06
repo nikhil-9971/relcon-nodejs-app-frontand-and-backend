@@ -17,11 +17,12 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.css"
     />
-    <script type="module">
-      import EmojiButton from "https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js";
+    <!-- ✅ Include emoji-button UMD build -->
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
 
+    <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const picker = new EmojiButton();
+        const picker = new EmojiButton(); // now defined
         const emojiBtn = document.getElementById("emojiBtn");
         const chatInput = document.getElementById("chatInput");
 
