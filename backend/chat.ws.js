@@ -127,6 +127,7 @@ function setupWebsocket(server) {
           text: msg.text,
           delivered: true,
           read: false,
+          replyTo: msg.replyTo || null, // 🟢 Save replyTo if it exists
         });
 
         const payloadMessage = {
@@ -134,6 +135,7 @@ function setupWebsocket(server) {
           from: user,
           text: msg.text,
           createdAt: messageDoc.createdAt,
+          replyTo: msg.replyTo || null, // 🟢 Send to everyone
         };
 
         // 🚀 Broadcast to all users
