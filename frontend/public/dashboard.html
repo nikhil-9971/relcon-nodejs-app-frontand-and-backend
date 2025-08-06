@@ -792,16 +792,6 @@
         };
       }
 
-      let div = document.createElement("div");
-
-      div.querySelector(".replyBtn")?.addEventListener("click", () => {
-        document.getElementById("replyBox").style.display = "block";
-        document.getElementById(
-          "replyBox"
-        ).textContent = `"${msg.text}" by ${msg.from}`;
-        chatInput.focus();
-      });
-
       function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
@@ -921,6 +911,17 @@
 
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const replyBtn = div.querySelector(".replyBtn");
+        if (replyBtn) {
+          replyBtn.addEventListener("click", () => {
+            const replyBox = document.getElementById("replyBox");
+            const chatInput = document.getElementById("chatInput");
+            replyBox.style.display = "block";
+            replyBox.textContent = `"${msg.text}" by ${msg.from}`;
+            chatInput.focus();
+          });
+        }
       }
 
       async function loadGroupHistory() {
@@ -1136,6 +1137,8 @@
         };
       }
 
+      // Empoji picker
+
       window.addEventListener("load", () => {
         const emojiBtn = document.getElementById("emojiBtn");
         const chatInput = document.getElementById("chatInput");
@@ -1158,6 +1161,8 @@
           console.error("❌ EmojiButton failed to load.");
         }
       });
+
+      //micro phone
       const micBtn = document.getElementById("micBtn");
       const micIcon = micBtn.querySelector("i"); // target the icon inside the button
 
