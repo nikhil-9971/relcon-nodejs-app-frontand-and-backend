@@ -806,7 +806,7 @@
           createdAt: new Date().toISOString(),
         };
 
-        // Check if there's a quoted message in replyContext
+        // 🟢 Add replyTo if replying
         if (replyContext) {
           payload.replyTo = {
             from: replyContext.from,
@@ -820,8 +820,8 @@
         }
 
         if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(payload));
-          renderMessage(payload); // Optional: render locally
+          ws.send(JSON.stringify(payload)); // 🟢 Now includes replyTo
+          renderMessage(payload); // for self
           chatInput.value = "";
         }
       }
