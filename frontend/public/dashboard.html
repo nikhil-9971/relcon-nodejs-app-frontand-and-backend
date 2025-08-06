@@ -17,7 +17,23 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.css"
     />
-    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+    <script type="module">
+      import EmojiButton from "https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const picker = new EmojiButton();
+        const emojiBtn = document.getElementById("emojiBtn");
+        const chatInput = document.getElementById("chatInput");
+
+        emojiBtn.addEventListener("click", () => {
+          picker.togglePicker(emojiBtn);
+        });
+
+        picker.on("emoji", (emoji) => {
+          chatInput.value += emoji;
+        });
+      });
+    </script>
 
     <style>
       body {
@@ -790,6 +806,8 @@
           setTimeout(initWS, 3000);
         };
       }
+
+      let div = document.createElement("div");
 
       div.querySelector(".replyBtn")?.addEventListener("click", () => {
         document.getElementById("replyBox").style.display = "block";
