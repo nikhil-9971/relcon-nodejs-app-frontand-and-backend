@@ -18,12 +18,13 @@
       href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.css"
     />
     <!-- ✅ Include emoji-button UMD build -->
-
+    <!-- ✅ Load emoji picker script -->
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script>
 
+    <!-- ✅ Use it only after it's defined -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const picker = new EmojiButton();
+        const picker = new EmojiButton(); // ✅ No error now
         const emojiBtn = document.getElementById("emojiBtn");
         const chatInput = document.getElementById("chatInput");
 
@@ -1153,17 +1154,23 @@
         };
       }
 
-      const emojiBtn = document.getElementById("emojiBtn");
-      const picker = new EmojiButton({
-        position: "top-start",
-        theme: "auto",
-        zIndex: 9999,
-      });
-      picker.on("emoji", (emoji) => {
-        chatInput.value += emoji;
-      });
-      emojiBtn.addEventListener("click", () => {
-        picker.togglePicker(emojiBtn);
+      document.addEventListener("DOMContentLoaded", () => {
+        const emojiBtn = document.getElementById("emojiBtn");
+        const chatInput = document.getElementById("chatInput");
+
+        const picker = new EmojiButton({
+          position: "top-start",
+          theme: "auto",
+          zIndex: 9999,
+        });
+
+        picker.on("emoji", (emoji) => {
+          chatInput.value += emoji;
+        });
+
+        emojiBtn.addEventListener("click", () => {
+          picker.togglePicker(emojiBtn);
+        });
       });
 
       const micBtn = document.getElementById("micBtn");
