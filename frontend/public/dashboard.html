@@ -476,11 +476,26 @@
     </button>
 
     <!-- 🧾 Chat Box -->
-    <div id="chatBox">
-      <div id="chatHeader">
-        <span>Team Chat</span>
-        <span style="cursor: pointer" onclick="toggleChatBox()">✕</span>
+    <div id="chatBox" style="display: none">
+      <!-- Header -->
+      <div
+        style="
+          background: #16a34a;
+          color: white;
+          padding: 10px;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+        "
+        class="flex justify-between items-center"
+      >
+        <b>Team Chat</b>
+        <span
+          style="cursor: pointer"
+          onclick="document.getElementById('chatBox').style.display='none'"
+          >×</span
+        >
       </div>
+
       <!-- Typing Indicator -->
       <div
         id="typingIndicator"
@@ -488,12 +503,25 @@
       ></div>
 
       <!-- Messages -->
-      <div id="chatMessages"></div>
+      <div
+        id="chatMessages"
+        class="flex-1 overflow-y-auto p-2 text-sm max-h-60"
+      ></div>
 
       <!-- Input -->
       <div id="chatInputSection" class="p-2 flex gap-2 border-t">
-        <input type="text" id="chatInput" placeholder="Type..." />
-        <button id="sendBtn">Send</button>
+        <input
+          type="text"
+          id="chatInput"
+          placeholder="Type..."
+          class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+        />
+        <button
+          id="sendBtn"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded"
+        >
+          Send
+        </button>
       </div>
     </div>
 
