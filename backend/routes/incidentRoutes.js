@@ -3,24 +3,27 @@ const router = express.Router();
 const Incident = require("../models/Incident");
 
 // 🔁 Bulk Import Incidents
-router.post("/bulkImportIncident", async (req, res) => {
-  try {
-    const { incidents } = req.body;
-    if (!Array.isArray(incidents) || incidents.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No data received" });
+fetch(`${backendURL}/bulkImportIncident`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ incidents: data }),
+})
+  .then(async (res) => {
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const result = await res.json();
+      if (result.success) showToast("✅ Data imported successfully");
+      else throw new Error(result.error || "Import failed.");
+    } else {
+      throw new Error("❌ Invalid server response");
     }
-
-    await Incident.insertMany(incidents);
-    res.json({ success: true, message: "Data imported successfully" });
-  } catch (err) {
-    console.error("Bulk import error:", err.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Server error during import" });
-  }
-});
+  })
+  .catch((err) => {
+    console.error("Import error:", err);
+    showToast("❌ Failed to import data");
+  });
 
 // ✅ Update Incident Status
 // PUT: Update status (Pending/Close)
