@@ -23,15 +23,17 @@ router.post("/bulkImportIncident", async (req, res) => {
 });
 
 // ✅ Update Incident Status
-router.put("/update-status", async (req, res) => {
+// PUT: Update status (Pending/Close)
+router.put("/updateIncidentStatus", async (req, res) => {
   const { incidentId, status } = req.body;
-
-  if (!incidentId || !status) {
-    return res.status(400).json({ message: "Missing required fields" });
+  try {
+    await sheet.updateRow("IncidentData", "Incident ID", incidentId, {
+      Status: status,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  await Incident.findOneAndUpdate({ incidentId }, { status });
-  res.json({ message: "✅ Status updated" });
 });
 
 module.exports = router;
