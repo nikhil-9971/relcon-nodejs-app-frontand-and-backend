@@ -49,10 +49,10 @@
       const role = localStorage.getItem("role");
       let currentIncidentData = [];
 
-      if (role !== "admin") {
-        alert("Access denied. Only admin can view this page.");
-        window.location.href = "dashboard.html";
-      }
+      //  if (role !== "admin") {
+      //  alert("Access denied. Only admin can view this page.");
+      //  window.location.href = "dashboard.html";
+      // }
 
       document.getElementById("excelInput").addEventListener("change", (e) => {
         const file = e.target.files[0];
