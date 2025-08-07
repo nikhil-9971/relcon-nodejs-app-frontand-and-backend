@@ -3,27 +3,22 @@ const router = express.Router();
 const Incident = require("../models/Incident");
 
 // 🔁 Bulk Import Incidents
-router.post("/bulk-import", async (req, res) => {
+router.post("/bulkImportIncident", async (req, res) => {
   try {
     const { incidents } = req.body;
-
-    if (!Array.isArray(incidents)) {
-      return res.status(400).json({ message: "Invalid data" });
+    if (!Array.isArray(incidents) || incidents.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No data received" });
     }
 
-    const docs = incidents.map((i) => ({
-      incidentId: i.incidentId?.toUpperCase(),
-      roCode: i.roCode?.toUpperCase(),
-      siteName: i.siteName,
-      region: i.region,
-      incidentDate: i.incidentDate,
-      status: i.status,
-    }));
-
-    await Incident.insertMany(docs, { ordered: false });
-    res.json({ message: "✅ Data imported" });
+    await Incident.insertMany(incidents);
+    res.json({ success: true, message: "Data imported successfully" });
   } catch (err) {
-    res.status(200).json({ message: "Imported with some duplicates/skips" });
+    console.error("Bulk import error:", err.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error during import" });
   }
 });
 
