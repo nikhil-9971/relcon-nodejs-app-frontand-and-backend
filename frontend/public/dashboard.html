@@ -631,6 +631,9 @@
           if (user.role === "admin") {
             document.getElementById("taskManagementLink").style.display =
               "flex";
+          }
+
+          if (user.role === "admin") {
             document.getElementById("incidentId").style.display = "flex";
           }
         } catch (err) {
