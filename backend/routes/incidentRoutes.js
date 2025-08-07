@@ -19,16 +19,16 @@ router.post("/bulkImportIncident", async (req, res) => {
 });
 
 // ========== 2. UPDATE INCIDENT STATUS ========== //
-router.post("/updateIncidentStatus", async (req, res) => {
+router.put("/updateIncidentStatus", async (req, res) => {
   try {
-    const { incidentId, newStatus } = req.body;
-    if (!incidentId || !newStatus) {
-      return res.status(400).json({ error: "Missing incidentId or newStatus" });
+    const { incidentId, status } = req.body;
+    if (!incidentId || !status) {
+      return res.status(400).json({ error: "Missing incidentId or status" });
     }
 
     const updated = await Incident.findOneAndUpdate(
       { incidentId },
-      { status: newStatus },
+      { status },
       { new: true }
     );
 
@@ -40,6 +40,17 @@ router.post("/updateIncidentStatus", async (req, res) => {
   } catch (err) {
     console.error("Status update error:", err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ========== 3. GET ALL INCIDENTS ========== //
+router.get("/getAllIncidents", async (req, res) => {
+  try {
+    const incidents = await Incident.find().sort({ incidentDate: -1 });
+    res.json({ success: true, incidents });
+  } catch (err) {
+    console.error("Fetch error:", err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
