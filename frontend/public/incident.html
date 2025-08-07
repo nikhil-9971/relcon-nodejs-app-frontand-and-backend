@@ -52,6 +52,8 @@
       const BASE_URL = "https://relcon-backend-jwt.onrender.com";
       let excelPreviewData = [];
 
+      window.onload = fetchIncidents;
+
       document
         .getElementById("excelFile")
         .addEventListener("change", async (e) => {
@@ -66,12 +68,20 @@
             siteName: item["Site Name"] || "",
             region: item["Region"] || "",
             incidentId: item["Incident ID"] || "",
-            incidentDate: item["Incident Date"] || "",
+            incidentDate: formatExcelDate(item["Incident Date"]),
             status: item["Status"] || "Pending",
           }));
           renderIncidentTable(excelPreviewData);
           syncToBackend(excelPreviewData);
         });
+
+      function formatExcelDate(excelDate) {
+        if (typeof excelDate === "number") {
+          const date = new Date((excelDate - 25569) * 86400 * 1000);
+          return date.toISOString().split("T")[0];
+        }
+        return excelDate || "";
+      }
 
       function renderIncidentTable(data) {
         const tbody = document.getElementById("incidentTable");
@@ -135,6 +145,19 @@
         } catch (err) {
           console.error(err);
           showToast("❌ Server error");
+        }
+      }
+
+      async function fetchIncidents() {
+        try {
+          const res = await fetch(`${BASE_URL}/getAllIncidents`);
+          const result = await res.json();
+          if (result.success && result.incidents) {
+            excelPreviewData = result.incidents;
+            renderIncidentTable(excelPreviewData);
+          }
+        } catch (err) {
+          console.error("Failed to fetch incident data:", err);
         }
       }
 
