@@ -47,11 +47,14 @@
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("role");
-      let currentIncidentData = [];
 
-      //  if (role !== "admin") {
-      //  alert("Access denied. Only admin can view this page.");
-      //  window.location.href = "dashboard.html";
+      let currentIncidentData = [];
+      let excelPreviewData = [];
+
+      // Optional: Uncomment to restrict access
+      // if (role !== "admin") {
+      //   alert("Access denied. Only admin can view this page.");
+      //   window.location.href = "dashboard.html";
       // }
 
       document.getElementById("excelInput").addEventListener("change", (e) => {
@@ -62,13 +65,40 @@
           const wb = XLSX.read(evt.target.result, { type: "binary" });
           const sheet = wb.Sheets[wb.SheetNames[0]];
           const data = XLSX.utils.sheet_to_json(sheet);
-          currentIncidentData = data;
-          renderIncidentTable(data);
-          syncToBackend(data);
+
+          excelPreviewData = data;
+
+          // Show Import button
+          let btn = document.getElementById("importBtn");
+          if (!btn) {
+            const newBtn = document.createElement("button");
+            newBtn.id = "importBtn";
+            newBtn.textContent = "Import";
+            newBtn.className = "bg-blue-600 text-white px-4 py-2 rounded";
+            newBtn.onclick = handleImport;
+            document.querySelector(".mb-4").appendChild(newBtn);
+          } else {
+            btn.classList.remove("hidden");
+          }
         };
 
         reader.readAsBinaryString(file);
       });
+
+      function handleImport() {
+        if (!excelPreviewData.length) {
+          alert("❌ No data to import.");
+          return;
+        }
+
+        currentIncidentData = excelPreviewData;
+        renderIncidentTable(currentIncidentData);
+        syncToBackend(currentIncidentData);
+
+        // Hide import button again
+        const btn = document.getElementById("importBtn");
+        if (btn) btn.classList.add("hidden");
+      }
 
       function renderIncidentTable(data) {
         const tbody = document.getElementById("incidentBody");
@@ -79,22 +109,20 @@
           tr.className = i % 2 === 0 ? "bg-gray-50" : "bg-white";
 
           tr.innerHTML = `
-            <td class="border px-4 py-2">${row.roCode || ""}</td>
-            <td class="border px-4 py-2">${row.siteName || ""}</td>
-            <td class="border px-4 py-2">${row.region || ""}</td>
-            <td class="border px-4 py-2">${row.incidentId || ""}</td>
-            <td class="border px-4 py-2">${row.incidentdate || ""}</td>
-            <td class="border px-4 py-2">
-              <select onchange="updateStatus(${i}, this.value)" class="border p-1 rounded">
-                <option ${
-                  row.status === "Pending" ? "selected" : ""
-                }>Pending</option>
-                <option ${
-                  row.status === "Close" ? "selected" : ""
-                }>Close</option>
-              </select>
-            </td>
-          `;
+        <td class="border px-4 py-2">${row.roCode || ""}</td>
+        <td class="border px-4 py-2">${row.siteName || ""}</td>
+        <td class="border px-4 py-2">${row.region || ""}</td>
+        <td class="border px-4 py-2">${row.incidentId || ""}</td>
+        <td class="border px-4 py-2">${row.incidentdate || ""}</td>
+        <td class="border px-4 py-2">
+          <select onchange="updateStatus(${i}, this.value)" class="border p-1 rounded">
+            <option ${
+              row.status === "Pending" ? "selected" : ""
+            }>Pending</option>
+            <option ${row.status === "Close" ? "selected" : ""}>Close</option>
+          </select>
+        </td>
+      `;
 
           tbody.appendChild(tr);
         });
