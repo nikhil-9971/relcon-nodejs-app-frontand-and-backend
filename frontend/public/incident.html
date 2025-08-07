@@ -3,180 +3,146 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Incident Admin</title>
+    <title>Incident Admin Panel</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
-
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="bg-gray-100 text-sm">
+  <body class="bg-gray-100">
     <div class="p-4">
-      <h2 class="text-xl font-bold mb-4">📋 Incident Admin Panel</h2>
+      <h2 class="text-2xl font-bold mb-4">
+        <span class="mr-2">📋</span>Incident Admin Panel
+      </h2>
 
-      <div class="flex gap-4 items-center mb-4">
+      <div class="flex items-center gap-4 mb-4">
         <input
           type="file"
-          id="excelInput"
-          accept=".xlsx,.xls"
-          class="border rounded px-3 py-2"
+          id="excelFile"
+          accept=".xlsx, .xls"
+          class="p-2 border rounded w-full max-w-xs"
         />
         <button
           onclick="exportToExcel()"
-          class="bg-green-600 text-white px-4 py-2 rounded"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
         >
           Export
         </button>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded shadow">
-          <thead class="bg-green-600 text-white">
-            <tr>
-              <th class="px-4 py-2">RO Code</th>
-              <th class="px-4 py-2">Site Name</th>
-              <th class="px-4 py-2">Region</th>
-              <th class="px-4 py-2">Incident ID</th>
-              <th class="px-4 py-2">Incident Date</th>
-              <th class="px-4 py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody id="incidentBody"></tbody>
-        </table>
-      </div>
+      <table class="table-auto w-full text-sm">
+        <thead class="bg-green-600 text-white">
+          <tr>
+            <th class="px-2 py-2">RO Code</th>
+            <th class="px-2 py-2">Site Name</th>
+            <th class="px-2 py-2">Region</th>
+            <th class="px-2 py-2">Incident ID</th>
+            <th class="px-2 py-2">Incident Date</th>
+            <th class="px-2 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody id="incidentTable" class="bg-white"></tbody>
+      </table>
     </div>
 
     <div
       id="toast"
-      class="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300 text-sm z-50"
+      class="hidden fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg"
     ></div>
 
     <script>
-      const baseUrl = "https://relcon-backend-jwt.onrender.com";
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
-
-      let currentIncidentData = [];
+      const BASE_URL = "https://relcon-backend-jwt.onrender.com";
       let excelPreviewData = [];
 
-      // Optional: Uncomment to restrict access
-      // if (role !== "admin") {
-      //   alert("Access denied. Only admin can view this page.");
-      //   window.location.href = "dashboard.html";
-      // }
-
-      document.getElementById("excelInput").addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-
-        reader.onload = (evt) => {
-          const wb = XLSX.read(evt.target.result, { type: "binary" });
-          const sheet = wb.Sheets[wb.SheetNames[0]];
-          const data = XLSX.utils.sheet_to_json(sheet);
-
-          excelPreviewData = data;
-
-          // Show Import button
-          let btn = document.getElementById("importBtn");
-          if (!btn) {
-            const newBtn = document.createElement("button");
-            newBtn.id = "importBtn";
-            newBtn.textContent = "Import";
-            newBtn.className = "bg-blue-600 text-white px-4 py-2 rounded";
-            newBtn.onclick = handleImport;
-            document.querySelector(".mb-4").appendChild(newBtn);
-          } else {
-            btn.classList.remove("hidden");
-          }
-        };
-
-        reader.readAsBinaryString(file);
-      });
-
-      async function handleImport() {
-        if (!excelPreviewData.length) {
-          alert("❌ No data to import.");
-          return;
-        }
-
-        currentIncidentData = excelPreviewData;
-        renderIncidentTable(currentIncidentData);
-
-        // 🔄 Wait for backend sync to complete
-        await syncToBackend(currentIncidentData);
-
-        // ✅ Show toast after successful import
-        showToast("✅ Data imported successfully");
-
-        // Hide import button again
-        const btn = document.getElementById("importBtn");
-        if (btn) btn.classList.add("hidden");
-      }
+      document
+        .getElementById("excelFile")
+        .addEventListener("change", async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data);
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(sheet);
+          excelPreviewData = json.map((item) => ({
+            roCode: item["RO Code"] || "",
+            siteName: item["Site Name"] || "",
+            region: item["Region"] || "",
+            incidentId: item["Incident ID"] || "",
+            incidentDate: item["Incident Date"] || "",
+            status: item["Status"] || "Pending",
+          }));
+          renderIncidentTable(excelPreviewData);
+          syncToBackend(excelPreviewData);
+        });
 
       function renderIncidentTable(data) {
-        const tbody = document.getElementById("incidentBody");
+        const tbody = document.getElementById("incidentTable");
         tbody.innerHTML = "";
-
-        data.forEach((row, i) => {
-          const tr = document.createElement("tr");
-          tr.className = i % 2 === 0 ? "bg-gray-50" : "bg-white";
-
-          tr.innerHTML = `
-        <td class="border px-4 py-2">${row.roCode || ""}</td>
-        <td class="border px-4 py-2">${row.siteName || ""}</td>
-        <td class="border px-4 py-2">${row.region || ""}</td>
-        <td class="border px-4 py-2">${row.incidentId || ""}</td>
-        <td class="border px-4 py-2">${row.incidentdate || ""}</td>
-        <td class="border px-4 py-2">
-          <select onchange="updateStatus(${i}, this.value)" class="border p-1 rounded">
-            <option ${
-              row.status === "Pending" ? "selected" : ""
-            }>Pending</option>
-            <option ${row.status === "Close" ? "selected" : ""}>Close</option>
-          </select>
-        </td>
-      `;
-
-          tbody.appendChild(tr);
+        data.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="border px-2 py-1">${item.roCode}</td>
+            <td class="border px-2 py-1">${item.siteName}</td>
+            <td class="border px-2 py-1">${item.region}</td>
+            <td class="border px-2 py-1">${item.incidentId}</td>
+            <td class="border px-2 py-1">${item.incidentDate}</td>
+            <td class="border px-2 py-1">
+              <select class="border px-2 py-1 rounded" onchange="updateStatus(${index}, this.value)">
+                <option ${
+                  item.status === "Pending" ? "selected" : ""
+                }>Pending</option>
+                <option ${
+                  item.status === "Close" ? "selected" : ""
+                }>Close</option>
+              </select>
+            </td>
+          `;
+          tbody.appendChild(row);
         });
       }
 
       function updateStatus(index, newStatus) {
-        currentIncidentData[index].status = newStatus;
-
-        fetch(`${baseUrl}/incident/update-status`, {
+        excelPreviewData[index].status = newStatus;
+        fetch(`${BASE_URL}/updateIncidentStatus`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            incidentId: currentIncidentData[index].incidentId,
+            incidentId: excelPreviewData[index].incidentId,
             status: newStatus,
           }),
-        });
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.success) showToast("✅ Status updated");
+          });
       }
 
-      function syncToBackend(data) {
-        fetch(`${baseUrl}/incident/bulk-import`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ incidents: data }),
-        });
-      }
-
-      function showToast(message) {
+      function showToast(msg) {
         const toast = document.getElementById("toast");
-        toast.textContent = message;
-        toast.classList.remove("opacity-0");
-        setTimeout(() => toast.classList.add("opacity-0"), 3000);
+        toast.innerText = msg;
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 3000);
       }
+
+      async function syncToBackend(data) {
+        try {
+          const response = await fetch(`${BASE_URL}/bulkImportIncident`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ incidents: data }),
+          });
+          const res = await response.json();
+          if (res.success) showToast("✅ Data imported successfully");
+          else showToast("❌ Import failed");
+        } catch (err) {
+          console.error(err);
+          showToast("❌ Server error");
+        }
+      }
+
       function exportToExcel() {
-        const ws = XLSX.utils.json_to_sheet(currentIncidentData);
+        const ws = XLSX.utils.json_to_sheet(excelPreviewData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Incidents");
-        XLSX.writeFile(wb, "incident_export.xlsx");
+        XLSX.writeFile(wb, "incident-report-export.xlsx");
       }
     </script>
   </body>
