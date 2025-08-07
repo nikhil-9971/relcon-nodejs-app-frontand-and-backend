@@ -301,6 +301,7 @@
 
         <a
           href="#"
+          id="incidentId"
           onclick="loadPage('incident.html', this)"
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
         >
@@ -630,6 +631,7 @@
           if (user.role === "admin") {
             document.getElementById("taskManagementLink").style.display =
               "flex";
+            document.getElementById("incidentId").style.display = "flex";
           }
         } catch (err) {
           logout();
