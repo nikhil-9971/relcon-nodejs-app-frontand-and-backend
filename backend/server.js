@@ -67,7 +67,7 @@ app.use(taskRoutes);
 app.use("/jioBP", jioBPStatusRoutes);
 app.use("/materialRequirement", materialRoutes);
 app.use("/chat", chatRoutes);
-app.use("/incident", incidentRoutes);
+app.use("/", incidentRoutes);
 
 const server = http.createServer(app);
 setupWebsocket(server); // attach WS logic
