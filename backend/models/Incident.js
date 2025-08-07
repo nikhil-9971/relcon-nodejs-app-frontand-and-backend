@@ -1,13 +1,12 @@
-// models/Incident.js
 const mongoose = require("mongoose");
 
-const IncidentSchema = new mongoose.Schema({
-  incidentId: String,
+const incidentSchema = new mongoose.Schema({
   roCode: String,
   siteName: String,
   region: String,
+  incidentId: String,
   incidentDate: String,
-  status: String, // "Close" or "Pending"
+  status: { type: String, default: "Pending" },
 });
 
-module.exports = mongoose.model("Incident", IncidentSchema);
+module.exports = mongoose.model("Incident", incidentSchema);
