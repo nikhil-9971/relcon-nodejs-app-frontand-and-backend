@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Incident = require("../models/IncidentModel"); // Mongoose model
+const Incident = require("../models/Incident"); // Mongoose model
 
 // ========== 1. BULK IMPORT INCIDENT ========== //
 router.post("/bulkImportIncident", async (req, res) => {
