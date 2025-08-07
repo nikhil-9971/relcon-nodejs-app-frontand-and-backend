@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Incident Admin</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mini.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -44,6 +43,11 @@
         </table>
       </div>
     </div>
+
+    <div
+      id="toast"
+      class="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300 text-sm z-50"
+    ></div>
 
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
@@ -87,7 +91,7 @@
         reader.readAsBinaryString(file);
       });
 
-      function handleImport() {
+      async function handleImport() {
         if (!excelPreviewData.length) {
           alert("❌ No data to import.");
           return;
@@ -95,7 +99,12 @@
 
         currentIncidentData = excelPreviewData;
         renderIncidentTable(currentIncidentData);
-        syncToBackend(currentIncidentData);
+
+        // 🔄 Wait for backend sync to complete
+        await syncToBackend(currentIncidentData);
+
+        // ✅ Show toast after successful import
+        showToast("✅ Data imported successfully");
 
         // Hide import button again
         const btn = document.getElementById("importBtn");
@@ -157,6 +166,12 @@
         });
       }
 
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("opacity-0");
+        setTimeout(() => toast.classList.add("opacity-0"), 3000);
+      }
       function exportToExcel() {
         const ws = XLSX.utils.json_to_sheet(currentIncidentData);
         const wb = XLSX.utils.book_new();
