@@ -15,7 +15,9 @@ const taskRoutes = require("./routes/taskRoutes");
 const jioBPStatusRoutes = require("./routes/jioBPStatusRoutes");
 const materialRoutes = require("./routes/materialRequirement");
 const chatRoutes = require("./routes/chatRoutes");
+const incidentRoutes = require("./routes/incidentRoutes");
 const setupWebsocket = require("./chat.ws"); // path adjust
+
 const app = express();
 
 // ✅ Connect to MongoDB
@@ -65,6 +67,7 @@ app.use(taskRoutes);
 app.use("/jioBP", jioBPStatusRoutes);
 app.use("/materialRequirement", materialRoutes);
 app.use("/chat", chatRoutes);
+app.use("/incident", incidentRoutes);
 
 const server = http.createServer(app);
 setupWebsocket(server); // attach WS logic
