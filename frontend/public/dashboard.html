@@ -811,33 +811,37 @@
         const text = chatInput.value.trim();
         if (!text) return;
 
-        const replyBox = document.getElementById("replyBox");
+        // Chatbot check
+        chatbotFlow(text).then((intercepted) => {
+          if (intercepted) {
+            renderMessage({ from: currentUser, text });
+            chatInput.value = "";
+            return;
+          }
 
-        const payload = {
-          type: "group",
-          from: currentUser,
-          text: text,
-          createdAt: new Date().toISOString(),
-        };
-
-        // 🟢 Add replyTo if replying
-        if (replyContext) {
-          payload.replyTo = {
-            from: replyContext.from,
-            text: replyContext.text,
+          // If not chatbot flow, proceed normally
+          const payload = {
+            type: "group",
+            from: currentUser,
+            text: text,
+            createdAt: new Date().toISOString(),
           };
 
-          // Clear reply state
-          replyContext = null;
-          replyBox.style.display = "none";
-          replyBox.textContent = "";
-        }
+          if (replyContext) {
+            payload.replyTo = {
+              from: replyContext.from,
+              text: replyContext.text,
+            };
+            replyContext = null;
+            document.getElementById("replyBox").style.display = "none";
+          }
 
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(payload)); // 🟢 Now includes replyTo
-          renderMessage(payload); // for self
-          chatInput.value = "";
-        }
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(payload));
+            renderMessage(payload);
+            chatInput.value = "";
+          }
+        });
       }
 
       // ---------- mention notification state ----------
@@ -1240,6 +1244,83 @@
         fetchUserListForMention();
         createMentionBox();
       });
+
+      let chatbotStep = 0;
+      let chatbotState = { roCode: "", status: "" };
+
+      async function chatbotFlow(message) {
+        const lower = message.toLowerCase();
+
+        if (chatbotStep === 0 && lower.includes("please provide incident id")) {
+          chatbotStep = 1;
+          renderMessage({
+            from: "🤖 Chatbot",
+            text: "Please provide RO Code.",
+          });
+          return true;
+        }
+
+        if (chatbotStep === 1) {
+          chatbotState.roCode = message.trim();
+          chatbotStep = 2;
+          renderMessage({
+            from: "🤖 Chatbot",
+            text: "Which status do you want? (Close or Pending)",
+          });
+          return true;
+        }
+
+        if (chatbotStep === 2) {
+          const status = message.trim().toLowerCase();
+          if (status !== "close" && status !== "pending") {
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Please type either 'Close' or 'Pending'.",
+            });
+            return true;
+          }
+
+          chatbotState.status =
+            status.charAt(0).toUpperCase() + status.slice(1);
+          chatbotStep = 0;
+
+          // Fetch data from backend
+          try {
+            const res = await fetch(
+              `${baseUrl}/getIncidentsByRoCodeAndStatus?roCode=${encodeURIComponent(
+                chatbotState.roCode
+              )}&status=${encodeURIComponent(chatbotState.status)}`
+            );
+            const data = await res.json();
+
+            if (data.success && data.incidents.length > 0) {
+              const list = data.incidents
+                .map(
+                  (i) =>
+                    `\n- Incident ID: ${i.incidentId}\n  Site: ${i.siteName}, Region: ${i.region}`
+                )
+                .join("\n");
+              renderMessage({
+                from: "🤖 Chatbot",
+                text: `Found the following ${chatbotState.status} incidents:\n${list}`,
+              });
+            } else {
+              renderMessage({
+                from: "🤖 Chatbot",
+                text: `No incidents found for RO Code ${chatbotState.roCode} with status ${chatbotState.status}.`,
+              });
+            }
+          } catch (err) {
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Server error while fetching data.",
+            });
+          }
+          return true;
+        }
+
+        return false;
+      }
 
       // 🚀 Start
       initWS();
