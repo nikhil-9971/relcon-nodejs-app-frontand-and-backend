@@ -877,7 +877,7 @@
       function renderMessage(msg) {
         const isOwn = msg.from === currentUser;
 
-        // Detect if current user was mentioned
+        // Mention detect
         const mentionPattern = new RegExp(
           `@${currentUser.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
           "i"
@@ -912,7 +912,7 @@
           .replace(/\s+GMT.*/, "")
           .trim();
 
-        // Highlight mentions visually
+        // Highlight mentions
         const highlightedText = (msg.text || "").replace(
           /@([^\s@]+(?:\s[^\s@]+)?)/g,
           (_, name) => {
@@ -934,9 +934,38 @@
     `;
         }
 
-        // Check if message contains HTML (for chatbot tables)
+        // Table styling for HTML messages
+
+        const tableStyle = `
+  <style>
+    .chat-table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 5px;
+    }
+    table.chat-table {
+      border-collapse: collapse;
+      min-width: 400px; /* Prevent table from shrinking too much */
+    }
+    table.chat-table th, table.chat-table td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      font-size: 12px;
+      text-align: left;
+      white-space: nowrap; /* Prevent text wrapping */
+    }
+    table.chat-table th {
+      background-color: #15803d;
+      color: white;
+    }
+    table.chat-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+`;
+
         const messageContent = msg.html
-          ? msg.html // render raw HTML from chatbot
+          ? tableStyle + `<div class="chat-table-wrapper">${msg.html}</div>`
           : highlightedText;
 
         div.innerHTML = `
