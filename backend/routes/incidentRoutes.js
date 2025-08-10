@@ -54,4 +54,26 @@ router.get("/getAllIncidents", async (req, res) => {
   }
 });
 
+// ✅ New route to fetch incidents by RO Code and Status
+router.get("/getIncidentsByRoCodeAndStatus", async (req, res) => {
+  const { roCode, status } = req.query;
+
+  if (!roCode || !status) {
+    return res
+      .status(400)
+      .json({ success: false, error: "RO Code and status are required." });
+  }
+
+  try {
+    const incidents = await Incident.find({
+      roCode: roCode.trim(),
+      status: status.trim(),
+    }).select("roCode siteName region incidentId status");
+
+    res.json({ success: true, incidents });
+  } catch (err) {
+    console.error("Query error:", err.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
 module.exports = router;
