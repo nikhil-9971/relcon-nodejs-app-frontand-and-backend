@@ -877,22 +877,18 @@
       function renderMessage(msg) {
         const isOwn = msg.from === currentUser;
 
-        // Detect if current user was mentioned in this incoming message
+        // Detect if current user was mentioned
         const mentionPattern = new RegExp(
           `@${currentUser.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
           "i"
         );
         const isMentioned = !isOwn && mentionPattern.test(msg.text || "");
 
-        // If mentioned and chat box is not visible / not focused, increment
         if (isMentioned) {
-          // If chatBox not visible or user not looking at it, increment
           const chatVisible = chatBoxEl.style.display === "flex";
           if (!chatVisible) {
             unreadsMentionCount += 1;
             updateMentionBadge();
-            // Optional: play a subtle sound
-            // new Audio('/sounds/mention.mp3').play();
           }
         }
 
@@ -916,7 +912,7 @@
           .replace(/\s+GMT.*/, "")
           .trim();
 
-        // highlight mentions visually
+        // Highlight mentions visually
         const highlightedText = (msg.text || "").replace(
           /@([^\s@]+(?:\s[^\s@]+)?)/g,
           (_, name) => {
@@ -931,20 +927,25 @@
         let replyHTML = "";
         if (msg.replyTo) {
           replyHTML = `
-    <div style="font-size:9px; background:#f3f4f6; border-left: 3px solid #15803d; padding: 4px 8px; margin-bottom:4px;">
-      <span style="font-weight:600;">${msg.replyTo.from}:</span>
-      <span style="color:#4b5563;"> ${msg.replyTo.text}</span>
-    </div>
-  `;
+      <div style="font-size:9px; background:#f3f4f6; border-left: 3px solid #15803d; padding: 4px 8px; margin-bottom:4px;">
+        <span style="font-weight:600;">${msg.replyTo.from}:</span>
+        <span style="color:#4b5563;"> ${msg.replyTo.text}</span>
+      </div>
+    `;
         }
-        div.innerHTML = `
-  <div style="font-size:10px;"><b>${msg.from}</b></div>
-  ${replyHTML}
-  <div>${highlightedText}</div>
-  <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
- <button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>
 
-`;
+        // Check if message contains HTML (for chatbot tables)
+        const messageContent = msg.html
+          ? msg.html // render raw HTML from chatbot
+          : highlightedText;
+
+        div.innerHTML = `
+    <div style="font-size:10px;"><b>${msg.from}</b></div>
+    ${replyHTML}
+    <div>${messageContent}</div>
+    <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
+    <button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>
+  `;
 
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -954,7 +955,7 @@
           replyBtn.addEventListener("click", () => {
             const replyBox = document.getElementById("replyBox");
             const chatInput = document.getElementById("chatInput");
-            replyContext = { text: msg.text, from: msg.from }; // store context
+            replyContext = { text: msg.text, from: msg.from };
             replyBox.style.display = "block";
             replyBox.textContent = `"${msg.text}" by ${msg.from}`;
             chatInput.focus();
