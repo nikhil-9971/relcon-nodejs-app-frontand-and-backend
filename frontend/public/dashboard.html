@@ -154,6 +154,32 @@
           height: 70vh;
         }
       }
+
+      /* Chatbot table styles */
+      .chat-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 5px;
+      }
+      .chat-table-wrapper table {
+        border-collapse: collapse;
+        min-width: 400px;
+        font-size: 12px;
+      }
+      .chat-table-wrapper table th,
+      .chat-table-wrapper table td {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .chat-table-wrapper table th {
+        background-color: #15803d;
+        color: white;
+      }
+      .chat-table-wrapper table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
@@ -936,38 +962,10 @@
         }
 
         // Table styling (applies to any <table> inside the wrapper)
-        const tableStyle = `
-    <style>
-      .chat-table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-top: 5px;
-      }
-      .chat-table-wrapper table {
-        border-collapse: collapse;
-        min-width: 400px;
-        font-size: 12px;
-      }
-      .chat-table-wrapper table th,
-      .chat-table-wrapper table td {
-        border: 1px solid #ccc;
-        padding: 6px 8px;
-        text-align: left;
-        white-space: nowrap;
-      }
-      .chat-table-wrapper table th {
-        background-color: #15803d;
-        color: white;
-      }
-      .chat-table-wrapper table tr:nth-child(even) {
-        background-color: #f9f9f9;
-      }
-    </style>
-  `;
 
         // If msg.html provided (chatbot table), wrap it so style applies
         const messageContent = msg.html
-          ? `${tableStyle}<div class="chat-table-wrapper">${msg.html}</div>`
+          ? `<div class="chat-table-wrapper">${msg.html}</div>`
           : `<div>${highlightedText}</div>`;
 
         div.innerHTML = `
