@@ -1245,13 +1245,18 @@
         createMentionBox();
       });
 
+      let chatbotActive = false;
       let chatbotStep = 0;
       let chatbotState = { roCode: "", status: "" };
 
-      async function chatbotFlow(message) {
-        const lower = message.toLowerCase();
-
-        if (chatbotStep === 0 && lower.includes("please provide incident id")) {
+      async function chatbotFlow(message, sender) {
+        // Only trigger if message is from current user and bot is not already in active flow
+        if (
+          sender === currentUser &&
+          chatbotStep === 0 &&
+          message.trim().toLowerCase() === "please provide incident id"
+        ) {
+          chatbotActive = true;
           chatbotStep = 1;
           renderMessage({
             from: "🤖 Chatbot",
@@ -1260,7 +1265,8 @@
           return true;
         }
 
-        if (chatbotStep === 1) {
+        // Step 1: Waiting for RO Code
+        if (chatbotActive && chatbotStep === 1 && sender === currentUser) {
           chatbotState.roCode = message.trim();
           chatbotStep = 2;
           renderMessage({
@@ -1270,7 +1276,8 @@
           return true;
         }
 
-        if (chatbotStep === 2) {
+        // Step 2: Waiting for status
+        if (chatbotActive && chatbotStep === 2 && sender === currentUser) {
           const status = message.trim().toLowerCase();
           if (status !== "close" && status !== "pending") {
             renderMessage({
@@ -1283,8 +1290,8 @@
           chatbotState.status =
             status.charAt(0).toUpperCase() + status.slice(1);
           chatbotStep = 0;
+          chatbotActive = false;
 
-          // Fetch data from backend
           try {
             const res = await fetch(
               `${baseUrl}/getIncidentsByRoCodeAndStatus?roCode=${encodeURIComponent(
