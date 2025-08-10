@@ -1301,16 +1301,35 @@
             const data = await res.json();
 
             if (data.success && data.incidents.length > 0) {
-              const list = data.incidents
-                .map(
-                  (i) =>
-                    `\n- Incident ID: ${i.incidentId}\n  Site: ${i.siteName}, Region: ${i.region}`
-                )
-                .join("\n");
-              renderMessage({
-                from: "🤖 Chatbot",
-                text: `Found the following ${chatbotState.status} incidents:\n${list}`,
+              let tableHTML = `
+    <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+      <thead>
+        <tr style="background-color: #4CAF50; color: white; text-align: left;">
+          <th>RO Code</th>
+          <th>Site Name</th>
+          <th>Region</th>
+          <th>Incident ID</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+              data.incidents.forEach((i) => {
+                tableHTML += `
+      <tr>
+        <td>${i.roCode}</td>
+        <td>${i.siteName}</td>
+        <td>${i.region}</td>
+        <td>${i.incidentId}</td>
+        <td>${i.status}</td>
+      </tr>
+    `;
               });
+
+              tableHTML += "</tbody></table>";
+
+              renderMessage({ from: "🤖 Chatbot", html: tableHTML });
             } else {
               renderMessage({
                 from: "🤖 Chatbot",
