@@ -877,7 +877,7 @@
       function renderMessage(msg) {
         const isOwn = msg.from === currentUser;
 
-        // Mention detect
+        // Mention detection
         const mentionPattern = new RegExp(
           `@${currentUser.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
           "i"
@@ -912,7 +912,7 @@
           .replace(/\s+GMT.*/, "")
           .trim();
 
-        // Highlight mentions
+        // Highlight mentions in normal text
         const highlightedText = (msg.text || "").replace(
           /@([^\s@]+(?:\s[^\s@]+)?)/g,
           (_, name) => {
@@ -934,7 +934,7 @@
     `;
         }
 
-        // Table styling for HTML messages
+        // Table styling (applies only if msg.html is present)
         const tableStyle = `
     <style>
       .chat-table-wrapper {
@@ -945,11 +945,11 @@
       table.chat-table {
         border-collapse: collapse;
         min-width: 400px;
+        font-size: 12px;
       }
       table.chat-table th, table.chat-table td {
         border: 1px solid #ccc;
         padding: 6px 8px;
-        font-size: 12px;
         text-align: left;
         white-space: nowrap;
       }
@@ -963,20 +963,20 @@
     </style>
   `;
 
-        // Choose message content
         const messageContent = msg.html
-          ? `${tableStyle}<div class="chat-table-wrapper">${msg.html}</div>`
-          : `<div>${highlightedText}</div>`;
+          ? tableStyle + `<div class="chat-table-wrapper">${msg.html}</div>`
+          : highlightedText;
 
         div.innerHTML = `
     <div style="font-size:10px;"><b>${msg.from}</b></div>
     ${replyHTML}
-    ${messageContent}
+    <div>${messageContent}</div>
     <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
     <button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>
   `;
 
-        chatMessages.appendChild(div);
+        // Always append in correct order
+        chatMessages.append(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         const replyBtn = div.querySelector(".replyBtn");
