@@ -771,6 +771,7 @@
 
       let typingTimeout;
       let ws;
+      let lastUserMessageEl = null; // stores the most recent message element that the local user sent
 
       function initWS() {
         ws = new WebSocket(
@@ -879,7 +880,7 @@
 
         // Mention detection
         const mentionPattern = new RegExp(
-          `@${currentUser.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
+          `@${currentUser.replace(/[-/\\^$*+?.()|[\\]{}]/g, "\\$&")}`,
           "i"
         );
         const isMentioned = !isOwn && mentionPattern.test(msg.text || "");
@@ -934,7 +935,7 @@
     `;
         }
 
-        // Table styling (applies only if msg.html is present)
+        // Table styling (applies to any <table> inside the wrapper)
         const tableStyle = `
     <style>
       .chat-table-wrapper {
@@ -942,43 +943,68 @@
         -webkit-overflow-scrolling: touch;
         margin-top: 5px;
       }
-      table.chat-table {
+      .chat-table-wrapper table {
         border-collapse: collapse;
         min-width: 400px;
         font-size: 12px;
       }
-      table.chat-table th, table.chat-table td {
+      .chat-table-wrapper table th,
+      .chat-table-wrapper table td {
         border: 1px solid #ccc;
         padding: 6px 8px;
         text-align: left;
         white-space: nowrap;
       }
-      table.chat-table th {
+      .chat-table-wrapper table th {
         background-color: #15803d;
         color: white;
       }
-      table.chat-table tr:nth-child(even) {
+      .chat-table-wrapper table tr:nth-child(even) {
         background-color: #f9f9f9;
       }
     </style>
   `;
 
+        // If msg.html provided (chatbot table), wrap it so style applies
         const messageContent = msg.html
-          ? tableStyle + `<div class="chat-table-wrapper">${msg.html}</div>`
-          : highlightedText;
+          ? `${tableStyle}<div class="chat-table-wrapper">${msg.html}</div>`
+          : `<div>${highlightedText}</div>`;
 
         div.innerHTML = `
     <div style="font-size:10px;"><b>${msg.from}</b></div>
     ${replyHTML}
-    <div>${messageContent}</div>
+    ${messageContent}
     <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
     <button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>
   `;
 
-        // Always append in correct order
-        chatMessages.append(div);
+        // ===== ordering logic =====
+        // If local user's message => append and store element
+        // If bot message and there's a stored lastUserMessageEl, insert after it
+        // Otherwise append normally.
+
+        const isBot = (msg.from || "").toLowerCase().includes("chatbot");
+
+        if (isOwn) {
+          chatMessages.append(div);
+          lastUserMessageEl = div; // remember this element so bot reply can be inserted after it
+        } else if (
+          isBot &&
+          lastUserMessageEl &&
+          chatMessages.contains(lastUserMessageEl)
+        ) {
+          // Insert bot reply right after the user's message
+          lastUserMessageEl.insertAdjacentElement("afterend", div);
+          // Clear stored user message so single reply maps to that message only
+          lastUserMessageEl = null;
+        } else {
+          chatMessages.append(div);
+        }
+
+        // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
+        // reply button behavior
         const replyBtn = div.querySelector(".replyBtn");
         if (replyBtn) {
           replyBtn.addEventListener("click", () => {
