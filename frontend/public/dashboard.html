@@ -807,19 +807,18 @@
           setTimeout(initWS, 3000);
         };
       }
+
       function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        // Chatbot check
-        chatbotFlow(text).then((intercepted) => {
+        chatbotFlow(text, currentUser).then((intercepted) => {
           if (intercepted) {
             renderMessage({ from: currentUser, text });
             chatInput.value = "";
             return;
           }
 
-          // If not chatbot flow, proceed normally
           const payload = {
             type: "group",
             from: currentUser,
@@ -1250,11 +1249,13 @@
       let chatbotState = { roCode: "", status: "" };
 
       async function chatbotFlow(message, sender) {
-        // Only trigger if message is from current user and bot is not already in active flow
+        const lowerMsg = message.trim().toLowerCase();
+
+        // Step 0: Start flow
         if (
-          sender === currentUser &&
-          chatbotStep === 0 &&
-          message.trim().toLowerCase() === "please provide incident id"
+          !chatbotActive &&
+          lowerMsg.includes("please provide incident id") &&
+          sender === currentUser
         ) {
           chatbotActive = true;
           chatbotStep = 1;
@@ -1265,8 +1266,17 @@
           return true;
         }
 
-        // Step 1: Waiting for RO Code
+        // Step 1: Get RO Code
         if (chatbotActive && chatbotStep === 1 && sender === currentUser) {
+          if (lowerMsg === "cancel") {
+            chatbotActive = false;
+            chatbotStep = 0;
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Chatbot flow cancelled.",
+            });
+            return true;
+          }
           chatbotState.roCode = message.trim();
           chatbotStep = 2;
           renderMessage({
@@ -1276,10 +1286,19 @@
           return true;
         }
 
-        // Step 2: Waiting for status
+        // Step 2: Get Status
         if (chatbotActive && chatbotStep === 2 && sender === currentUser) {
-          const status = message.trim().toLowerCase();
-          if (status !== "close" && status !== "pending") {
+          if (lowerMsg === "cancel") {
+            chatbotActive = false;
+            chatbotStep = 0;
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Chatbot flow cancelled.",
+            });
+            return true;
+          }
+
+          if (lowerMsg !== "close" && lowerMsg !== "pending") {
             renderMessage({
               from: "🤖 Chatbot",
               text: "❌ Please type either 'Close' or 'Pending'.",
@@ -1288,7 +1307,7 @@
           }
 
           chatbotState.status =
-            status.charAt(0).toUpperCase() + status.slice(1);
+            lowerMsg.charAt(0).toUpperCase() + lowerMsg.slice(1);
           chatbotStep = 0;
           chatbotActive = false;
 
@@ -1302,29 +1321,29 @@
 
             if (data.success && data.incidents.length > 0) {
               let tableHTML = `
-    <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 5px;">
-      <thead>
-        <tr style="background-color: #4CAF50; color: white; text-align: left;">
-          <th>RO Code</th>
-          <th>Site Name</th>
-          <th>Region</th>
-          <th>Incident ID</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+          <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+            <thead>
+              <tr style="background-color: #4CAF50; color: white; text-align: left;">
+                <th>RO Code</th>
+                <th>Site Name</th>
+                <th>Region</th>
+                <th>Incident ID</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
 
               data.incidents.forEach((i) => {
                 tableHTML += `
-      <tr>
-        <td>${i.roCode}</td>
-        <td>${i.siteName}</td>
-        <td>${i.region}</td>
-        <td>${i.incidentId}</td>
-        <td>${i.status}</td>
-      </tr>
-    `;
+            <tr>
+              <td>${i.roCode}</td>
+              <td>${i.siteName}</td>
+              <td>${i.region}</td>
+              <td>${i.incidentId}</td>
+              <td>${i.status}</td>
+            </tr>
+          `;
               });
 
               tableHTML += "</tbody></table>";
