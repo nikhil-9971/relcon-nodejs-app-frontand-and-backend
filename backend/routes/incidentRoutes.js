@@ -89,4 +89,23 @@ router.get("/getIncidentsByRoCodeAndStatus", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+
+// ========== 5. DELETE INCIDENT ==========
+router.delete("/deleteIncident/:incidentId", async (req, res) => {
+  try {
+    const { incidentId } = req.params;
+    const deleted = await Incident.findOneAndDelete({ incidentId });
+
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Incident not found" });
+    }
+
+    res.json({ success: true, message: "Incident deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
 module.exports = router;
