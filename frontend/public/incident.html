@@ -108,6 +108,23 @@
       }
 
       function renderIncidentTable(data) {
+        const engineerNames = [
+          "Abhishek Pathak",
+          "Amit Kumar",
+          "Banti Kumar",
+          "Gautam Kumar",
+          "Gautam Kumar (Purnia)",
+          "Kaushal Pandey",
+          "Raushan Kumar",
+          "Shaurav Kumar",
+          "Vinit Kumar",
+          "Rajan Pandey",
+          "Shubhendu Giri",
+          "Prerak Singh",
+          "Kuldeep Kumar",
+          "RAVI PRATAP",
+        ];
+
         const tbody = document.getElementById("incidentTable");
         tbody.innerHTML = "";
         data.forEach((item, index) => {
@@ -119,9 +136,33 @@
             <td class="border px-2 py-1">${item.incidentId}</td>
             <td class="border px-2 py-1">${item.incidentDate}</td>
             <td class="border px-2 py-1">${item.complaintRemark}</td>
-            <td class="border px-2 py-1">${item.assignEngineer}</td>
-            <td class="border px-2 py-1">${item.closeRemark}</td>
-            <td class="border px-2 py-1">${item.incidentcloseDate}</td>
+             
+      <td class="border px-2 py-1">
+        <select class="border rounded px-2 py-1" onchange="updateAssignEngineer(${index}, this.value)">
+          ${engineerNames
+            .map(
+              (name) =>
+                `<option value="${name}" ${
+                  item.assignEngineer === name ? "selected" : ""
+                }>${name}</option>`
+            )
+            .join("")}
+        </select>
+      </td>
+
+       <td class="border px-2 py-1">
+        <input type="date" value="${item.incidentcloseDate || ""}" 
+               class="border rounded px-2 py-1"
+               onchange="updateCloseDate(${index}, this.value)">
+      </td>
+
+
+        <td class="border px-2 py-1">
+          <input type="text" value="${item.closeRemark || ""}" 
+               class="border rounded px-2 py-1 w-full"
+               onchange="updateCloseRemark(${index}, this.value)">
+        </td>
+
             <td class="border px-2 py-1">
               <select class="border px-2 py-1 rounded" onchange="updateStatus(${index}, this.value)">
                 <option ${
@@ -135,6 +176,24 @@
           `;
           tbody.appendChild(row);
         });
+      }
+
+      // Update Assign Engineer
+      function updateAssignEngineer(index, value) {
+        excelPreviewData[index].assignEngineer = value;
+        saveFieldChange(index, { assignEngineer: value });
+      }
+
+      // Update Close Remark
+      function updateCloseRemark(index, value) {
+        excelPreviewData[index].closeRemark = value;
+        saveFieldChange(index, { closeRemark: value });
+      }
+
+      // Update Close Date
+      function updateCloseDate(index, value) {
+        excelPreviewData[index].incidentcloseDate = value;
+        saveFieldChange(index, { incidentcloseDate: value });
       }
 
       function updateStatus(index, newStatus) {
