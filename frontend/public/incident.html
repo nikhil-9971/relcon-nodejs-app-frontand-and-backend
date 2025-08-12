@@ -191,11 +191,11 @@
           isAdminUser
             ? `
           <button id="editBtn-${index}" onclick="toggleEditMode(${index}, true)" 
-            class="bg-blue-500 text-white px-2 py-1 rounded mr-1">Edit</button>
+            class="bg-blue-500 text-white px-2 py-1 rounded mr-1">✏️</button>
           <button id="saveEdit-${index}" onclick="saveEdit(${index})" 
             class="bg-green-500 text-white px-2 py-1 rounded mr-1 hidden">Save Changes</button>
           <button onclick="deleteIncident(${index})" 
-            class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+            class="bg-red-500 text-white px-2 py-1 rounded">🗑️</button>
         `
             : ""
         }
