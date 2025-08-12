@@ -8,6 +8,7 @@ const incidentSchema = new mongoose.Schema({
   incidentDate: String,
   complaintRemark: String,
   assignEngineer: String,
+  closeRemark: String,
   incidentcloseDate: String,
   status: { type: String, default: "Pending" },
 });
