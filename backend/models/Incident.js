@@ -6,6 +6,9 @@ const incidentSchema = new mongoose.Schema({
   region: String,
   incidentId: String,
   incidentDate: String,
+  complaintRemark: String,
+  assignEngineer: String,
+  incidentcloseDate: String,
   status: { type: String, default: "Pending" },
 });
 
