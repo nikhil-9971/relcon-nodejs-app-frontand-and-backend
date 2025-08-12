@@ -21,14 +21,27 @@ router.post("/bulkImportIncident", async (req, res) => {
 // ========== 2. UPDATE INCIDENT STATUS ========== //
 router.put("/updateIncidentStatus", async (req, res) => {
   try {
-    const { incidentId, status } = req.body;
-    if (!incidentId || !status) {
-      return res.status(400).json({ error: "Missing incidentId or status" });
+    const {
+      incidentId,
+      status,
+      assignEngineer,
+      closeRemark,
+      incidentcloseDate,
+    } = req.body;
+
+    if (!incidentId) {
+      return res.status(400).json({ error: "Missing incidentId" });
     }
+
+    const updateFields = {};
+    if (status) updateFields.status = status;
+    if (assignEngineer) updateFields.assignEngineer = assignEngineer;
+    if (closeRemark) updateFields.closeRemark = closeRemark;
+    if (incidentcloseDate) updateFields.incidentcloseDate = incidentcloseDate;
 
     const updated = await Incident.findOneAndUpdate(
       { incidentId },
-      { status },
+      { $set: updateFields },
       { new: true }
     );
 
@@ -38,7 +51,7 @@ router.put("/updateIncidentStatus", async (req, res) => {
 
     res.json({ success: true, updated });
   } catch (err) {
-    console.error("Status update error:", err.message);
+    console.error("Incident update error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
