@@ -128,6 +128,8 @@
         const tbody = document.getElementById("incidentTable");
         tbody.innerHTML = "";
         data.forEach((item, index) => {
+          const isClosed = item.status === "Close";
+
           const row = document.createElement("tr");
           row.innerHTML = `
       <td class="border px-2 py-1">${item.roCode}</td>
@@ -137,10 +139,10 @@
       <td class="border px-2 py-1">${item.incidentDate}</td>
       <td class="border px-2 py-1">${item.complaintRemark}</td>
 
-      <!-- Assign Engineer -->
       <td class="border px-2 py-1">
-        <select class="border rounded px-2 py-1"
-          onchange="saveFieldChange(${index}, { assignEngineer: this.value })">
+        <select ${
+          isClosed ? "disabled" : ""
+        } id="engineer-${index}" class="border rounded px-2 py-1">
           <option value="">--Select--</option>
           ${engineerNames
             .map(
@@ -153,30 +155,33 @@
         </select>
       </td>
 
-      <!-- Close Remark -->
       <td class="border px-2 py-1">
-        <input type="text" value="${item.closeRemark || ""}"
+        <input type="text" id="remark-${index}" value="${
+            item.closeRemark || ""
+          }" 
           class="border rounded px-2 py-1 w-full"
-          placeholder="Enter remark"
-          onchange="saveFieldChange(${index}, { closeRemark: this.value })">
+          placeholder="Enter remark" ${isClosed ? "readonly" : ""}>
       </td>
 
-      <!-- Incident Close Date -->
       <td class="border px-2 py-1">
-        <input type="date" value="${item.incidentcloseDate || ""}"
-          class="border rounded px-2 py-1"
-          onchange="saveFieldChange(${index}, { incidentcloseDate: this.value })">
+        <input type="date" id="date-${index}" value="${
+            item.incidentcloseDate || ""
+          }" 
+          class="border rounded px-2 py-1" ${isClosed ? "readonly" : ""}>
       </td>
 
-      <!-- Status -->
       <td class="border px-2 py-1">
-        <select class="border px-2 py-1 rounded"
-          onchange="saveFieldChange(${index}, { status: this.value })">
+        <select id="status-${index}" class="border px-2 py-1 rounded" ${
+            isClosed ? "disabled" : ""
+          }
+          onchange="handleStatusChange(${index})">
           <option ${
             item.status === "Pending" ? "selected" : ""
           }>Pending</option>
           <option ${item.status === "Close" ? "selected" : ""}>Close</option>
         </select>
+        <button id="saveBtn-${index}" class="bg-green-500 text-white px-2 py-1 rounded ml-1 hidden"
+          onclick="saveRow(${index})">Save</button>
       </td>
     `;
           tbody.appendChild(row);
@@ -251,6 +256,64 @@
         } catch (err) {
           console.error("Failed to fetch incident data:", err);
         }
+      }
+
+      function handleStatusChange(index) {
+        const status = document.getElementById(`status-${index}`).value;
+        toggleSaveButton(index, status);
+      }
+
+      function toggleSaveButton(index, status) {
+        const engineer = document
+          .getElementById(`engineer-${index}`)
+          .value.trim();
+        const remark = document.getElementById(`remark-${index}`).value.trim();
+        const date = document.getElementById(`date-${index}`).value.trim();
+
+        const saveBtn = document.getElementById(`saveBtn-${index}`);
+
+        if (status === "Close" && engineer && remark && date) {
+          saveBtn.classList.remove("hidden");
+        } else {
+          saveBtn.classList.add("hidden");
+        }
+      }
+
+      function saveRow(index) {
+        const payload = {
+          incidentId: excelPreviewData[index].incidentId,
+          assignEngineer: document.getElementById(`engineer-${index}`).value,
+          closeRemark: document.getElementById(`remark-${index}`).value,
+          incidentcloseDate: document.getElementById(`date-${index}`).value,
+          status: document.getElementById(`status-${index}`).value,
+        };
+
+        fetch(`${BASE_URL}/updateIncidentStatus`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.success) {
+              showToast("✅ Incident closed successfully");
+              excelPreviewData[index] = {
+                ...excelPreviewData[index],
+                ...payload,
+              };
+
+              // Disable fields after save
+              document.getElementById(`engineer-${index}`).disabled = true;
+              document.getElementById(`remark-${index}`).readOnly = true;
+              document.getElementById(`date-${index}`).readOnly = true;
+              document.getElementById(`status-${index}`).disabled = true;
+              document
+                .getElementById(`saveBtn-${index}`)
+                .classList.add("hidden");
+            } else {
+              showToast("❌ Failed to update");
+            }
+          });
       }
 
       function exportToExcel() {
