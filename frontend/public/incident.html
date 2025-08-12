@@ -54,7 +54,7 @@
             <th class="px-2 py-1">Incident Date</th>
             <th class="px-2 py-1">Complain Remark</th>
             <th class="px-2 py-1">Assign to Engineer</th>
-            <th class="px-2 py-1">Close Remark</th>
+            <th class="px-2 py-1">Incident Close Remark</th>
             <th class="px-2 py-1">Incident Close date</th>
             <th class="px-2 py-1">Status</th>
           </tr>
@@ -196,19 +196,19 @@
         saveFieldChange(index, { incidentcloseDate: value });
       }
 
-      function updateStatus(index, newStatus) {
-        excelPreviewData[index].status = newStatus;
+      // Common Save Function
+      function saveFieldChange(index, updateObj) {
         fetch(`${BASE_URL}/updateIncidentStatus`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             incidentId: excelPreviewData[index].incidentId,
-            status: newStatus,
+            ...updateObj,
           }),
         })
           .then((res) => res.json())
           .then((res) => {
-            if (res.success) showToast("✅ Status updated");
+            if (res.success) showToast("✅ Updated successfully");
           });
       }
 
