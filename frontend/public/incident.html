@@ -54,6 +54,7 @@
             <th class="px-2 py-1">Incident Date</th>
             <th class="px-2 py-1">Complain Remark</th>
             <th class="px-2 py-1">Assign to Engineer</th>
+            <th class="px-2 py-1">Close Remark</th>
             <th class="px-2 py-1">Incident Close date</th>
             <th class="px-2 py-1">Status</th>
           </tr>
@@ -90,6 +91,7 @@
             incidentDate: formatExcelDate(item["Incident Date"]),
             complaintRemark: item["Complain Remark"] || "",
             assignEngineer: item["Assign to Engineer"] || "",
+            closeRemark: item["Incident Close Remark"] || "",
             incidentcloseDate: formatExcelDate(item["Incident Close Date"]),
             status: item["Status"] || "Pending",
           }));
@@ -118,6 +120,7 @@
             <td class="border px-2 py-1">${item.incidentDate}</td>
             <td class="border px-2 py-1">${item.complaintRemark}</td>
             <td class="border px-2 py-1">${item.assignEngineer}</td>
+            <td class="border px-2 py-1">${item.closeRemark}</td>
             <td class="border px-2 py-1">${item.incidentcloseDate}</td>
             <td class="border px-2 py-1">
               <select class="border px-2 py-1 rounded" onchange="updateStatus(${index}, this.value)">
