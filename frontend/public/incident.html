@@ -130,15 +130,18 @@
         data.forEach((item, index) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td class="border px-2 py-1">${item.roCode}</td>
-            <td class="border px-2 py-1">${item.siteName}</td>
-            <td class="border px-2 py-1">${item.region}</td>
-            <td class="border px-2 py-1">${item.incidentId}</td>
-            <td class="border px-2 py-1">${item.incidentDate}</td>
-            <td class="border px-2 py-1">${item.complaintRemark}</td>
-             
+      <td class="border px-2 py-1">${item.roCode}</td>
+      <td class="border px-2 py-1">${item.siteName}</td>
+      <td class="border px-2 py-1">${item.region}</td>
+      <td class="border px-2 py-1">${item.incidentId}</td>
+      <td class="border px-2 py-1">${item.incidentDate}</td>
+      <td class="border px-2 py-1">${item.complaintRemark}</td>
+
+      <!-- Assign Engineer -->
       <td class="border px-2 py-1">
-        <select class="border rounded px-2 py-1" onchange="updateAssignEngineer(${index}, this.value)">
+        <select class="border rounded px-2 py-1"
+          onchange="saveFieldChange(${index}, { assignEngineer: this.value })">
+          <option value="">--Select--</option>
           ${engineerNames
             .map(
               (name) =>
@@ -150,30 +153,32 @@
         </select>
       </td>
 
-       <td class="border px-2 py-1">
-        <input type="date" value="${item.incidentcloseDate || ""}" 
-               class="border rounded px-2 py-1"
-               onchange="updateCloseDate(${index}, this.value)">
+      <!-- Close Remark -->
+      <td class="border px-2 py-1">
+        <input type="text" value="${item.closeRemark || ""}"
+          class="border rounded px-2 py-1 w-full"
+          placeholder="Enter remark"
+          onchange="saveFieldChange(${index}, { closeRemark: this.value })">
       </td>
 
+      <!-- Incident Close Date -->
+      <td class="border px-2 py-1">
+        <input type="date" value="${item.incidentcloseDate || ""}"
+          class="border rounded px-2 py-1"
+          onchange="saveFieldChange(${index}, { incidentcloseDate: this.value })">
+      </td>
 
-        <td class="border px-2 py-1">
-          <input type="text" value="${item.closeRemark || ""}" 
-               class="border rounded px-2 py-1 w-full"
-               onchange="updateCloseRemark(${index}, this.value)">
-        </td>
-
-            <td class="border px-2 py-1">
-              <select class="border px-2 py-1 rounded" onchange="updateStatus(${index}, this.value)">
-                <option ${
-                  item.status === "Pending" ? "selected" : ""
-                }>Pending</option>
-                <option ${
-                  item.status === "Close" ? "selected" : ""
-                }>Close</option>
-              </select>
-            </td>
-          `;
+      <!-- Status -->
+      <td class="border px-2 py-1">
+        <select class="border px-2 py-1 rounded"
+          onchange="saveFieldChange(${index}, { status: this.value })">
+          <option ${
+            item.status === "Pending" ? "selected" : ""
+          }>Pending</option>
+          <option ${item.status === "Close" ? "selected" : ""}>Close</option>
+        </select>
+      </td>
+    `;
           tbody.appendChild(row);
         });
       }
