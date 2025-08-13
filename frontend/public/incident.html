@@ -28,6 +28,71 @@
           <img src="./assets/JioBP.png" alt="JioBP" class="h-6" />
           <img src="./assets/BPCL.png" alt="BPCL" class="h-6" />
         </div>
+        <!-- Add Incident Button -->
+        <button
+          onclick="openIncidentModal()"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded mb-4"
+        >
+          ➕ Add Incident
+        </button>
+
+        <!-- Modal -->
+        <div
+          id="incidentModal"
+          class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50"
+        >
+          <div class="bg-white p-6 rounded shadow w-[90%] max-w-lg">
+            <h2 class="text-lg font-bold mb-4">Add New Incident</h2>
+
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                id="newRoCode"
+                placeholder="RO Code"
+                class="border p-2 rounded"
+              />
+              <input
+                id="newSiteName"
+                placeholder="Site Name"
+                class="border p-2 rounded"
+              />
+              <input
+                id="newRegion"
+                placeholder="Region"
+                class="border p-2 rounded"
+              />
+              <input
+                id="newIncidentId"
+                placeholder="Incident ID"
+                class="border p-2 rounded"
+              />
+              <input
+                id="newIncidentDate"
+                type="date"
+                class="border p-2 rounded"
+              />
+              <input
+                id="newComplaintRemark"
+                placeholder="Complaint Remark"
+                class="border p-2 rounded"
+              />
+            </div>
+
+            <div class="mt-4 flex justify-end gap-2">
+              <button
+                onclick="closeIncidentModal()"
+                class="bg-gray-500 text-white px-4 py-1 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onclick="saveNewIncident()"
+                class="bg-green-600 text-white px-4 py-1 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="flex items-center gap-4 mb-4">
         <input
@@ -439,6 +504,62 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Incidents");
         XLSX.writeFile(wb, "incident-report-export.xlsx");
+      }
+
+      //MANUAL INCIDENT ADD
+
+      function openIncidentModal() {
+        document.getElementById("incidentModal").classList.remove("hidden");
+        document.getElementById("incidentModal").classList.add("flex");
+      }
+
+      function closeIncidentModal() {
+        document.getElementById("incidentModal").classList.add("hidden");
+      }
+
+      function saveNewIncident() {
+        const payload = {
+          roCode: document.getElementById("newRoCode").value.trim(),
+          siteName: document.getElementById("newSiteName").value.trim(),
+          region: document.getElementById("newRegion").value.trim(),
+          incidentId: document.getElementById("newIncidentId").value.trim(),
+          incidentDate: document.getElementById("newIncidentDate").value.trim(),
+          complaintRemark: document
+            .getElementById("newComplaintRemark")
+            .value.trim(),
+          assignEngineer: "",
+          closeRemark: "",
+          incidentcloseDate: "",
+          status: "Pending",
+        };
+
+        // Basic validation
+        if (
+          !payload.roCode ||
+          !payload.siteName ||
+          !payload.incidentId ||
+          !payload.incidentDate
+        ) {
+          showToast("⚠ Please fill all required fields");
+          return;
+        }
+
+        fetch(`${BASE_URL}/addIncident`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.success) {
+              showToast("✅ Incident added successfully");
+              closeIncidentModal();
+              fetchIncidents(); // refresh table
+            } else {
+              showToast("❌ Failed to add incident");
+            }
+          })
+          .catch(() => showToast("❌ Server error"));
       }
     </script>
   </body>
