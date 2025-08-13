@@ -230,6 +230,9 @@
   <div class="w-12 h-12 border-4 border-white border-t-blue-600 rounded-full animate-spin"></div>
 </div>
 
+<div id="pagination" class="flex justify-center items-center gap-2 mt-4 text-sm"></div>
+
+
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       let filteredData = [];
@@ -428,7 +431,77 @@
   });
 }
 
+
+let currentPage = 1;
+const rowsPerPage = 50;
+
+function renderPagination(totalRows) {
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const paginationDiv = document.getElementById("pagination");
+  paginationDiv.innerHTML = "";
+
+  // Prev Button
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "⬅ Prev";
+  prevBtn.className = "px-3 py-1 border rounded bg-gray-200";
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.onclick = function () {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable(filteredData);
+    }
+  };
+  paginationDiv.appendChild(prevBtn);
+
+  // Page Numbers
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.className =
+      "px-3 py-1 border rounded " +
+      (i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200");
+    btn.onclick = function () {
+      currentPage = i;
+      renderTable(filteredData);
+    };
+    paginationDiv.appendChild(btn);
+  }
+
+  // Next Button
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "Next ➡";
+  nextBtn.className = "px-3 py-1 border rounded bg-gray-200";
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.onclick = function () {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTable(filteredData);
+    }
+  };
+  paginationDiv.appendChild(nextBtn);
+}
+
+// Keyboard Arrow Navigation
+document.addEventListener("keydown", function (event) {
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  if (event.key === "ArrowRight" && currentPage < totalPages) {
+    currentPage++;
+    renderTable(filteredData);
+  }
+  if (event.key === "ArrowLeft" && currentPage > 1) {
+    currentPage--;
+    renderTable(filteredData);
+  }
+});
+
+
+
 function _renderTableNow(data) {
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start, end);
+
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const username = user.username;
   const role = user.role;
@@ -549,9 +622,10 @@ function _renderTableNow(data) {
         })
         .join("");
 
-      return `<tr>${row}</tr>`;
+      return `<tr class="transition-colors">${row}</tr>`;
     })
     .join("");
+     renderPagination(data.length); // Update pagination buttons
 }
 
 
