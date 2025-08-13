@@ -359,6 +359,18 @@
 
         <div class="space-y-3 text-sm">
           <div>
+            <label class="block font-medium mb-1 text-gray-700">Zone:</label>
+            <select
+              id="newZone"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Zone</option>
+              <option>ECZ</option>
+              <option>NCZ</option>
+            </select>
+          </div>
+
+          <div>
             <label class="block font-medium mb-1 text-gray-700">RO Code:</label>
             <input
               id="newRoCode"
@@ -696,6 +708,10 @@
       );
 
       async function submitNewSite() {
+        const zone = document
+          .getElementById("newZone")
+          .value.trim()
+          .toUpperCase();
         const roCode = document
           .getElementById("newRoCode")
           .value.trim()
@@ -715,7 +731,15 @@
           .value.trim()
           .toUpperCase();
 
-        if (!roCode || !roName || !region || !phase || !engineer || !amcQtr) {
+        if (
+          !zone ||
+          !roCode ||
+          !roName ||
+          !region ||
+          !phase ||
+          !engineer ||
+          !amcQtr
+        ) {
           alert("❌ All fields are required");
           return;
         }
@@ -728,6 +752,7 @@
               Authorization: `Bearer ${getToken()}`,
             },
             body: JSON.stringify({
+              zone,
               roCode,
               roName,
               region,
