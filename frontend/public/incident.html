@@ -149,7 +149,7 @@
       <td class="border px-2 py-1">
         <select id="engineer-${index}" class="border rounded px-2 py-1" ${
             isClosed ? "disabled" : ""
-          }>
+          } onchange="checkFields(${index})">
           <option value="">--Select--</option>
           ${engineerNames
             .map(
@@ -166,20 +166,24 @@
         <input type="text" id="remark-${index}" value="${
             item.closeRemark || ""
           }"
-          class="border rounded px-2 py-1 w-full" ${isClosed ? "readonly" : ""}>
+          class="border rounded px-2 py-1 w-full" ${
+            isClosed ? "readonly" : ""
+          }   onchange="checkFields(${index})">
       </td>
 
       <td class="border px-2 py-1">
         <input type="date" id="date-${index}" value="${
             item.incidentcloseDate || ""
           }"
-          class="border rounded px-2 py-1" ${isClosed ? "readonly" : ""}>
+          class="border rounded px-2 py-1" ${
+            isClosed ? "readonly" : ""
+          }   onchange="checkFields(${index})">
       </td>
 
       <td class="border px-2 py-1">
         <select id="status-${index}" class="border px-2 py-1 rounded" ${
             isClosed ? "disabled" : ""
-          }>
+          }   onchange="checkFields(${index})">
           <option ${
             item.status === "Pending" ? "selected" : ""
           }>Pending</option>
@@ -187,20 +191,23 @@
         </select>
       </td>
 
-      <td class="border px-2 py-1">
-        ${
-          isAdminUser
-            ? `
-          <button id="editBtn-${index}" onclick="toggleEditMode(${index}, true)" 
-            class="bg-blue-500 text-white px-2 py-1 rounded mr-1">✏️</button>
-          <button id="saveEdit-${index}" onclick="saveEdit(${index})" 
-            class="bg-green-500 text-white px-2 py-1 rounded mr-1 hidden">Save Changes</button>
-          <button onclick="deleteIncident(${index})" 
-            class="bg-red-500 text-white px-2 py-1 rounded">🗑️</button>
-        `
-            : ""
-        }
-      </td>
+     <td class="border px-2 py-1">
+  ${
+    isAdminUser
+      ? `
+    <button id="editBtn-${index}" onclick="toggleEditMode(${index}, true)" 
+      class="bg-blue-500 text-white px-2 py-1 rounded mr-1">✏️</button>
+    <button id="saveEdit-${index}" onclick="saveEdit(${index})" 
+      class="bg-green-500 text-white px-2 py-1 rounded mr-1 hidden">Save Changes</button>
+    <button id="saveBtn-${index}" onclick="saveRow(${index})" 
+      class="bg-green-500 text-white px-2 py-1 rounded mr-1 hidden">Save</button>
+    <button onclick="deleteIncident(${index})" 
+      class="bg-red-500 text-white px-2 py-1 rounded">🗑️</button>
+  `
+      : ""
+  }
+</td>
+
     `;
           tbody.appendChild(row);
         });
@@ -222,6 +229,23 @@
       function updateCloseDate(index, value) {
         excelPreviewData[index].incidentcloseDate = value;
         saveFieldChange(index, { incidentcloseDate: value });
+      }
+
+      function checkFields(index) {
+        const engineer = document
+          .getElementById(`engineer-${index}`)
+          .value.trim();
+        const remark = document.getElementById(`remark-${index}`).value.trim();
+        const date = document.getElementById(`date-${index}`).value.trim();
+        const status = document.getElementById(`status-${index}`).value.trim();
+
+        const saveBtn = document.getElementById(`saveBtn-${index}`);
+
+        if (engineer && remark && date && status) {
+          saveBtn.classList.remove("hidden");
+        } else {
+          saveBtn.classList.add("hidden");
+        }
       }
 
       // Common Save Function
