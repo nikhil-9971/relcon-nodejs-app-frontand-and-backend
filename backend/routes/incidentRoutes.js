@@ -111,7 +111,7 @@ router.delete("/deleteIncident/:incidentId", async (req, res) => {
 
 // ========== 5. Incident add ==========
 
-app.post("/addIncident", async (req, res) => {
+router.post("/addIncident", async (req, res) => {
   try {
     const incident = new IncidentModel(req.body);
     await incident.save();
