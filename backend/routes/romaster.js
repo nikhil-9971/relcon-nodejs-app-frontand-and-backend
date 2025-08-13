@@ -15,9 +15,17 @@ router.get("/getROInfo/:roCode", async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { roCode, roName, region, phase, engineer, amcQtr } = req.body;
+    const { zone, roCode, roName, region, phase, engineer, amcQtr } = req.body;
 
-    if (!roCode || !roName || !region || !phase || !engineer || !amcQtr) {
+    if (
+      !zone ||
+      !roCode ||
+      !roName ||
+      !region ||
+      !phase ||
+      !engineer ||
+      !amcQtr
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -29,6 +37,7 @@ router.post("/add", async (req, res) => {
     }
 
     const newEntry = new ROMaster({
+      zone,
       roCode: roCode.toUpperCase(),
       roName,
       region,
