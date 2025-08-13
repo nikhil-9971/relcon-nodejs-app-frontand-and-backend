@@ -108,4 +108,17 @@ router.delete("/deleteIncident/:incidentId", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+
+// ========== 5. Incident add ==========
+
+app.post("/addIncident", async (req, res) => {
+  try {
+    const incident = new IncidentModel(req.body);
+    await incident.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
