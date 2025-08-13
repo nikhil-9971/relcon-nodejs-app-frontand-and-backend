@@ -420,16 +420,23 @@
 
 
 
-       function renderTable(data) {
+ function renderTable(data) {
   showLoader();
+
+  // Pagination logic applied here
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start, end);
 
   requestAnimationFrame(() => {
     setTimeout(() => {
-      _renderTableNow(data);
-      hideLoader(); // Hide only after table is painted
+      _renderTableNow(pageData); // Pass only current page data
+      renderPagination(data.length); // Pass full data length for buttons
+      hideLoader();
     }, 0);
   });
 }
+
 
 
 let currentPage = 1;
@@ -498,9 +505,7 @@ document.addEventListener("keydown", function (event) {
 
 function _renderTableNow(data) {
 
-  const start = (currentPage - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
-  const pageData = data.slice(start, end);
+
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const username = user.username;
@@ -625,7 +630,7 @@ function _renderTableNow(data) {
       return `<tr class="transition-colors">${row}</tr>`;
     })
     .join("");
-     renderPagination(data.length); // Update pagination buttons
+    
 }
 
 
