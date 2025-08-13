@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const ROMasterSchema = new mongoose.Schema({
+  zone: String,
   roCode: String,
   roName: String,
   region: String,
