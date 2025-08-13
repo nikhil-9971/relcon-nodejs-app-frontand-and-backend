@@ -113,10 +113,11 @@ router.delete("/deleteIncident/:incidentId", async (req, res) => {
 
 router.post("/addIncident", async (req, res) => {
   try {
-    const incident = new IncidentModel(req.body);
+    const incident = new Incident(req.body); // ✅ Correct model name
     await incident.save();
     res.json({ success: true });
   } catch (err) {
+    console.error("Add incident error:", err.message);
     res.json({ success: false, error: err.message });
   }
 });
