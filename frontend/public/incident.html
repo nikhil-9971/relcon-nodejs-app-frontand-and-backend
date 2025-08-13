@@ -21,9 +21,9 @@
   </head>
   <body class="bg-gray-100">
     <div class="p-4">
-      <div class="flex items-center gap-4">
-        <h1 class="text-xl font-bold">📋 Incident Records</h1>
+      <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
+          <h1 class="text-xl font-bold">📋 Incident Records</h1>
           <img src="./assets/HPCL.png" alt="HPCL" class="h-6" />
           <img src="./assets/JioBP.png" alt="JioBP" class="h-6" />
           <img src="./assets/BPCL.png" alt="BPCL" class="h-6" />
@@ -35,65 +35,65 @@
         >
           ➕ Add Incident
         </button>
+      </div>
+      <!-- Modal -->
+      <div
+        id="incidentModal"
+        class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50"
+      >
+        <div class="bg-white p-6 rounded shadow w-[90%] max-w-lg">
+          <h2 class="text-lg font-bold mb-4">Add New Incident</h2>
 
-        <!-- Modal -->
-        <div
-          id="incidentModal"
-          class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50"
-        >
-          <div class="bg-white p-6 rounded shadow w-[90%] max-w-lg">
-            <h2 class="text-lg font-bold mb-4">Add New Incident</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <input
+              id="newRoCode"
+              placeholder="RO Code"
+              class="border p-2 rounded"
+            />
+            <input
+              id="newSiteName"
+              placeholder="Site Name"
+              class="border p-2 rounded"
+            />
+            <input
+              id="newRegion"
+              placeholder="Region"
+              class="border p-2 rounded"
+            />
+            <input
+              id="newIncidentId"
+              placeholder="Incident ID"
+              class="border p-2 rounded"
+            />
+            <input
+              id="newIncidentDate"
+              type="date"
+              class="border p-2 rounded"
+            />
+            <input
+              id="newComplaintRemark"
+              placeholder="Complaint Remark"
+              class="border p-2 rounded"
+            />
+          </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <input
-                id="newRoCode"
-                placeholder="RO Code"
-                class="border p-2 rounded"
-              />
-              <input
-                id="newSiteName"
-                placeholder="Site Name"
-                class="border p-2 rounded"
-              />
-              <input
-                id="newRegion"
-                placeholder="Region"
-                class="border p-2 rounded"
-              />
-              <input
-                id="newIncidentId"
-                placeholder="Incident ID"
-                class="border p-2 rounded"
-              />
-              <input
-                id="newIncidentDate"
-                type="date"
-                class="border p-2 rounded"
-              />
-              <input
-                id="newComplaintRemark"
-                placeholder="Complaint Remark"
-                class="border p-2 rounded"
-              />
-            </div>
-
-            <div class="mt-4 flex justify-end gap-2">
-              <button
-                onclick="closeIncidentModal()"
-                class="bg-gray-500 text-white px-4 py-1 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onclick="saveNewIncident()"
-                class="bg-green-600 text-white px-4 py-1 rounded"
-              >
-                Save
-              </button>
-            </div>
+          <div class="mt-4 flex justify-end gap-2">
+            <button
+              onclick="closeIncidentModal()"
+              class="bg-gray-500 text-white px-4 py-1 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              onclick="saveNewIncident()"
+              class="bg-green-600 text-white px-4 py-1 rounded"
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
+
       <div class="flex items-center gap-4 mb-4">
         <input
           type="file"
