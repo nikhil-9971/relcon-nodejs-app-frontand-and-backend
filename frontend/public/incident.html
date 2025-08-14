@@ -188,6 +188,7 @@
           "Rajan Pandey",
           "Shubhendu Giri",
           "Prerak Singh",
+          "Kirtivardhan",
           "Kuldeep Kumar",
           "RAVI PRATAP",
         ];
@@ -253,6 +254,9 @@
             item.status === "Pending" ? "selected" : ""
           }>Pending</option>
           <option ${item.status === "Close" ? "selected" : ""}>Close</option>
+          <option ${
+            item.status === "HPCL Action Required" ? "selected" : ""
+          }>HPCL Action Required</option>
         </select>
       </td>
 
