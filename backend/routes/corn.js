@@ -33,16 +33,21 @@ function startCronJobs(broadcastToAll) {
         });
 
         if (pending.length > 0) {
-          // Build HTML table
+          // Build HTML table with inline styles for consistent rendering
+          const thStyle =
+            "border: 1px solid #ccc; padding: 6px 8px; text-align: left; white-space: nowrap; background-color: #15803d; color: white;";
+          const tdStyle =
+            "border: 1px solid #ccc; padding: 6px 8px; text-align: left; white-space: nowrap;";
+
           let tableHTML = `
-            <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+            <table style="border-collapse: collapse; width: 100%; margin-top: 5px; font-size: 12px;">
               <thead>
-                <tr style="background-color: #4CAF50; color: white; text-align: left;">
-                  <th>RO Code</th>
-                  <th>Site Name</th>
-                  <th>Region</th>
-                  <th>Incident ID</th>
-                  <th>Incident Date</th>
+                <tr>
+                  <th style="${thStyle}">RO Code</th>
+                  <th style="${thStyle}">Site Name</th>
+                  <th style="${thStyle}">Region</th>
+                  <th style="${thStyle}">Incident ID</th>
+                  <th style="${thStyle}">Incident Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -51,11 +56,11 @@ function startCronJobs(broadcastToAll) {
           for (const i of pending) {
             tableHTML += `
               <tr>
-                <td>${i.roCode}</td>
-                <td>${i.siteName}</td>
-                <td>${i.region}</td>
-                <td>${i.incidentId}</td>
-                <td>${i.incidentDate}</td>
+                <td style="${tdStyle}">${i.roCode}</td>
+                <td style="${tdStyle}">${i.siteName}</td>
+                <td style="${tdStyle}">${i.region}</td>
+                <td style="${tdStyle}">${i.incidentId}</td>
+                <td style="${tdStyle}">${i.incidentDate}</td>
               </tr>`;
           }
 
