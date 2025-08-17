@@ -51,12 +51,16 @@ router.post("/mark-read", async (req, res) => {
   }
 });
 
-// 📜 Get group chat history
+// 📜 Get group chat history (exclude system messages)
 router.get("/history/group", async (req, res) => {
   try {
-    const messages = await Chat.find({ roomId: "group" }).sort({
-      createdAt: 1,
-    });
+    const messages = await Chat.find({
+      roomId: "group",
+      system: { $ne: true }, // 🟢 exclude system messages
+    })
+      .sort({ createdAt: 1 })
+      .lean();
+
     res.json(messages);
   } catch (err) {
     res
