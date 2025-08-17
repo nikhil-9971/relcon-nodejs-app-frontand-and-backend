@@ -1,12 +1,12 @@
 const cron = require("node-cron");
 const fetch = require("node-fetch");
-const Chat = require("./models/Chat"); // to save messages in DB
+const Chat = require("../models/Chat"); // to save messages in DB
 
 const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 
 function startCronJobs(broadcastToAll) {
   // Run every day at 15:45
-  cron.schedule("32 16 * * *", async () => {
+  cron.schedule("40 16 * * *", async () => {
     console.log("⏰ Running pending incidents cron job at 16:32");
 
     try {
