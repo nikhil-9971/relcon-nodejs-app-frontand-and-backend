@@ -51,15 +51,28 @@ router.post("/mark-read", async (req, res) => {
   }
 });
 
-// 📜 Get group chat history (exclude system messages)
+// chatRoutes.js
 router.get("/history/group", async (req, res) => {
   try {
-    const messages = await Chat.find({
+    // Get normal user/group messages
+    const userMessages = await Chat.find({
       roomId: "group",
-      system: { $ne: true }, // 🟢 exclude system messages
+      $or: [{ system: { $exists: false } }, { system: false }],
     })
       .sort({ createdAt: 1 })
       .lean();
+
+    // Get the latest system message (if any)
+    const latestSystem = await Chat.findOne({
+      roomId: "group",
+      system: true,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const messages = latestSystem
+      ? [...userMessages, latestSystem] // append the latest cron/system msg
+      : userMessages;
 
     res.json(messages);
   } catch (err) {
