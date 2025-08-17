@@ -58,6 +58,7 @@ router.get("/history/group", async (req, res) => {
     const userMessages = await Chat.find({
       roomId: "group",
       $or: [{ system: { $exists: false } }, { system: false }],
+      text: { $not: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
     })
       .sort({ createdAt: 1 })
       .lean();

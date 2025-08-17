@@ -26,7 +26,10 @@ function startCronJobs(broadcastToAll) {
         await Chat.deleteMany({
           roomId: "group",
           from: "🤖 Chatbot",
-          system: true,
+          $or: [
+            { system: true },
+            { text: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
+          ],
         });
 
         if (pending.length > 0) {
