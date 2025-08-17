@@ -17,7 +17,7 @@ const materialRoutes = require("./routes/materialRequirement");
 const chatRoutes = require("./routes/chatRoutes");
 const incidentRoutes = require("./routes/incidentRoutes");
 const { setupWebsocket, broadcastToAll } = require("./chat.ws"); // ✅ updated import
-const { startCronJobs } = require("./corn"); // ✅ import cron job
+const { startCronJobs } = require("./routes/corn"); // ✅ import cron job
 
 const app = express();
 
