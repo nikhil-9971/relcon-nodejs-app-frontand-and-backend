@@ -7,7 +7,7 @@ const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 function startCronJobs(broadcastToAll) {
   // Run every day at 16:40 IST
   cron.schedule(
-    "29 17 * * *",
+    "14 18 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 16:40 IST");
 
@@ -48,8 +48,8 @@ function startCronJobs(broadcastToAll) {
 
             tableHTML += "</tbody></table>";
 
-            // Save message in DB also
-            await Chat.create({
+            // Save message in DB
+            const messageDoc = await Chat.create({
               from: "🤖 Chatbot",
               to: "group",
               roomId: "group",
@@ -58,12 +58,12 @@ function startCronJobs(broadcastToAll) {
               read: false,
             });
 
-            // Broadcast to all WS clients
+            // Broadcast only once, using saved doc
             broadcastToAll({
               type: "group",
               from: "🤖 Chatbot",
               html: tableHTML,
-              createdAt: new Date().toISOString(),
+              createdAt: messageDoc.createdAt,
             });
           } else {
             broadcastToAll({
