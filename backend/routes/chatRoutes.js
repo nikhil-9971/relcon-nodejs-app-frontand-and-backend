@@ -73,8 +73,10 @@ router.get("/history/group", async (req, res) => {
 
     if (latestSystem) {
       // ⚡ Convert text → html so frontend renders table formatting
-      if (latestSystem.text?.startsWith("<table")) {
-        latestSystem.html = latestSystem.text;
+      const txt =
+        typeof latestSystem.text === "string" ? latestSystem.text : "";
+      if (/<table[\s\S]*<\/table>/i.test(txt)) {
+        latestSystem.html = txt;
         delete latestSystem.text;
       }
     }
