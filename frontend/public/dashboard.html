@@ -993,20 +993,25 @@
           ? `<div class="chat-table-wrapper">${msg.html}</div>`
           : `<div>${highlightedText}</div>`;
 
+        const isBot = (msg.from || "").toLowerCase().includes("chatbot");
+
+        const showReplyButton = !isOwn && !isBot && (msg.text || "").trim() !== "";
+        const replyButtonHTML = showReplyButton
+          ? '<button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>'
+          : '';
+
         div.innerHTML = `
     <div style="font-size:10px;"><b>${msg.from}</b></div>
     ${replyHTML}
     ${messageContent}
     <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
-    <button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>
+    ${replyButtonHTML}
   `;
 
         // ===== ordering logic =====
         // If local user's message => append and store element
         // If bot message and there's a stored lastUserMessageEl, insert after it
         // Otherwise append normally.
-
-        const isBot = (msg.from || "").toLowerCase().includes("chatbot");
 
         if (isOwn) {
           chatMessages.append(div);
