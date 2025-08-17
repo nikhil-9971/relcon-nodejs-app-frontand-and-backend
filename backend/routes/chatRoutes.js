@@ -54,7 +54,7 @@ router.post("/mark-read", async (req, res) => {
 // chatRoutes.js
 router.get("/history/group", async (req, res) => {
   try {
-    // Get normal user/group messages
+    // Get normal chat messages (exclude system)
     const userMessages = await Chat.find({
       roomId: "group",
       $or: [{ system: { $exists: false } }, { system: false }],
@@ -62,16 +62,24 @@ router.get("/history/group", async (req, res) => {
       .sort({ createdAt: 1 })
       .lean();
 
-    // Get the latest system message (if any)
-    const latestSystem = await Chat.findOne({
+    // Get the latest system message
+    let latestSystem = await Chat.findOne({
       roomId: "group",
       system: true,
     })
       .sort({ createdAt: -1 })
       .lean();
 
+    if (latestSystem) {
+      // ⚡ Convert text → html so frontend renders table formatting
+      if (latestSystem.text?.startsWith("<table")) {
+        latestSystem.html = latestSystem.text;
+        delete latestSystem.text;
+      }
+    }
+
     const messages = latestSystem
-      ? [...userMessages, latestSystem] // append the latest cron/system msg
+      ? [...userMessages, latestSystem]
       : userMessages;
 
     res.json(messages);
