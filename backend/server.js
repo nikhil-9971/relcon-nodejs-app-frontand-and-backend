@@ -16,7 +16,8 @@ const jioBPStatusRoutes = require("./routes/jioBPStatusRoutes");
 const materialRoutes = require("./routes/materialRequirement");
 const chatRoutes = require("./routes/chatRoutes");
 const incidentRoutes = require("./routes/incidentRoutes");
-const setupWebsocket = require("./chat.ws"); // path adjust
+const { setupWebsocket, broadcastToAll } = require("./chat.ws"); // ✅ updated import
+const { startCronJobs } = require("./cron"); // ✅ import cron job
 
 const app = express();
 
@@ -71,6 +72,9 @@ app.use("/", incidentRoutes);
 
 const server = http.createServer(app);
 setupWebsocket(server); // attach WS logic
+
+// ✅ Start cron jobs after WebSocket is ready
+startCronJobs(broadcastToAll);
 
 // ✅ Redirect *.html to clean path
 app.use((req, res, next) => {

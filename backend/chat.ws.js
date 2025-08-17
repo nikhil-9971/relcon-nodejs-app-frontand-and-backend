@@ -160,4 +160,15 @@ function setupWebsocket(server) {
   });
 }
 
-module.exports = setupWebsocket;
+function broadcastToAll(message) {
+  const data = JSON.stringify(message);
+  for (const conns of clients.values()) {
+    for (const s of conns) {
+      if (s.readyState === WebSocket.OPEN) {
+        s.send(data);
+      }
+    }
+  }
+}
+
+module.exports = { setupWebsocket, broadcastToAll };
