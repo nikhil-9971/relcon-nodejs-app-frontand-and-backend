@@ -8,7 +8,7 @@ const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 function startCronJobs(broadcastToAll) {
   // Run every day at 18:35 IST
   cron.schedule(
-    "44 21 * * *",
+    "31 22 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 21:20 IST");
 
