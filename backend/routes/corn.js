@@ -2,6 +2,8 @@
 const cron = require("node-cron");
 const fetch = require("node-fetch");
 const Chat = require("../models/Chat");
+const { buildPendingReportsWorkbookBuffer } = require("../utils/pendingReports");
+const { sendEmailWithAttachments } = require("../utils/mailer");
 
 const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 
@@ -105,6 +107,49 @@ function startCronJobs(broadcastToAll) {
         }
       } catch (err) {
         console.error("❌ Cron job error:", err);
+      }
+    },
+    { timezone: "Asia/Kolkata" }
+  );
+
+  // 📧 Daily email: Pending Verify Status + JioBP Status as Excel (08:30 IST)
+  cron.schedule(
+    "30 8 * * *",
+    async () => {
+      try {
+        const recipients = process.env.REPORT_RECIPIENTS || "";
+        if (!recipients) {
+          console.warn("[reports] REPORT_RECIPIENTS not set. Skipping email.");
+          return;
+        }
+
+        const { buffer, counts } = await buildPendingReportsWorkbookBuffer();
+        const subject = `Pending Verify & JioBP Status - ${new Date()
+          .toISOString()
+          .slice(0, 10)}`;
+        const text = `Attached are the pending reports.\n\nVerify Status pending: ${counts.verify}\nJioBP Status pending: ${counts.jio}`;
+
+        const result = await sendEmailWithAttachments({
+          to: recipients,
+          subject,
+          text,
+          attachments: [
+            {
+              filename: "PendingReports.xlsx",
+              content: buffer,
+              contentType:
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+          ],
+        });
+
+        if (result?.skipped) {
+          console.warn("[reports] Email skipped due to missing SMTP configuration.");
+        } else {
+          console.log("[reports] Email sent.");
+        }
+      } catch (err) {
+        console.error("❌ Reports cron error:", err);
       }
     },
     { timezone: "Asia/Kolkata" }

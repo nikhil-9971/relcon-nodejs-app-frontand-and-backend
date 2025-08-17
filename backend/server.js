@@ -16,6 +16,7 @@ const jioBPStatusRoutes = require("./routes/jioBPStatusRoutes");
 const materialRoutes = require("./routes/materialRequirement");
 const chatRoutes = require("./routes/chatRoutes");
 const incidentRoutes = require("./routes/incidentRoutes");
+const reportRoutes = require("./routes/reports");
 const { setupWebsocket, broadcastToAll } = require("./chat.ws"); // ✅ updated import
 const { startCronJobs } = require("./routes/corn"); // ✅ import cron job
 
@@ -69,6 +70,7 @@ app.use("/jioBP", jioBPStatusRoutes);
 app.use("/materialRequirement", materialRoutes);
 app.use("/chat", chatRoutes);
 app.use("/", incidentRoutes);
+app.use("/reports", reportRoutes);
 
 const server = http.createServer(app);
 setupWebsocket(server); // attach WS logic
