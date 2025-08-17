@@ -8,7 +8,7 @@ const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 function startCronJobs(broadcastToAll) {
   // Run every day at 18:35 IST
   cron.schedule(
-    "34 21 * * *",
+    "44 21 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 21:20 IST");
 
@@ -40,7 +40,12 @@ function startCronJobs(broadcastToAll) {
             "border: 1px solid #ccc; padding: 4px 6px; text align:left; white-space: nowrap;";
           let tableHTML = `
              <table style = "border-collapse: collapse; width: 100%; margin-top: 5px; front-size: 11px;">
-
+               <p style="margin: 0 0 10px 0; font-weight: bold;">
+      Dear Team,<br>
+      Good Morning ! <br>
+      Please find today incident detail under Lucknow, Patna & Begusarai Regional office.<br>
+      Please let me know if issue resolved.
+    </p>
               <thead>
                 <tr>
                   <th style="${thStyle}">RO Code</th>
