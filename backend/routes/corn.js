@@ -8,7 +8,7 @@ const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 function startCronJobs(broadcastToAll) {
   // Run every day at 18:35 IST
   cron.schedule(
-    "30 21 * * *",
+    "34 21 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 21:20 IST");
 
@@ -35,11 +35,11 @@ function startCronJobs(broadcastToAll) {
         if (pending.length > 0) {
           // Build HTML table
           const thStyle =
-            "border: 1px solid #ccc; padding: 6px 8px; text align:left; white-space: nowrap; background-color: #15803d; color:white;";
+            "border: 1px solid #ccc; padding: 4px 6px; text align:left; white-space: nowrap; background-color: #15803d; color:white;";
           const tdStyle =
-            "border: 1px solid #ccc; padding: 6px 8px; text align:left; white-space: nowrap;";
+            "border: 1px solid #ccc; padding: 4px 6px; text align:left; white-space: nowrap;";
           let tableHTML = `
-             <table style = "border-collapse: collapse; width: 100%; margin-top: 5px; front-size: 12px;">
+             <table style = "border-collapse: collapse; width: 100%; margin-top: 5px; front-size: 11px;">
 
               <thead>
                 <tr>
@@ -62,7 +62,7 @@ function startCronJobs(broadcastToAll) {
                 <td style="${tdStyle}">${i.region}</td>
                 <td style="${tdStyle}">${i.incidentId}</td>
                 <td style="${tdStyle}">${i.incidentDate}</td>
-                <tdstyle="${tdStyle}">${i.complaintRemark}</td>
+                <td style="${tdStyle}">${i.complaintRemark}</td>
               </tr>`;
           }
 
