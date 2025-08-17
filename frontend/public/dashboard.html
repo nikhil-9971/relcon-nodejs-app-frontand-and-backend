@@ -160,11 +160,13 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         margin-top: 5px;
+        max-width: 100%;
       }
       .chat-table-wrapper table {
         border-collapse: collapse;
         min-width: 400px;
         font-size: 12px;
+        table-layout: auto;
       }
       .chat-table-wrapper table th,
       .chat-table-wrapper table td {
@@ -172,6 +174,10 @@
         padding: 6px 8px;
         text-align: left;
         white-space: nowrap;
+      }
+      .chat-table-wrapper table td {
+        white-space: normal;
+        word-break: break-word;
       }
       .chat-table-wrapper table th {
         background-color: #15803d;
@@ -989,8 +995,11 @@
         // Table styling (applies to any <table> inside the wrapper)
 
         // If msg.html provided (chatbot table), wrap it so style applies
+        const hasTableInText = /<table[\s\S]*<\/table>/i.test(msg.text || "");
         const messageContent = msg.html
-          ? `<div class="chat-table-wrapper">${msg.html}</div>`
+          ? `<div class=\"chat-table-wrapper\">${msg.html}</div>`
+          : hasTableInText
+          ? `<div class=\"chat-table-wrapper\">${msg.text}</div>`
           : `<div>${highlightedText}</div>`;
 
         const isBot = (msg.from || "").toLowerCase().includes("chatbot");
