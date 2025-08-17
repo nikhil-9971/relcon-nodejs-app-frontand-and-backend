@@ -1,3 +1,4 @@
+// corn.js
 const cron = require("node-cron");
 const fetch = require("node-fetch");
 const Chat = require("../models/Chat"); // to save messages in DB
@@ -5,11 +6,11 @@ const Chat = require("../models/Chat"); // to save messages in DB
 const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 
 function startCronJobs(broadcastToAll) {
-  // Run every day at 16:40 IST
+  // Run every day at 18:35 IST
   cron.schedule(
     "35 18 * * *",
     async () => {
-      console.log("⏰ Running pending incidents cron job at 16:40 IST");
+      console.log("⏰ Running pending incidents cron job at 18:35 IST");
 
       try {
         const res = await fetch(`${BASE_URL}/getAllIncidents`);
@@ -19,6 +20,13 @@ function startCronJobs(broadcastToAll) {
           const pending = result.incidents.filter(
             (i) => i.status === "Pending"
           );
+
+          // ❌ Remove old cron/system chatbot messages
+          await Chat.deleteMany({
+            roomId: "group",
+            from: "🤖 Chatbot",
+            system: true,
+          });
 
           if (pending.length > 0) {
             let tableHTML = `
@@ -48,18 +56,17 @@ function startCronJobs(broadcastToAll) {
 
             tableHTML += "</tbody></table>";
 
-            // Save message in DB
+            // ✅ Save only the latest pending table
             const messageDoc = await Chat.create({
               from: "🤖 Chatbot",
               to: "group",
               roomId: "group",
-              text: tableHTML,
+              html: tableHTML, // ✅ use html for styling
               delivered: true,
               read: false,
-              system: true, // add flag
+              system: true,
             });
 
-            // Broadcast only once, using saved doc
             broadcastToAll({
               type: "group",
               from: "🤖 Chatbot",
@@ -67,11 +74,22 @@ function startCronJobs(broadcastToAll) {
               createdAt: messageDoc.createdAt,
             });
           } else {
+            // ✅ Save "No pending incidents" as system message (replaces old table)
+            const messageDoc = await Chat.create({
+              from: "🤖 Chatbot",
+              to: "group",
+              roomId: "group",
+              text: "✅ No pending incidents today.",
+              delivered: true,
+              read: false,
+              system: true,
+            });
+
             broadcastToAll({
               type: "group",
               from: "🤖 Chatbot",
               text: "✅ No pending incidents today.",
-              createdAt: new Date().toISOString(),
+              createdAt: messageDoc.createdAt,
             });
           }
         }
@@ -79,9 +97,7 @@ function startCronJobs(broadcastToAll) {
         console.error("❌ Cron job error:", err);
       }
     },
-    {
-      timezone: "Asia/Kolkata", // ✅ ensure Indian Standard Time
-    }
+    { timezone: "Asia/Kolkata" }
   );
 }
 
