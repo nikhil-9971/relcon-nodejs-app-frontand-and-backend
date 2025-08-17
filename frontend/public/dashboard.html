@@ -1497,7 +1497,7 @@
       function schedulePendingIncidents() {
         const now = new Date();
         const target = new Date();
-        target.setHours(8, 0, 0, 0); // 8 AM
+        target.setHours(15, 41, 0, 0); // 8 AM
 
         if (now > target) {
           target.setDate(target.getDate() + 1); // schedule for tomorrow if already past 8 AM
