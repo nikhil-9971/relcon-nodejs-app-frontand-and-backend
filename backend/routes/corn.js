@@ -35,11 +35,11 @@ function startCronJobs(broadcastToAll) {
         if (pending.length > 0) {
           // Build HTML table
           const thStyle =
-            "border: 1px solid #ccc; padding: 4px 6px; text align:left; white-space: nowrap; background-color: #15803d; color:white;";
+            "border: 1px solid #ccc; padding: 4px 6px; text-align:left; white-space: normal; background-color: #15803d; color:white;";
           const tdStyle =
-            "border: 1px solid #ccc; padding: 4px 6px; text align:left; white-space: nowrap;";
+            "border: 1px solid #ccc; padding: 4px 6px; text-align:left; white-space: normal; word-break: break-word; overflow-wrap: anywhere;";
           let tableHTML = `
-             <table style = "border-collapse: collapse; width: 100%; margin-top: 5px; front-size: 11px;">
+             <table style = "border-collapse: collapse; width: 100%; margin-top: 5px; font-size: 11px; table-layout: fixed;">
 
               <thead>
                 <tr>

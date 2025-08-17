@@ -160,18 +160,23 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         margin-top: 5px;
+        max-width: 100%;
       }
       .chat-table-wrapper table {
         border-collapse: collapse;
         min-width: 400px;
         font-size: 12px;
+        width: 100%;
+        table-layout: fixed;
       }
       .chat-table-wrapper table th,
       .chat-table-wrapper table td {
         border: 1px solid #ccc;
         padding: 6px 8px;
         text-align: left;
-        white-space: nowrap;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
       .chat-table-wrapper table th {
         background-color: #15803d;
