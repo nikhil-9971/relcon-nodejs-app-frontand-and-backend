@@ -123,7 +123,7 @@
 
       <div class="overflow-x-auto overflow-y-auto max-h-[600px] border rounded">
         <table class="table-auto min-w-max text-[11px]">
-          <thead class="bg-green-600 text-white sticky top-0 z-10">
+          <thead class="bg-green-600 text-white sticky top-0 z-10 rounded">
             <tr>
               <th class="px-2 py-1">RO Code</th>
               <th class="px-2 py-1">Site Name</th>
@@ -254,14 +254,15 @@
         </select>
       </td>
 
-      <td class="border px-2 py-1">
-        <input type="text" id="remark-${index}" value="${
-            item.closeRemark || ""
-          }"
-          class="border rounded px-2 py-1 w-full" ${
-            isClosed ? "readonly" : ""
-          }   onchange="checkFields(${index})">
-      </td>
+      <td class="border px-2 py-1 max-w-[300px]">
+  <input type="text" 
+         id="remark-${index}" 
+         value="${item.closeRemark || ""}"
+         class="border rounded px-2 py-1 w-full whitespace-normal break-words" 
+         ${isClosed ? "readonly" : ""}
+         onchange="checkFields(${index})">
+</td>
+
 
       <td class="border px-2 py-1">
         <input type="date" id="date-${index}" value="${
