@@ -109,8 +109,26 @@
         </button>
       </div>
 
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row gap-3 sm:items-center mb-3">
+        <input
+          id="searchBox"
+          type="text"
+          placeholder="Search by any field..."
+          class="border px-3 py-2 rounded w-full sm:max-w-sm"
+        />
+        <select id="statusFilter" class="border px-3 py-2 rounded w-full sm:w-auto">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Close">Close</option>
+          <option value="HPCL Action Required">HPCL Action Required</option>
+        </select>
+      </div>
+
+      <!-- Scrollable table container -->
+      <div class="border rounded overflow-auto max-h-[65vh]">
       <table class="table-auto w-full text-[11px]">
-        <thead class="bg-green-600 text-white">
+        <thead class="bg-green-600 text-white sticky top-0 z-10">
           <tr>
             <th class="px-2 py-1">RO Code</th>
             <th class="px-2 py-1">Site Name</th>
@@ -127,6 +145,7 @@
         </thead>
         <tbody id="incidentTable" class="bg-white"></tbody>
       </table>
+      </div>
     </div>
 
     <div
@@ -137,6 +156,7 @@
     <script>
       const BASE_URL = "https://relcon-backend-jwt.onrender.com";
       let excelPreviewData = [];
+      let filteredIncidents = [];
 
       window.onload = fetchIncidents;
 
@@ -161,9 +181,51 @@
             incidentcloseDate: formatExcelDate(item["Incident Close Date"]),
             status: item["Status"] || "Pending",
           }));
-          renderIncidentTable(excelPreviewData);
+          applyFilters();
           syncToBackend(excelPreviewData);
         });
+      // Filtering helpers
+      function normalize(value) {
+        return (value || "").toString().toLowerCase();
+      }
+
+      function applyFilters() {
+        const q = normalize(document.getElementById("searchBox")?.value || "");
+        const statusVal = document.getElementById("statusFilter")?.value || "";
+
+        filteredIncidents = excelPreviewData.filter((item) => {
+          const matchesStatus = !statusVal || item.status === statusVal;
+          if (!q) return matchesStatus;
+
+          const haystack = [
+            item.roCode,
+            item.siteName,
+            item.region,
+            item.incidentId,
+            item.incidentDate,
+            item.complaintRemark,
+            item.assignEngineer,
+            item.closeRemark,
+            item.incidentcloseDate,
+            item.status,
+          ]
+            .map(normalize)
+            .join(" ");
+
+        return matchesStatus && haystack.includes(q);
+        });
+
+        renderIncidentTable(filteredIncidents);
+      }
+
+      // Wire up search and filter inputs
+      document.addEventListener("DOMContentLoaded", () => {
+        const s = document.getElementById("searchBox");
+        const f = document.getElementById("statusFilter");
+        if (s) s.addEventListener("input", applyFilters);
+        if (f) f.addEventListener("change", applyFilters);
+      });
+
 
       function formatExcelDate(excelDate) {
         if (typeof excelDate === "number") {
@@ -362,7 +424,7 @@
           const result = await res.json();
           if (result.success && result.incidents) {
             excelPreviewData = result.incidents;
-            renderIncidentTable(excelPreviewData);
+            applyFilters();
           }
         } catch (err) {
           console.error("Failed to fetch incident data:", err);
@@ -421,6 +483,7 @@
               document
                 .getElementById(`saveBtn-${index}`)
                 .classList.add("hidden");
+              applyFilters();
             } else {
               showToast("❌ Failed to update");
             }
@@ -475,6 +538,7 @@
 
               // Always disable fields after saving, even if status is still Pending
               toggleEditMode(index, false);
+              applyFilters();
             } else {
               showToast("❌ Failed to update");
             }
@@ -496,7 +560,7 @@
             if (res.success) {
               showToast("✅ Incident deleted");
               excelPreviewData.splice(index, 1);
-              renderIncidentTable(excelPreviewData);
+              applyFilters();
             } else {
               showToast("❌ Delete failed");
             }
