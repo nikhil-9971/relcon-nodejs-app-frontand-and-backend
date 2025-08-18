@@ -18,7 +18,7 @@ function startCronJobs(broadcastToAll) {
 
   // 🔹 Evening 07:30 PM job
   cron.schedule(
-    "30 23 * * *",
+    "30 19 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 07:30 PM IST");
       await runPendingIncidentJob(broadcastToAll, "Good Evening !");
