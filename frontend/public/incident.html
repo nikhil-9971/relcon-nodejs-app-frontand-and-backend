@@ -36,6 +36,18 @@
           ➕ Add Incident
         </button>
       </div>
+
+      <!-- Search Box -->
+      <div class="flex items-center gap-2 mb-4">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="🔍 Search Incident..."
+          class="border p-2 rounded w-full max-w-xs"
+          onkeyup="searchTable()"
+        />
+      </div>
+
       <!-- Modal -->
       <div
         id="incidentModal"
@@ -109,24 +121,26 @@
         </button>
       </div>
 
-      <table class="table-auto w-full text-[11px]">
-        <thead class="bg-green-600 text-white">
-          <tr>
-            <th class="px-2 py-1">RO Code</th>
-            <th class="px-2 py-1">Site Name</th>
-            <th class="px-2 py-1">Region</th>
-            <th class="px-2 py-1">Incident ID</th>
-            <th class="px-2 py-1">Incident Date</th>
-            <th class="px-2 py-1">Complain Remark</th>
-            <th class="px-2 py-1">Assign to Engineer</th>
-            <th class="px-2 py-1">Incident Close Remark</th>
-            <th class="px-2 py-1">Incident Close date</th>
-            <th class="px-2 py-1">Status</th>
-            <th class="px-2 py-1">Action</th>
-          </tr>
-        </thead>
-        <tbody id="incidentTable" class="bg-white"></tbody>
-      </table>
+      <div class="overflow-x-auto overflow-y-auto max-h-[600px] border rounded">
+        <table class="table-auto w-full text-[11px]">
+          <thead class="bg-green-600 text-white">
+            <tr>
+              <th class="px-2 py-1">RO Code</th>
+              <th class="px-2 py-1">Site Name</th>
+              <th class="px-2 py-1">Region</th>
+              <th class="px-2 py-1">Incident ID</th>
+              <th class="px-2 py-1">Incident Date</th>
+              <th class="px-2 py-1">Complain Remark</th>
+              <th class="px-2 py-1">Assign to Engineer</th>
+              <th class="px-2 py-1">Incident Close Remark</th>
+              <th class="px-2 py-1">Incident Close date</th>
+              <th class="px-2 py-1">Status</th>
+              <th class="px-2 py-1">Action</th>
+            </tr>
+          </thead>
+          <tbody id="incidentTable" class="bg-white"></tbody>
+        </table>
+      </div>
     </div>
 
     <div
@@ -171,6 +185,18 @@
           return date.toISOString().split("T")[0];
         }
         return excelDate || "";
+      }
+
+      function searchTable() {
+        const input = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const filteredData = excelPreviewData.filter((item) =>
+          Object.values(item).some((val) =>
+            String(val).toLowerCase().includes(input)
+          )
+        );
+        renderIncidentTable(filteredData);
       }
 
       function renderIncidentTable(data) {
