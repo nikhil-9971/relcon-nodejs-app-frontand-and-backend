@@ -6,39 +6,36 @@ const Chat = require("../models/Chat");
 const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 
 function startCronJobs(broadcastToAll) {
-  // Run every day at 18:35 IST
-  cron.schedule(
-    "34 21 * * *",
-    async () => {
-      console.log("⏰ Running pending incidents cron job at 21:20 IST");
+  async function runPendingIncidentsJob(label) {
+    console.log(`⏰ Running pending incidents cron job at ${label} IST`);
 
-      try {
-        const res = await fetch(`${BASE_URL}/getAllIncidents`);
-        const result = await res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/getAllIncidents`);
+      const result = await res.json();
 
-        if (!result?.success) return;
+      if (!result?.success) return;
 
-        const pending = (result.incidents || []).filter(
-          (i) => i.status === "Pending"
-        );
+      const pending = (result.incidents || []).filter(
+        (i) => i.status === "Pending"
+      );
 
-        // Remove any previous system chatbot messages (keep only the latest each day)
-        await Chat.deleteMany({
-          roomId: "group",
-          from: "🤖 Chatbot",
-          $or: [
-            { system: true },
-            { text: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
-          ],
-        });
+      // Remove any previous system chatbot messages (keep only the latest each day)
+      await Chat.deleteMany({
+        roomId: "group",
+        from: "🤖 Chatbot",
+        $or: [
+          { system: true },
+          { text: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
+        ],
+      });
 
-        if (pending.length > 0) {
-          // Build HTML table
-          const thStyle =
-            "border: 1px solid #ccc; padding: 4px 6px; text-align:left; white-space: normal; background-color: #15803d; color:white;";
-          const tdStyle =
-            "border: 1px solid #ccc; padding: 4px 6px; text-align:left; white-space: normal; word-break: break-word; overflow-wrap: anywhere;";
-          let tableHTML = `
+      if (pending.length > 0) {
+        // Build HTML table
+        const thStyle =
+          "border: 1px solid #ccc; padding: 4px 6px; text-align:left; white-space: normal; background-color: #15803d; color:white;";
+        const tdStyle =
+          "border: 1px solid #ccc; padding: 4px 6px; text-align:left; white-space: normal; word-break: break-word; overflow-wrap: anywhere;";
+        let tableHTML = `
              <table style = "border-collapse: collapse; width: 100%; margin-top: 5px; font-size: 11px; table-layout: fixed;">
 
               <thead>
@@ -54,8 +51,8 @@ function startCronJobs(broadcastToAll) {
               <tbody>
           `;
 
-          for (const i of pending) {
-            tableHTML += `
+        for (const i of pending) {
+          tableHTML += `
               <tr>
                 <td style="${tdStyle}">${i.roCode}</td>
                 <td style="${tdStyle}">${i.siteName}</td>
@@ -64,51 +61,63 @@ function startCronJobs(broadcastToAll) {
                 <td style="${tdStyle}">${i.incidentDate}</td>
                 <td style="${tdStyle}">${i.complaintRemark}</td>
               </tr>`;
-          }
-
-          tableHTML += "</tbody></table>";
-
-          // Save to DB as text (history-safe)
-          const messageDoc = await Chat.create({
-            from: "🤖 Chatbot",
-            to: "group",
-            roomId: "group",
-            text: tableHTML, // store in text
-            delivered: true,
-            read: false,
-            system: true,
-          });
-
-          // Broadcast as HTML so styling is preserved
-          broadcastToAll({
-            type: "group",
-            from: "🤖 Chatbot",
-            html: tableHTML,
-            createdAt: messageDoc.createdAt,
-          });
-        } else {
-          // Save + broadcast single "No pending..." message
-          const messageDoc = await Chat.create({
-            from: "🤖 Chatbot",
-            to: "group",
-            roomId: "group",
-            text: "✅ No pending incidents today.",
-            delivered: true,
-            read: false,
-            system: true,
-          });
-
-          broadcastToAll({
-            type: "group",
-            from: "🤖 Chatbot",
-            text: "✅ No pending incidents today.",
-            createdAt: messageDoc.createdAt,
-          });
         }
-      } catch (err) {
-        console.error("❌ Cron job error:", err);
+
+        tableHTML += "</tbody></table>";
+
+        // Save to DB as text (history-safe)
+        const messageDoc = await Chat.create({
+          from: "🤖 Chatbot",
+          to: "group",
+          roomId: "group",
+          text: tableHTML, // store in text
+          delivered: true,
+          read: false,
+          system: true,
+        });
+
+        // Broadcast as HTML so styling is preserved
+        broadcastToAll({
+          type: "group",
+          from: "🤖 Chatbot",
+          html: tableHTML,
+          createdAt: messageDoc.createdAt,
+        });
+      } else {
+        // Save + broadcast single "No pending..." message
+        const messageDoc = await Chat.create({
+          from: "🤖 Chatbot",
+          to: "group",
+          roomId: "group",
+          text: "✅ No pending incidents today.",
+          delivered: true,
+          read: false,
+          system: true,
+        });
+
+        broadcastToAll({
+          type: "group",
+          from: "🤖 Chatbot",
+          text: "✅ No pending incidents today.",
+          createdAt: messageDoc.createdAt,
+        });
       }
-    },
+    } catch (err) {
+      console.error("❌ Cron job error:", err);
+    }
+  }
+
+  // Schedule at 07:30 PM IST
+  cron.schedule(
+    "30 19 * * *",
+    () => runPendingIncidentsJob("19:30"),
+    { timezone: "Asia/Kolkata" }
+  );
+
+  // Keep the late-evening run as well (currently 09:34 PM IST)
+  cron.schedule(
+    "34 21 * * *",
+    () => runPendingIncidentsJob("21:34"),
     { timezone: "Asia/Kolkata" }
   );
 }
