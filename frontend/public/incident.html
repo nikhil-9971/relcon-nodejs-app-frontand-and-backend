@@ -254,14 +254,15 @@
         </select>
       </td>
 
-      <td class="border px-2 py-1 max-w-[300px]">
-  <input type="text" 
+    <td class="border px-2 py-1 max-w-[400px]">
+  <textarea 
          id="remark-${index}" 
-         value="${item.closeRemark || ""}"
-         class="border rounded px-2 py-1 w-full whitespace-normal break-words" 
+         class="border rounded px-2 py-1 w-full whitespace-normal break-words resize-y"
          ${isClosed ? "readonly" : ""}
-         onchange="checkFields(${index})">
+         onchange="checkFields(${index})"
+         rows="2">${item.closeRemark || ""}</textarea>
 </td>
+
 
 
       <td class="border px-2 py-1">
