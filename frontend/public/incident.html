@@ -122,7 +122,7 @@
       </div>
 
       <div class="overflow-x-auto overflow-y-auto max-h-[600px] border rounded">
-        <table class="table-auto w-full text-[11px]">
+        <table class="table-auto min-w-max text-[11px]">
           <thead class="bg-green-600 text-white sticky top-0 z-10">
             <tr>
               <th class="px-2 py-1">RO Code</th>
@@ -382,14 +382,23 @@
         }
       }
 
-      async function fetchIncidents() {
+      function fetchIncidents() {
         try {
-          const res = await fetch(`${BASE_URL}/getAllIncidents`);
-          const result = await res.json();
-          if (result.success && result.incidents) {
-            excelPreviewData = result.incidents;
-            renderIncidentTable(excelPreviewData);
-          }
+          fetch(`${BASE_URL}/getAllIncidents`)
+            .then((res) => res.json())
+            .then((result) => {
+              if (result.success && result.incidents) {
+                excelPreviewData = result.incidents;
+                const searchVal = document
+                  .getElementById("searchInput")
+                  .value.toLowerCase();
+                if (searchVal) {
+                  searchTable(); // अगर search box में value है तो filter लगाओ
+                } else {
+                  renderIncidentTable(excelPreviewData);
+                }
+              }
+            });
         } catch (err) {
           console.error("Failed to fetch incident data:", err);
         }
