@@ -162,4 +162,28 @@ router.get("/getEmpId/:engineerName", async (req, res) => {
   }
 });
 
+// ✅ Get Last Visit by RO Code
+router.get("/getLastVisit/:roCode", async (req, res) => {
+  try {
+    const { roCode } = req.params;
+
+    // Find latest plan by roCode (sorted by date descending)
+    const lastVisit = await DailyPlan.findOne({
+      roCode: roCode.toUpperCase().trim(),
+    }).sort({ date: -1 });
+
+    if (!lastVisit) {
+      return res.json({ lastDate: "", lastPurpose: "" });
+    }
+
+    res.json({
+      lastDate: lastVisit.date,
+      lastPurpose: lastVisit.purpose,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching last visit:", err);
+    res.status(500).send("Server error");
+  }
+});
+
 module.exports = router;
