@@ -6,6 +6,28 @@ const verifyToken = require("../middleware/authMiddleware");
 const JioBPStatus = require("../models/jioBPStatus");
 const User = require("../models/User");
 
+// ✅ Get last visit details by RO Code
+router.get("/lastVisit/:roCode", async (req, res) => {
+  try {
+    const roCode = req.params.roCode?.toUpperCase()?.trim();
+    if (!roCode) return res.status(400).json({ error: "Missing roCode" });
+
+    // Dates are saved as YYYY-MM-DD strings, so lexicographical sort works
+    const last = await DailyPlan.findOne({ roCode }).sort({ date: -1 });
+
+    if (!last) return res.json({ date: "", purpose: "" });
+
+    res.json({
+      date: last.date || "",
+      purpose: last.purpose || "",
+      roName: last.roName || "",
+    });
+  } catch (err) {
+    console.error("Error fetching last visit:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // ✅ Save Daily Plan
 router.post("/saveDailyPlan", async (req, res) => {
   try {
