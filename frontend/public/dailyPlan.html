@@ -254,6 +254,21 @@
             </div>
           </div>
 
+          <!-- 🔴 Last Visit Info Box (center) -->
+          <div
+            id="lastVisitBox"
+            class="w-full text-center bg-red-100 border border-red-400 text-red-700 p-3 rounded-lg text-sm my-4 hidden"
+          >
+            <p>
+              <b>📅 Last Visit Date:</b>
+              <span id="lastVisitDate" class="font-semibold"></span>
+            </p>
+            <p>
+              <b>📝 Last Purpose of Visit:</b>
+              <span id="lastPurpose" class="font-semibold"></span>
+            </p>
+          </div>
+
           <div class="flex items-center justify-between mt-4">
             <button
               id="submitBtn"
@@ -269,7 +284,7 @@
             </div>
           </div>
           <p class="text-center text-gray-500 text-xs mt-4">
-            👨‍💻 Developed By Advit Software| Version: 27.07.25
+            👨‍💻 Developed By Advit Software| Version: 19.08.25
           </p>
         </div>
       </form>
@@ -426,8 +441,29 @@
 
           // For <select> disable the dropdown
           document.getElementById("phase").disabled = true;
+
+          // ✅ Fetch Last Visit Details
+          const lastRes = await fetch(`${baseUrl}/getLastVisit/${roCode}`, {
+            credentials: "include",
+          });
+          if (lastRes.ok) {
+            const lastData = await lastRes.json();
+            if (lastData.lastDate || lastData.lastPurpose) {
+              document.getElementById("lastVisitDate").textContent =
+                lastData.lastDate || "N/A";
+              document.getElementById("lastPurpose").textContent =
+                lastData.lastPurpose || "N/A";
+              document
+                .getElementById("lastVisitBox")
+                .classList.remove("hidden");
+            } else {
+              document.getElementById("lastVisitBox").classList.add("hidden");
+            }
+          }
         } catch (err) {
           alert("RO Code not found in master data");
+        } finally {
+          icon.classList.remove("spin");
         }
       }
 
