@@ -142,6 +142,7 @@ async function fetchJioBPUnverified() {
     roCode: d.planId?.roCode || d.roCode || "",
     roName: d.planId?.roName || d.roName || "",
     date: d.planId?.date || d.date || "",
+    purpose: d.planId?.purpose || d.purpose || "",
   }));
 }
 
@@ -356,7 +357,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 9:00 बजे IST
-const CRON_SCHEDULE = "30 22 * * *";
+const CRON_SCHEDULE = "55 22 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
