@@ -132,7 +132,9 @@ async function getFreshToken() {
 // HPCL unverified
 async function fetchHPCLUnverified() {
   const url = `${BASE_URL}/getMergedStatusRecords`;
-  const { data } = await axios.get(url, { headers: bearerHeaders });
+  const { data } = await axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const rows = (data || []).filter(
     (d) => d && (d.isVerified === false || d.isVerified === "false")
   );
@@ -142,7 +144,9 @@ async function fetchHPCLUnverified() {
 // JIO BP unverified
 async function fetchJioBPUnverified() {
   const url = `${BASE_URL}/jioBP/getAllJioBPStatus`;
-  const { data } = await axios.get(url, { headers: bearerHeaders });
+  const { data } = await axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const rows = (data || []).filter(
     (d) => d && (d.isVerified === false || d.isVerified === "false")
   );
@@ -370,7 +374,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 9:00 बजे IST
-const CRON_SCHEDULE = "46 23 * * *";
+const CRON_SCHEDULE = "59 23 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
