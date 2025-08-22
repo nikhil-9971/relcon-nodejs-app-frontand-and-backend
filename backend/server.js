@@ -76,6 +76,9 @@ setupWebsocket(server); // attach WS logic
 // ✅ Start cron jobs after WebSocket is ready
 startCronJobs(broadcastToAll);
 
+// ✅ Start mailer service (daily unverified email)
+require("./services/mailer");
+
 // ✅ Redirect *.html to clean path
 app.use((req, res, next) => {
   if (req.path.endsWith(".html")) {
