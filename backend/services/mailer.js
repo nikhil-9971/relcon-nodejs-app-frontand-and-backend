@@ -13,7 +13,8 @@ const {
   MAIL_FROM,
   MAIL_TO,
   BASE_URL,
-  JWT_TOKEN,
+  APP_USER,
+  APP_PASS,
 } = process.env;
 
 if (
@@ -24,7 +25,8 @@ if (
   !MAIL_FROM ||
   !MAIL_TO ||
   !BASE_URL ||
-  !JWT_TOKEN
+  !APP_USER ||
+  !APP_PASS
 ) {
   console.error("❌ Please set all required ENV vars in .env");
   process.exit(1);
@@ -37,11 +39,6 @@ const transporter = nodemailer.createTransport({
   secure: Number(SMTP_PORT) === 465, // 465 => SSL
   auth: { user: SMTP_USER, pass: SMTP_PASS },
 });
-
-// ---- Helpers ----
-const bearerHeaders = {
-  Authorization: `Bearer ${JWT_TOKEN}`,
-};
 
 function safe(val) {
   return (val ?? "").toString();
@@ -117,6 +114,20 @@ function toCSV(rows, keys, headerMap) {
   return [header, ...lines].join("\n");
 }
 
+// ---- Get fresh JWT ----
+async function getFreshToken() {
+  try {
+    const res = await axios.post(`${BASE_URL}/login`, {
+      username: APP_USER,
+      password: APP_PASS,
+    });
+    return res.data.token;
+  } catch (err) {
+    console.error("❌ Error while login:", err.response?.data || err.message);
+    throw err;
+  }
+}
+
 // ---- Fetchers ----
 // HPCL unverified
 async function fetchHPCLUnverified() {
@@ -147,46 +158,46 @@ async function fetchJioBPUnverified() {
 }
 
 // ---- Build & Send Email ----
+
 async function sendUnverifiedEmail() {
-  // 1) Fetch
-  const [hpcl, jio] = await Promise.all([
-    fetchHPCLUnverified(),
-    fetchJioBPUnverified(),
-  ]);
+  try {
+    const token = await getFreshToken(); // ✅ fresh token per run
 
-  // 2) Columns
-  const hpclCols = [
-    { label: "Date", get: (r) => safe(r.date) },
-    { label: "Engineer", get: (r) => safe(r.engineer) },
-    { label: "Region", get: (r) => safe(r.region) },
-    { label: "RO Code", get: (r) => safe(r.roCode) },
-    { label: "RO Name", get: (r) => safe(r.roName) },
-    { label: "Purpose", get: (r) => safe(r.purpose) },
-    { label: "Work Completion Status", get: (r) => safe(r.workCompletion) },
-  ];
+    const [hpcl, jio] = await Promise.all([
+      fetchHPCLUnverified(token),
+      fetchJioBPUnverified(token),
+    ]);
 
-  const jioCols = [
-    { label: "Date", get: (r) => safe(r.date) },
-    { label: "Engineer", get: (r) => safe(r.engineer) },
-    { label: "Region", get: (r) => safe(r.region) },
-    { label: "RO Code", get: (r) => safe(r.roCode) },
-    { label: "RO Name", get: (r) => safe(r.roName) },
-    { label: "Purpose", get: (r) => safe(r.purpose) },
-    { label: "Status", get: (r) => safe(r.status) },
-  ];
+    const hpclCols = [
+      { label: "Date", get: (r) => safe(r.date) },
+      { label: "Engineer", get: (r) => safe(r.engineer) },
+      { label: "Region", get: (r) => safe(r.region) },
+      { label: "RO Code", get: (r) => safe(r.roCode) },
+      { label: "RO Name", get: (r) => safe(r.roName) },
+      { label: "Purpose", get: (r) => safe(r.purpose) },
+      { label: "Work Completion Status", get: (r) => safe(r.workCompletion) },
+    ];
+    const jioCols = [
+      { label: "Date", get: (r) => safe(r.date) },
+      { label: "Engineer", get: (r) => safe(r.engineer) },
+      { label: "Region", get: (r) => safe(r.region) },
+      { label: "RO Code", get: (r) => safe(r.roCode) },
+      { label: "RO Name", get: (r) => safe(r.roName) },
+      { label: "Purpose", get: (r) => safe(r.purpose) },
+      { label: "Status", get: (r) => safe(r.status) },
+    ];
 
-  // 3) HTML
-  const subject = `Unverified Status • HPCL: ${hpcl.length} • JIO BP: ${jio.length}`;
-  const intro = `
+    const subject = `Unverified Status • HPCL: ${hpcl.length} • JIO BP: ${jio.length}`;
+    const intro = `
     <div style="font:14px/1.55 system-ui,Segoe UI,Roboto,Arial">
       <p>Dear Team,</p>
       <p>Please find <b>Unverified</b> record summary of HPCL & JIO BP Site. Please Check and verify Site Status</p>
     </div>`;
 
-  const hpclTable = buildTable(hpcl, hpclCols, "HPCL — Unverified Status");
-  const jioTable = buildTable(jio, jioCols, "JIO BP — Unverified Status");
+    const hpclTable = buildTable(hpcl, hpclCols, "HPCL — Unverified Status");
+    const jioTable = buildTable(jio, jioCols, "JIO BP — Unverified Status");
 
-  const html = `
+    const html = `
     <div style="background:#f8fafc;padding:18px">
       <div style="max-width:1100px;margin:auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px">
         <h2 style="margin:0 0 12px 0;font:600 18px system-ui">Daily Unverified Report</h2>
@@ -198,154 +209,155 @@ async function sendUnverifiedEmail() {
       </div>
     </div>`;
 
-  // 4) Attach CSVs
-  const hpclKeys = [
-    "engineer",
-    "region",
-    "phase",
-    "roCode",
-    "roName",
-    "date",
-    "amcQtr",
-    "purpose",
-    "probeMake",
-    "probeSize",
-    "lowProductLock",
-    "highWaterSet",
-    "duSerialNumber",
-    "dgStatus",
-    "connectivityType",
-    "sim1Provider",
-    "sim1Number",
-    "sim2Provider",
-    "sim2Number",
-    "iemiNumber",
-    "bosVersion",
-    "fccVersion",
-    "wirelessSlave",
-    "sftpConfig",
-    "adminPassword",
-    "workCompletion",
-    "spareUsed",
-    "activeSpare",
-    "faultySpare",
-    "spareRequirment",
-    "spareRequirmentname",
-    "earthingStatus",
-    "voltageReading",
-    "duOffline",
-    "duDependency",
-    "duRemark",
-    "tankOffline",
-    "tankDependency",
-    "tankRemark",
-    "locationField",
-  ];
+    const hpclKeys = [
+      "engineer",
+      "region",
+      "phase",
+      "roCode",
+      "roName",
+      "date",
+      "amcQtr",
+      "purpose",
+      "probeMake",
+      "probeSize",
+      "lowProductLock",
+      "highWaterSet",
+      "duSerialNumber",
+      "dgStatus",
+      "connectivityType",
+      "sim1Provider",
+      "sim1Number",
+      "sim2Provider",
+      "sim2Number",
+      "iemiNumber",
+      "bosVersion",
+      "fccVersion",
+      "wirelessSlave",
+      "sftpConfig",
+      "adminPassword",
+      "workCompletion",
+      "spareUsed",
+      "activeSpare",
+      "faultySpare",
+      "spareRequirment",
+      "spareRequirmentname",
+      "earthingStatus",
+      "voltageReading",
+      "duOffline",
+      "duDependency",
+      "duRemark",
+      "tankOffline",
+      "tankDependency",
+      "tankRemark",
+      "locationField",
+    ];
 
-  const hpclHeaderMap = {
-    engineer: "Engineer Name",
-    region: "Region",
-    phase: "Phase",
-    roCode: "RO Code",
-    roName: "RO Name",
-    date: "Date",
-    amcQtr: "AMC Qtr",
-    purpose: "Purpose of Visit",
-    probeMake: "Probe Make",
-    probeSize: "Product & Probe Size",
-    lowProductLock: "Low Product Lock",
-    highWaterSet: "Highwater Lock Set",
-    duSerialNumber: "DU Serial Number Updated",
-    dgStatus: "DG Status",
-    connectivityType: "Connectivity Type",
-    sim1Provider: "SIM1 Provider",
-    sim1Number: "SIM1 Number",
-    sim2Provider: "SIM2 Provider",
-    sim2Number: "SIM2 Number",
-    iemiNumber: "IEMI Number",
-    bosVersion: "BOS Version",
-    fccVersion: "FCC Version",
-    wirelessSlave: "Wireless Slave Version",
-    sftpConfig: "SFTP Config",
-    adminPassword: "Admin Password Updated",
-    workCompletion: "Work Completion",
-    spareUsed: "Any Spare Used",
-    activeSpare: "Used Spare Name",
-    faultySpare: "Faulty Spare Name & Code",
-    spareRequirment: "Any Spare Requirement",
-    spareRequirmentname: "Required Spare Name",
-    earthingStatus: "Earthing Status",
-    voltageReading: "Voltage Reading",
-    duOffline: "DU Offline",
-    duDependency: "DU Dependency",
-    duRemark: "DU Remark",
-    tankOffline: "Tank Offline",
-    tankDependency: "Tank Dependency",
-    tankRemark: "Tank Remark",
-    locationField: "Location Field",
-  };
+    const hpclHeaderMap = {
+      engineer: "Engineer Name",
+      region: "Region",
+      phase: "Phase",
+      roCode: "RO Code",
+      roName: "RO Name",
+      date: "Date",
+      amcQtr: "AMC Qtr",
+      purpose: "Purpose of Visit",
+      probeMake: "Probe Make",
+      probeSize: "Product & Probe Size",
+      lowProductLock: "Low Product Lock",
+      highWaterSet: "Highwater Lock Set",
+      duSerialNumber: "DU Serial Number Updated",
+      dgStatus: "DG Status",
+      connectivityType: "Connectivity Type",
+      sim1Provider: "SIM1 Provider",
+      sim1Number: "SIM1 Number",
+      sim2Provider: "SIM2 Provider",
+      sim2Number: "SIM2 Number",
+      iemiNumber: "IEMI Number",
+      bosVersion: "BOS Version",
+      fccVersion: "FCC Version",
+      wirelessSlave: "Wireless Slave Version",
+      sftpConfig: "SFTP Config",
+      adminPassword: "Admin Password Updated",
+      workCompletion: "Work Completion",
+      spareUsed: "Any Spare Used",
+      activeSpare: "Used Spare Name",
+      faultySpare: "Faulty Spare Name & Code",
+      spareRequirment: "Any Spare Requirement",
+      spareRequirmentname: "Required Spare Name",
+      earthingStatus: "Earthing Status",
+      voltageReading: "Voltage Reading",
+      duOffline: "DU Offline",
+      duDependency: "DU Dependency",
+      duRemark: "DU Remark",
+      tankOffline: "Tank Offline",
+      tankDependency: "Tank Dependency",
+      tankRemark: "Tank Remark",
+      locationField: "Location Field",
+    };
 
-  const hpclCSV = toCSV(hpcl, hpclKeys, hpclHeaderMap);
+    const hpclCSV = toCSV(hpcl, hpclKeys, hpclHeaderMap);
 
-  const jioKeys = [
-    "engineer",
-    "region",
-    "roCode",
-    "roName",
-    "purpose",
-    "date",
-    "hpsdId",
-    "diagnosis",
-    "solution",
-    "activeMaterialUsed",
-    "usedMaterialDetails",
-    "faultyMaterialDetails",
-    "spareRequired",
-    "observationHours",
-    "materialRequirement",
-    "relconsupport",
-    "rbmlperson",
-    "status",
-    "actions",
-  ];
+    const jioKeys = [
+      "engineer",
+      "region",
+      "roCode",
+      "roName",
+      "purpose",
+      "date",
+      "hpsdId",
+      "diagnosis",
+      "solution",
+      "activeMaterialUsed",
+      "usedMaterialDetails",
+      "faultyMaterialDetails",
+      "spareRequired",
+      "observationHours",
+      "materialRequirement",
+      "relconsupport",
+      "rbmlperson",
+      "status",
+      "actions",
+    ];
 
-  const jioHeaderMap = {
-    engineer: "Engineer",
-    region: "Region",
-    roCode: "RO Code",
-    roName: "RO Name",
-    purpose: "Purpose of Visit",
-    date: "Date",
-    hpsdId: "HPSM ID",
-    diagnosis: "Diagnosis",
-    solution: "Solution",
-    activeMaterialUsed: "Active Material Used",
-    usedMaterialDetails: "Used Material Name & Code",
-    faultyMaterialDetails: "Faulty Material Name & Code",
-    spareRequired: "Spare Requirement",
-    observationHours: "Observation (in Hours)",
-    materialRequirement: "Material Requirement Name",
-    relconsupport: "Support Taken from RELCON Person",
-    rbmlperson: "Inform to RBML Person",
-    status: "Status",
-    actions: "Actions",
-  };
+    const jioHeaderMap = {
+      engineer: "Engineer",
+      region: "Region",
+      roCode: "RO Code",
+      roName: "RO Name",
+      purpose: "Purpose of Visit",
+      date: "Date",
+      hpsdId: "HPSM ID",
+      diagnosis: "Diagnosis",
+      solution: "Solution",
+      activeMaterialUsed: "Active Material Used",
+      usedMaterialDetails: "Used Material Name & Code",
+      faultyMaterialDetails: "Faulty Material Name & Code",
+      spareRequired: "Spare Requirement",
+      observationHours: "Observation (in Hours)",
+      materialRequirement: "Material Requirement Name",
+      relconsupport: "Support Taken from RELCON Person",
+      rbmlperson: "Inform to RBML Person",
+      status: "Status",
+      actions: "Actions",
+    };
 
-  const jioCSV = toCSV(jio, jioKeys, jioHeaderMap);
+    const jioCSV = toCSV(jio, jioKeys, jioHeaderMap);
 
-  // 5) Send
-  const info = await transporter.sendMail({
-    from: MAIL_FROM,
-    to: MAIL_TO, // comma-separated list in .env
-    subject,
-    html,
-    attachments: [
-      { filename: "HPCL_unverified.csv", content: hpclCSV },
-      { filename: "JIO BP_unverified.csv", content: jioCSV },
-    ],
-  });
+    const info = await transporter.sendMail({
+      from: MAIL_FROM,
+      to: MAIL_TO,
+      subject,
+      html,
+      attachments: [
+        { filename: "HPCL_unverified.csv", content: hpclCSV },
+        { filename: "JIO_BP_unverified.csv", content: jioCSV },
+      ],
+    });
 
-  console.log("✅ Mail sent:", info.messageId);
+    console.log("✅ Mail sent:", info.messageId);
+  } catch (err) {
+    console.error("❌ Mail error:", err.response?.data || err.message);
+  }
 }
 
 // ---- Manual run (node mailer.js) ----
