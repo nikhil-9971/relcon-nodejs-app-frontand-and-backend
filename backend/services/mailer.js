@@ -193,7 +193,7 @@ async function sendUnverifiedEmail() {
       { label: "Status", get: (r) => safe(r.status) },
     ];
 
-    const subject = `Unverified Status • HPCL: ${hpcl.length} • JIO BP: ${jio.length}`;
+    const subject = `Unverified Status • HPCL: ${hpcl.length} • JIO BP: ${jio.length}_LUCKNOW, PATNA & BEGUSARAI`;
     const intro = `
     <div style="font:14px/1.55 system-ui,Segoe UI,Roboto,Arial">
       <p>Dear Team,</p>
