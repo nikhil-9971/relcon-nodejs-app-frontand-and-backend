@@ -60,10 +60,9 @@ function htmlEscape(str) {
       }[s])
   );
 }
-
 function buildTable(rows, columns, title) {
   if (!rows.length) {
-    return `<div style="font:14px/1.5 system-ui,Segoe UI,Roboto,Arial">
+    return `<div style="font:14px/1.5 Calibri,Segoe UI,Roboto,Arial,sans-serif">
       <h3 style="margin:16px 0">${htmlEscape(title)}</h3>
       <div style="padding:8px 12px;background:#fff3cd;border:1px solid #ffe69c;border-radius:8px">
         No unverified records.
@@ -74,7 +73,7 @@ function buildTable(rows, columns, title) {
   const thead = columns
     .map(
       (c) =>
-        `<th style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:left;background:#f3f4f6">${htmlEscape(
+        `<th style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:left;background:#f3f4f6;font-family:Calibri,Segoe UI,Roboto,Arial,sans-serif">${htmlEscape(
           c.label
         )}</th>`
     )
@@ -85,8 +84,8 @@ function buildTable(rows, columns, title) {
       const tds = columns
         .map(
           (c) =>
-            `<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9">${htmlEscape(
-              c.get(r)
+            `<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-family:Calibri,Segoe UI,Roboto,Arial,sans-serif">${htmlEscape(
+              typeof c.get === "function" ? c.get(r) : r[c.key]
             )}</td>`
         )
         .join("");
@@ -95,14 +94,15 @@ function buildTable(rows, columns, title) {
     .join("");
 
   return `
-  <div style="font:14px/1.5 system-ui,Segoe UI,Roboto,Arial;margin-top:16px">
-    <h3 style="margin:16px 0">${htmlEscape(
-      title
-    )} <span style="font-weight:normal;color:#6b7280">(${
-    rows.length
-  })</span></h3>
+  <div style="font:14px/1.5 Calibri,Segoe UI,Roboto,Arial,sans-serif;margin-top:16px">
+    <h3 style="margin:16px 0">${htmlEscape(title)} 
+      <span style="font-weight:normal;color:#6b7280">(${rows.length})</span>
+    </h3>
     <div style="overflow:auto;border:1px solid #e5e7eb;border-radius:10px">
-      <table style="width:100%;border-collapse:collapse;min-width:860px">${`<thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody>`}</table>
+      <table style="width:100%;border-collapse:collapse;min-width:860px">
+        <thead><tr>${thead}</tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
     </div>
   </div>`;
 }
@@ -160,11 +160,8 @@ async function sendUnverifiedEmail() {
     { label: "Region", get: (r) => safe(r.region) },
     { label: "RO Code", get: (r) => safe(r.roCode) },
     { label: "RO Name", get: (r) => safe(r.roName) },
-    { label: "DU Offline", get: (r) => safe(r.duOffline) },
-    { label: "DU Dependency", get: (r) => safe(r.duDependency) },
-    { label: "Tank Offline", get: (r) => safe(r.tankOffline) },
-    { label: "Tank Dependency", get: (r) => safe(r.tankDependency) },
-    { label: "Earthing Status", get: (r) => safe(r.earthingStatus) },
+    { label: "Purpose", get: (r) => safe(r.purpose) },
+    { label: "Work Completion Status", get: (r) => safe(r.workCompletion) },
   ];
 
   const jioCols = [
@@ -174,9 +171,7 @@ async function sendUnverifiedEmail() {
     { label: "RO Code", get: (r) => safe(r.roCode) },
     { label: "RO Name", get: (r) => safe(r.roName) },
     { label: "Purpose", get: (r) => safe(r.purpose) },
-    { label: "Diagnosis", get: (r) => safe(r.diagnosis) },
-    { label: "Solution", get: (r) => safe(r.solution) },
-    { label: "Spare Required", get: (r) => safe(r.spareRequired) },
+    { label: "Status", get: (r) => safe(r.status) },
   ];
 
   // 3) HTML
@@ -203,53 +198,137 @@ async function sendUnverifiedEmail() {
 
   // 4) Attach CSVs
   const hpclKeys = [
-    "date",
     "engineer",
     "region",
+    "phase",
     "roCode",
     "roName",
+    "date",
+    "amcQtr",
+    "purpose",
+    "probeMake",
+    "probeSize",
+    "lowProductLock",
+    "highWaterSet",
+    "duSerialNumber",
+    "dgStatus",
+    "connectivityType",
+    "sim1Provider",
+    "sim1Number",
+    "sim2Provider",
+    "sim2Number",
+    "iemiNumber",
+    "bosVersion",
+    "fccVersion",
+    "wirelessSlave",
+    "sftpConfig",
+    "adminPassword",
+    "workCompletion",
+    "spareUsed",
+    "activeSpare",
+    "faultySpare",
+    "spareRequirment",
+    "spareRequirmentname",
+    "earthingStatus",
+    "voltageReading",
     "duOffline",
     "duDependency",
+    "duRemark",
     "tankOffline",
     "tankDependency",
-    "earthingStatus",
+    "tankRemark",
+    "locationField",
   ];
+
   const hpclHeaderMap = {
-    date: "Date",
-    engineer: "Engineer",
+    engineer: "Engineer Name",
     region: "Region",
+    phase: "Phase",
     roCode: "RO Code",
     roName: "RO Name",
+    date: "Date",
+    amcQtr: "AMC Qtr",
+    purpose: "Purpose of Visit",
+    probeMake: "Probe Make",
+    probeSize: "Product & Probe Size",
+    lowProductLock: "Low Product Lock",
+    highWaterSet: "Highwater Lock Set",
+    duSerialNumber: "DU Serial Number Updated",
+    dgStatus: "DG Status",
+    connectivityType: "Connectivity Type",
+    sim1Provider: "SIM1 Provider",
+    sim1Number: "SIM1 Number",
+    sim2Provider: "SIM2 Provider",
+    sim2Number: "SIM2 Number",
+    iemiNumber: "IEMI Number",
+    bosVersion: "BOS Version",
+    fccVersion: "FCC Version",
+    wirelessSlave: "Wireless Slave Version",
+    sftpConfig: "SFTP Config",
+    adminPassword: "Admin Password Updated",
+    workCompletion: "Work Completion",
+    spareUsed: "Any Spare Used",
+    activeSpare: "Used Spare Name",
+    faultySpare: "Faulty Spare Name & Code",
+    spareRequirment: "Any Spare Requirement",
+    spareRequirmentname: "Required Spare Name",
+    earthingStatus: "Earthing Status",
+    voltageReading: "Voltage Reading",
     duOffline: "DU Offline",
     duDependency: "DU Dependency",
+    duRemark: "DU Remark",
     tankOffline: "Tank Offline",
     tankDependency: "Tank Dependency",
-    earthingStatus: "Earthing Status",
+    tankRemark: "Tank Remark",
+    locationField: "Location Field",
   };
+
   const hpclCSV = toCSV(hpcl, hpclKeys, hpclHeaderMap);
 
   const jioKeys = [
-    "date",
     "engineer",
     "region",
     "roCode",
     "roName",
     "purpose",
+    "date",
+    "hpsdId",
     "diagnosis",
     "solution",
+    "activeMaterialUsed",
+    "usedMaterialDetails",
+    "faultyMaterialDetails",
     "spareRequired",
+    "observationHours",
+    "materialRequirement",
+    "relconsupport",
+    "rbmlperson",
+    "status",
+    "actions",
   ];
+
   const jioHeaderMap = {
-    date: "Date",
     engineer: "Engineer",
     region: "Region",
     roCode: "RO Code",
     roName: "RO Name",
-    purpose: "Purpose",
+    purpose: "Purpose of Visit",
+    date: "Date",
+    hpsdId: "HPSM ID",
     diagnosis: "Diagnosis",
     solution: "Solution",
-    spareRequired: "Spare Required",
+    activeMaterialUsed: "Active Material Used",
+    usedMaterialDetails: "Used Material Name & Code",
+    faultyMaterialDetails: "Faulty Material Name & Code",
+    spareRequired: "Spare Requirement",
+    observationHours: "Observation (in Hours)",
+    materialRequirement: "Material Requirement Name",
+    relconsupport: "Support Taken from RELCON Person",
+    rbmlperson: "Inform to RBML Person",
+    status: "Status",
+    actions: "Actions",
   };
+
   const jioCSV = toCSV(jio, jioKeys, jioHeaderMap);
 
   // 5) Send
