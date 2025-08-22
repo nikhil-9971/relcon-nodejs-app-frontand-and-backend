@@ -184,7 +184,7 @@ async function sendUnverifiedEmail() {
   const intro = `
     <div style="font:14px/1.55 system-ui,Segoe UI,Roboto,Arial">
       <p>Dear Team,</p>
-      <p>नीचे <b>Unverified</b> रिकॉर्ड का summary है (HPCL & JIO BP)। कृपया review/verify करें।</p>
+      <p>Please find <b>Unverified</b> record summary of HPCL & JIO BP Site. Please Check and verify Site Status</p>
     </div>`;
 
   const hpclTable = buildTable(hpcl, hpclCols, "HPCL — Unverified Status");
@@ -197,7 +197,7 @@ async function sendUnverifiedEmail() {
         ${intro}
         ${hpclTable}
         ${jioTable}
-        <p style="margin-top:16px;color:#64748b">— This is an automated email.</p>
+        <p style="margin-top:16px;color:#64748b">— This is an automated email. Don't Reply</p>
       </div>
     </div>`;
 
@@ -259,8 +259,8 @@ async function sendUnverifiedEmail() {
     subject,
     html,
     attachments: [
-      { filename: "hpcl_unverified.csv", content: hpclCSV },
-      { filename: "jioBP_unverified.csv", content: jioCSV },
+      { filename: "HPCL_unverified.csv", content: hpclCSV },
+      { filename: "JIO BP_unverified.csv", content: jioCSV },
     ],
   });
 
@@ -277,7 +277,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 9:00 बजे IST
-const CRON_SCHEDULE = "24 21 * * *";
+const CRON_SCHEDULE = "34 21 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
