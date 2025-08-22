@@ -193,6 +193,7 @@ async function sendUnverifiedEmail() {
         ${intro}
         ${hpclTable}
         ${jioTable}
+        <p style="margin-top:16px;color:#64748b">- Nikhil Trivedi </p>
         <p style="margin-top:16px;color:#64748b">— This is an automated email. Don't Reply</p>
       </div>
     </div>`;
@@ -357,7 +358,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 9:00 बजे IST
-const CRON_SCHEDULE = "55 22 * * *";
+const CRON_SCHEDULE = "07 23 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
