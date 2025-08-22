@@ -59,8 +59,8 @@ function htmlEscape(str) {
 }
 function buildTable(rows, columns, title) {
   if (!rows.length) {
-    return `<div style="font:14px/1.5 Calibri,Segoe UI,Roboto,Arial,sans-serif">
-      <h3 style="margin:16px 0">${htmlEscape(title)}</h3>
+    return `<div style="font:13px/1.4 Calibri,Segoe UI,Roboto,Arial,sans-serif">
+      <h3 style="margin:12px 0">${htmlEscape(title)}</h3>
       <div style="padding:8px 12px;background:#fff3cd;border:1px solid #ffe69c;border-radius:8px">
         No unverified records.
       </div>
@@ -70,9 +70,9 @@ function buildTable(rows, columns, title) {
   const thead = columns
     .map(
       (c) =>
-        `<th style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:left;background:#f3f4f6;font-family:Calibri,Segoe UI,Roboto,Arial,sans-serif">${htmlEscape(
-          c.label
-        )}</th>`
+        `<th style="padding:6px 8px;border:1px solid #d1d5db;background:#f1f5f9;
+        font-size:12px;font-weight:600;text-align:left;white-space:nowrap;">
+        ${htmlEscape(c.label)}</th>`
     )
     .join("");
 
@@ -81,7 +81,10 @@ function buildTable(rows, columns, title) {
       const tds = columns
         .map(
           (c) =>
-            `<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-family:Calibri,Segoe UI,Roboto,Arial,sans-serif">${htmlEscape(
+            `<td style="padding:6px 8px;border:1px solid #d1d5db;
+            font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            max-width:200px;">
+            ${htmlEscape(
               typeof c.get === "function" ? c.get(r) : r[c.key]
             )}</td>`
         )
@@ -91,12 +94,12 @@ function buildTable(rows, columns, title) {
     .join("");
 
   return `
-  <div style="font:14px/1.5 Calibri,Segoe UI,Roboto,Arial,sans-serif;margin-top:16px">
-    <h3 style="margin:16px 0">${htmlEscape(title)} 
+  <div style="font:13px/1.4 Calibri,Segoe UI,Roboto,Arial,sans-serif;margin-top:12px">
+    <h3 style="margin:12px 0">${htmlEscape(title)} 
       <span style="font-weight:normal;color:#6b7280">(${rows.length})</span>
     </h3>
-    <div style="overflow:auto;border:1px solid #e5e7eb;border-radius:10px">
-      <table style="width:100%;border-collapse:collapse;min-width:860px">
+    <div style="overflow:auto;border:1px solid #d1d5db;border-radius:6px">
+      <table style="width:100%;border-collapse:collapse;min-width:860px;">
         <thead><tr>${thead}</tr></thead>
         <tbody>${tbody}</tbody>
       </table>
@@ -373,7 +376,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 9:00 बजे IST
-const CRON_SCHEDULE = "23 00 * * *";
+const CRON_SCHEDULE = "30 00 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
