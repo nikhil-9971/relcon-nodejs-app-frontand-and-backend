@@ -70,7 +70,7 @@ function buildTable(rows, columns, title) {
   const thead = columns
     .map(
       (c) =>
-        `<th style="padding:6px 8px;border:1px solid #537dbbff;background:#f1f5f9;
+        `<th style="padding:6px 8px;border:1px solid #d1d5db;background:#e8f4ff;
         font-size:12px;font-weight:600;text-align:left;white-space:nowrap;">
         ${htmlEscape(c.label)}</th>`
     )
@@ -376,7 +376,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 9:00 बजे IST
-const CRON_SCHEDULE = "35 00 * * *";
+const CRON_SCHEDULE = "38 00 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
