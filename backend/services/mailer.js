@@ -130,7 +130,7 @@ async function getFreshToken() {
 
 // ---- Fetchers ----
 // HPCL unverified
-async function fetchHPCLUnverified() {
+async function fetchHPCLUnverified(token) {
   const url = `${BASE_URL}/getMergedStatusRecords`;
   const { data } = await axios.get(url, {
     headers: { Authorization: `Bearer ${token}` },
@@ -142,7 +142,7 @@ async function fetchHPCLUnverified() {
 }
 
 // JIO BP unverified
-async function fetchJioBPUnverified() {
+async function fetchJioBPUnverified(token) {
   const url = `${BASE_URL}/jioBP/getAllJioBPStatus`;
   const { data } = await axios.get(url, {
     headers: { Authorization: `Bearer ${token}` },
@@ -160,7 +160,6 @@ async function fetchJioBPUnverified() {
     purpose: d.planId?.purpose || d.purpose || "",
   }));
 }
-
 // ---- Build & Send Email ----
 
 async function sendUnverifiedEmail() {
