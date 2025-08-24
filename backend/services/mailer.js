@@ -563,7 +563,7 @@ cron.schedule(
 
 // Sent Weekly Last Week Status on Monday at 11 PM
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
-const WEEKLY_CRON_SCHEDULE = "35 23 * * 0"; // 1 = Monday
+const WEEKLY_CRON_SCHEDULE = "36 23 * * 0"; // 1 = Monday
 cron.schedule(
   WEEKLY_CRON_SCHEDULE,
   () => {
