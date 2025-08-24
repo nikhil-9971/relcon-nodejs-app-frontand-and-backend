@@ -117,8 +117,6 @@ function toCSV(rows, keys, headerMap) {
   return [header, ...lines].join("\n");
 }
 
-// Weekly Last Week daily Plan mail Sent ON Monday.
-
 // ---- Date helpers (IST) ----
 function toIST(date) {
   // Convert a Date to an equivalent Date object in IST timezone
@@ -481,6 +479,7 @@ async function sendWeeklyPlanEmail() {
     );
     const subject = `Weekly Plans Summary (${start} to ${end}) • Engineers: ${summaryRows.length} • Total Plans: ${filtered.length}`;
 
+    // Include all relevant DailyPlan fields in CSV
     const csvKeys = [
       "zone",
       "region",
@@ -555,6 +554,476 @@ async function sendWeeklyPlanEmail() {
   }
 }
 
+// ---- Weekly HPCL/JIO Status Analysis ----
+async function fetchHPCLAllStatuses(token) {
+  const url = `${BASE_URL}/getMergedStatusRecords`;
+  const { data } = await axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+async function fetchJioBPAllStatuses(token) {
+  const url = `${BASE_URL}/jioBP/getAllJioBPStatus`;
+  const { data } = await axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const rows = Array.isArray(data) ? data : [];
+  return rows.map((d) => ({
+    ...d,
+    engineer: d.planId?.engineer || d.engineer || "",
+    region: d.planId?.region || d.region || "",
+    roCode: d.planId?.roCode || d.roCode || "",
+    roName: d.planId?.roName || d.roName || "",
+    date: d.planId?.date || d.date || "",
+    purpose: d.planId?.purpose || d.purpose || "",
+  }));
+}
+
+function boolish(v) {
+  if (typeof v === "boolean") return v;
+  const s = safe(v).trim().toLowerCase();
+  return s === "true" || s === "yes" || s === "1";
+}
+
+function analyzeStatuses(hpclRows, jioRows) {
+  const perEngineer = new Map();
+  const perRegion = new Map();
+
+  function upsert(map, key, init) {
+    if (!map.has(key)) map.set(key, init());
+    return map.get(key);
+  }
+
+  // HPCL aggregation
+  hpclRows.forEach((r) => {
+    const engineer = safe(r.engineer) || "UNKNOWN";
+    const region = safe(r.region) || "";
+    const verified = boolish(r.isVerified);
+    const issueType =
+      (safe(r.issueType) || safe(r.purpose) || "").trim().toUpperCase() ||
+      "N/A";
+
+    const e = upsert(perEngineer, engineer, () => ({
+      engineer,
+      hpclVisits: 0,
+      hpclVerified: 0,
+      hpclUnverified: 0,
+      jioVisits: 0,
+      jioResolved: 0,
+      jioUnresolved: 0,
+      issues: {},
+      regions: new Set(),
+    }));
+    e.hpclVisits += 1;
+    e[verified ? "hpclVerified" : "hpclUnverified"] += 1;
+    e.issues[issueType] = (e.issues[issueType] || 0) + 1;
+    if (region) e.regions.add(region);
+
+    const reg = upsert(perRegion, region || "N/A", () => ({
+      region: region || "N/A",
+      hpclVisits: 0,
+      jioVisits: 0,
+      engineers: new Set(),
+    }));
+    reg.hpclVisits += 1;
+    if (engineer) reg.engineers.add(engineer);
+  });
+
+  // JIO aggregation
+  jioRows.forEach((r) => {
+    const engineer = safe(r.engineer) || "UNKNOWN";
+    const region = safe(r.region) || "";
+    const resolved = safe(r.status).toLowerCase() === "resolved";
+    const issueType =
+      (safe(r.diagnosis) || safe(r.purpose) || "").trim().toUpperCase() ||
+      "N/A";
+
+    const e = upsert(perEngineer, engineer, () => ({
+      engineer,
+      hpclVisits: 0,
+      hpclVerified: 0,
+      hpclUnverified: 0,
+      jioVisits: 0,
+      jioResolved: 0,
+      jioUnresolved: 0,
+      issues: {},
+      regions: new Set(),
+    }));
+    e.jioVisits += 1;
+    e[resolved ? "jioResolved" : "jioUnresolved"] += 1;
+    e.issues[issueType] = (e.issues[issueType] || 0) + 1;
+    if (region) e.regions.add(region);
+
+    const reg = upsert(perRegion, region || "N/A", () => ({
+      region: region || "N/A",
+      hpclVisits: 0,
+      jioVisits: 0,
+      engineers: new Set(),
+    }));
+    reg.jioVisits += 1;
+    if (engineer) reg.engineers.add(engineer);
+  });
+
+  const perEngineerRows = Array.from(perEngineer.values()).map((e) => ({
+    engineer: e.engineer,
+    hpclVisits: e.hpclVisits,
+    hpclVerified: e.hpclVerified,
+    hpclUnverified: e.hpclUnverified,
+    jioVisits: e.jioVisits,
+    jioResolved: e.jioResolved,
+    jioUnresolved: e.jioUnresolved,
+    totalVisits: e.hpclVisits + e.jioVisits,
+    regions: Array.from(e.regions).join(", "),
+  }));
+  perEngineerRows.sort(
+    (a, b) =>
+      b.totalVisits - a.totalVisits || a.engineer.localeCompare(b.engineer)
+  );
+
+  const perRegionRows = Array.from(perRegion.values()).map((r) => ({
+    region: r.region,
+    hpclVisits: r.hpclVisits,
+    jioVisits: r.jioVisits,
+    totalVisits: r.hpclVisits + r.jioVisits,
+    uniqueEngineers: r.engineers.size,
+  }));
+  perRegionRows.sort(
+    (a, b) => b.totalVisits - a.totalVisits || a.region.localeCompare(b.region)
+  );
+
+  // Top issues overall (combine HPCL issueType and JIO diagnosis)
+  const issueCounts = {};
+  hpclRows.forEach((r) => {
+    const t = (safe(r.issueType) || safe(r.purpose) || "N/A")
+      .trim()
+      .toUpperCase();
+    issueCounts[t] = (issueCounts[t] || 0) + 1;
+  });
+  jioRows.forEach((r) => {
+    const t = (safe(r.diagnosis) || safe(r.purpose) || "N/A")
+      .trim()
+      .toUpperCase();
+    issueCounts[t] = (issueCounts[t] || 0) + 1;
+  });
+  const topIssues = Object.entries(issueCounts)
+    .map(([issue, count]) => ({ issue, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  return { perEngineerRows, perRegionRows, topIssues };
+}
+
+async function sendWeeklyStatusEmail() {
+  try {
+    const token = await getFreshToken();
+    const { start, end } = getLastWeekRangeIST();
+
+    const [hpclAll, jioAll] = await Promise.all([
+      fetchHPCLAllStatuses(token),
+      fetchJioBPAllStatuses(token),
+    ]);
+
+    const hpcl = hpclAll.filter((r) => withinDateRange(r.date, start, end));
+    const jio = jioAll.filter((r) => withinDateRange(r.date, start, end));
+
+    const { perEngineerRows, perRegionRows, topIssues } = analyzeStatuses(
+      hpcl,
+      jio
+    );
+
+    const perEngineerCols = [
+      { label: "Engineer", get: (r) => safe(r.engineer) },
+      { label: "HPCL Visits", get: (r) => String(r.hpclVisits) },
+      { label: "HPCL Verified", get: (r) => String(r.hpclVerified) },
+      { label: "HPCL Unverified", get: (r) => String(r.hpclUnverified) },
+      { label: "JIO Visits", get: (r) => String(r.jioVisits) },
+      { label: "JIO Resolved", get: (r) => String(r.jioResolved) },
+      { label: "JIO Unresolved", get: (r) => String(r.jioUnresolved) },
+      { label: "Total Visits", get: (r) => String(r.totalVisits) },
+      { label: "Regions", get: (r) => safe(r.regions) },
+    ];
+    const perRegionCols = [
+      { label: "Region", get: (r) => safe(r.region) },
+      { label: "HPCL Visits", get: (r) => String(r.hpclVisits) },
+      { label: "JIO Visits", get: (r) => String(r.jioVisits) },
+      { label: "Total Visits", get: (r) => String(r.totalVisits) },
+      { label: "Unique Engineers", get: (r) => String(r.uniqueEngineers) },
+    ];
+    const topIssuesCols = [
+      { label: "Issue", get: (r) => safe(r.issue) },
+      { label: "Count", get: (r) => String(r.count) },
+    ];
+
+    const perEngineerTable = buildTable(
+      perEngineerRows,
+      perEngineerCols,
+      `Per‑Engineer Summary (${start} to ${end})`
+    );
+    const perRegionTable = buildTable(
+      perRegionRows,
+      perRegionCols,
+      `Per‑Region Summary (${start} to ${end})`
+    );
+    const topIssuesTable = buildTable(
+      topIssues,
+      topIssuesCols,
+      `Top Issues (${start} to ${end})`
+    );
+
+    const subject = `Weekly Site Status Analysis (HPCL & JIO BP) • ${start} to ${end}`;
+    const html = `
+    <div style="background:#f8fafc;padding:18px">
+      <div style="max-width:1100px;margin:auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px">
+        <h2 style="margin:0 0 12px 0;font:600 18px system-ui">Weekly Site Status Analysis</h2>
+        <div style="font:14px/1.55 system-ui,Segoe UI,Roboto,Arial">
+          <p>Dear Team,</p>
+          <p>Here is the analyzed report for last week's HPCL and JIO BP site statuses.</p>
+        </div>
+        ${perEngineerTable}
+        ${perRegionTable}
+        ${topIssuesTable}
+        <p style="margin-top:16px;color:#64748b">— This is an automated email. Don't Reply</p>
+      </div>
+    </div>`;
+
+    // CSV attachments
+    const engineerKeys = [
+      "engineer",
+      "hpclVisits",
+      "hpclVerified",
+      "hpclUnverified",
+      "jioVisits",
+      "jioResolved",
+      "jioUnresolved",
+      "totalVisits",
+      "regions",
+    ];
+    const engineerHeader = {
+      engineer: "Engineer",
+      hpclVisits: "HPCL Visits",
+      hpclVerified: "HPCL Verified",
+      hpclUnverified: "HPCL Unverified",
+      jioVisits: "JIO Visits",
+      jioResolved: "JIO Resolved",
+      jioUnresolved: "JIO Unresolved",
+      totalVisits: "Total Visits",
+      regions: "Regions",
+    };
+    const regionKeys = [
+      "region",
+      "hpclVisits",
+      "jioVisits",
+      "totalVisits",
+      "uniqueEngineers",
+    ];
+    const regionHeader = {
+      region: "Region",
+      hpclVisits: "HPCL Visits",
+      jioVisits: "JIO Visits",
+      totalVisits: "Total Visits",
+      uniqueEngineers: "Unique Engineers",
+    };
+    const topIssueKeys = ["issue", "count"];
+    const topIssueHeader = { issue: "Issue", count: "Count" };
+
+    const hpclDetailKeys = [
+      "engineer",
+      "region",
+      "phase",
+      "roCode",
+      "roName",
+      "date",
+      "amcQtr",
+      "purpose",
+      "probeMake",
+      "probeSize",
+      "lowProductLock",
+      "highWaterSet",
+      "duSerialNumber",
+      "dgStatus",
+      "connectivityType",
+      "sim1Provider",
+      "sim1Number",
+      "sim2Provider",
+      "sim2Number",
+      "iemiNumber",
+      "bosVersion",
+      "fccVersion",
+      "wirelessSlave",
+      "sftpConfig",
+      "adminPassword",
+      "workCompletion",
+      "spareUsed",
+      "activeSpare",
+      "faultySpare",
+      "spareRequirment",
+      "spareRequirmentname",
+      "earthingStatus",
+      "voltageReading",
+      "duOffline",
+      "duDependency",
+      "duRemark",
+      "tankOffline",
+      "tankDependency",
+      "tankRemark",
+      "locationField",
+      "isVerified",
+      "Verified",
+      "Unverified",
+    ];
+    const hpclDetailHeader = {
+      engineer: "Engineer",
+      region: "Region",
+      phase: "Phase",
+      roCode: "RO Code",
+      roName: "RO Name",
+      date: "Date",
+      amcQtr: "AMC Qtr",
+      purpose: "Purpose of Visit",
+      probeMake: "Probe Make",
+      probeSize: "Product & Probe Size",
+      lowProductLock: "Low Product Lock",
+      highWaterSet: "Highwater Lock Set",
+      duSerialNumber: "DU Serial Number Updated",
+      dgStatus: "DG Status",
+      connectivityType: "Connectivity Type",
+      sim1Provider: "SIM1 Provider",
+      sim1Number: "SIM1 Number",
+      sim2Provider: "SIM2 Provider",
+      sim2Number: "SIM2 Number",
+      iemiNumber: "IEMI Number",
+      bosVersion: "BOS Version",
+      fccVersion: "FCC Version",
+      wirelessSlave: "Wireless Slave Version",
+      sftpConfig: "SFTP Config",
+      adminPassword: "Admin Password Updated",
+      workCompletion: "Work Completion",
+      spareUsed: "Any Spare Used",
+      activeSpare: "Used Spare Name",
+      faultySpare: "Faulty Spare Name & Code",
+      spareRequirment: "Any Spare Requirement",
+      spareRequirmentname: "Required Spare Name",
+      earthingStatus: "Earthing Status",
+      voltageReading: "Voltage Reading",
+      duOffline: "DU Offline",
+      duDependency: "DU Dependency",
+      duRemark: "DU Remark",
+      tankOffline: "Tank Offline",
+      tankDependency: "Tank Dependency",
+      tankRemark: "Tank Remark",
+      locationField: "Location Field",
+      isVerified: "Verified Flag",
+      Verified: "Verified",
+      Unverified: "Unverified",
+    };
+
+    // JIO CSV: include all status fields + Verified/Unverified
+    const jioDetailKeys = [
+      "engineer",
+      "region",
+      "roCode",
+      "roName",
+      "purpose",
+      "date",
+      "hpsdId",
+      "diagnosis",
+      "solution",
+      "activeMaterialUsed",
+      "usedMaterialDetails",
+      "faultyMaterialDetails",
+      "spareRequired",
+      "observationHours",
+      "materialRequirement",
+      "relconsupport",
+      "rbmlperson",
+      "status",
+      "actions",
+      "isVerified",
+      "Verified",
+      "Unverified",
+    ];
+    const jioDetailHeader = {
+      engineer: "Engineer",
+      region: "Region",
+      roCode: "RO Code",
+      roName: "RO Name",
+      purpose: "Purpose",
+      date: "Date",
+      hpsdId: "HPSM ID",
+      diagnosis: "Diagnosis",
+      solution: "Solution",
+      activeMaterialUsed: "Active Material Used",
+      usedMaterialDetails: "Used Material Details",
+      faultyMaterialDetails: "Faulty Material Details",
+      spareRequired: "Spare Required",
+      observationHours: "Observation Hours",
+      materialRequirement: "Material Requirement",
+      relconsupport: "RELCON Support Taken",
+      rbmlperson: "Informed RBML Person",
+      status: "Status",
+      actions: "Actions",
+      isVerified: "Verified Flag",
+      Verified: "Verified",
+      Unverified: "Unverified",
+    };
+
+    const attachments = [
+      {
+        filename: `Summary_PerEngineer_${start}_to_${end}.csv`,
+        content: toCSV(perEngineerRows, engineerKeys, engineerHeader),
+      },
+      {
+        filename: `Summary_PerRegion_${start}_to_${end}.csv`,
+        content: toCSV(perRegionRows, regionKeys, regionHeader),
+      },
+      {
+        filename: `Top_Issues_${start}_to_${end}.csv`,
+        content: toCSV(topIssues, topIssueKeys, topIssueHeader),
+      },
+      {
+        filename: `HPCL_Detail_${start}_to_${end}.csv`,
+        content: toCSV(
+          hpcl.map((r) => ({
+            ...r,
+            Verified: boolish(r.isVerified) ? "Yes" : "No",
+            Unverified: boolish(r.isVerified) ? "No" : "Yes",
+          })),
+          hpclDetailKeys,
+          hpclDetailHeader
+        ),
+      },
+      {
+        filename: `JIO_Detail_${start}_to_${end}.csv`,
+        content: toCSV(
+          jio.map((r) => ({
+            ...r,
+            Verified: boolish(r.isVerified) ? "Yes" : "No",
+            Unverified: boolish(r.isVerified) ? "No" : "Yes",
+          })),
+          jioDetailKeys,
+          jioDetailHeader
+        ),
+      },
+    ];
+
+    const info = await transporter.sendMail({
+      from: MAIL_FROM,
+      to: MAIL_TO,
+      subject,
+      html,
+      attachments,
+    });
+
+    console.log("✅ Weekly status analysis mail sent:", info.messageId);
+  } catch (err) {
+    console.error(
+      "❌ Weekly status analysis error:",
+      err.response?.data || err.message
+    );
+  }
+}
+
 // ---- Manual run (node mailer.js) ----
 if (require.main === module) {
   sendUnverifiedEmail().catch((e) => {
@@ -564,8 +1033,6 @@ if (require.main === module) {
 }
 
 // ---- CRON (auto) ----
-
-// Sent Unverified Status on Daily Basis at 10 AM
 // रोज़ाना सुबह 10:00 बजे IST
 const CRON_SCHEDULE = "00 10 * * *";
 cron.schedule(
@@ -579,7 +1046,6 @@ cron.schedule(
   { timezone: "Asia/Kolkata" }
 );
 
-// Sent Weekly Last Week Status on Monday at 11 PM
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
 const WEEKLY_CRON_SCHEDULE = "00 11 * * 1"; // 1 = Monday
 cron.schedule(
@@ -588,7 +1054,25 @@ cron.schedule(
     console.log("⏰ Weekly cron triggered:", new Date().toISOString());
     sendWeeklyPlanEmail().catch((e) =>
       console.error(
-        "❌ Weekly cron mail error:",
+        "❌ Weekly plan cron error:",
+        e?.response?.data || e.message
+      )
+    );
+    // Also send status analysis
+    // Move to 12:30 PM IST as per request
+  },
+  { timezone: "Asia/Kolkata" }
+);
+
+// हर सोमवार 12:30 बजे IST - साप्ताहिक स्टेटस एनालिसिस रिपोर्ट (HPCL & JIO)
+const WEEKLY_STATUS_CRON = "41 00 * * 1"; // Monday 12:30
+cron.schedule(
+  WEEKLY_STATUS_CRON,
+  () => {
+    console.log("⏰ Weekly status cron triggered:", new Date().toISOString());
+    sendWeeklyStatusEmail().catch((e) =>
+      console.error(
+        "❌ Weekly status cron error:",
         e?.response?.data || e.message
       )
     );
