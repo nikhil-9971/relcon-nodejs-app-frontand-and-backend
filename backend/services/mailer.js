@@ -434,27 +434,43 @@ async function sendWeeklyPlanEmail() {
       .filter((p) => withinDateRange(p.date, start, end))
       .filter((p) => normalizePurpose(p.purpose) !== "NO PLAN");
 
-    // Sort by engineer then date
-    filtered.sort((a, b) => {
-      const ea = safe(a.engineer).toLowerCase();
-      const eb = safe(b.engineer).toLowerCase();
-      if (ea !== eb) return ea < eb ? -1 : 1;
-      return safe(a.date) < safe(b.date) ? -1 : safe(a.date) > safe(b.date) ? 1 : 0;
+    // Build distinct Issue Types
+    const issueTypesSet = new Set();
+    filtered.forEach((p) => {
+      const t = (safe(p.issueType).trim() || "N/A").toUpperCase();
+      issueTypesSet.add(t);
+    });
+    const issueTypes = Array.from(issueTypesSet).sort();
+
+    // Aggregate by engineer
+    const byEngineer = new Map();
+    filtered.forEach((p) => {
+      const engineerName = safe(p.engineer) || "UNKNOWN";
+      const itype = (safe(p.issueType).trim() || "N/A").toUpperCase();
+      if (!byEngineer.has(engineerName)) {
+        byEngineer.set(engineerName, { engineer: engineerName, total: 0, issueCounts: {} });
+      }
+      const agg = byEngineer.get(engineerName);
+      agg.total += 1;
+      agg.issueCounts[itype] = (agg.issueCounts[itype] || 0) + 1;
     });
 
-    const cols = [
-      { label: "Date", get: (r) => safe(r.date) },
+    const summaryRows = Array.from(byEngineer.values()).sort((a, b) =>
+      a.engineer.toLowerCase() < b.engineer.toLowerCase() ? -1 : 1
+    );
+
+    const summaryCols = [
       { label: "Engineer", get: (r) => safe(r.engineer) },
-      { label: "Region", get: (r) => safe(r.region) },
-      { label: "Phase", get: (r) => safe(r.phase) },
-      { label: "RO Code", get: (r) => safe(r.roCode) },
-      { label: "RO Name", get: (r) => safe(r.roName) },
-      { label: "Purpose", get: (r) => safe(r.purpose) },
-      { label: "AMC Qtr", get: (r) => safe(r.amcQtr) },
+      { label: "Total Visits", get: (r) => String(r.total) },
+      ...issueTypes.map((t) => ({ label: `Issue: ${t}`, get: (r) => String(r.issueCounts[t] || 0) })),
     ];
 
-    const htmlTable = buildTable(filtered, cols, `Weekly Plan Report (${start} to ${end})`);
-    const subject = `Weekly Plans (${start} to ${end}) • Count: ${filtered.length}`;
+    const summaryTable = buildTable(
+      summaryRows,
+      summaryCols,
+      `Weekly Plan Summary (${start} to ${end})`
+    );
+    const subject = `Weekly Plans Summary (${start} to ${end}) • Engineers: ${summaryRows.length} • Total Plans: ${filtered.length}`;
 
     const csvKeys = [
       "date",
@@ -481,14 +497,14 @@ async function sendWeeklyPlanEmail() {
     const html = `
     <div style="background:#f8fafc;padding:18px">
       <div style="max-width:1100px;margin:auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px">
-        <h2 style="margin:0 0 12px 0;font:600 18px system-ui">Weekly Plan Report</h2>
+        <h2 style="margin:0 0 12px 0;font:600 18px system-ui">Weekly Plan Summary</h2>
         <div style="font:14px/1.55 system-ui,Segoe UI,Roboto,Arial">
           <p>Dear Team,</p>
-          <p>Please find last week's plans for all engineers (excluding <b>NO PLAN</b>) for the period <b>${htmlEscape(
+          <p>Please find a summary of last week's plans for all engineers (excluding <b>NO PLAN</b>) for the period <b>${htmlEscape(
             start
           )}</b> to <b>${htmlEscape(end)}</b>.</p>
         </div>
-        ${htmlTable}
+        ${summaryTable}
         <p style="margin-top:16px;color:#64748b">— This is an automated email. Don't Reply</p>
       </div>
     </div>`;
