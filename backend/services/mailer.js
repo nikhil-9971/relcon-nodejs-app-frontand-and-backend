@@ -1065,7 +1065,7 @@ cron.schedule(
 );
 
 // हर सोमवार 12:30 बजे IST - साप्ताहिक स्टेटस एनालिसिस रिपोर्ट (HPCL & JIO)
-const WEEKLY_STATUS_CRON = "41 00 * * 1"; // Monday 12:30
+const WEEKLY_STATUS_CRON = "30 12 * * 1"; // Monday 12:30
 cron.schedule(
   WEEKLY_STATUS_CRON,
   () => {
