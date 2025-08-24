@@ -472,25 +472,44 @@ async function sendWeeklyPlanEmail() {
     );
     const subject = `Weekly Plans Summary (${start} to ${end}) • Engineers: ${summaryRows.length} • Total Plans: ${filtered.length}`;
 
+    // Include all relevant DailyPlan fields in CSV
     const csvKeys = [
-      "date",
-      "engineer",
+      "zone",
       "region",
+      "engineer",
       "phase",
       "roCode",
       "roName",
+      "empId",
+      "incidentId",
       "purpose",
+      "issueType",
       "amcQtr",
+      "date",
+      "completionStatus",
+      "arrivalTime",
+      "leaveTime",
+      "supportTakenFrom",
+      "whatDone",
     ];
     const headerMap = {
-      date: "Date",
-      engineer: "Engineer",
+      zone: "Zone",
       region: "Region",
+      engineer: "Engineer",
       phase: "Phase",
       roCode: "RO Code",
       roName: "RO Name",
-      purpose: "Purpose",
+      empId: "Employee Id",
+      incidentId: "Incident Id",
+      purpose: "Purpose of Visit",
+      issueType: "Issue Type",
       amcQtr: "AMC Qtr",
+      date: "Date of Visit",
+      completionStatus: "Completion Status",
+      arrivalTime: "Arrival Time",
+      leaveTime: "Leave Time",
+      supportTakenFrom: "Support Taken From",
+      whatDone: "What has to be done",
     };
     const csv = toCSV(filtered, csvKeys, headerMap);
 
