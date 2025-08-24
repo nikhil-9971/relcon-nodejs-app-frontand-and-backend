@@ -918,12 +918,20 @@
       function openChatBox() {
         document.getElementById("chatBox").style.display = "flex";
         clearMentionNotifications();
+        setTimeout(scrolltoBottom, 0);
       }
 
       // If user focuses input, also consider clearing
       chatInput.addEventListener("focus", () => {
         clearMentionNotifications();
       });
+
+      //keep Chat scrolled to Latest
+      function scrolltoBottom() {
+        try {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch {}
+      }
 
       // ---------- modify renderMessage to detect @mentions ----------
       function renderMessage(msg) {
@@ -1053,6 +1061,8 @@
           const data = await res.json();
           chatMessages.innerHTML = "";
           data.forEach(renderMessage);
+          //after rendering history Jump to Bottom
+          scrolltoBottom();
         } catch (err) {
           console.error("❌ Failed to load chat", err);
         }
