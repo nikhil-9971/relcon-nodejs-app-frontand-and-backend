@@ -826,6 +826,7 @@ async function sendWeeklyStatusEmail() {
       workCompletion: "Work Completion",
     };
 
+    // JIO CSV: include all status fields + Verified/Unverified
     const jioDetailKeys = [
       "engineer",
       "region",
@@ -836,9 +837,19 @@ async function sendWeeklyStatusEmail() {
       "hpsdId",
       "diagnosis",
       "solution",
-      "status",
-      "materialRequirement",
+      "activeMaterialUsed",
+      "usedMaterialDetails",
+      "faultyMaterialDetails",
+      "spareRequired",
       "observationHours",
+      "materialRequirement",
+      "relconsupport",
+      "rbmlperson",
+      "status",
+      "actions",
+      "isVerified",
+      "Verified",
+      "Unverified",
     ];
     const jioDetailHeader = {
       engineer: "Engineer",
@@ -850,9 +861,19 @@ async function sendWeeklyStatusEmail() {
       hpsdId: "HPSM ID",
       diagnosis: "Diagnosis",
       solution: "Solution",
-      status: "Status",
-      materialRequirement: "Material Requirement",
+      activeMaterialUsed: "Active Material Used",
+      usedMaterialDetails: "Used Material Details",
+      faultyMaterialDetails: "Faulty Material Details",
+      spareRequired: "Spare Required",
       observationHours: "Observation Hours",
+      materialRequirement: "Material Requirement",
+      relconsupport: "RELCON Support Taken",
+      rbmlperson: "Informed RBML Person",
+      status: "Status",
+      actions: "Actions",
+      isVerified: "Verified Flag",
+      Verified: "Verified",
+      Unverified: "Unverified",
     };
 
     const attachments = [
@@ -860,7 +881,15 @@ async function sendWeeklyStatusEmail() {
       { filename: `Summary_PerRegion_${start}_to_${end}.csv`, content: toCSV(perRegionRows, regionKeys, regionHeader) },
       { filename: `Top_Issues_${start}_to_${end}.csv`, content: toCSV(topIssues, topIssueKeys, topIssueHeader) },
       { filename: `HPCL_Detail_${start}_to_${end}.csv`, content: toCSV(hpcl, hpclDetailKeys, hpclDetailHeader) },
-      { filename: `JIO_Detail_${start}_to_${end}.csv`, content: toCSV(jio, jioDetailKeys, jioDetailHeader) },
+      { filename: `JIO_Detail_${start}_to_${end}.csv`, content: toCSV(
+          jio.map((r) => ({
+            ...r,
+            Verified: boolish(r.isVerified) ? "Yes" : "No",
+            Unverified: boolish(r.isVerified) ? "No" : "Yes",
+          })),
+          jioDetailKeys,
+          jioDetailHeader
+        ) },
     ];
 
     const info = await transporter.sendMail({
@@ -909,6 +938,17 @@ cron.schedule(
       console.error("❌ Weekly plan cron error:", e?.response?.data || e.message)
     );
     // Also send status analysis
+    // Move to 12:30 PM IST as per request
+  },
+  { timezone: "Asia/Kolkata" }
+);
+
+// हर सोमवार 12:30 बजे IST - साप्ताहिक स्टेटस एनालिसिस रिपोर्ट (HPCL & JIO)
+const WEEKLY_STATUS_CRON = "30 12 * * 1"; // Monday 12:30
+cron.schedule(
+  WEEKLY_STATUS_CRON,
+  () => {
+    console.log("⏰ Weekly status cron triggered:", new Date().toISOString());
     sendWeeklyStatusEmail().catch((e) =>
       console.error("❌ Weekly status cron error:", e?.response?.data || e.message)
     );
