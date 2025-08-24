@@ -117,6 +117,44 @@ function toCSV(rows, keys, headerMap) {
   return [header, ...lines].join("\n");
 }
 
+// ---- Date helpers (IST) ----
+function toIST(date) {
+  // Convert a Date to an equivalent Date object in IST timezone
+  const s = date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+  return new Date(s);
+}
+
+function formatYYYYMMDD(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getLastWeekRangeIST() {
+  const nowIST = toIST(new Date());
+  // Find current week Monday (IST)
+  const day = nowIST.getDay(); // 0=Sun,1=Mon,...
+  const daysSinceMonday = (day + 6) % 7; // 0 if Mon
+  const currentMonday = new Date(nowIST);
+  currentMonday.setHours(0, 0, 0, 0);
+  currentMonday.setDate(currentMonday.getDate() - daysSinceMonday);
+
+  // Last week's Monday and Sunday
+  const lastMonday = new Date(currentMonday);
+  lastMonday.setDate(lastMonday.getDate() - 7);
+  const lastSunday = new Date(lastMonday);
+  lastSunday.setDate(lastSunday.getDate() + 6);
+  lastSunday.setHours(23, 59, 59, 999);
+
+  return {
+    start: formatYYYYMMDD(lastMonday),
+    end: formatYYYYMMDD(lastSunday),
+    startDate: lastMonday,
+    endDate: lastSunday,
+  };
+}
+
 // ---- Get fresh JWT ----
 async function getFreshToken() {
   try {
@@ -366,6 +404,109 @@ async function sendUnverifiedEmail() {
   }
 }
 
+// ---- Weekly Plan Report (excluding NO PLAN) ----
+async function fetchAllPlans(token) {
+  const url = `${BASE_URL}/getDailyPlans`;
+  const { data } = await axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+function normalizePurpose(p) {
+  return safe(p).trim().toUpperCase();
+}
+
+function withinDateRange(planDateStr, startYYYYMMDD, endYYYYMMDD) {
+  // Plan date is expected as YYYY-MM-DD; compare lexicographically
+  const d = safe(planDateStr).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  return d >= startYYYYMMDD && d <= endYYYYMMDD;
+}
+
+async function sendWeeklyPlanEmail() {
+  try {
+    const token = await getFreshToken();
+    const { start, end } = getLastWeekRangeIST();
+
+    const plans = await fetchAllPlans(token);
+    const filtered = plans
+      .filter((p) => withinDateRange(p.date, start, end))
+      .filter((p) => normalizePurpose(p.purpose) !== "NO PLAN");
+
+    // Sort by engineer then date
+    filtered.sort((a, b) => {
+      const ea = safe(a.engineer).toLowerCase();
+      const eb = safe(b.engineer).toLowerCase();
+      if (ea !== eb) return ea < eb ? -1 : 1;
+      return safe(a.date) < safe(b.date) ? -1 : safe(a.date) > safe(b.date) ? 1 : 0;
+    });
+
+    const cols = [
+      { label: "Date", get: (r) => safe(r.date) },
+      { label: "Engineer", get: (r) => safe(r.engineer) },
+      { label: "Region", get: (r) => safe(r.region) },
+      { label: "Phase", get: (r) => safe(r.phase) },
+      { label: "RO Code", get: (r) => safe(r.roCode) },
+      { label: "RO Name", get: (r) => safe(r.roName) },
+      { label: "Purpose", get: (r) => safe(r.purpose) },
+      { label: "AMC Qtr", get: (r) => safe(r.amcQtr) },
+    ];
+
+    const htmlTable = buildTable(filtered, cols, `Weekly Plan Report (${start} to ${end})`);
+    const subject = `Weekly Plans (${start} to ${end}) • Count: ${filtered.length}`;
+
+    const csvKeys = [
+      "date",
+      "engineer",
+      "region",
+      "phase",
+      "roCode",
+      "roName",
+      "purpose",
+      "amcQtr",
+    ];
+    const headerMap = {
+      date: "Date",
+      engineer: "Engineer",
+      region: "Region",
+      phase: "Phase",
+      roCode: "RO Code",
+      roName: "RO Name",
+      purpose: "Purpose",
+      amcQtr: "AMC Qtr",
+    };
+    const csv = toCSV(filtered, csvKeys, headerMap);
+
+    const html = `
+    <div style="background:#f8fafc;padding:18px">
+      <div style="max-width:1100px;margin:auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px">
+        <h2 style="margin:0 0 12px 0;font:600 18px system-ui">Weekly Plan Report</h2>
+        <div style="font:14px/1.55 system-ui,Segoe UI,Roboto,Arial">
+          <p>Dear Team,</p>
+          <p>Please find last week's plans for all engineers (excluding <b>NO PLAN</b>) for the period <b>${htmlEscape(
+            start
+          )}</b> to <b>${htmlEscape(end)}</b>.</p>
+        </div>
+        ${htmlTable}
+        <p style="margin-top:16px;color:#64748b">— This is an automated email. Don't Reply</p>
+      </div>
+    </div>`;
+
+    const info = await transporter.sendMail({
+      from: MAIL_FROM,
+      to: MAIL_TO,
+      subject,
+      html,
+      attachments: [{ filename: `Weekly_Plans_${start}_to_${end}.csv`, content: csv }],
+    });
+
+    console.log("✅ Weekly plan mail sent:", info.messageId);
+  } catch (err) {
+    console.error("❌ Weekly plan mail error:", err.response?.data || err.message);
+  }
+}
+
 // ---- Manual run (node mailer.js) ----
 if (require.main === module) {
   sendUnverifiedEmail().catch((e) => {
@@ -383,6 +524,19 @@ cron.schedule(
     console.log("⏰ Cron triggered:", new Date().toISOString());
     sendUnverifiedEmail().catch((e) =>
       console.error("❌ Cron mail error:", e?.response?.data || e.message)
+    );
+  },
+  { timezone: "Asia/Kolkata" }
+);
+
+// हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
+const WEEKLY_CRON_SCHEDULE = "00 11 * * 1"; // 1 = Monday
+cron.schedule(
+  WEEKLY_CRON_SCHEDULE,
+  () => {
+    console.log("⏰ Weekly cron triggered:", new Date().toISOString());
+    sendWeeklyPlanEmail().catch((e) =>
+      console.error("❌ Weekly cron mail error:", e?.response?.data || e.message)
     );
   },
   { timezone: "Asia/Kolkata" }
