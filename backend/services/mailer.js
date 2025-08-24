@@ -482,24 +482,42 @@ async function sendWeeklyPlanEmail() {
     const subject = `Weekly Plans Summary (${start} to ${end}) • Engineers: ${summaryRows.length} • Total Plans: ${filtered.length}`;
 
     const csvKeys = [
-      "date",
-      "engineer",
+      "zone",
       "region",
+      "engineer",
       "phase",
       "roCode",
       "roName",
+      "empId",
+      "incidentId",
       "purpose",
+      "issueType",
       "amcQtr",
+      "date",
+      "completionStatus",
+      "arrivalTime",
+      "leaveTime",
+      "supportTakenFrom",
+      "whatDone",
     ];
     const headerMap = {
-      date: "Date",
-      engineer: "Engineer",
+      zone: "Zone",
       region: "Region",
+      engineer: "Engineer",
       phase: "Phase",
       roCode: "RO Code",
       roName: "RO Name",
-      purpose: "Purpose",
+      empId: "Employee Id",
+      incidentId: "Incident Id",
+      purpose: "Purpose of Visit",
+      issueType: "Issue Type",
       amcQtr: "AMC Qtr",
+      date: "Date of Visit",
+      completionStatus: "Completion Status",
+      arrivalTime: "Arrival Time",
+      leaveTime: "Leave Time",
+      supportTakenFrom: "Support Taken From",
+      whatDone: "What has to be done",
     };
     const csv = toCSV(filtered, csvKeys, headerMap);
 
@@ -563,7 +581,7 @@ cron.schedule(
 
 // Sent Weekly Last Week Status on Monday at 11 PM
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
-const WEEKLY_CRON_SCHEDULE = "38 23 * * 0"; // 1 = Monday
+const WEEKLY_CRON_SCHEDULE = "00 11 * * 1"; // 1 = Monday
 cron.schedule(
   WEEKLY_CRON_SCHEDULE,
   () => {
