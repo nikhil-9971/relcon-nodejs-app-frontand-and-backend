@@ -117,8 +117,11 @@ function toCSV(rows, keys, headerMap) {
   return [header, ...lines].join("\n");
 }
 
+<<<<<<< HEAD
 // Weekly Last Week daily Plan mail Sent ON Monday.
 
+=======
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
 // ---- Date helpers (IST) ----
 function toIST(date) {
   // Convert a Date to an equivalent Date object in IST timezone
@@ -450,11 +453,15 @@ async function sendWeeklyPlanEmail() {
       const engineerName = safe(p.engineer) || "UNKNOWN";
       const itype = (safe(p.issueType).trim() || "N/A").toUpperCase();
       if (!byEngineer.has(engineerName)) {
+<<<<<<< HEAD
         byEngineer.set(engineerName, {
           engineer: engineerName,
           total: 0,
           issueCounts: {},
         });
+=======
+        byEngineer.set(engineerName, { engineer: engineerName, total: 0, issueCounts: {} });
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
       }
       const agg = byEngineer.get(engineerName);
       agg.total += 1;
@@ -468,10 +475,14 @@ async function sendWeeklyPlanEmail() {
     const summaryCols = [
       { label: "Engineer", get: (r) => safe(r.engineer) },
       { label: "Total Visits", get: (r) => String(r.total) },
+<<<<<<< HEAD
       ...issueTypes.map((t) => ({
         label: `Issue: ${t}`,
         get: (r) => String(r.issueCounts[t] || 0),
       })),
+=======
+      ...issueTypes.map((t) => ({ label: `Issue: ${t}`, get: (r) => String(r.issueCounts[t] || 0) })),
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
     ];
 
     const summaryTable = buildTable(
@@ -523,17 +534,25 @@ async function sendWeeklyPlanEmail() {
       to: MAIL_TO,
       subject,
       html,
+<<<<<<< HEAD
       attachments: [
         { filename: `Weekly_Plans_${start}_to_${end}.csv`, content: csv },
       ],
+=======
+      attachments: [{ filename: `Weekly_Plans_${start}_to_${end}.csv`, content: csv }],
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
     });
 
     console.log("✅ Weekly plan mail sent:", info.messageId);
   } catch (err) {
+<<<<<<< HEAD
     console.error(
       "❌ Weekly plan mail error:",
       err.response?.data || err.message
     );
+=======
+    console.error("❌ Weekly plan mail error:", err.response?.data || err.message);
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
   }
 }
 
@@ -561,18 +580,27 @@ cron.schedule(
   { timezone: "Asia/Kolkata" }
 );
 
+<<<<<<< HEAD
 // Sent Weekly Last Week Status on Monday at 11 PM
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
 const WEEKLY_CRON_SCHEDULE = "32 23 * * 0"; // 1 = Monday
+=======
+// हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
+const WEEKLY_CRON_SCHEDULE = "00 11 * * 1"; // 1 = Monday
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
 cron.schedule(
   WEEKLY_CRON_SCHEDULE,
   () => {
     console.log("⏰ Weekly cron triggered:", new Date().toISOString());
     sendWeeklyPlanEmail().catch((e) =>
+<<<<<<< HEAD
       console.error(
         "❌ Weekly cron mail error:",
         e?.response?.data || e.message
       )
+=======
+      console.error("❌ Weekly cron mail error:", e?.response?.data || e.message)
+>>>>>>> 23ee63f4559691c0f001a800c8c880b998025dc7
     );
   },
   { timezone: "Asia/Kolkata" }
