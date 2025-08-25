@@ -68,6 +68,27 @@
         </div>
       </section>
     </div>
+
+    <!-- 📧 Mail Tracking -->
+    <section class="w-full mt-2 p-2 bg-white">
+      <h2 class="section-title mb-2">📧 Mail Tracking</h2>
+      <div class="w-full overflow-auto">
+        <table class="min-w-max w-full table-auto border-collapse">
+          <thead class="bg-gray-100 text-left sticky top-0 z-10">
+            <tr>
+              <th class="px-4 py-2">Type</th>
+              <th class="px-4 py-2">Subject</th>
+              <th class="px-4 py-2">To</th>
+              <th class="px-4 py-2">Status</th>
+              <th class="px-4 py-2">Sent At</th>
+              <th class="px-4 py-2">Error</th>
+            </tr>
+          </thead>
+          <tbody id="emailLogsBody" class="text-[11px]"></tbody>
+        </table>
+      </div>
+    </section>
+
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com"; // 🔁 Your backend URL
 
@@ -76,17 +97,21 @@
         if (!token) return alert("Token missing. Please log in again.");
 
         try {
-          const [loginRes, trailRes] = await Promise.all([
+          const [loginRes, trailRes, emailRes] = await Promise.all([
             fetch(`${baseUrl}/audit/loginLogs`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
             fetch(`${baseUrl}/audit/auditTrails`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
+            fetch(`${baseUrl}/audit/emailLogs`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
           ]);
 
           const loginLogs = await loginRes.json();
           const trails = await trailRes.json();
+          const emailLogs = await emailRes.json();
 
           // Render Login Logs
           document.getElementById("loginLogsBody").innerHTML = loginLogs
@@ -149,6 +174,24 @@
   </div>
 </td>
 
+          </tr>
+        `
+            )
+            .join("");
+
+          // Render Email Logs
+          document.getElementById("emailLogsBody").innerHTML = emailLogs
+            .map(
+              (e) => `
+          <tr class="border-b">
+            <td class="px-2 py-1">${e.type || ""}</td>
+            <td class="px-2 py-1">${e.subject || ""}</td>
+            <td class="px-2 py-1">${e.to || ""}</td>
+            <td class="px-2 py-1 ${e.status === 'success' ? 'text-green-700' : 'text-red-600'}">${
+                e.status
+              }</td>
+            <td class="px-2 py-1">${new Date(e.sentAt).toLocaleString()}</td>
+            <td class="px-2 py-1 text-[10px]">${e.error || "-"}</td>
           </tr>
         `
             )
