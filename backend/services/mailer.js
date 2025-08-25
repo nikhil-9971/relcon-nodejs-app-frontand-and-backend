@@ -3,6 +3,7 @@ require("dotenv").config();
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
+const { EmailLog } = require("../models/AuditLog");
 
 // ---- ENV ----
 const {
@@ -399,8 +400,30 @@ async function sendUnverifiedEmail() {
     });
 
     console.log("✅ Mail sent:", info.messageId);
+    // ✅ Log email success
+    await EmailLog.create({
+      type: "Daily Unverified Report",
+      subject,
+      to: MAIL_TO,
+      status: "success",
+      meta: { counts: { hpcl: hpcl.length, jio: jio.length } },
+      sentAt: new Date(),
+    });
   } catch (err) {
     console.error("❌ Mail error:", err.response?.data || err.message);
+    // ❌ Log email failure
+    try {
+      await EmailLog.create({
+        type: "Daily Unverified Report",
+        subject: typeof subject !== "undefined" ? subject : "",
+        to: MAIL_TO,
+        status: "failure",
+        error: err?.response?.data || err.message,
+        sentAt: new Date(),
+      });
+    } catch (e) {
+      // swallow logging error
+    }
   }
 }
 
@@ -546,11 +569,30 @@ async function sendWeeklyPlanEmail() {
     });
 
     console.log("✅ Weekly plan mail sent:", info.messageId);
+    await EmailLog.create({
+      type: "Weekly Plans Summary",
+      subject,
+      to: MAIL_TO,
+      status: "success",
+      meta: { range: { start, end }, totalPlans: filtered.length },
+      sentAt: new Date(),
+    });
   } catch (err) {
     console.error(
       "❌ Weekly plan mail error:",
       err.response?.data || err.message
     );
+    try {
+      await EmailLog.create({
+        type: "Weekly Plans Summary",
+        subject: typeof subject !== "undefined" ? subject : "",
+        to: MAIL_TO,
+        status: "failure",
+        error: err?.response?.data || err.message,
+        meta: { range: { start, end } },
+        sentAt: new Date(),
+      });
+    } catch (_) {}
   }
 }
 
@@ -1016,11 +1058,34 @@ async function sendWeeklyStatusEmail() {
     });
 
     console.log("✅ Weekly status analysis mail sent:", info.messageId);
+    await EmailLog.create({
+      type: "Weekly Status Analysis",
+      subject,
+      to: MAIL_TO,
+      status: "success",
+      meta: {
+        range: { start, end },
+        hpclCount: hpcl.length,
+        jioCount: jio.length,
+      },
+      sentAt: new Date(),
+    });
   } catch (err) {
     console.error(
       "❌ Weekly status analysis error:",
       err.response?.data || err.message
     );
+    try {
+      await EmailLog.create({
+        type: "Weekly Status Analysis",
+        subject: typeof subject !== "undefined" ? subject : "",
+        to: MAIL_TO,
+        status: "failure",
+        error: err?.response?.data || err.message,
+        meta: { range: { start, end } },
+        sentAt: new Date(),
+      });
+    } catch (_) {}
   }
 }
 
