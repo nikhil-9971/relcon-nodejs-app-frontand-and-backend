@@ -79,7 +79,7 @@
         <div id="customerCards" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-3"></div>
       </div>
 
-      <div class="bg-white rounded-xl shadow p-4">
+      <div id="recentLoginsCard" class="bg-white rounded-xl shadow p-4">
         <div class="text-sm font-semibold text-gray-700 mb-2">Recent Logins</div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
@@ -105,7 +105,8 @@
           const token = getToken();
           const headers = { Authorization: `Bearer ${token}` };
 
-          const [plansRes, statusRes, jioRes, incidentRes, loginLogsRes] = await Promise.all([
+          const [userRes, plansRes, statusRes, jioRes, incidentRes, loginLogsRes] = await Promise.all([
+            fetch(`${baseUrl}/user`, { headers }),
             fetch(`${baseUrl}/getDailyPlans`, { headers }),
             fetch(`${baseUrl}/getMergedStatusRecords`, { headers }),
             fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, { headers }),
@@ -113,6 +114,7 @@
             fetch(`${baseUrl}/audit/loginLogs`, { headers }),
           ]);
 
+          const currentUser = await userRes.json();
           const plans = await plansRes.json();
           const hpcl = await statusRes.json();
           const jio = await jioRes.json();
@@ -139,6 +141,12 @@
           document.getElementById('kpiActiveUsers').textContent = activeUsernames.size;
           document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
 
+          // Show/hide Recent Logins card based on role
+          const recentCard = document.getElementById('recentLoginsCard');
+          if (recentCard) {
+            recentCard.style.display = (String(currentUser.role||'').toLowerCase()==='admin') ? '' : 'none';
+          }
+
           // Recent logins
           const tbody = document.getElementById('recentLogins');
           const filteredLogins = (Array.isArray(loginLogs)?loginLogs:[])
@@ -152,7 +160,22 @@
             </tr>
           `).join('');
 
-          renderVerifyChart(unverifiedHpcl.length + unverifiedJio.length, (hpcl.length + jio.length) - (unverifiedHpcl.length + unverifiedJio.length));
+          // Verification Split chart role-based
+          const userRole = String(currentUser.role||'').toLowerCase();
+          const uname = String(currentUser.engineerName || currentUser.username || '').trim().toLowerCase();
+          const mineHpcl = (Array.isArray(hpcl)?hpcl:[]).filter(r => String(r.engineer||'').trim().toLowerCase() === uname);
+          const mineJio = (Array.isArray(jio)?jio:[]).filter(r => String(r.engineer||'').trim().toLowerCase() === uname);
+          const myTotal = mineHpcl.length + mineJio.length;
+          const myUnverified = mineHpcl.filter(r => String(r.isVerified).toLowerCase()!== 'true').length +
+                               mineJio.filter(r => String(r.isVerified).toLowerCase()!== 'true').length;
+
+          const allUnverified = unverifiedHpcl.length + unverifiedJio.length;
+          const allTotal = (Array.isArray(hpcl)?hpcl.length:0) + (Array.isArray(jio)?jio.length:0);
+
+          const chartUnverified = userRole === 'admin' ? allUnverified : myUnverified;
+          const chartVerified = userRole === 'admin' ? (allTotal - allUnverified) : (myTotal - myUnverified);
+
+          renderVerifyChart(chartUnverified, chartVerified);
           renderPlansRegionChart(plansToday);
           renderCustomerChart(plansToday);
 
