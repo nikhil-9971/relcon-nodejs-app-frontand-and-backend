@@ -188,7 +188,7 @@
         background: #fff;
       }
       #sendBtn {
-        background: #16a34a;
+        background: var(--accent);
         color: white;
         border: none;
         padding: 10px 16px;
@@ -199,7 +199,7 @@
         transition: background 0.2s ease;
       }
       #sendBtn:hover {
-        background: #15803d;
+        background: var(--accent-700);
       }
 
       #mentionBox div:hover {
@@ -262,9 +262,9 @@
       .dark #userDetails {
         color: var(--text);
       }
-      .dark #progressBar {
-        background-color: var(--accent);
-      }
+      .dark #progressBar { background-color: var(--accent); }
+      .dark #mobileNavbar { background: var(--accent) !important; }
+      .dark .chatHeader { background: var(--accent) !important; }
       .dark #chatBox {
         background: var(--card);
         border-color: var(--border);
@@ -297,7 +297,9 @@
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
     <!-- Mobile Navbar -->
     <div
-      class="md:hidden bg-green-700 text-white p-4 flex justify-between items-center shadow-md"
+      id="mobileNavbar"
+      class="md:hidden text-white p-4 flex justify-between items-center shadow-md"
+      style="background: var(--accent);"
     >
       <div class="font-bold text-lg">RELCON</div>
       <div class="flex items-center gap-3">
@@ -657,14 +659,8 @@
     >
       <!-- Header -->
       <div
-        style="
-          background: #16a34a;
-          color: white;
-          padding: 10px;
-          border-top-left-radius: 10px;
-          border-top-right-radius: 10px;
-        "
-        class="flex justify-between items-center"
+        class="flex justify-between items-center chatHeader"
+        style="color: white; padding: 10px; border-top-left-radius: 10px; border-top-right-radius: 10px; background: var(--accent);"
       >
         <b>Team Chat</b>
         <span
