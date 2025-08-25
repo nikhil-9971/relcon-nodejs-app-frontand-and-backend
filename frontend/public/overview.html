@@ -106,6 +106,41 @@
         ></div>
       </div>
 
+      <!-- Engineer Monthly Visits by Customer -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-gray-700">
+            Engineer Monthly Visits by Customer
+          </div>
+          <div class="flex items-center gap-2">
+            <label for="monthSelect" class="text-xs text-gray-500"
+              >Select Month</label
+            >
+            <select
+              id="monthSelect"
+              class="border rounded px-2 py-1 text-xs"
+            ></select>
+          </div>
+        </div>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left">Engineer</th>
+                <th class="px-3 py-2 text-left">HPCL</th>
+                <th class="px-3 py-2 text-left">RBML</th>
+                <th class="px-3 py-2 text-left">BPCL</th>
+                <th class="px-3 py-2 text-left">NPL</th>
+                <th class="px-3 py-2 text-left">JIO BP</th>
+                <th class="px-3 py-2 text-left">OTHER</th>
+                <th class="px-3 py-2 text-left">Total</th>
+              </tr>
+            </thead>
+            <tbody id="engMonthBody" class="text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="recentLoginsCard" class="bg-white rounded-xl shadow p-4">
         <div class="text-sm font-semibold text-gray-700 mb-2">
           Recent Logins
@@ -281,6 +316,15 @@
             customerCounts.set(cust, (customerCounts.get(cust) || 0) + 1);
           });
           renderCustomerCards(customerCounts);
+
+          // Engineer monthly by customer (dropdown + table)
+          window.__allPlans = Array.isArray(plans) ? plans : [];
+          buildMonthDropdown(window.__allPlans);
+          const sel = document.getElementById("monthSelect");
+          renderEngineerMonthly(window.__allPlans, sel.value);
+          sel.addEventListener("change", () => {
+            renderEngineerMonthly(window.__allPlans, sel.value);
+          });
         } catch (e) {
           console.error("overview load error", e);
         }
@@ -404,6 +448,75 @@
           </div>
         `
           )
+          .join("");
+      }
+
+      // ===== Monthly Engineer x Customer table =====
+      function ymKey(d) {
+        try {
+          return new Date(d).toISOString().slice(0, 7);
+        } catch {
+          return "";
+        }
+      }
+      function buildMonthDropdown(plans) {
+        const sel = document.getElementById("monthSelect");
+        if (!sel) return;
+        const keys = new Set(
+          (plans || []).map((p) => ymKey(p.date)).filter(Boolean)
+        );
+        // Fallback: include current month if none
+        if (keys.size === 0) {
+          keys.add(new Date().toISOString().slice(0, 7));
+        }
+        const sorted = Array.from(keys).sort().reverse();
+        sel.innerHTML = sorted
+          .map((k) => {
+            const [y, m] = k.split("-");
+            const dt = new Date(`${k}-01T00:00:00`);
+            const label = dt.toLocaleString("en-US", {
+              month: "long",
+              year: "numeric",
+            });
+            return `<option value="${k}">${label}</option>`;
+          })
+          .join("");
+      }
+      function renderEngineerMonthly(plans, ym) {
+        const body = document.getElementById("engMonthBody");
+        if (!body) return;
+        const data = (plans || []).filter((p) => {
+          if (ymKey(p.date) !== ym) return false;
+          const purpose = String(p.purpose || "")
+            .trim()
+            .toUpperCase();
+          if (purpose === "NO PLAN" || purpose === "IN LEAVE") return false;
+          return true;
+        });
+
+        // Aggregate: engineer -> customer -> count
+        const map = new Map();
+        const customers = ["HPCL", "RBML", "BPCL", "NPL", "JIO BP", "OTHER"];
+        data.forEach((p) => {
+          const eng = String(p.engineer || "").trim() || "-";
+          const cust = customerFromPlan(p);
+          if (!map.has(eng))
+            map.set(eng, new Map(customers.map((c) => [c, 0])));
+          const row = map.get(eng);
+          row.set(cust, (row.get(cust) || 0) + 1);
+        });
+
+        const rows = Array.from(map.entries()).sort((a, b) =>
+          a[0].localeCompare(b[0])
+        );
+        body.innerHTML = rows
+          .map(([eng, row]) => {
+            const cells = customers
+              .map((c) => `<td class="px-3 py-2">${row.get(c) || 0}</td>`)
+              .join("");
+            const total = customers.reduce((s, c) => s + (row.get(c) || 0), 0);
+            return `<tr class="border-b"><td class="px-3 py-2 font-medium">${eng}</td>${cells}<td class="px-3 py-2 font-semibold">${total}</td></tr>`;
+          })
           .join("");
       }
 
