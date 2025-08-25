@@ -1047,7 +1047,7 @@ cron.schedule(
 );
 
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
-const WEEKLY_CRON_SCHEDULE = "00 11 * * 1"; // 1 = Monday
+const WEEKLY_CRON_SCHEDULE = "30 13 * * 1"; // 1 = Monday
 cron.schedule(
   WEEKLY_CRON_SCHEDULE,
   () => {
