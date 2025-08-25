@@ -12,6 +12,10 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <script>
+      // Tailwind CDN config for dark mode
+      tailwind.config = { darkMode: "class" };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Emoji button must come BEFORE the above code uses EmojiButton -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script> -->
@@ -182,24 +186,30 @@
       }
     </style>
   </head>
-  <body class="h-screen flex flex-col md:flex-row bg-gray-100">
+  <body id="appRoot" class="h-screen flex flex-col md:flex-row bg-gray-100 dark:bg-gray-900 dark:text-gray-100">
     <!-- Mobile Navbar -->
     <div
-      class="md:hidden bg-green-700 text-white p-4 flex justify-between items-center"
+      class="md:hidden bg-green-700 dark:bg-green-800 text-white p-4 flex justify-between items-center"
     >
-      <div class="font-bold text-lg">RELCON</div>
-      <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
+      <div class="font-bold text-lg tracking-wide">RELCON</div>
+      <div class="flex items-center gap-3">
+        <button id="darkToggleMobile" class="text-sm px-2 py-1 rounded bg-black/20">🌙</button>
+        <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
+      </div>
     </div>
 
     <!-- Sidebar -->
     <aside
       id="sidebar"
-      class="w-64 bg-gray-200 text-gray-800 flex-col shadow-md hidden md:flex absolute md:relative top-0 left-0 z-50 h-screen md:h-auto md:block transition-all"
+      class="w-64 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-100 flex-col shadow-md hidden md:flex absolute md:relative top-0 left-0 z-50 h-screen md:h-auto md:block transition-all"
     >
       <div
-        class="px-4 py-3 text-base font-bold border-b border-gray-300 leading-5 tracking-wide bg-gray-200"
+        class="px-4 py-3 text-base font-bold border-b border-gray-300 dark:border-gray-700 leading-5 tracking-wide bg-gray-200 dark:bg-gray-800"
       >
-        <span class="block text-green-700 text-lg">RELCON SYSTEMS</span>
+        <div class="flex items-center justify-between">
+          <span class="block text-green-700 dark:text-green-400 text-lg">RELCON SYSTEMS</span>
+          <button id="darkToggle" class="text-xs px-2 py-1 rounded bg-black/10 dark:bg-white/10">🌙</button>
+        </div>
       </div>
 
       <!-- 👤 Logged-in user -->
@@ -346,7 +356,7 @@
       </nav>
 
       <!-- Logout -->
-      <div class="p-4 border-t border-gray-300">
+      <div class="p-4 border-t border-gray-300 dark:border-gray-700">
         <button
           onclick="logout()"
           class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
@@ -490,16 +500,16 @@
 
     <!-- Main Content -->
     <main class="flex-1">
-      <iframe id="contentFrame" src="overview.html"></iframe>
+      <iframe id="contentFrame" class="bg-white dark:bg-gray-900" src="overview.html"></iframe>
     </main>
 
     <!-- Global Loader -->
     <div
       id="globalLoader"
-      class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden"
+      class="fixed inset-0 bg-black/30 dark:bg-black/40 flex items-center justify-center z-50 hidden"
     >
       <div
-        class="w-12 h-12 border-4 border-white border-t-green-600 rounded-full animate-spin"
+        class="w-12 h-12 border-4 border-white dark:border-gray-700 border-t-green-600 rounded-full animate-spin"
       ></div>
     </div>
 
@@ -640,6 +650,22 @@
         if (window.innerWidth < 768) {
           document.getElementById("sidebar").classList.add("hidden");
         }
+      }
+
+      // ===== Dark mode toggle =====
+      function setDarkMode(enabled){
+        const root = document.getElementById('appRoot');
+        if(!root) return;
+        if(enabled){ root.classList.add('dark'); localStorage.setItem('relcon_dark','1'); }
+        else { root.classList.remove('dark'); localStorage.removeItem('relcon_dark'); }
+      }
+      function initDarkMode(){
+        const saved = localStorage.getItem('relcon_dark') === '1';
+        setDarkMode(saved);
+        const btn = document.getElementById('darkToggle');
+        const btnM = document.getElementById('darkToggleMobile');
+        if(btn) btn.onclick = ()=> setDarkMode(!document.getElementById('appRoot').classList.contains('dark'));
+        if(btnM) btnM.onclick = ()=> setDarkMode(!document.getElementById('appRoot').classList.contains('dark'));
       }
 
       // ===== Dashboard Data =====
@@ -907,6 +933,7 @@
         // Assign event handlers safely
         document.getElementById("addSiteBtn").onclick = openNewSiteModal;
         resetInactivityTimer();
+        initDarkMode();
       };
 
       function showGlobalLoader() {
