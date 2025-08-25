@@ -481,7 +481,88 @@
 
     <!-- Main Content -->
     <main class="flex-1">
-      <iframe id="contentFrame" src="dailyPlan.html"></iframe>
+      <!-- Professional Overview -->
+      <section id="overview" class="p-4 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-gray-800">Dashboard Overview</h2>
+          <div id="lastUpdated" class="text-xs text-gray-500">—</div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Plans Today</div>
+              <div id="kpiPlansToday" class="text-xl font-semibold">—</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Unverified Status</div>
+              <div id="kpiUnverified" class="text-xl font-semibold">—</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Open Incidents</div>
+              <div id="kpiOpenIncidents" class="text-xl font-semibold">—</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Active Users Today</div>
+              <div id="kpiActiveUsers" class="text-xl font-semibold">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts + Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div class="bg-white rounded-xl shadow p-4">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Verification Split</div>
+            <canvas id="chartVerify" height="160"></canvas>
+          </div>
+          <div class="bg-white rounded-xl shadow p-4 lg:col-span-2">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Plans by Region (Today)</div>
+            <canvas id="chartPlansRegion" height="80"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-4">
+          <div class="text-sm font-semibold text-gray-700 mb-2">Recent Logins</div>
+          <div class="overflow-auto">
+            <table class="min-w-max w-full table-auto">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-2 text-left">User</th>
+                  <th class="px-3 py-2 text-left">Role</th>
+                  <th class="px-3 py-2 text-left">Time</th>
+                  <th class="px-3 py-2 text-left">IP</th>
+                </tr>
+              </thead>
+              <tbody id="recentLogins" class="text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Existing App Pages -->
+      <iframe id="contentFrame" src="dailyPlan.html" style="height: calc(100vh - 420px);"></iframe>
     </main>
 
     <!-- Global Loader -->
@@ -588,6 +669,7 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
@@ -630,6 +712,124 @@
         if (window.innerWidth < 768) {
           document.getElementById("sidebar").classList.add("hidden");
         }
+      }
+
+      // ===== Dashboard Data =====
+      async function loadDashboard() {
+        try {
+          const token = getToken();
+          const headers = { Authorization: `Bearer ${token}` };
+
+          const [plansRes, statusRes, jioRes, incidentRes, loginLogsRes] = await Promise.all([
+            fetch(`${baseUrl}/getDailyPlans`, { headers }),
+            fetch(`${baseUrl}/getMergedStatusRecords`, { headers }),
+            fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, { headers }),
+            fetch(`${baseUrl}/getAllIncidents`, { headers }),
+            fetch(`${baseUrl}/audit/loginLogs`, { headers }),
+          ]);
+
+          const plans = await plansRes.json();
+          const hpcl = await statusRes.json();
+          const jio = await jioRes.json();
+          const incJson = await incidentRes.json();
+          const loginLogs = await loginLogsRes.json();
+
+          const today = new Date().toISOString().slice(0, 10);
+
+          const plansToday = (Array.isArray(plans) ? plans : []).filter(
+            (p) => (p.date || "").slice(0, 10) === today
+          );
+          const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
+            (r) => String(r.isVerified).toLowerCase() !== "true"
+          );
+          const unverifiedJio = (Array.isArray(jio) ? jio : []).filter(
+            (r) => String(r.isVerified).toLowerCase() !== "true"
+          );
+          const openIncidents = (incJson?.incidents || []).filter(
+            (i) => (i.status || "").toLowerCase() !== "close"
+          );
+          const activeUsernames = new Set(
+            (Array.isArray(loginLogs) ? loginLogs : [])
+              .filter((l) => (l.loginTime && new Date(l.loginTime)).toDateString() === new Date().toDateString())
+              .map((l) => l.engineerName || l.username)
+          );
+
+          document.getElementById("kpiPlansToday").textContent = plansToday.length;
+          document.getElementById("kpiUnverified").textContent =
+            unverifiedHpcl.length + unverifiedJio.length;
+          document.getElementById("kpiOpenIncidents").textContent = openIncidents.length;
+          document.getElementById("kpiActiveUsers").textContent = activeUsernames.size;
+          document.getElementById("lastUpdated").textContent = new Date().toLocaleString();
+
+          // Recent logins table
+          const tbody = document.getElementById("recentLogins");
+          tbody.innerHTML = (Array.isArray(loginLogs) ? loginLogs.slice(0, 8) : [])
+            .map(
+              (l) => `
+              <tr class="border-b">
+                <td class="px-3 py-2">${l.engineerName || l.username}</td>
+                <td class="px-3 py-2">${l.role || ""}</td>
+                <td class="px-3 py-2">${l.loginTime ? new Date(l.loginTime).toLocaleString() : ""}</td>
+                <td class="px-3 py-2">${l.ip || ""}</td>
+              </tr>
+            `
+            )
+            .join("");
+
+          // Charts
+          renderVerifyChart(unverifiedHpcl.length + unverifiedJio.length, (hpcl.length + jio.length) - (unverifiedHpcl.length + unverifiedJio.length));
+          renderPlansRegionChart(plansToday);
+        } catch (e) {
+          console.error("Dashboard load error", e);
+        }
+      }
+
+      function renderVerifyChart(unverified, verified) {
+        const ctx = document.getElementById("chartVerify");
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: ["Unverified", "Verified"],
+            datasets: [
+              {
+                data: [unverified, verified],
+                backgroundColor: ["#f59e0b", "#16a34a"],
+              },
+            ],
+          },
+          options: { responsive: true, plugins: { legend: { position: "bottom" } } },
+        });
+      }
+
+      function renderPlansRegionChart(plans) {
+        const ctx = document.getElementById("chartPlansRegion");
+        if (!ctx) return;
+        const counts = new Map();
+        (plans || []).forEach((p) => {
+          const r = (p.region || "").toUpperCase();
+          counts.set(r, (counts.get(r) || 0) + 1);
+        });
+        const labels = Array.from(counts.keys());
+        const data = labels.map((l) => counts.get(l));
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Plans",
+                data,
+                backgroundColor: "#60a5fa",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
       }
 
       async function fetchUser() {
