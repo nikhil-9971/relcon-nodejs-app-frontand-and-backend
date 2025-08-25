@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { LoginLog, AuditTrail } = require("../models/AuditLog");
+const { LoginLog, AuditTrail, EmailLog } = require("../models/AuditLog");
 
 // Get Login Logs
 router.get("/loginLogs", async (req, res) => {
@@ -23,3 +23,13 @@ router.get("/auditTrails", async (req, res) => {
 });
 
 module.exports = router;
+
+// ✅ Get Email Logs
+router.get("/emailLogs", async (req, res) => {
+  try {
+    const logs = await EmailLog.find().sort({ sentAt: -1 }).limit(100);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch email logs" });
+  }
+});

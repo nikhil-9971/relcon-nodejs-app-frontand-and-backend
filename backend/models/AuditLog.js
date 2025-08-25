@@ -22,7 +22,19 @@ const auditTrailSchema = new mongoose.Schema({
   engineerName: String, // ✅ new
 });
 
+// ✅ Email logs for tracking outgoing mails
+const emailLogSchema = new mongoose.Schema({
+  type: { type: String, default: "" }, // e.g., Daily Unverified, Weekly Plan, etc.
+  subject: { type: String, default: "" },
+  to: { type: String, default: "" },
+  status: { type: String, enum: ["success", "failure"], default: "success" },
+  error: { type: String, default: "" },
+  meta: { type: Object, default: {} },
+  sentAt: { type: Date, default: Date.now },
+});
+
 module.exports = {
   LoginLog: mongoose.model("LoginLog", loginLogSchema),
   AuditTrail: mongoose.model("AuditTrail", auditTrailSchema),
+  EmailLog: mongoose.model("EmailLog", emailLogSchema),
 };
