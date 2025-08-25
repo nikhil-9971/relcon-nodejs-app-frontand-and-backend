@@ -111,7 +111,12 @@
 
           const loginLogs = await loginRes.json();
           const trails = await trailRes.json();
-          const emailLogs = await emailRes.json();
+          const emailLogsRaw = await emailRes.json();
+          const emailLogs = Array.isArray(emailLogsRaw)
+            ? emailLogsRaw
+            : Array.isArray(emailLogsRaw?.data)
+            ? emailLogsRaw.data
+            : [];
 
           // Render Login Logs
           document.getElementById("loginLogsBody").innerHTML = loginLogs
@@ -180,22 +185,21 @@
             .join("");
 
           // Render Email Logs
-          document.getElementById("emailLogsBody").innerHTML = emailLogs
-            .map(
-              (e) => `
-          <tr class="border-b">
-            <td class="px-2 py-1">${e.type || ""}</td>
-            <td class="px-2 py-1">${e.subject || ""}</td>
-            <td class="px-2 py-1">${e.to || ""}</td>
-            <td class="px-2 py-1 ${e.status === 'success' ? 'text-green-700' : 'text-red-600'}">${
-                e.status
-              }</td>
-            <td class="px-2 py-1">${new Date(e.sentAt).toLocaleString()}</td>
-            <td class="px-2 py-1 text-[10px]">${e.error || "-"}</td>
-          </tr>
-        `
-            )
-            .join("");
+          const emailRows = (emailLogs || []).map(
+            (e) => `
+        <tr class="border-b">
+          <td class="px-2 py-1">${e.type || ""}</td>
+          <td class="px-2 py-1">${e.subject || ""}</td>
+          <td class="px-2 py-1">${e.to || ""}</td>
+          <td class="px-2 py-1 ${e.status === 'success' ? 'text-green-700' : 'text-red-600'}">${
+              e.status || "-"
+            }</td>
+          <td class="px-2 py-1">${e.sentAt ? new Date(e.sentAt).toLocaleString() : "-"}</td>
+          <td class="px-2 py-1 text-[10px]">${e.error || "-"}</td>
+        </tr>
+      `
+          );
+          document.getElementById("emailLogsBody").innerHTML = emailRows.join("");
         } catch (error) {
           console.error("Failed to load audit data:", error);
           alert("Failed to load audit logs. Check console for details.");
