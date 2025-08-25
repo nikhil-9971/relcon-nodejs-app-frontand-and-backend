@@ -94,6 +94,14 @@
         </div>
       </div>
 
+      <!-- Customer-wise visits -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <div class="text-sm font-semibold text-gray-700 mb-2">
+          Customer-wise Visits (Today)
+        </div>
+        <canvas id="chartCustomer" height="80"></canvas>
+      </div>
+
       <div class="bg-white rounded-xl shadow p-4">
         <div class="text-sm font-semibold text-gray-700 mb-2">
           Recent Logins
@@ -141,9 +149,15 @@
           const loginLogs = await loginLogsRes.json();
 
           const today = new Date().toISOString().slice(0, 10);
-          const plansToday = (Array.isArray(plans) ? plans : []).filter(
-            (p) => (p.date || "").slice(0, 10) === today
-          );
+          const plansToday = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const isToday = (p.date || "").slice(0, 10) === today;
+            const purpose = String(p.purpose || "")
+              .trim()
+              .toUpperCase();
+            const isNoPlanOrLeave =
+              purpose === "NO PLAN" || purpose === "IN LEAVE";
+            return isToday && !isNoPlanOrLeave;
+          });
           const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
             (r) => String(r.isVerified).toLowerCase() !== "true"
           );
@@ -200,6 +214,7 @@
               (unverifiedHpcl.length + unverifiedJio.length)
           );
           renderPlansRegionChart(plansToday);
+          renderCustomerChart(plansToday);
         } catch (e) {
           console.error("overview load error", e);
         }
@@ -240,6 +255,52 @@
           data: {
             labels,
             datasets: [{ label: "Plans", data, backgroundColor: "#60a5fa" }],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
+      }
+
+      function renderCustomerChart(plans) {
+        const ctx = document.getElementById("chartCustomer");
+        if (!ctx) return;
+        const counts = new Map();
+        const labelColorMap = new Map([
+          ["HPCL", "#16a34a"],
+          ["RBML", "#f59e0b"],
+          ["BPCL", "#60a5fa"],
+          ["NPL", "#34d399"],
+          ["JIO BP", "#a78bfa"],
+          ["OTHER", "#9ca3af"],
+        ]);
+
+        function customerFromPlan(p) {
+          const ph = String(p.phase || "").toUpperCase();
+          if (ph.startsWith("HPCL")) return "HPCL";
+          if (ph.includes("RBML")) return "RBML";
+          if (ph.includes("BPCL")) return "BPCL";
+          if (ph.includes("NPL")) return "NPL";
+          if (ph.includes("JIO")) return "JIO BP";
+          return "OTHER";
+        }
+
+        (plans || []).forEach((p) => {
+          const cust = customerFromPlan(p);
+          counts.set(cust, (counts.get(cust) || 0) + 1);
+        });
+
+        const labels = Array.from(counts.keys());
+        const data = labels.map((l) => counts.get(l));
+        const colors = labels.map((l) => labelColorMap.get(l) || "#9ca3af");
+
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{ label: "Visits", data, backgroundColor: colors }],
           },
           options: {
             responsive: true,
