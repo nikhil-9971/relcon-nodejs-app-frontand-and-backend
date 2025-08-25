@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | RELCON SYSTEMS</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Emoji button must come BEFORE the above code uses EmojiButton -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.umd.min.js"></script> -->
+    <!-- FIX: Load correct EmojiButton version -->
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/emoji-button.min.js"></script>
+
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("theme");
+          var prefersDark =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = saved || (prefersDark ? "dark" : "light");
+          if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <style>
+      :root {
+        --bg: #f1f5f9;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --card: #ffffff;
+        --border: #e5e7eb;
+        --sidebar: #e5e7eb;
+        --hover: #e7f5eb;
+        --accent: #16a34a;
+        --accent-700: #15803d;
+        --link-active-bg: #ffffff;
+        --link-active-text: #15803d;
+      }
+
+      .dark {
+        --bg: #0b1220;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --card: #0f172a;
+        --border: #1f2937;
+        --sidebar: #0f172a;
+        --hover: #122036;
+        --accent: #22c55e;
+        --accent-700: #16a34a;
+        --link-active-bg: #111827;
+        --link-active-text: #22c55e;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        font-size: 12px;
+      }
+      iframe {
+        width: 100%;
+        height: 100vh;
+        border: none;
+      }
+      .active-link {
+        background-color: var(--link-active-bg);
+        color: var(--link-active-text);
+        font-weight: 600;
+        border-left: 3px solid var(--accent);
+      }
+
+      #recordList {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+      }
+
+      #recordList.open {
+        max-height: 300px; /* adjust based on content */
+      }
+
+      .label {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 11px;
+        display: block;
+      }
+
+      /* Stylish Top Progress Bar */
+      #progressBar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 0%;
+        background-color: #16a34a; /* green-600 */
+        z-index: 1000;
+        transition: width 0.4s ease, opacity 0.3s ease;
+      }
+
+      #chatBox {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60vw;
+        height: 70vh;
+        background: #ffffff;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        z-index: 9999;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      #chatMessages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      #chatToggleBtn {
+        bottom: 70px;
+        right: 20px;
+      }
+      .msg {
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-size: 13px;
+        word-break: break-word;
+      }
+
+      .msg.me {
+        background: #dcfce7;
+        align-self: flex-end;
+        border-bottom-right-radius: 0;
+      }
+
+      .msg.them {
+        background: #f1f5f9;
+        align-self: flex-start;
+        border-bottom-left-radius: 0;
+      }
+
+      #chatInputSection {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+      }
+
+      #chatInput {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: 24px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        outline: none;
+        background: #fff;
+      }
+      #sendBtn {
+        background: #16a34a;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 24px;
+        margin-left: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      #sendBtn:hover {
+        background: #15803d;
+      }
+
+      #mentionBox div:hover {
+        background: #f0f0f0;
+      }
+      @media (max-width: 768px) {
+        #chatBox {
+          width: 95vw;
+          height: 70vh;
+        }
+      }
+
+      /* Chatbot table styles */
+      .chat-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 5px;
+      }
+      .chat-table-wrapper table {
+        border-collapse: collapse;
+        min-width: 400px;
+        font-size: 12px;
+      }
+      .chat-table-wrapper table th,
+      .chat-table-wrapper table td {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .chat-table-wrapper table th {
+        background-color: #15803d;
+        color: white;
+      }
+      .chat-table-wrapper table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      /* Dark theme overrides */
+      .dark body {
+        background-color: var(--bg);
+        color: var(--text);
+      }
+      .dark .bg-gray-100 { background-color: var(--bg) !important; }
+      .dark .text-gray-800 { color: var(--text) !important; }
+      .dark .border-gray-300 { border-color: var(--border) !important; }
+      .dark #sidebar {
+        background-color: var(--sidebar) !important;
+        color: var(--text) !important;
+      }
+      .dark #sidebar .bg-gray-200 { background-color: var(--sidebar) !important; }
+      .dark #sidebar .border-gray-300 { border-color: var(--border) !important; }
+      .dark #sidebar a {
+        color: var(--text);
+      }
+      .dark #sidebar a:hover {
+        background-color: var(--accent-700) !important;
+        color: #ffffff !important;
+      }
+      .dark #userDetails {
+        color: var(--text);
+      }
+      .dark #progressBar {
+        background-color: var(--accent);
+      }
+      .dark #chatBox {
+        background: var(--card);
+        border-color: var(--border);
+        box-shadow: none;
+      }
+      .dark .msg.me {
+        background: rgba(34, 197, 94, 0.15);
+      }
+      .dark .msg.them {
+        background: #111827;
+      }
+      .dark #chatInputSection {
+        background: #0b1220;
+        border-top-color: var(--border);
+      }
+      .dark #chatInput {
+        background: #0b1220;
+        color: var(--text);
+        border-color: var(--border);
+      }
+      .dark #mentionBox {
+        background: var(--card);
+        border-color: var(--border);
+      }
+      .dark #mentionBox div:hover {
+        background: #111827;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex flex-col md:flex-row bg-gray-100">
+    <!-- Mobile Navbar -->
+    <div
+      class="md:hidden bg-green-700 text-white p-4 flex justify-between items-center"
+    >
+      <div class="font-bold text-lg">RELCON</div>
+      <div class="flex items-center gap-3">
+        <button id="themeToggleMobile" class="focus:outline-none" title="Toggle theme">
+          <i id="themeToggleIconMobile" class="fa-regular fa-moon"></i>
+        </button>
+        <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside
+      id="sidebar"
+      class="w-64 bg-gray-200 text-gray-800 flex-col shadow-md hidden md:flex absolute md:relative top-0 left-0 z-50 h-screen md:h-auto md:block transition-all"
+    >
+      <div
+        class="px-4 py-3 text-base font-bold border-b border-gray-300 leading-5 tracking-wide bg-gray-200 flex items-center justify-between"
+      >
+        <span class="block text-green-700 text-lg">RELCON SYSTEMS</span>
+        <button id="themeToggle" class="text-gray-700 hover:text-green-800 text-sm px-2 py-1 rounded" title="Toggle theme">
+          <i id="themeToggleIcon" class="fa-regular fa-moon"></i>
+        </button>
+      </div>
+
+      <!-- 👤 Logged-in user -->
+      <div
+        id="userDetails"
+        class="px-4 py-2 text-sm text-gray-700 border-b border-gray-300"
+      >
+        👤 Loading user...
+      </div>
+
+      <!-- Nav links -->
+      <nav class="flex-1 p-4 space-y-2">
+        <!-- Daily Plan (outside list) -->
+        <a
+          href="#"
+          id="dashboardOverviewLink"
+          onclick="loadPage('overview.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+        >
+          <i class="fa-solid fa-chart-line"></i> Dashboard Overview
+        </a>
+        <a
+          href="#"
+          onclick="loadPage('dailyPlan.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium active-link"
+        >
+          <i class="fa-solid fa-user-pen"></i> Create Daily Plan
+        </a>
+
+        <a
+          href="#"
+          id="addSiteBtn"
+          onclick="openNewSiteModal()"
+          class="block px-4 py-2 rounded bg-red-600 hover:bg-green-800 hover:text-white transition-all font-medium text-white hidden"
+        >
+          <i class="fa-solid fa-plus"></i> Add New Site
+        </a>
+
+        <div>
+          <!-- Toggle Button -->
+          <button
+            onclick="toggleRecordList()"
+            class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          >
+            <div class="flex items-center">
+              <i class="fa-solid fa-folder-plus"></i>
+              <span class="ml-1">Report</span>
+            </div>
+            <span id="toggleIcon" class="text-green-800 hover:text-white">
+              <i class="fa-solid fa-caret-down"></i>
+            </span>
+          </button>
+
+          <!-- Dropdown UL (initially collapsed but not hidden) -->
+          <ul id="recordList" class="ml-4 mt-1 space-y-1">
+            <li>
+              <a
+                href="#"
+                onclick="loadPage('dataView.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                ><i class="fa-solid fa-file-excel"></i> Visit Report</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                id="statusLink"
+                onclick="loadPage('statusRecords.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                ><i class="fa-solid fa-file-excel"></i>
+                <span class="ml-1">HPCL Status Report</span></a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="loadPage('atgRecords.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                ><i class="fa-solid fa-file-excel"></i> ATG Report</a
+              >
+            </li>
+            <li>
+              <a
+                id="tasklink"
+                href="#"
+                onclick="loadPage('taskReport.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                ><i class="fa-solid fa-file-excel"></i> Task Report</a
+              >
+            </li>
+
+            <li>
+              <a
+                href="#"
+                onclick="loadPage('jioBPreport.html', this)"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+              >
+                <i class="fa-solid fa-file-excel"></i> Jio BP Status Report
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Task Manager -->
+
+        <a
+          href="#"
+          id="taskManagementLink"
+          onclick="loadPage('taskManager.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          style="display: none"
+        >
+          <i class="fa-solid fa-list-check"></i> Task Management
+        </a>
+
+        <a
+          href="#"
+          id="auditLink"
+          onclick="loadPage('auditReport.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          style="display: none"
+        >
+          <i class="fa-solid fa-shield-halved"></i> Audit Report
+        </a>
+
+        <a
+          href="#"
+          onclick="loadPage('materialrequirement.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+        >
+          <i class="fa-solid fa-boxes-packing"></i> Material Requirement
+        </a>
+
+        <a
+          href="#"
+          id="incidentId"
+          onclick="loadPage('incident.html', this)"
+          class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          style="display: none"
+        >
+          <i class="fa-solid fa-screwdriver-wrench"></i> Incident ID
+        </a>
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-gray-300">
+        <button
+          onclick="logout()"
+          class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+        >
+          🚪 Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Add New Site Modal -->
+    <div
+      id="newSiteModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-xl">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">
+          ➕ Add New Site
+        </h2>
+
+        <div class="space-y-3 text-sm">
+          <div>
+            <label class="block font-medium mb-1 text-gray-700">Zone:</label>
+            <select
+              id="newZone"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Zone</option>
+              <option>ECZ</option>
+              <option>NCZ</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700">RO Code:</label>
+            <input
+              id="newRoCode"
+              type="text"
+              placeholder="Enter RO Code"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            />
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700">RO Name:</label>
+            <input
+              id="newRoName"
+              type="text"
+              placeholder="Enter RO Name"
+              class="w-full border border-gray-300 p-2 rounded uppercase focus:outline-none focus:ring focus:ring-green-300"
+            />
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700">Region:</label>
+            <select
+              id="newRegion"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Region</option>
+              <option>BEGUSARAI RET RO</option>
+              <option>PATNA RET RO</option>
+              <option>JHARKHAND</option>
+              <option>MUZAFFARPUR TERRITORY</option>
+              <option>BARAUNI TERRITORY</option>
+              <option>PATNA TERRITORY</option>
+              <option>LUCKNOW RET RO</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700">Phase:</label>
+            <select
+              id="newPhase"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Phase</option>
+              <option>HPCL/Phase-X</option>
+              <option>HPCL/Phase-IX</option>
+              <option>HPCL/Phase-XI</option>
+              <option>HPCL/Phase-XII</option>
+              <option>HPCL/Phase-XIII</option>
+              <option>RBML</option>
+              <option>BPCL/IOT</option>
+              <option>NPL</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700"
+              >Engineer:</label
+            >
+            <select
+              id="newEngineer"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Engineer Name</option>
+              <option>Abhishek Pathak</option>
+              <option>Amit Kumar</option>
+              <option>Banti Kumar</option>
+              <option>Gautam Kumar</option>
+              <option>Gautam Kumar (Purnia)</option>
+              <option>Kaushal Pandey</option>
+              <option>Kuldeep Kumar</option>
+              <option>Prerak Singh</option>
+              <option>Rajan Pandey</option>
+              <option>Raushan Kumar</option>
+              <option>RAVI PRATAP</option>
+              <option>Shaurav Kumar</option>
+              <option>Shubhendu Giri</option>
+              <option>Vinit Kumar</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700">AMC Qtr:</label>
+            <input
+              id="newAmcQtr"
+              type="text"
+              placeholder="Enter AMC Qtr"
+              class="w-full border border-gray-300 p-2 rounded uppercase focus:outline-none focus:ring focus:ring-green-300"
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end mt-6">
+          <button
+            onclick="closeNewSiteModal()"
+            class="ml-2 px-5 py-2 rounded bg-red-600 text-white hover: bg-red-700 shadow"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="submitNewSite()"
+            class="ml-2 px-5 py-2 rounded bg-green-600 text-white hover:bg-green-700 shadow"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <iframe id="contentFrame" src="dailyPlan.html"></iframe>
+    </main>
+
+    <!-- Global Loader -->
+    <div
+      id="globalLoader"
+      class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="w-12 h-12 border-4 border-white border-t-green-600 rounded-full animate-spin"
+      ></div>
+    </div>
+
+    <div id="progressBar"></div>
+
+    <!-- Chat Box -->
+    <!-- 💬 Chat Toggle Button -->
+    <button
+      id="chatToggleBtn"
+      onclick="openChatBox()"
+      class="fixed bottom-6 right-6 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg z-[9999]"
+    >
+      💬
+      <span
+        id="mentionBadge"
+        style="
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          background: red;
+          color: white;
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 50%;
+          display: none;
+        "
+        >0</span
+      >
+    </button>
+
+    <!-- 🧾 Chat Box -->
+    <div
+      id="chatBox"
+      class="shadow-lg flex flex-col fixed bottom-24 right-6 bg-white border border-gray-300 rounded-lg w-80 max-w-full z-[9999]"
+      style="display: none"
+    >
+      <!-- Header -->
+      <div
+        style="
+          background: #16a34a;
+          color: white;
+          padding: 10px;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+        "
+        class="flex justify-between items-center"
+      >
+        <b>Team Chat</b>
+        <span
+          style="cursor: pointer"
+          onclick="document.getElementById('chatBox').style.display='none'"
+          >×</span
+        >
+      </div>
+
+      <!-- Typing Indicator -->
+      <div
+        id="typingIndicator"
+        class="text-xs text-gray-500 italic mb-1 px-2"
+      ></div>
+
+      <!-- Messages -->
+      <div id="chatMessages" class="flex-1 overflow-y-auto p-2 text-sm"></div>
+
+      <div
+        id="replyBox"
+        style="
+          display: none;
+          background: #fef9c3;
+          padding: 6px 10px;
+          font-size: 11px;
+          border-left: 4px solid #facc15;
+        "
+      ></div>
+
+      <!-- Input -->
+      <div id="chatInputSection" class="p-2 flex gap-2 border-t relative">
+        <button id="emojiBtn" title="Emoji" class="text-lg">😊</button>
+        <input
+          type="text"
+          id="chatInput"
+          placeholder="Type..."
+          class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+        />
+        <button id="micBtn" title="Speak" class="text-lg">
+          <i class="fa-solid fa-microphone-lines"></i>
+        </button>
+
+        <button
+          id="sendBtn"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded"
+        >
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
+
+      let replyContext = null;
+
+      function getToken() {
+        return localStorage.getItem("token");
+      }
+
+      function openNewSiteModal() {
+        document.getElementById("newSiteModal").classList.remove("hidden");
+      }
+
+      function closeNewSiteModal() {
+        document.getElementById("newSiteModal").classList.add("hidden");
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      }
+
+      function loadPage(page, linkElement) {
+        showGlobalLoader(); // Start progress
+
+        const iframe = document.getElementById("contentFrame");
+        iframe.src = page;
+
+        iframe.onload = () => {
+          hideGlobalLoader(); // Finish progress
+          try {
+            injectDarkStylesInto(
+              iframe.contentDocument || iframe.contentWindow.document
+            );
+          } catch (e) {}
+        };
+
+        // Set active class
+        document
+          .querySelectorAll("nav a")
+          .forEach((link) => link.classList.remove("active-link"));
+        if (linkElement) linkElement.classList.add("active-link");
+
+        // Auto close sidebar on mobile
+        if (window.innerWidth < 768) {
+          document.getElementById("sidebar").classList.add("hidden");
+        }
+      }
+
+      function injectDarkStylesInto(doc) {
+        try {
+          if (!doc) return;
+          const id = "injected-dark-styles";
+          const existing = doc.getElementById(id);
+          const isDark = document.documentElement.classList.contains("dark");
+          if (!isDark) {
+            if (existing) existing.remove();
+            doc.documentElement.classList.remove("dark");
+            return;
+          }
+          doc.documentElement.classList.add("dark");
+          if (existing) return;
+          const style = doc.createElement("style");
+          style.id = id;
+          style.textContent = `
+:root {\n  --bg: #f1f5f9;\n  --text: #1f2937;\n  --muted: #6b7280;\n  --card: #ffffff;\n  --border: #e5e7eb;\n  --sidebar: #e5e7eb;\n  --hover: #e7f5eb;\n  --accent: #16a34a;\n  --accent-700: #15803d;\n}\n.dark {\n  --bg: #0b1220;\n  --text: #e5e7eb;\n  --muted: #9ca3af;\n  --card: #0f172a;\n  --border: #1f2937;\n  --sidebar: #0f172a;\n  --hover: #122036;\n  --accent: #22c55e;\n  --accent-700: #16a34a;\n}\nbody {\n  background-color: var(--bg) !important;\n  color: var(--text) !important;\n}\n.dark .bg-white { background-color: #0f172a !important; }\n.dark .bg-gray-50 { background-color: #0b1220 !important; }\n.dark .bg-gray-100 { background-color: #0b1220 !important; }\n.dark .bg-gray-200 { background-color: #0f172a !important; }\n.dark .text-gray-800 { color: var(--text) !important; }\n.dark .text-gray-700 { color: var(--text) !important; }\n.dark .border-gray-300 { border-color: var(--border) !important; }\n.dark table thead { background-color: var(--accent-700) !important; color: #fff !important; }\n.dark table tbody tr:nth-child(even) { background-color: #111827 !important; }\ninput, select, textarea { background: #0b1220 !important; color: var(--text) !important; border-color: var(--border) !important; }\nbutton { color: inherit; }
+`;
+          doc.head.appendChild(style);
+        } catch (e) {}
+      }
+
+      async function fetchUser() {
+        const token = getToken();
+        if (!token) return logout();
+
+        try {
+          const res = await fetch(`${baseUrl}/user`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (res.status === 403 || res.status === 401)
+            throw new Error("Expired");
+          const user = await res.json();
+
+          const text = `${user.engineerName || user.username} (${user.role})`;
+          document.getElementById("userDetails").textContent = `👤 ${text}`;
+
+          // Only show Status Record & Task Report to admin
+
+          document.getElementById("statusLink").style.display =
+            user.role === "admin" ? "flex" : "none";
+          document.getElementById("tasklink").style.display =
+            user.role === "admin" ? "flex" : "none";
+          // Show Audit Report only to admin + Nikhil Trivedi
+          if (user.role === "admin" && user.engineerName === "Nikhil Trivedi") {
+            document.getElementById("auditLink").style.display = "block";
+          }
+
+          // Add Site Details
+          if (user.role === "admin") {
+            document.getElementById("addSiteBtn").classList.remove("hidden");
+          }
+
+          // Show Task Management to admins only
+          if (user.role === "admin") {
+            document.getElementById("taskManagementLink").style.display =
+              "flex";
+          }
+
+          if (user.role === "admin") {
+            document.getElementById("incidentId").style.display = "flex";
+          }
+        } catch (err) {
+          logout();
+        }
+      }
+
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("hidden");
+      }
+
+      function toggleRecordList() {
+        const list = document.getElementById("recordList");
+        const icon = document.getElementById("toggleIcon");
+
+        const isOpen = list.classList.toggle("open");
+        icon.innerHTML = isOpen
+          ? '<i class="fa-solid fa-caret-down"></i>'
+          : '<i class="fa-solid fa-caret-left"></i>';
+      }
+
+      let inactivityTimeout;
+      function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(() => {
+          alert("You were inactive for 30 minutes. Logging out.");
+          logout();
+        }, 30 * 60 * 1000);
+      }
+
+      ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) =>
+        window.addEventListener(evt, resetInactivityTimer)
+      );
+
+      async function submitNewSite() {
+        const zone = document
+          .getElementById("newZone")
+          .value.trim()
+          .toUpperCase();
+        const roCode = document
+          .getElementById("newRoCode")
+          .value.trim()
+          .toUpperCase();
+        const roName = document
+          .getElementById("newRoName")
+          .value.trim()
+          .toUpperCase();
+        const region = document
+          .getElementById("newRegion")
+          .value.trim()
+          .toUpperCase();
+        const phase = document.getElementById("newPhase").value.trim();
+        const engineer = document.getElementById("newEngineer").value.trim();
+        const amcQtr = document
+          .getElementById("newAmcQtr")
+          .value.trim()
+          .toUpperCase();
+
+        if (
+          !zone ||
+          !roCode ||
+          !roName ||
+          !region ||
+          !phase ||
+          !engineer ||
+          !amcQtr
+        ) {
+          alert("❌ All fields are required");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${baseUrl}/romaster/add`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify({
+              zone,
+              roCode,
+              roName,
+              region,
+              phase,
+              engineer,
+              amcQtr,
+            }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            alert("✅ Site added successfully!");
+            closeNewSiteModal();
+          } else {
+            alert("❌ " + data.message);
+          }
+        } catch (err) {
+          alert("❌ Server error");
+        }
+      }
+
+      window.onload = () => {
+        fetchUser();
+        // Assign event handlers safely
+        document.getElementById("addSiteBtn").onclick = openNewSiteModal;
+        resetInactivityTimer();
+        initThemeControls();
+      };
+
+      function initThemeControls() {
+        const btn = document.getElementById("themeToggle");
+        const btnMobile = document.getElementById("themeToggleMobile");
+        const icon = document.getElementById("themeToggleIcon");
+        const iconMobile = document.getElementById("themeToggleIconMobile");
+
+        function isDark() {
+          return document.documentElement.classList.contains("dark");
+        }
+
+        function apply(theme) {
+          const root = document.documentElement;
+          if (theme === "dark") {
+            root.classList.add("dark");
+          } else {
+            root.classList.remove("dark");
+          }
+          try {
+            localStorage.setItem("theme", theme);
+          } catch (e) {}
+          syncIcons();
+          try {
+            const iframe = document.getElementById("contentFrame");
+            injectDarkStylesInto(iframe.contentDocument || iframe.contentWindow.document);
+          } catch (e) {}
+        }
+
+        function toggleTheme() {
+          apply(isDark() ? "light" : "dark");
+        }
+
+        function syncIcons() {
+          const dark = isDark();
+          if (icon) {
+            icon.className = dark ? "fa-regular fa-sun" : "fa-regular fa-moon";
+          }
+          if (iconMobile) {
+            iconMobile.className = dark
+              ? "fa-regular fa-sun"
+              : "fa-regular fa-moon";
+          }
+        }
+
+        if (btn) btn.addEventListener("click", toggleTheme);
+        if (btnMobile) btnMobile.addEventListener("click", toggleTheme);
+        syncIcons();
+      }
+
+      function showGlobalLoader() {
+        const bar = document.getElementById("progressBar");
+        bar.style.width = "0%";
+        bar.style.opacity = "1";
+        setTimeout(() => {
+          bar.style.width = "70%";
+        }, 100);
+      }
+
+      function hideGlobalLoader() {
+        const bar = document.getElementById("progressBar");
+        bar.style.width = "100%";
+        setTimeout(() => {
+          bar.style.opacity = "0";
+          bar.style.width = "0%";
+        }, 500); // Wait for animation to finish
+      }
+      const token = getToken();
+      if (!token) logout();
+
+      function parseUser() {
+        try {
+          const p = JSON.parse(atob(token.split(".")[1]));
+          return (p.engineerName || p.username || "").trim();
+        } catch {
+          return "";
+        }
+      }
+      const currentUser = parseUser();
+
+      let unreadsMentionCount = 0;
+      const badgeEl = document.getElementById("mentionBadge");
+      const chatBoxEl = document.getElementById("chatBox");
+      const chatToggleBtn = document.getElementById("chatToggleBtn");
+      const chatMessages = document.getElementById("chatMessages");
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const typingEl = document.getElementById("typingIndicator");
+
+      let typingTimeout;
+      let ws;
+      let lastUserMessageEl = null; // stores the most recent message element that the local user sent
+
+      function initWS() {
+        ws = new WebSocket(
+          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
+            token
+          )}`
+        );
+
+        ws.onopen = () => {
+          console.log("✅ Connected to group chat");
+          loadGroupHistory();
+        };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+
+          // 🟡 Typing indicator
+          if (msg.type === "typing" && msg.from !== currentUser) {
+            typingEl.textContent = `${msg.from} is typing...`;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+              typingEl.textContent = "";
+            }, 2000);
+          }
+
+          // 💬 Chat message
+          if (msg.type === "group" && msg.from !== currentUser) {
+            renderMessage(msg);
+          }
+        };
+
+        ws.onclose = () => {
+          console.warn("⚠️ WS closed, reconnecting...");
+          setTimeout(initWS, 3000);
+        };
+      }
+
+      function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        chatbotFlow(text, currentUser).then((intercepted) => {
+          if (intercepted) {
+            renderMessage({ from: currentUser, text });
+            chatInput.value = "";
+            return;
+          }
+
+          const payload = {
+            type: "group",
+            from: currentUser,
+            text: text,
+            createdAt: new Date().toISOString(),
+          };
+
+          if (replyContext) {
+            payload.replyTo = {
+              from: replyContext.from,
+              text: replyContext.text,
+            };
+            replyContext = null;
+            document.getElementById("replyBox").style.display = "none";
+          }
+
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(payload));
+            renderMessage(payload);
+            chatInput.value = "";
+          }
+        });
+      }
+
+      // ---------- mention notification state ----------
+
+      // Utility: update badge display
+      function updateMentionBadge() {
+        if (unreadsMentionCount > 0) {
+          badgeEl.textContent =
+            unreadsMentionCount > 99 ? "99+" : unreadsMentionCount;
+          badgeEl.style.display = "inline-block";
+        } else {
+          badgeEl.style.display = "none";
+        }
+      }
+
+      // Call this when user opens chat or focuses it to clear mentions
+      function clearMentionNotifications() {
+        unreadsMentionCount = 0;
+        updateMentionBadge();
+      }
+
+      // Hook: when chat box is shown, clear
+      function openChatBox() {
+        document.getElementById("chatBox").style.display = "flex";
+        clearMentionNotifications();
+        setTimeout(scrolltoBottom, 0);
+      }
+
+      // If user focuses input, also consider clearing
+      chatInput.addEventListener("focus", () => {
+        clearMentionNotifications();
+      });
+
+      //keep Chat scrolled to Latest
+      function scrolltoBottom() {
+        try {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch {}
+      }
+
+      // ---------- modify renderMessage to detect @mentions ----------
+      function renderMessage(msg) {
+        const isOwn = msg.from === currentUser;
+
+        // Mention detection
+        const mentionPattern = new RegExp(
+          `@${currentUser.replace(/[-/\\^$*+?.()|[\\]{}]/g, "\\$&")}`,
+          "i"
+        );
+        const isMentioned = !isOwn && mentionPattern.test(msg.text || "");
+
+        if (isMentioned) {
+          const chatVisible = chatBoxEl.style.display === "flex";
+          if (!chatVisible) {
+            unreadsMentionCount += 1;
+            updateMentionBadge();
+          }
+        }
+
+        const div = document.createElement("div");
+        div.className = "msg " + (isOwn ? "me" : "them");
+
+        const date = msg.createdAt ? new Date(msg.createdAt) : new Date();
+        const options = {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        };
+        const formattedTime = date
+          .toLocaleString("en-US", options)
+          .replace(",", "")
+          .replace("at", ":")
+          .replace(/\s+GMT.*/, "")
+          .trim();
+
+        // Highlight mentions in normal text
+        const highlightedText = (msg.text || "").replace(
+          /@([^\s@]+(?:\s[^\s@]+)?)/g,
+          (_, name) => {
+            const display = `@${name}`;
+            if (name.toLowerCase() === currentUser.toLowerCase()) {
+              return `<span style="background:#fde68a; padding:2px 4px; border-radius:4px; color:#1f2937; font-weight:600;">${display}</span>`;
+            }
+            return `<span style="color:#2563eb; font-weight:500;">${display}</span>`;
+          }
+        );
+
+        let replyHTML = "";
+        if (msg.replyTo) {
+          replyHTML = `
+      <div style="font-size:9px; background:#f3f4f6; border-left: 3px solid #15803d; padding: 4px 8px; margin-bottom:4px;">
+        <span style="font-weight:600;">${msg.replyTo.from}:</span>
+        <span style="color:#4b5563;"> ${msg.replyTo.text}</span>
+      </div>
+    `;
+        }
+
+        // Table styling (applies to any <table> inside the wrapper)
+
+        // If msg.html provided (chatbot table), wrap it so style applies
+        const messageContent = msg.html
+          ? `<div class="chat-table-wrapper">${msg.html}</div>`
+          : `<div>${highlightedText}</div>`;
+
+        const isBot = (msg.from || "").toLowerCase().includes("chatbot");
+        const showReplyButton =
+          !isOwn && !isBot && (msg.text || "").trim() !== "";
+        const replyButtonHTML = showReplyButton
+          ? '<button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>'
+          : "";
+        div.innerHTML = `
+    <div style="font-size:10px;"><b>${msg.from}</b></div>
+    ${replyHTML}
+    ${messageContent}
+    <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
+   ${replyButtonHTML}
+  `;
+
+        // ===== ordering logic =====
+        // If local user's message => append and store element
+        // If bot message and there's a stored lastUserMessageEl, insert after it
+        // Otherwise append normally.
+
+        if (isOwn) {
+          chatMessages.append(div);
+          lastUserMessageEl = div; // remember this element so bot reply can be inserted after it
+        } else if (
+          isBot &&
+          lastUserMessageEl &&
+          chatMessages.contains(lastUserMessageEl)
+        ) {
+          // Insert bot reply right after the user's message
+          lastUserMessageEl.insertAdjacentElement("afterend", div);
+          // Clear stored user message so single reply maps to that message only
+          lastUserMessageEl = null;
+        } else {
+          chatMessages.append(div);
+        }
+
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // reply button behavior
+        const replyBtn = div.querySelector(".replyBtn");
+        if (replyBtn) {
+          replyBtn.addEventListener("click", () => {
+            const replyBox = document.getElementById("replyBox");
+            const chatInput = document.getElementById("chatInput");
+            replyContext = { text: msg.text, from: msg.from };
+            replyBox.style.display = "block";
+            replyBox.textContent = `"${msg.text}" by ${msg.from}`;
+            chatInput.focus();
+          });
+        }
+      }
+
+      async function loadGroupHistory() {
+        try {
+          const res = await fetch(`${baseUrl}/chat/history/group`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          chatMessages.innerHTML = "";
+          data.forEach(renderMessage);
+          //after rendering history Jump to Bottom
+          scrolltoBottom();
+        } catch (err) {
+          console.error("❌ Failed to load chat", err);
+        }
+      }
+
+      // 📡 Send typing event
+      chatInput.addEventListener("input", () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "typing", from: currentUser }));
+        }
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          typingEl.textContent = "";
+        }, 2000);
+      });
+
+      // 📩 Send on click or Enter
+      sendBtn.addEventListener("click", sendMessage);
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
+      });
+
+      //MENTER USER DETAIL
+
+      let mentionList = []; // full roster
+      let presenceOnlineSet = new Set(); // currently online
+      let mentionBox;
+
+      // 🔹 Load full roster
+      async function fetchUserListForMention() {
+        try {
+          const res = await fetch(`${baseUrl}/chat/userlist`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          mentionList = data.map((u) => {
+            const name =
+              typeof u === "string"
+                ? u
+                : u.name || u.engineerName || u.username || "";
+            return { name: name.trim(), online: false };
+          });
+        } catch (err) {
+          console.error("Failed to load mention list", err);
+        }
+      }
+
+      // 🔹 Update roster with presence info
+      function syncMentionListStatus() {
+        mentionList = mentionList.map((u) => ({
+          name: u.name,
+          online: presenceOnlineSet.has(u.name),
+        }));
+        const term = extractCurrentAtQuery();
+        if (term !== null) showMentionDropdown(term);
+      }
+
+      function extractCurrentAtQuery() {
+        const cursorPos = chatInput.selectionStart;
+        const val = chatInput.value.slice(0, cursorPos);
+        const atIndex = val.lastIndexOf("@");
+        if (atIndex === -1) return null;
+        const prefix = val[atIndex - 1];
+        if (atIndex > 0 && !/\s/.test(prefix)) return null;
+        return val.slice(atIndex + 1);
+      }
+
+      // 🔹 Create mention UI
+      function createMentionBox() {
+        mentionBox = document.createElement("div");
+        mentionBox.id = "mentionBox";
+        mentionBox.style.position = "absolute";
+        mentionBox.style.bottom = "50px";
+        mentionBox.style.right = "30px";
+        mentionBox.style.background = "#fff";
+        mentionBox.style.border = "1px solid #ccc";
+        mentionBox.style.borderRadius = "6px";
+        mentionBox.style.maxHeight = "160px";
+        mentionBox.style.overflowY = "auto";
+        mentionBox.style.zIndex = 9999;
+        mentionBox.style.fontSize = "12px";
+        mentionBox.style.display = "none";
+        document.body.appendChild(mentionBox);
+      }
+
+      // 🔹 Show mention dropdown with colored dots
+      function showMentionDropdown(searchTerm) {
+        if (!mentionList.length) return;
+        const term = searchTerm.toLowerCase();
+
+        // filter matching
+        let matches = mentionList.filter((u) =>
+          u.name.toLowerCase().includes(term)
+        );
+
+        if (matches.length === 0) {
+          mentionBox.style.display = "none";
+          return;
+        }
+
+        // sort: online first, then by name
+        matches.sort((a, b) => {
+          if (a.online !== b.online) return a.online ? -1 : 1; // online before offline
+          return a.name.localeCompare(b.name);
+        });
+
+        mentionBox.innerHTML = "";
+
+        matches.forEach(({ name, online }) => {
+          const item = document.createElement("div");
+          item.style.padding = "5px 10px";
+          item.style.cursor = "pointer";
+          item.style.display = "flex";
+          item.style.alignItems = "center";
+          item.style.gap = "8px";
+
+          const dot = document.createElement("span");
+          dot.style.display = "inline-block";
+          dot.style.width = "10px";
+          dot.style.height = "10px";
+          dot.style.borderRadius = "50%";
+          dot.style.flexShrink = "0";
+          dot.style.backgroundColor = online ? "#22c55e" : "#ef4444";
+
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = name;
+
+          item.appendChild(dot);
+          item.appendChild(nameSpan);
+
+          item.onclick = () => {
+            const val = chatInput.value;
+            const atIndex = val.lastIndexOf("@");
+            chatInput.value = val.slice(0, atIndex + 1) + name + " ";
+            chatInput.focus();
+            mentionBox.style.display = "none";
+          };
+          mentionBox.appendChild(item);
+        });
+
+        mentionBox.style.display = "block";
+      }
+
+      // 🔹 Hook input for @ mentions
+      chatInput.addEventListener("input", () => {
+        const term = extractCurrentAtQuery();
+        if (term === null) {
+          mentionBox.style.display = "none";
+          return;
+        }
+        if (term.length >= 1) showMentionDropdown(term);
+        else mentionBox.style.display = "none";
+      });
+
+      // 🔹 WS integration for presence
+      function initWS() {
+        ws = new WebSocket(
+          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
+            token
+          )}`
+        );
+
+        ws.onopen = () => {
+          console.log("✅ Connected to group chat");
+          loadGroupHistory();
+          // ask for presence on connect
+          ws.send(JSON.stringify({ type: "get_presence" }));
+        };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+
+          if (msg.type === "presence" && Array.isArray(msg.users)) {
+            presenceOnlineSet.clear();
+            msg.users.forEach((u) => {
+              const uname = (
+                u.name ||
+                u.engineerName ||
+                u.username ||
+                ""
+              ).trim();
+              if (uname) presenceOnlineSet.add(uname);
+            });
+            syncMentionListStatus();
+          }
+
+          if (msg.type === "typing" && msg.from !== currentUser) {
+            typingEl.textContent = `${msg.from} is typing...`;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+              typingEl.textContent = "";
+            }, 2000);
+          }
+
+          if (msg.type === "group" && msg.from !== currentUser) {
+            renderMessage(msg);
+          }
+        };
+
+        ws.onclose = () => {
+          console.warn("⚠️ WS closed, reconnecting...");
+          setTimeout(initWS, 3000);
+        };
+      }
+
+      // Empoji picker
+
+      window.addEventListener("load", () => {
+        const emojiBtn = document.getElementById("emojiBtn");
+        const chatInput = document.getElementById("chatInput");
+
+        if (typeof EmojiButton !== "undefined") {
+          const picker = new EmojiButton({
+            position: "top-start",
+            theme: "auto",
+            zIndex: 9999,
+          });
+
+          picker.on("emoji", (emoji) => {
+            chatInput.value += emoji;
+          });
+
+          emojiBtn.addEventListener("click", () => {
+            picker.togglePicker(emojiBtn);
+          });
+        } else {
+          console.error("❌ EmojiButton failed to load.");
+        }
+      });
+
+      //micro phone
+      const micBtn = document.getElementById("micBtn");
+      const micIcon = micBtn.querySelector("i"); // target the icon inside the button
+
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-IN";
+
+      let isListening = false;
+
+      micBtn.addEventListener("click", () => {
+        if (!isListening) {
+          recognition.start();
+          micIcon.className = "fa-solid fa-circle-stop"; // show stop icon
+          isListening = true;
+        } else {
+          recognition.stop();
+          micIcon.className = "fa-solid fa-microphone-lines"; // back to mic icon
+          isListening = false;
+        }
+      });
+
+      recognition.onresult = (event) => {
+        const chatInput = document.getElementById("chatInput");
+        chatInput.value += event.results[0][0].transcript + " ";
+        micIcon.className = "fa-solid fa-microphone-lines";
+        isListening = false;
+      };
+
+      recognition.onerror = () => {
+        micIcon.className = "fa-solid fa-microphone-lines";
+        isListening = false;
+      };
+
+      // 🚀 Start
+      window.addEventListener("DOMContentLoaded", () => {
+        fetchUserListForMention();
+        createMentionBox();
+      });
+
+      let chatbotActive = false;
+      let chatbotStep = 0;
+      let chatbotState = { roCode: "", status: "" };
+
+      async function chatbotFlow(message, sender) {
+        const lowerMsg = message.trim().toLowerCase();
+
+        // Step 0: Start flow
+        if (
+          !chatbotActive &&
+          lowerMsg.includes("please provide incident id") &&
+          sender === currentUser
+        ) {
+          chatbotActive = true;
+          chatbotStep = 1;
+          renderMessage({
+            from: "🤖 Chatbot",
+            text: "Please provide RO Code.",
+          });
+          return true;
+        }
+
+        // Step 1: Get RO Code
+        if (chatbotActive && chatbotStep === 1 && sender === currentUser) {
+          if (lowerMsg === "cancel") {
+            chatbotActive = false;
+            chatbotStep = 0;
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Chatbot flow cancelled.",
+            });
+            return true;
+          }
+          chatbotState.roCode = message.trim();
+          chatbotStep = 2;
+          renderMessage({
+            from: "🤖 Chatbot",
+            text: "Which status do you want? (Close or Pending)",
+          });
+          return true;
+        }
+
+        // Step 2: Get Status
+        if (chatbotActive && chatbotStep === 2 && sender === currentUser) {
+          if (lowerMsg === "cancel") {
+            chatbotActive = false;
+            chatbotStep = 0;
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Chatbot flow cancelled.",
+            });
+            return true;
+          }
+
+          if (lowerMsg !== "close" && lowerMsg !== "pending") {
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Please type either 'Close' or 'Pending'.",
+            });
+            return true;
+          }
+
+          chatbotState.status =
+            lowerMsg.charAt(0).toUpperCase() + lowerMsg.slice(1);
+          chatbotStep = 0;
+          chatbotActive = false;
+
+          try {
+            const res = await fetch(
+              `${baseUrl}/getIncidentsByRoCodeAndStatus?roCode=${encodeURIComponent(
+                chatbotState.roCode
+              )}&status=${encodeURIComponent(chatbotState.status)}`
+            );
+            const data = await res.json();
+
+            if (data.success && data.incidents.length > 0) {
+              let tableHTML = `
+          <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+            <thead>
+              <tr style="background-color: #4CAF50; color: white; text-align: left;">
+                <th>RO Code</th>
+                <th>Site Name</th>
+                <th>Region</th>
+                <th>Incident ID</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+              data.incidents.forEach((i) => {
+                tableHTML += `
+            <tr>
+              <td>${i.roCode}</td>
+              <td>${i.siteName}</td>
+              <td>${i.region}</td>
+              <td>${i.incidentId}</td>
+              <td>${i.status}</td>
+            </tr>
+          `;
+              });
+
+              tableHTML += "</tbody></table>";
+
+              renderMessage({ from: "🤖 Chatbot", html: tableHTML });
+            } else {
+              renderMessage({
+                from: "🤖 Chatbot",
+                text: `No incidents found for RO Code ${chatbotState.roCode} with status ${chatbotState.status}.`,
+              });
+            }
+          } catch (err) {
+            renderMessage({
+              from: "🤖 Chatbot",
+              text: "❌ Server error while fetching data.",
+            });
+          }
+          return true;
+        }
+
+        return false;
+      }
+
+      // 🚀 Start
+      initWS();
+    </script>
+  </body>
+</html>
