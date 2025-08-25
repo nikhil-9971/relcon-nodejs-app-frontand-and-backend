@@ -78,6 +78,7 @@
         background-color: var(--link-active-bg);
         color: var(--link-active-text);
         font-weight: 600;
+        border-left: 3px solid var(--accent);
       }
 
       #recordList {
@@ -734,6 +735,11 @@
 
         iframe.onload = () => {
           hideGlobalLoader(); // Finish progress
+          try {
+            injectDarkStylesInto(
+              iframe.contentDocument || iframe.contentWindow.document
+            );
+          } catch (e) {}
         };
 
         // Set active class
@@ -746,6 +752,28 @@
         if (window.innerWidth < 768) {
           document.getElementById("sidebar").classList.add("hidden");
         }
+      }
+
+      function injectDarkStylesInto(doc) {
+        try {
+          if (!doc) return;
+          const id = "injected-dark-styles";
+          const existing = doc.getElementById(id);
+          const isDark = document.documentElement.classList.contains("dark");
+          if (!isDark) {
+            if (existing) existing.remove();
+            doc.documentElement.classList.remove("dark");
+            return;
+          }
+          doc.documentElement.classList.add("dark");
+          if (existing) return;
+          const style = doc.createElement("style");
+          style.id = id;
+          style.textContent = `
+:root {\n  --bg: #f1f5f9;\n  --text: #1f2937;\n  --muted: #6b7280;\n  --card: #ffffff;\n  --border: #e5e7eb;\n  --sidebar: #e5e7eb;\n  --hover: #e7f5eb;\n  --accent: #16a34a;\n  --accent-700: #15803d;\n}\n.dark {\n  --bg: #0b1220;\n  --text: #e5e7eb;\n  --muted: #9ca3af;\n  --card: #0f172a;\n  --border: #1f2937;\n  --sidebar: #0f172a;\n  --hover: #122036;\n  --accent: #22c55e;\n  --accent-700: #16a34a;\n}\nbody {\n  background-color: var(--bg) !important;\n  color: var(--text) !important;\n}\n.dark .bg-white { background-color: #0f172a !important; }\n.dark .bg-gray-50 { background-color: #0b1220 !important; }\n.dark .bg-gray-100 { background-color: #0b1220 !important; }\n.dark .bg-gray-200 { background-color: #0f172a !important; }\n.dark .text-gray-800 { color: var(--text) !important; }\n.dark .text-gray-700 { color: var(--text) !important; }\n.dark .border-gray-300 { border-color: var(--border) !important; }\n.dark table thead { background-color: var(--accent-700) !important; color: #fff !important; }\n.dark table tbody tr:nth-child(even) { background-color: #111827 !important; }\ninput, select, textarea { background: #0b1220 !important; color: var(--text) !important; border-color: var(--border) !important; }\nbutton { color: inherit; }
+`;
+          doc.head.appendChild(style);
+        } catch (e) {}
       }
 
       async function fetchUser() {
@@ -919,6 +947,10 @@
             localStorage.setItem("theme", theme);
           } catch (e) {}
           syncIcons();
+          try {
+            const iframe = document.getElementById("contentFrame");
+            injectDarkStylesInto(iframe.contentDocument || iframe.contentWindow.document);
+          } catch (e) {}
         }
 
         function toggleTheme() {
