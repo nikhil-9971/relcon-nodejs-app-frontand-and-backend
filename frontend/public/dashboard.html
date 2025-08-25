@@ -18,10 +18,55 @@
     <!-- FIX: Load correct EmojiButton version -->
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/emoji-button.min.js"></script>
 
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("theme");
+          var prefersDark =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = saved || (prefersDark ? "dark" : "light");
+          if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <style>
+      :root {
+        --bg: #f1f5f9;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --card: #ffffff;
+        --border: #e5e7eb;
+        --sidebar: #e5e7eb;
+        --hover: #e7f5eb;
+        --accent: #16a34a;
+        --accent-700: #15803d;
+        --link-active-bg: #ffffff;
+        --link-active-text: #15803d;
+      }
+
+      .dark {
+        --bg: #0b1220;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --card: #0f172a;
+        --border: #1f2937;
+        --sidebar: #0f172a;
+        --hover: #122036;
+        --accent: #22c55e;
+        --accent-700: #16a34a;
+        --link-active-bg: #111827;
+        --link-active-text: #22c55e;
+      }
+
       body {
         font-family: "Poppins", sans-serif;
-        background-color: #f1f5f9;
+        background-color: var(--bg);
+        color: var(--text);
         font-size: 12px;
       }
       iframe {
@@ -30,8 +75,8 @@
         border: none;
       }
       .active-link {
-        background-color: white;
-        color: #15803d;
+        background-color: var(--link-active-bg);
+        color: var(--link-active-text);
         font-weight: 600;
       }
 
@@ -180,6 +225,61 @@
       .chat-table-wrapper table tr:nth-child(even) {
         background-color: #f9f9f9;
       }
+
+      /* Dark theme overrides */
+      .dark body {
+        background-color: var(--bg);
+        color: var(--text);
+      }
+      .dark .bg-gray-100 { background-color: var(--bg) !important; }
+      .dark .text-gray-800 { color: var(--text) !important; }
+      .dark .border-gray-300 { border-color: var(--border) !important; }
+      .dark #sidebar {
+        background-color: var(--sidebar) !important;
+        color: var(--text) !important;
+      }
+      .dark #sidebar .bg-gray-200 { background-color: var(--sidebar) !important; }
+      .dark #sidebar .border-gray-300 { border-color: var(--border) !important; }
+      .dark #sidebar a {
+        color: var(--text);
+      }
+      .dark #sidebar a:hover {
+        background-color: var(--accent-700) !important;
+        color: #ffffff !important;
+      }
+      .dark #userDetails {
+        color: var(--text);
+      }
+      .dark #progressBar {
+        background-color: var(--accent);
+      }
+      .dark #chatBox {
+        background: var(--card);
+        border-color: var(--border);
+        box-shadow: none;
+      }
+      .dark .msg.me {
+        background: rgba(34, 197, 94, 0.15);
+      }
+      .dark .msg.them {
+        background: #111827;
+      }
+      .dark #chatInputSection {
+        background: #0b1220;
+        border-top-color: var(--border);
+      }
+      .dark #chatInput {
+        background: #0b1220;
+        color: var(--text);
+        border-color: var(--border);
+      }
+      .dark #mentionBox {
+        background: var(--card);
+        border-color: var(--border);
+      }
+      .dark #mentionBox div:hover {
+        background: #111827;
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
@@ -188,7 +288,12 @@
       class="md:hidden bg-green-700 text-white p-4 flex justify-between items-center"
     >
       <div class="font-bold text-lg">RELCON</div>
-      <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
+      <div class="flex items-center gap-3">
+        <button id="themeToggleMobile" class="focus:outline-none" title="Toggle theme">
+          <i id="themeToggleIconMobile" class="fa-regular fa-moon"></i>
+        </button>
+        <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
+      </div>
     </div>
 
     <!-- Sidebar -->
@@ -197,9 +302,12 @@
       class="w-64 bg-gray-200 text-gray-800 flex-col shadow-md hidden md:flex absolute md:relative top-0 left-0 z-50 h-screen md:h-auto md:block transition-all"
     >
       <div
-        class="px-4 py-3 text-base font-bold border-b border-gray-300 leading-5 tracking-wide bg-gray-200"
+        class="px-4 py-3 text-base font-bold border-b border-gray-300 leading-5 tracking-wide bg-gray-200 flex items-center justify-between"
       >
         <span class="block text-green-700 text-lg">RELCON SYSTEMS</span>
+        <button id="themeToggle" class="text-gray-700 hover:text-green-800 text-sm px-2 py-1 rounded" title="Toggle theme">
+          <i id="themeToggleIcon" class="fa-regular fa-moon"></i>
+        </button>
       </div>
 
       <!-- 👤 Logged-in user -->
@@ -787,7 +895,52 @@
         // Assign event handlers safely
         document.getElementById("addSiteBtn").onclick = openNewSiteModal;
         resetInactivityTimer();
+        initThemeControls();
       };
+
+      function initThemeControls() {
+        const btn = document.getElementById("themeToggle");
+        const btnMobile = document.getElementById("themeToggleMobile");
+        const icon = document.getElementById("themeToggleIcon");
+        const iconMobile = document.getElementById("themeToggleIconMobile");
+
+        function isDark() {
+          return document.documentElement.classList.contains("dark");
+        }
+
+        function apply(theme) {
+          const root = document.documentElement;
+          if (theme === "dark") {
+            root.classList.add("dark");
+          } else {
+            root.classList.remove("dark");
+          }
+          try {
+            localStorage.setItem("theme", theme);
+          } catch (e) {}
+          syncIcons();
+        }
+
+        function toggleTheme() {
+          apply(isDark() ? "light" : "dark");
+        }
+
+        function syncIcons() {
+          const dark = isDark();
+          if (icon) {
+            icon.className = dark ? "fa-regular fa-sun" : "fa-regular fa-moon";
+          }
+          if (iconMobile) {
+            iconMobile.className = dark
+              ? "fa-regular fa-sun"
+              : "fa-regular fa-moon";
+          }
+        }
+
+        if (btn) btn.addEventListener("click", toggleTheme);
+        if (btnMobile) btnMobile.addEventListener("click", toggleTheme);
+        syncIcons();
+      }
 
       function showGlobalLoader() {
         const bar = document.getElementById("progressBar");
