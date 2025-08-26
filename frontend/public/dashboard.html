@@ -131,6 +131,24 @@
       #chatToggleBtn { background-color: var(--accent) !important; }
       #chatToggleBtn:hover { background-color: var(--accent-700) !important; }
 
+      /* Icon system */
+      .sidebar-nav i {
+        font-size: 14px;
+        line-height: 1;
+        opacity: 0.9;
+        transition: opacity 0.2s ease, transform 0.1s ease;
+      }
+      .sidebar-nav a:hover i { opacity: 1; }
+      .dark .sidebar-nav i { opacity: 0.85; filter: brightness(0.95); }
+
+      /* Toggle icons */
+      #themeToggleIcon, #themeToggleIconMobile { font-size: 16px; opacity: 0.9; }
+      .dark #themeToggleIcon, .dark #themeToggleIconMobile { opacity: 0.85; }
+
+      /* Caret/icon color tuning */
+      #toggleIcon { color: var(--accent-700); }
+      .dark #toggleIcon { color: var(--accent); }
+
       #chatBox {
         position: fixed;
         top: 50%;
