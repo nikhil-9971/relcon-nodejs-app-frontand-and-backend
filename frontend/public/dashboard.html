@@ -46,10 +46,10 @@
         --border: #e5e7eb;
         --sidebar: #e5e7eb;
         --hover: #e7f5eb;
-        --accent: #16a34a;
-        --accent-700: #15803d;
+        --accent: #14b8a6;
+        --accent-700: #0d9488;
         --link-active-bg: #ffffff;
-        --link-active-text: #15803d;
+        --link-active-text: #14b8a6;
       }
 
       .dark {
@@ -114,7 +114,7 @@
         left: 0;
         height: 4px;
         width: 0%;
-        background-color: #16a34a; /* green-600 */
+        background-color: var(--accent);
         z-index: 1000;
         transition: width 0.4s ease, opacity 0.3s ease;
       }
@@ -123,6 +123,13 @@
       #sidebar, nav a, .msg, #chatBox, #chatInput, .active-link, #userDetails {
         transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
       }
+
+      /* Accent surfaces */
+      #mobileNavbar, .chatHeader {
+        background-image: linear-gradient(135deg, var(--accent-700), var(--accent));
+      }
+      #chatToggleBtn { background-color: var(--accent) !important; }
+      #chatToggleBtn:hover { background-color: var(--accent-700) !important; }
 
       #chatBox {
         position: fixed;
