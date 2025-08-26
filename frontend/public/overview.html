@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <!-- Today Pending Status (HPCL + RBML) -->
+        <!-- Pending Status (Last 7 Days) (HPCL + RBML) -->
         <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
           <div
             class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center"
@@ -74,7 +74,7 @@
             <i class="fa-solid fa-hourglass-half"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500">Today Pending (HPCL + RBML)</div>
+            <div class="text-xs text-gray-500">Pending (Last 7 days) — HPCL + RBML</div>
             <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
             <div id="kpiPendingBreakdown" class="text-[10px] text-gray-500">—</div>
           </div>
@@ -209,14 +209,20 @@
           const loginLogs = await loginLogsRes.json();
 
           const today = new Date().toISOString().slice(0, 10);
+          const sevenDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          const inLast7 = (d) => {
+            const ds = String(d || "").slice(0, 10);
+            return ds >= sevenDaysAgo && ds <= today;
+          };
+
           const plansToday = (Array.isArray(plans) ? plans : []).filter((p) => {
-            const isToday = (p.date || "").slice(0, 10) === today;
+            const inWindow = inLast7(p.date);
             const purpose = String(p.purpose || "")
               .trim()
               .toUpperCase();
             const isNoPlanOrLeave =
               purpose === "NO PLAN" || purpose === "IN LEAVE";
-            return isToday && !isNoPlanOrLeave;
+            return inWindow && !isNoPlanOrLeave;
           });
           const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
             (r) => String(r.isVerified).toLowerCase() !== "true"
@@ -251,12 +257,12 @@
           const hpclStatusTodaySet = new Set(
             (Array.isArray(hpcl) ? hpcl : [])
               .filter((r) => String(r.phase || "").toUpperCase().startsWith("HPCL"))
-              .filter((r) => String(r.date || r.uploadDate || "").slice(0,10) === today)
+              .filter((r) => inLast7(r.date || r.uploadDate))
               .map((r) => key(r.roCode, r.date || r.uploadDate))
           );
           const rbmlStatusTodaySet = new Set(
             (Array.isArray(jio) ? jio : [])
-              .filter((r) => String(r.date || "").slice(0,10) === today)
+              .filter((r) => inLast7(r.date))
               .map((r) => key(r.roCode, r.date))
           );
 
