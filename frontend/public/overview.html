@@ -242,18 +242,25 @@
             unverifiedHpcl.length + unverifiedJio.length;
           document.getElementById("kpiOpenIncidents").textContent =
             openIncidents.length;
-          // Today Pending (HPCL + RBML)
-          const pendingTodayHpcl = (Array.isArray(hpcl) ? hpcl : []).filter((r) => {
-            const d = String(r.uploadDate || r.date || "").slice(0, 10);
-            const status = String(r.status || r.currentStatus || "").toUpperCase();
-            return d === today && status === "PENDING";
-          }).length;
-          const pendingTodayRbml = (Array.isArray(plans) ? plans : []).filter((p) => {
-            const isToday = String(p.date || "").slice(0, 10) === today;
-            const isRbml = String(p.phase || "").toUpperCase().includes("RBML");
-            const st = String(p.status || p.currentStatus || "").toUpperCase();
-            return isToday && isRbml && st === "PENDING";
-          }).length;
+          // Today Pending (HPCL + RBML) = Today's plans minus submitted statuses from their respective sources
+          const key = (rc, d) => `${String(rc || "").trim().toUpperCase()}-${String(d || "").slice(0,10)}`;
+          const plansTodayHpcl = (plansToday || []).filter((p) => String(p.phase || "").toUpperCase().startsWith("HPCL"));
+          const plansTodayRbml = (plansToday || []).filter((p) => String(p.phase || "").toUpperCase().includes("RBML"));
+
+          const hpclStatusTodaySet = new Set(
+            (Array.isArray(hpcl) ? hpcl : [])
+              .filter((r) => String(r.phase || "").toUpperCase().startsWith("HPCL"))
+              .filter((r) => String(r.date || r.uploadDate || "").slice(0,10) === today)
+              .map((r) => key(r.roCode, r.date || r.uploadDate))
+          );
+          const rbmlStatusTodaySet = new Set(
+            (Array.isArray(jio) ? jio : [])
+              .filter((r) => String(r.date || "").slice(0,10) === today)
+              .map((r) => key(r.roCode, r.date))
+          );
+
+          const pendingTodayHpcl = plansTodayHpcl.filter((p) => !hpclStatusTodaySet.has(key(p.roCode, p.date))).length;
+          const pendingTodayRbml = plansTodayRbml.filter((p) => !rbmlStatusTodaySet.has(key(p.roCode, p.date))).length;
           document.getElementById("kpiPendingToday").textContent = pendingTodayHpcl + pendingTodayRbml;
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
