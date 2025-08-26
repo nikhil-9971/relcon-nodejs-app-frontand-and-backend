@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Dashboard | RELCON SYSTEMS</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
@@ -44,10 +50,10 @@
         --border: #e5e7eb;
         --sidebar: #e5e7eb;
         --hover: #e7f5eb;
-        --accent: #16a34a;
-        --accent-700: #15803d;
+        --accent: #14b8a6;
+        --accent-700: #0d9488;
         --link-active-bg: #ffffff;
-        --link-active-text: #15803d;
+        --link-active-text: #14b8a6;
       }
 
       .dark {
@@ -58,10 +64,10 @@
         --border: #1f2937;
         --sidebar: #0f172a;
         --hover: #122036;
-        --accent: #22c55e;
-        --accent-700: #16a34a;
+        --accent: #14b8a6; /* teal-500 */
+        --accent-700: #0d9488; /* teal-600/700 */
         --link-active-bg: #111827;
-        --link-active-text: #22c55e;
+        --link-active-text: #14b8a6;
       }
 
       body {
@@ -123,7 +129,7 @@
         left: 0;
         height: 4px;
         width: 0%;
-        background-color: #16a34a; /* green-600 */
+        background-color: var(--accent);
         z-index: 1000;
         transition: width 0.4s ease, opacity 0.3s ease;
       }
@@ -138,6 +144,22 @@
       #userDetails {
         transition: background-color 0.25s ease, color 0.25s ease,
           border-color 0.25s ease;
+      }
+
+      /* Accent surfaces */
+      #mobileNavbar,
+      .chatHeader {
+        background-image: linear-gradient(
+          135deg,
+          var(--accent-700),
+          var(--accent)
+        );
+      }
+      #chatToggleBtn {
+        background-color: var(--accent) !important;
+      }
+      #chatToggleBtn:hover {
+        background-color: var(--accent-700) !important;
       }
 
       #chatBox {
@@ -207,7 +229,7 @@
         background: #fff;
       }
       #sendBtn {
-        background: #16a34a;
+        background: var(--accent);
         color: white;
         border: none;
         padding: 10px 16px;
@@ -218,7 +240,7 @@
         transition: background 0.2s ease;
       }
       #sendBtn:hover {
-        background: #15803d;
+        background: var(--accent-700);
       }
 
       #mentionBox div:hover {
@@ -294,6 +316,12 @@
       .dark #progressBar {
         background-color: var(--accent);
       }
+      .dark #mobileNavbar {
+        background: var(--accent) !important;
+      }
+      .dark .chatHeader {
+        background: var(--accent) !important;
+      }
       .dark #chatBox {
         background: var(--card);
         border-color: var(--border);
@@ -326,7 +354,9 @@
   <body class="h-screen flex flex-col md:flex-row bg-gray-100">
     <!-- Mobile Navbar -->
     <div
-      class="md:hidden bg-green-700 text-white p-4 flex justify-between items-center shadow-md"
+      id="mobileNavbar"
+      class="md:hidden text-white p-4 flex justify-between items-center shadow-md"
+      style="background: var(--accent)"
     >
       <div class="font-bold text-lg">RELCON</div>
       <div class="flex items-center gap-3">
@@ -694,14 +724,14 @@
     >
       <!-- Header -->
       <div
+        class="flex justify-between items-center chatHeader"
         style="
-          background: #16a34a;
           color: white;
           padding: 10px;
           border-top-left-radius: 10px;
           border-top-right-radius: 10px;
+          background: var(--accent);
         "
-        class="flex justify-between items-center"
       >
         <b>Team Chat</b>
         <span
@@ -779,7 +809,9 @@
         showGlobalLoader(); // Start progress
 
         const iframe = document.getElementById("contentFrame");
-        iframe.src = page;
+        const cacheBust = `cb=${Date.now()}`;
+        const sep = page.includes("?") ? "&" : "?";
+        iframe.src = page + sep + cacheBust;
 
         iframe.onload = () => {
           hideGlobalLoader(); // Finish progress
@@ -818,7 +850,7 @@
           const style = doc.createElement("style");
           style.id = id;
           style.textContent = `
-:root {\n  --bg: #f1f5f9;\n  --text: #1f2937;\n  --muted: #6b7280;\n  --card: #ffffff;\n  --border: #e5e7eb;\n  --sidebar: #e5e7eb;\n  --hover: #e7f5eb;\n  --accent: #16a34a;\n  --accent-700: #15803d;\n}\n.dark {\n  --bg: #0b1220;\n  --text: #e5e7eb;\n  --muted: #9ca3af;\n  --card: #0f172a;\n  --border: #1f2937;\n  --sidebar: #0f172a;\n  --hover: #122036;\n  --accent: #22c55e;\n  --accent-700: #16a34a;\n}\nbody {\n  background-color: var(--bg) !important;\n  color: var(--text) !important;\n  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;\n  scrollbar-width: thin;\n  scrollbar-color: var(--accent-700) transparent;\n}\nbody::-webkit-scrollbar { width: 10px; height: 10px; }\nbody::-webkit-scrollbar-thumb { background-color: rgba(21, 128, 61, 0.35); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }\nbody::-webkit-scrollbar-thumb:hover { background-color: rgba(21, 128, 61, 0.55); }\n.dark .bg-white { background-color: #0f172a !important; }\n.dark .bg-gray-50 { background-color: #0b1220 !important; }\n.dark .bg-gray-100 { background-color: #0b1220 !important; }\n.dark .bg-gray-200 { background-color: #0f172a !important; }\n.dark .text-gray-800 { color: var(--text) !important; }\n.dark .text-gray-700 { color: var(--text) !important; }\n.dark .border-gray-300 { border-color: var(--border) !important; }\n.dark table thead { background-color: var(--accent-700) !important; color: #fff !important; }\n.dark table tbody tr:nth-child(even) { background-color: #111827 !important; }\ninput, select, textarea { background: #0b1220 !important; color: var(--text) !important; border-color: var(--border) !important; transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease; }\nbutton { color: inherit; }
+:root {\n  --bg: #f1f5f9;\n  --text: #1f2937;\n  --muted: #6b7280;\n  --card: #ffffff;\n  --border: #e5e7eb;\n  --sidebar: #e5e7eb;\n  --hover: #e7f5eb;\n  --accent: #16a34a;\n  --accent-700: #15803d;\n}\n.dark {\n  --bg: #0b1220;\n  --text: #e5e7eb;\n  --muted: #9ca3af;\n  --card: #0f172a;\n  --border: #1f2937;\n  --sidebar: #0f172a;\n  --hover: #122036;\n  --accent: #14b8a6;\n  --accent-700: #0d9488;\n}\nbody {\n  background-color: var(--bg) !important;\n  color: var(--text) !important;\n  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;\n  scrollbar-width: thin;\n  scrollbar-color: var(--accent-700) transparent;\n}\nbody::-webkit-scrollbar { width: 10px; height: 10px; }\nbody::-webkit-scrollbar-thumb { background-color: rgba(21, 128, 61, 0.35); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }\nbody::-webkit-scrollbar-thumb:hover { background-color: rgba(21, 128, 61, 0.55); }\n.dark .bg-white { background-color: #0f172a !important; }\n.dark .bg-gray-50 { background-color: #0b1220 !important; }\n.dark .bg-gray-100 { background-color: #0b1220 !important; }\n.dark .bg-gray-200 { background-color: #0f172a !important; }\n.dark .text-gray-800 { color: var(--text) !important; }\n.dark .text-gray-700 { color: var(--text) !important; }\n.dark .border-gray-300 { border-color: var(--border) !important; }\n.dark table thead { background-color: var(--accent-700) !important; color: #fff !important; }\n.dark table tbody tr:nth-child(even) { background-color: #111827 !important; }\ninput, select, textarea { background: #0b1220 !important; color: var(--text) !important; border-color: var(--border) !important; transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease; }\nbutton { color: inherit; }
 `;
           doc.head.appendChild(style);
         } catch (e) {}
