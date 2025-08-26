@@ -219,23 +219,9 @@
           "RAVI PRATAP",
         ];
 
-        const userLS = JSON.parse(localStorage.getItem("user") || "null");
-        const token = localStorage.getItem("token") || "";
-        function parseUserFromToken() {
-          try {
-            const p = JSON.parse(atob(token.split(".")[1]));
-            return {
-              username: (p.username || p.user || p.email || "").toLowerCase(),
-              role: (p.role || p.userRole || "").toLowerCase(),
-            };
-          } catch (e) {
-            return { username: "", role: "" };
-          }
-        }
-        const user = userLS || parseUserFromToken();
+        const user = JSON.parse(localStorage.getItem("user")) || {};
         const isAdminUser =
-          (user.username || "").toLowerCase() === "nikhil.trivedi" &&
-          (user.role || "").toLowerCase() === "admin";
+          user.username === "nikhil.trivedi" && user.role === "admin";
 
         const tbody = document.getElementById("incidentTable");
         tbody.innerHTML = "";
@@ -254,7 +240,7 @@
 
       <td class="border px-2 py-1">
         <select id="engineer-${index}" class="border rounded px-2 py-1" ${
-            isClosed && !isAdminUser ? "disabled" : ""
+            isClosed ? "disabled" : ""
           } onchange="checkFields(${index})">
           <option value="">--Select--</option>
           ${engineerNames
@@ -269,11 +255,14 @@
       </td>
 
    <td class="border px-2 py-1 whitespace-normal break-words">
-  <textarea id="remark-${index}"
-            class="border rounded px-2 py-1 w-full resize-y"
-            ${isClosed && !isAdminUser ? "readonly" : ""}
-            onchange="checkFields(${index})"
-            rows="2">${item.closeRemark || ""}</textarea>
+  ${
+    isClosed
+      ? item.closeRemark || ""
+      : `<textarea id="remark-${index}" 
+                   class="border rounded px-2 py-1 w-full resize-y"
+                   onchange="checkFields(${index})"
+                   rows="2">${item.closeRemark || ""}</textarea>`
+  }
 </td>
 
 
@@ -284,13 +273,13 @@
             item.incidentcloseDate || ""
           }"
           class="border rounded px-2 py-1" ${
-            isClosed && !isAdminUser ? "readonly" : ""
+            isClosed ? "readonly" : ""
           }   onchange="checkFields(${index})">
       </td>
 
       <td class="border px-2 py-1">
         <select id="status-${index}" class="border px-2 py-1 rounded" ${
-            isClosed && !isAdminUser ? "disabled" : ""
+            isClosed ? "disabled" : ""
           }   onchange="checkFields(${index})">
           <option ${
             item.status === "Pending" ? "selected" : ""
