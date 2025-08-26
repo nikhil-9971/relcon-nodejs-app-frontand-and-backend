@@ -29,7 +29,7 @@
         <div id="lastUpdated" class="text-xs text-gray-500">—</div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
           <div
             class="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center"
@@ -63,6 +63,19 @@
           <div>
             <div class="text-xs text-gray-500">Open Incidents</div>
             <div id="kpiOpenIncidents" class="text-xl font-semibold">—</div>
+          </div>
+        </div>
+
+        <!-- Today Pending Status (HPCL + RBML) -->
+        <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-hourglass-half"></i>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500">Today Pending (HPCL + RBML)</div>
+            <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
           </div>
         </div>
 
@@ -229,6 +242,19 @@
             unverifiedHpcl.length + unverifiedJio.length;
           document.getElementById("kpiOpenIncidents").textContent =
             openIncidents.length;
+          // Today Pending (HPCL + RBML)
+          const pendingTodayHpcl = (Array.isArray(hpcl) ? hpcl : []).filter((r) => {
+            const d = String(r.uploadDate || r.date || "").slice(0, 10);
+            const status = String(r.status || r.currentStatus || "").toUpperCase();
+            return d === today && status === "PENDING";
+          }).length;
+          const pendingTodayRbml = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const isToday = String(p.date || "").slice(0, 10) === today;
+            const isRbml = String(p.phase || "").toUpperCase().includes("RBML");
+            const st = String(p.status || p.currentStatus || "").toUpperCase();
+            return isToday && isRbml && st === "PENDING";
+          }).length;
+          document.getElementById("kpiPendingToday").textContent = pendingTodayHpcl + pendingTodayRbml;
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
           document.getElementById("lastUpdated").textContent =
