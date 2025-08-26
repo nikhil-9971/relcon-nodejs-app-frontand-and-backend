@@ -76,6 +76,7 @@
           <div>
             <div class="text-xs text-gray-500">Today Pending (HPCL + RBML)</div>
             <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
+            <div id="kpiPendingBreakdown" class="text-[10px] text-gray-500">—</div>
           </div>
         </div>
 
@@ -262,6 +263,7 @@
           const pendingTodayHpcl = plansTodayHpcl.filter((p) => !hpclStatusTodaySet.has(key(p.roCode, p.date))).length;
           const pendingTodayRbml = plansTodayRbml.filter((p) => !rbmlStatusTodaySet.has(key(p.roCode, p.date))).length;
           document.getElementById("kpiPendingToday").textContent = pendingTodayHpcl + pendingTodayRbml;
+          document.getElementById("kpiPendingBreakdown").textContent = `HPCL: ${pendingTodayHpcl} • RBML: ${pendingTodayRbml}`;
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
           document.getElementById("lastUpdated").textContent =
