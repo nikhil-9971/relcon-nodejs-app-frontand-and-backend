@@ -162,6 +162,40 @@
         background-color: var(--accent-700) !important;
       }
 
+      /* Icon system */
+      .sidebar-nav i {
+        font-size: 14px;
+        line-height: 1;
+        opacity: 0.9;
+        transition: opacity 0.2s ease, transform 0.1s ease;
+      }
+      .sidebar-nav a:hover i {
+        opacity: 1;
+      }
+      .dark .sidebar-nav i {
+        opacity: 0.85;
+        filter: brightness(0.95);
+      }
+
+      /* Toggle icons */
+      #themeToggleIcon,
+      #themeToggleIconMobile {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+      .dark #themeToggleIcon,
+      .dark #themeToggleIconMobile {
+        opacity: 0.85;
+      }
+
+      /* Caret/icon color tuning */
+      #toggleIcon {
+        color: var(--accent-700);
+      }
+      .dark #toggleIcon {
+        color: var(--accent);
+      }
+
       #chatBox {
         position: fixed;
         top: 50%;
@@ -365,7 +399,10 @@
           class="focus:outline-none"
           title="Toggle theme"
         >
-          <i id="themeToggleIconMobile" class="fa-regular fa-moon"></i>
+          <i
+            id="themeToggleIconMobile"
+            class="fa-regular fa-moon text-base"
+          ></i>
         </button>
         <button onclick="toggleSidebar()" class="focus:outline-none">☰</button>
       </div>
@@ -385,7 +422,7 @@
           class="text-gray-700 hover:text-green-800 text-sm px-2 py-1 rounded"
           title="Toggle theme"
         >
-          <i id="themeToggleIcon" class="fa-regular fa-moon"></i>
+          <i id="themeToggleIcon" class="fa-regular fa-moon text-base"></i>
         </button>
       </div>
 
@@ -406,14 +443,16 @@
           onclick="loadPage('overview.html', this)"
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
         >
-          <i class="fa-solid fa-chart-line"></i> Dashboard Overview
+          <i class="fa-solid fa-chart-line mr-2 text-[13px] opacity-90"></i>
+          <span>Dashboard Overview</span>
         </a>
         <a
           href="#"
           onclick="loadPage('dailyPlan.html', this)"
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium active-link"
         >
-          <i class="fa-solid fa-user-pen"></i> Create Daily Plan
+          <i class="fa-solid fa-user-pen mr-2 text-[13px] opacity-90"></i>
+          <span>Create Daily Plan</span>
         </a>
 
         <a
@@ -432,8 +471,10 @@
             class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
           >
             <div class="flex items-center">
-              <i class="fa-solid fa-folder-plus"></i>
-              <span class="ml-1">Report</span>
+              <i
+                class="fa-solid fa-folder-plus mr-2 text-[13px] opacity-90"
+              ></i>
+              <span>Report</span>
             </div>
             <span id="toggleIcon" class="text-green-800 hover:text-white">
               <i class="fa-solid fa-caret-down"></i>
@@ -446,8 +487,11 @@
               <a
                 href="#"
                 onclick="loadPage('dataView.html', this)"
-                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-                ><i class="fa-solid fa-file-excel"></i> Visit Report</a
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all flex items-center"
+                ><i
+                  class="fa-solid fa-file-excel mr-2 text-[13px] opacity-90"
+                ></i>
+                <span>Visit Report</span></a
               >
             </li>
             <li>
@@ -455,17 +499,22 @@
                 href="#"
                 id="statusLink"
                 onclick="loadPage('statusRecords.html', this)"
-                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-                ><i class="fa-solid fa-file-excel"></i>
-                <span class="ml-1">HPCL Status Report</span></a
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all flex items-center"
+                ><i
+                  class="fa-solid fa-file-excel mr-2 text-[13px] opacity-90"
+                ></i>
+                <span>HPCL Status Report</span></a
               >
             </li>
             <li>
               <a
                 href="#"
                 onclick="loadPage('atgRecords.html', this)"
-                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-                ><i class="fa-solid fa-file-excel"></i> ATG Report</a
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all flex items-center"
+                ><i
+                  class="fa-solid fa-file-excel mr-2 text-[13px] opacity-90"
+                ></i>
+                <span>ATG Report</span></a
               >
             </li>
             <li>
@@ -473,8 +522,11 @@
                 id="tasklink"
                 href="#"
                 onclick="loadPage('taskReport.html', this)"
-                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
-                ><i class="fa-solid fa-file-excel"></i> Task Report</a
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all flex items-center"
+                ><i
+                  class="fa-solid fa-file-excel mr-2 text-[13px] opacity-90"
+                ></i>
+                <span>Task Report</span></a
               >
             </li>
 
@@ -482,9 +534,12 @@
               <a
                 href="#"
                 onclick="loadPage('jioBPreport.html', this)"
-                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all"
+                class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all flex items-center"
               >
-                <i class="fa-solid fa-file-excel"></i> Jio BP Status Report
+                <i
+                  class="fa-solid fa-file-excel mr-2 text-[13px] opacity-90"
+                ></i>
+                <span>Jio BP Status Report</span>
               </a>
             </li>
           </ul>
@@ -499,7 +554,8 @@
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
           style="display: none"
         >
-          <i class="fa-solid fa-list-check"></i> Task Management
+          <i class="fa-solid fa-list-check mr-2 text-[13px] opacity-90"></i>
+          <span>Task Management</span>
         </a>
 
         <a
@@ -509,7 +565,8 @@
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
           style="display: none"
         >
-          <i class="fa-solid fa-shield-halved"></i> Audit Report
+          <i class="fa-solid fa-shield-halved mr-2 text-[13px] opacity-90"></i>
+          <span>Audit Report</span>
         </a>
 
         <a
@@ -517,7 +574,8 @@
           onclick="loadPage('materialrequirement.html', this)"
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
         >
-          <i class="fa-solid fa-boxes-packing"></i> Material Requirement
+          <i class="fa-solid fa-boxes-packing mr-2 text-[13px] opacity-90"></i>
+          <span>Material Requirement</span>
         </a>
 
         <a
@@ -527,7 +585,10 @@
           class="block px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
           style="display: none"
         >
-          <i class="fa-solid fa-screwdriver-wrench"></i> Incident ID
+          <i
+            class="fa-solid fa-screwdriver-wrench mr-2 text-[13px] opacity-90"
+          ></i>
+          <span>Incident ID</span>
         </a>
       </nav>
 
