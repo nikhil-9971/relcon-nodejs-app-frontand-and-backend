@@ -50,6 +50,8 @@
         --accent-700: #0d9488;
         --link-active-bg: #ffffff;
         --link-active-text: #14b8a6;
+        --header-h: 0px;
+        --toolbar-h: 0px;
       }
 
       .dark {
@@ -80,8 +82,11 @@
       body::-webkit-scrollbar-thumb:hover { background-color: rgba(21, 128, 61, 0.55); }
       iframe {
         width: 100%;
-        height: 100vh;
+        height: calc(100vh - var(--header-h) - var(--toolbar-h));
         border: none;
+      }
+      @media (min-width: 768px) {
+        :root { --header-h: 56px; --toolbar-h: 44px; }
       }
       .active-link {
         background-color: var(--link-active-bg);
@@ -338,10 +343,28 @@
       </div>
     </div>
 
+    <!-- Desktop Top Header -->
+    <header class="hidden md:flex items-center justify-between px-4 border-b" style="height: var(--header-h); background: var(--card); border-color: var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 40;">
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-semibold" style="color: var(--text)">RELCON SYSTEMS</span>
+        <span class="text-xs px-2 py-0.5 rounded" style="background: var(--hover); color: var(--accent)">Dashboard</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-1 px-2 py-1 rounded border" style="border-color: var(--border); background: var(--bg);">
+          <i class="fa-solid fa-magnifying-glass text-[12px] opacity-70"></i>
+          <input id="globalSearch" placeholder="Search..." class="outline-none bg-transparent text-[12px]" style="color: var(--text)" />
+        </div>
+        <button id="themeToggleDesktop" class="px-2 py-1 rounded border" style="border-color: var(--border); color: var(--text)" title="Toggle theme">
+          <i id="themeToggleIconDesktop" class="fa-regular fa-moon text-base"></i>
+        </button>
+      </div>
+    </header>
+
     <!-- Sidebar -->
     <aside
       id="sidebar"
       class="w-64 bg-gray-200 text-gray-800 flex-col shadow-md hidden md:flex absolute md:relative top-0 left-0 z-50 h-screen md:h-auto md:block transition-all"
+      style="top: var(--header-h)"
     >
       <div
         class="px-4 py-3 text-base font-bold border-b border-gray-300 leading-5 tracking-wide bg-gray-200 flex items-center justify-between"
@@ -640,7 +663,17 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1">
+    <main class="flex-1" style="margin-top: var(--header-h); width: 100%">
+      <!-- Content Toolbar -->
+      <div id="contentToolbar" class="hidden md:flex items-center justify-between px-4 border-b" style="height: var(--toolbar-h); background: var(--card); border-color: var(--border);">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-[12px] opacity-80"></i>
+          <span id="pageTitle" class="text-sm" style="color: var(--text)">Create Daily Plan</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="reloadIframe()" class="px-2 py-1 rounded border text-xs" style="border-color: var(--border); color: var(--text)"><i class="fa-solid fa-rotate-right"></i> Reload</button>
+        </div>
+      </div>
       <iframe id="contentFrame" src="dailyPlan.html"></iframe>
     </main>
 
@@ -779,6 +812,22 @@
               iframe.contentDocument || iframe.contentWindow.document
             );
           } catch (e) {}
+          try {
+            const titleMap = {
+              'overview.html': 'Dashboard Overview',
+              'dailyPlan.html': 'Create Daily Plan',
+              'dataView.html': 'Visit Report',
+              'statusRecords.html': 'HPCL Status Report',
+              'atgRecords.html': 'ATG Report',
+              'taskReport.html': 'Task Report',
+              'jioBPreport.html': 'Jio BP Status Report',
+              'taskManager.html': 'Task Management',
+              'auditReport.html': 'Audit Report',
+              'materialrequirement.html': 'Material Requirement',
+              'incident.html': 'Incident ID',
+            };
+            document.getElementById('pageTitle').textContent = titleMap[page] || 'Content';
+          } catch (e) {}
         };
 
         // Set active class
@@ -791,6 +840,13 @@
         if (window.innerWidth < 768) {
           document.getElementById("sidebar").classList.add("hidden");
         }
+      }
+
+      function reloadIframe() {
+        const iframe = document.getElementById('contentFrame');
+        const src = iframe.src.split('#')[0].split('?')[0];
+        const cacheBust = `cb=${Date.now()}`;
+        iframe.src = src + `?${cacheBust}`;
       }
 
       function injectDarkStylesInto(doc) {
@@ -968,8 +1024,10 @@
       function initThemeControls() {
         const btn = document.getElementById("themeToggle");
         const btnMobile = document.getElementById("themeToggleMobile");
+        const btnDesktop = document.getElementById("themeToggleDesktop");
         const icon = document.getElementById("themeToggleIcon");
         const iconMobile = document.getElementById("themeToggleIconMobile");
+        const iconDesktop = document.getElementById("themeToggleIconDesktop");
 
         function isDark() {
           return document.documentElement.classList.contains("dark");
@@ -1006,10 +1064,14 @@
               ? "fa-regular fa-sun"
               : "fa-regular fa-moon";
           }
+          if (iconDesktop) {
+            iconDesktop.className = dark ? "fa-regular fa-sun" : "fa-regular fa-moon";
+          }
         }
 
         if (btn) btn.addEventListener("click", toggleTheme);
         if (btnMobile) btnMobile.addEventListener("click", toggleTheme);
+        if (btnDesktop) btnDesktop.addEventListener("click", toggleTheme);
         syncIcons();
       }
 
