@@ -306,11 +306,16 @@
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
+      // HPCL Quarter Date Constants
+      const HPCL_START_QTR_DATE = "2025-07-01"; // 01-07-2025
+      const HPCL_END_QTR_DATE = "2025-09-30"; // 30-09-2025
+
       async function handleSubmit(event) {
         event.preventDefault();
 
         // ❌ Stop if form is invalid
         if (!validateForm()) return;
+
         const data = {
           roCode: document.getElementById("roCode").value.trim().toUpperCase(),
           date: document.getElementById("date").value,
@@ -325,6 +330,13 @@
           incidentId: document.getElementById("incidentId").value.toUpperCase(),
           purpose: document.getElementById("purpose").value.toUpperCase(),
         };
+
+        // HPCL AMC Validation
+        const validationResult = await validateHPCLAMC(data);
+        if (!validationResult.isValid) {
+          showToast(validationResult.message, "bg-red-600");
+          return;
+        }
 
         const btn = document.getElementById("submitBtn");
         const text = document.getElementById("submitText");
@@ -618,6 +630,81 @@
 
       // ✅ On page load if engineer already selected
       window.addEventListener("DOMContentLoaded", fetchEmpIdIfEngineerExists);
+
+      // HPCL AMC Validation Function
+      async function validateHPCLAMC(data) {
+        // Only validate for HPCL visits
+        if (data.phase !== "HPCL") {
+          return { isValid: true, message: "" };
+        }
+
+        const roCode = data.roCode;
+        const visitDate = data.date;
+        const issueType = data.issueType;
+
+        // Check if IssueType is PM Visit or Issue & PM Visit
+        const isPMVisit =
+          issueType === "PM Visit" || issueType === "Issue & PM Visit";
+
+        try {
+          // Fetch existing plans for this RO Code within the quarter date range
+          const response = await fetch(
+            `${baseUrl}/getDailyPlans?roCode=${roCode}&startDate=${HPCL_START_QTR_DATE}&endDate=${HPCL_END_QTR_DATE}`,
+            {
+              credentials: "include",
+            }
+          );
+
+          if (!response.ok) {
+            console.error("Error fetching plans for validation");
+            return { isValid: true, message: "" }; // Allow submission if API fails
+          }
+
+          const plans = await response.json();
+
+          // Filter plans for this specific RO Code
+          const roPlans = plans.filter(
+            (plan) =>
+              plan.roCode === roCode &&
+              plan.issueType &&
+              (plan.issueType === "PM Visit" ||
+                plan.issueType === "Issue & PM Visit")
+          );
+
+          // Case 01: No existing PM visits in quarter, but user is not selecting PM visit
+          if (roPlans.length === 0 && !isPMVisit) {
+            return {
+              isValid: false,
+              message:
+                "AMC Pending of this RO, Please select Issue & PM Visit OR PM Visit.",
+            };
+          }
+
+          // Case 02: Existing PM visit found, but user is trying to add another PM visit
+          if (roPlans.length > 0 && isPMVisit) {
+            // Find the most recent PM visit date
+            const latestPMVisit = roPlans.reduce((latest, plan) => {
+              return new Date(plan.date) > new Date(latest.date)
+                ? plan
+                : latest;
+            });
+
+            const pmVisitDate = new Date(latestPMVisit.date).toLocaleDateString(
+              "en-GB"
+            ); // DD-MM-YYYY format
+
+            return {
+              isValid: false,
+              message: `AMC Already Done at dated ${pmVisitDate}, Please change IssueType.`,
+            };
+          }
+
+          return { isValid: true, message: "" };
+        } catch (error) {
+          console.error("Error in HPCL AMC validation:", error);
+          return { isValid: true, message: "" }; // Allow submission if validation fails
+        }
+      }
 
       // Validate form
       function validateForm() {
