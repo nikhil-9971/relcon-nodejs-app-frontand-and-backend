@@ -182,6 +182,8 @@
       const token = localStorage.getItem("token");
       let allData = [],
         filtered = [];
+      let currentUser = null;
+      let currentEditingRow = null;
 
       function showLoader() {
         document.getElementById("loader").classList.remove("hidden");
@@ -214,7 +216,7 @@
         const jioData = await jioRes.json();
         const planData = await planRes.json();
         const materialData = await materialRes.json();
-        const currentUser = await userRes.json();
+        currentUser = await userRes.json();
 
         const planMap = {};
         planData.forEach((p) => {
@@ -289,11 +291,6 @@
         });
 
         renderTable();
-        // Ensure engineers can view details (no role-based hide)
-        const role = String(currentUser.role || "").toLowerCase();
-        if (role === "engineer") {
-          // No changes needed: table shows all filtered rows
-        }
         hideLoader();
       }
 
@@ -369,6 +366,7 @@
           alert("No matching row found");
           return;
         }
+        currentEditingRow = row;
 
         if (!row) return alert("Row not found!");
 
@@ -395,7 +393,7 @@
       function saveEdit() {
         const id = document.getElementById("editId").value;
         const current = filtered.find((r) => r._id === id);
-        let target = current;
+        let target = current || currentEditingRow;
         if (!target) {
           // If new, match by key triplet to update existing or create
           const roCode = document.getElementById("editRoCode")?.value || "";
