@@ -519,18 +519,18 @@
           tbody.innerHTML = filtered
             .map((row) => {
               const editBtn = canEdit
-                ? `<button class="bg-blue-500 text-white px-2 py-1 rounded mr-1" onclick="editRow('${
+                ? `<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100" onclick="editRow('${
                     row._id || ""
                   }', '${row.roCode}', '${row.date}', '${
                     row.engineer
-                  }')">✏️</button>`
+                  }')">Edit</button>`
                 : "";
               const delBtn = canEdit
-                ? `<button class="bg-red-600 text-white px-2 py-1 rounded mr-1" onclick="deleteRowWrapper('${
+                ? `<button class="px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2" onclick="deleteRowWrapper('${
                     row._id || ""
                   }', '${row.roCode}', '${String(row.date || "").slice(0, 10)}', '${
                     row.engineer
-                  }')">🗑️</button>`
+                  }')">Delete</button>`
                 : "";
               return `
           <tr class="border-b text-center hover:bg-gray-50">
