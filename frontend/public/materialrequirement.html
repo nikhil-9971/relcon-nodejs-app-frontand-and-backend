@@ -32,7 +32,9 @@
         vertical-align: middle !important;
         padding: 4px 6px !important;
         font-size: 10px !important;
+        border: 1px solid #e5e7eb; /* proper cell borders */
       }
+      thead th { border-bottom: 2px solid #e5e7eb; }
     </style>
   </head>
   <body class="p-6 bg-gray-100 text-[9px]">
@@ -41,12 +43,21 @@
         <h1 class="text-xl font-bold text-green-800">
           📊 Material Requirement
         </h1>
-        <button
-          onclick="exportToExcel()"
-          class="bg-green-600 text-white px-4 py-2 rounded shadow"
-        >
-          📤 Export
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            id="manualAddBtn"
+            onclick="openManualModal()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
+          >
+            ➕ Manual Material Requirement
+          </button>
+          <button
+            onclick="exportToExcel()"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+          >
+            📤 Export
+          </button>
+        </div>
       </div>
 
       <!-- Filter -->
@@ -98,9 +109,9 @@
       </div>
 
       <div
-        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-200 rounded-lg shadow-sm"
+        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded-lg shadow-sm"
       >
-        <table class="min-w-full bg-white border border-gray-200 table-auto">
+        <table class="min-w-full bg-white border border-gray-300 table-auto">
           <thead class="sticky top-0 z-10 bg-gray-100 text-gray-700 uppercase tracking-wide text-[10px]">
             <tr>
               <th>Engineer</th>
@@ -228,6 +239,74 @@
       ></div>
     </div>
 
+    <!-- Manual Add Modal -->
+    <div
+      id="manualModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50"
+    >
+      <div class="bg-white p-6 rounded shadow-lg w-[90%] max-w-lg">
+        <h2 class="text-lg font-semibold mb-4 text-blue-700">
+          Manual Material Requirement
+        </h2>
+        <div class="grid grid-cols-2 gap-3 text-[12px]">
+          <div class="col-span-1">
+            <label class="text-gray-700">Engineer</label>
+            <input id="manualEngineer" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-1">
+            <label class="text-gray-700">Region</label>
+            <input id="manualRegion" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-1">
+            <label class="text-gray-700">RO Code</label>
+            <input id="manualRoCode" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-1">
+            <label class="text-gray-700">RO Name</label>
+            <input id="manualRoName" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-1">
+            <label class="text-gray-700">Phase</label>
+            <input id="manualPhase" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-1">
+            <label class="text-gray-700">Date Of Visit</label>
+            <input type="date" id="manualDate" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-2">
+            <label class="text-gray-700">Required Material</label>
+            <input id="manualMaterial" class="border p-2 rounded w-full" />
+          </div>
+          <div class="col-span-2 grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-gray-700">Material Dispatch Status</label>
+              <input id="manualDispatchStatus" class="border p-2 rounded w-full" />
+            </div>
+            <div>
+              <label class="text-gray-700">Material Request To</label>
+              <input id="manualRequestTo" class="border p-2 rounded w-full" />
+            </div>
+            <div>
+              <label class="text-gray-700">Material Request Date</label>
+              <input type="date" id="manualRequestDate" class="border p-2 rounded w-full" />
+            </div>
+            <div>
+              <label class="text-gray-700">Material Arrange From</label>
+              <input id="manualArrangeFrom" class="border p-2 rounded w-full" />
+            </div>
+            <div>
+              <label class="text-gray-700">Material Received Date</label>
+              <input type="date" id="manualReceivedDate" class="border p-2 rounded w-full" />
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-4">
+          <button onclick="closeManualModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+          <button onclick="saveManual()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const baseUrl = "https://relcon-backend-jwt.onrender.com";
       const token = localStorage.getItem("token");
@@ -326,6 +405,59 @@
         applyFilters();
       }
 
+      function openManualModal() {
+        const engineerName = currentUser?.engineerName || currentUser?.username || "";
+        const role = String(currentUser?.role || "").toLowerCase();
+        if (role === "engineer") return; // safety
+        document.getElementById("manualEngineer").value = engineerName;
+        document.getElementById("manualModal").classList.remove("hidden");
+      }
+
+      function closeManualModal() {
+        document.getElementById("manualModal").classList.add("hidden");
+      }
+
+      function saveManual() {
+        const payload = {
+          engineer: document.getElementById("manualEngineer").value || "",
+          region: document.getElementById("manualRegion").value || "",
+          roCode: document.getElementById("manualRoCode").value || "",
+          roName: document.getElementById("manualRoName").value || "",
+          phase: document.getElementById("manualPhase").value || "",
+          date: document.getElementById("manualDate").value || "",
+          material: document.getElementById("manualMaterial").value || "",
+          materialDispatchStatus: document.getElementById("manualDispatchStatus").value || "",
+          materialRequestTo: document.getElementById("manualRequestTo").value || "",
+          materialRequestDate: document.getElementById("manualRequestDate").value || "",
+          materialArrangeFrom: document.getElementById("manualArrangeFrom").value || "",
+          materialReceivedDate: document.getElementById("manualReceivedDate").value || "",
+        };
+
+        if (!payload.roCode || !payload.date || !payload.engineer || !payload.material) {
+          alert("Engineer, RO Code, Date and Required Material are mandatory.");
+          return;
+        }
+
+        fetch(`${baseUrl}/materialRequirement`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        })
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || "Save failed");
+            closeManualModal();
+            fetchData();
+          })
+          .catch((err) => {
+            alert("Failed to save entry");
+            console.error(err);
+          });
+      }
+
       function applyFilters() {
         const searchText = document
           .getElementById("searchInput")
@@ -376,6 +508,13 @@
           const tbody = document.getElementById("tableBody");
           const role = String(currentUser?.role || "").toLowerCase();
           const canEdit = role !== "engineer";
+
+          // Hide Manual button for engineers
+          const manualBtn = document.getElementById("manualAddBtn");
+          if (manualBtn) {
+            if (canEdit) manualBtn.classList.remove("hidden");
+            else manualBtn.classList.add("hidden");
+          }
 
           tbody.innerHTML = filtered
             .map((row) => {
