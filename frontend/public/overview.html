@@ -21,8 +21,20 @@
         font-size: 12px;
       }
       /* Show CSV icon only on hover over KPI cards (admin only buttons remain hidden for non-admin via JS) */
-      .kpi-card .kpi-export { opacity: 0; visibility: hidden; transition: opacity 0.2s ease; }
-      .kpi-card:hover .kpi-export { opacity: 1; visibility: visible; }
+      .kpi-card .kpi-export {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(2px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .kpi-card:hover .kpi-export {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+      /* Icon color tuning */
+      .kpi-export i { color: #2563eb; }
+      .dark .kpi-export, .dark .kpi-export i { color: var(--accent) !important; }
     </style>
   </head>
   <body class="p-4">
