@@ -156,7 +156,7 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">
-              Status Fill Pending (HPCL + RBML)
+              Status Pending (HPCL + RBML)
             </div>
             <div class="flex items-center gap-2">
               <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
@@ -588,7 +588,7 @@
             exportCSV(
               pendingRows,
               ["customer", "date", "roCode", "roName", "region", "engineer"],
-              "Today_Status_Pending.csv"
+              "status_pending.csv"
             )
           );
 
@@ -629,8 +629,12 @@
           // Recent logins
           const tbody = document.getElementById("recentLogins");
           const filteredLogins = (Array.isArray(loginLogs) ? loginLogs : [])
-            .filter((l) => String(l.role || "").toLowerCase() !== "engineer")
-            .slice(0, 8);
+            .sort((a, b) => {
+              const ta = a.loginTime ? new Date(a.loginTime).getTime() : 0;
+              const tb = b.loginTime ? new Date(b.loginTime).getTime() : 0;
+              return tb - ta;
+            })
+            .slice(0, 16);
           tbody.innerHTML = filteredLogins
             .map(
               (l) => `
