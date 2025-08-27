@@ -20,6 +20,26 @@
         background: #f1f5f9;
         font-size: 12px;
       }
+      /* Show CSV icon only on hover over KPI cards (admin only buttons remain hidden for non-admin via JS) */
+      .kpi-card .kpi-export {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(2px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .kpi-card:hover .kpi-export {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+      /* Icon color tuning */
+      .kpi-export i {
+        color: #2563eb;
+      }
+      .dark .kpi-export,
+      .dark .kpi-export i {
+        color: var(--accent) !important;
+      }
     </style>
   </head>
   <body class="p-4">
@@ -30,7 +50,9 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+        <div
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
+        >
           <div
             class="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center"
           >
@@ -42,10 +64,10 @@
               <div id="kpiPlansToday" class="text-xl font-semibold">—</div>
               <button
                 id="exportPlansToday"
-                class="text-[10px] text-blue-600 underline"
+                class="text-[10px] text-blue-600 kpi-export"
                 title="Export CSV"
               >
-                CSV
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
           </div>
@@ -54,7 +76,7 @@
         <!-- Hold Engineers (NO PLAN + IN LEAVE) -->
         <div
           id="holdEngineersCard"
-          class="bg-white rounded-xl shadow p-4 flex items-center gap-3"
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
         >
           <div
             class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"
@@ -67,17 +89,19 @@
               <div id="kpiHold" class="text-xl font-semibold">—</div>
               <button
                 id="exportHold"
-                class="text-[10px] text-blue-600 underline"
+                class="text-[10px] text-blue-600 kpi-export"
                 title="Export CSV"
               >
-                CSV
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
             <div id="kpiHoldBreakdown" class="text-[10px] text-gray-500">—</div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+        <div
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
+        >
           <div
             class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center"
           >
@@ -89,16 +113,18 @@
               <div id="kpiUnverified" class="text-xl font-semibold">—</div>
               <button
                 id="exportUnverified"
-                class="text-[10px] text-blue-600 underline"
+                class="text-[10px] text-blue-600 kpi-export"
                 title="Export CSV"
               >
-                CSV
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+        <div
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
+        >
           <div
             class="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center"
           >
@@ -110,17 +136,19 @@
               <div id="kpiOpenIncidents" class="text-xl font-semibold">—</div>
               <button
                 id="exportOpenInc"
-                class="text-[10px] text-blue-600 underline"
+                class="text-[10px] text-blue-600 kpi-export"
                 title="Export CSV"
               >
-                CSV
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
           </div>
         </div>
 
         <!-- Today Pending Status (HPCL + RBML) -->
-        <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+        <div
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
+        >
           <div
             class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center"
           >
@@ -132,10 +160,10 @@
               <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
               <button
                 id="exportPending"
-                class="text-[10px] text-blue-600 underline"
+                class="text-[10px] text-blue-600 kpi-export"
                 title="Export CSV"
               >
-                CSV
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
             <div id="kpiPendingBreakdown" class="text-[10px] text-gray-500">
@@ -144,7 +172,9 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
+        <div
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
+        >
           <div
             class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center"
           >
@@ -156,10 +186,10 @@
               <div id="kpiActiveUsers" class="text-xl font-semibold">—</div>
               <button
                 id="exportActiveUsers"
-                class="text-[10px] text-blue-600 underline"
+                class="text-[10px] text-blue-600 kpi-export"
                 title="Export CSV"
               >
-                CSV
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
           </div>
