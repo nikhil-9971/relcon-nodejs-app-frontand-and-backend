@@ -663,13 +663,30 @@
         console.log("🔍 Is PM Visit:", isPMVisit);
         
         try {
+          // Get token from localStorage
+          const token = localStorage.getItem("token");
+          
+          if (!token) {
+            console.log("🔐 No token found, allowing submission");
+            return { isValid: true, message: "" };
+          }
+          
+          console.log("🔐 Token found, proceeding with validation");
+          
           // Fetch existing plans for this RO Code within the quarter date range
           const response = await fetch(`${baseUrl}/getDailyPlans`, {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
             credentials: "include"
           });
           
           if (!response.ok) {
-            console.error("❌ Error fetching plans for validation");
+            console.error("❌ Error fetching plans for validation:", response.status, response.statusText);
+            if (response.status === 401) {
+              console.log("🔐 User not authenticated, allowing submission");
+            }
             return { isValid: true, message: "" }; // Allow submission if API fails
           }
           
@@ -780,9 +797,90 @@
         };
         
         console.log("🧪 Testing validation with data:", testData);
-        const result = await validateHPCLAMC(testData);
-        console.log("🧪 Test result:", result);
-        showToast(result.message || "Test completed", result.isValid ? "bg-green-600" : "bg-red-600");
+        
+        // Test with mock data to verify logic
+        const mockPlans = [
+          {
+            roCode: "13872800",
+            date: "2025-07-04",
+            issueType: "PM Visit",
+            phase: "HPCL/Phase-X"
+          }
+        ];
+        
+        console.log("🧪 Testing with mock data...");
+        const result = await validateHPCLAMCWithMockData(testData, mockPlans);
+        console.log("🧪 Mock test result:", result);
+        
+        // Also test the real validation
+        const realResult = await validateHPCLAMC(testData);
+        console.log("🧪 Real test result:", realResult);
+        
+        showToast(realResult.message || "Test completed", realResult.isValid ? "bg-green-600" : "bg-red-600");
+      }
+      
+      // Test validation with mock data
+      async function validateHPCLAMCWithMockData(data, mockPlans) {
+        console.log("🔍 HPCL Validation with Mock Data:", data);
+        
+        // Only validate for HPCL visits
+        if (!data.phase || !data.phase.includes("HPCL")) {
+          console.log("⏭️ Not HPCL phase, skipping validation. Phase:", data.phase);
+          return { isValid: true, message: "" };
+        }
+        
+        const roCode = data.roCode;
+        const visitDate = data.date;
+        const issueType = data.issueType;
+        
+        console.log("🔍 Validating HPCL - RO Code:", roCode, "IssueType:", issueType);
+        
+        // Check if IssueType is PM Visit or Issue & PM Visit
+        const isPMVisit = issueType === "PM Visit" || issueType === "Issue & PM Visit";
+        console.log("🔍 Is PM Visit:", isPMVisit);
+        
+        // Filter plans for this specific RO Code within quarter date range
+        const roPlans = mockPlans.filter(plan => {
+          const planDate = new Date(plan.date);
+          const startDate = new Date(HPCL_START_QTR_DATE);
+          const endDate = new Date(HPCL_END_QTR_DATE);
+          
+          return plan.roCode === roCode && 
+                 plan.issueType && 
+                 (plan.issueType === "PM Visit" || plan.issueType === "Issue & PM Visit") &&
+                 planDate >= startDate && 
+                 planDate <= endDate;
+        });
+        
+        console.log("🔍 Filtered RO plans:", roPlans);
+        
+        // Case 01: No existing PM visits in quarter, but user is not selecting PM visit
+        if (roPlans.length === 0 && !isPMVisit) {
+          console.log("❌ Case 01: AMC Pending");
+          return {
+            isValid: false,
+            message: "AMC Pending of this RO, Please select Issue & PM Visit OR PM Visit."
+          };
+        }
+        
+        // Case 02: Existing PM visit found, but user is trying to add another PM visit
+        if (roPlans.length > 0 && isPMVisit) {
+          console.log("❌ Case 02: AMC Already Done");
+          // Find the most recent PM visit date
+          const latestPMVisit = roPlans.reduce((latest, plan) => {
+            return new Date(plan.date) > new Date(latest.date) ? plan : latest;
+          });
+          
+          const pmVisitDate = new Date(latestPMVisit.date).toLocaleDateString('en-GB'); // DD-MM-YYYY format
+          
+          return {
+            isValid: false,
+            message: `AMC Already Done at dated ${pmVisitDate}, Please change IssueType.`
+          };
+        }
+        
+        console.log("✅ Validation passed");
+        return { isValid: true, message: "" };
       }
     </script>
   </body>
