@@ -138,6 +138,26 @@
         <input type="hidden" id="editDate" />
         <input type="hidden" id="editEngineer" />
         <div class="grid grid-cols-1 gap-3">
+          <!-- Readonly context fields -->
+          <label class="text-[12px] text-gray-700" for="roEngineer">Engineer</label>
+          <input id="roEngineer" class="border p-2 rounded bg-gray-100" readonly />
+
+          <label class="text-[12px] text-gray-700" for="roRegion">Region</label>
+          <input id="roRegion" class="border p-2 rounded bg-gray-100" readonly />
+
+          <label class="text-[12px] text-gray-700" for="roName">RO Name</label>
+          <input id="roName" class="border p-2 rounded bg-gray-100" readonly />
+
+          <label class="text-[12px] text-gray-700" for="roPhase">Phase</label>
+          <input id="roPhase" class="border p-2 rounded bg-gray-100" readonly />
+
+          <label class="text-[12px] text-gray-700" for="roDate">Date Of Visit</label>
+          <input id="roDate" class="border p-2 rounded bg-gray-100" readonly />
+
+          <label class="text-[12px] text-gray-700" for="roMaterial">Required Material</label>
+          <input id="roMaterial" class="border p-2 rounded bg-gray-100" readonly />
+
+          <!-- Editable fields -->
           <label class="text-[12px] text-gray-700" for="editDispatchStatus">Material Dispatch Status</label>
           <input id="editDispatchStatus" class="border p-2 rounded" />
 
@@ -290,7 +310,11 @@
           const isVerified =
             item.isVerified === true || item.isVerified === "true";
 
-          return matchDate && matchSearch && (isJio || isHpcl) && isVerified;
+          const role = String(currentUser?.role || "").toLowerCase();
+          const isOwner = String(item.engineer || "").trim().toLowerCase() ===
+            String(currentUser?.engineerName || currentUser?.username || "").trim().toLowerCase();
+
+          return matchDate && matchSearch && (isJio || isHpcl) && isVerified && (role === 'admin' || isOwner);
         });
 
         renderTable();
@@ -377,6 +401,13 @@
         document.getElementById("editRoCode").value = row.roCode || "";
         document.getElementById("editDate").value = String(row.date || "").slice(0,10);
         document.getElementById("editEngineer").value = row.engineer || "";
+        // Fill readonly context
+        document.getElementById("roEngineer").value = row.engineer || "";
+        document.getElementById("roRegion").value = row.region || "";
+        document.getElementById("roName").value = row.roName || "";
+        document.getElementById("roPhase").value = row.phase || "";
+        document.getElementById("roDate").value = String(row.date || "").slice(0,10);
+        document.getElementById("roMaterial").value = row.material || "";
         document.getElementById("editDispatchStatus").value =
           row.materialDispatchStatus || "";
         document.getElementById("editRequestTo").value =
