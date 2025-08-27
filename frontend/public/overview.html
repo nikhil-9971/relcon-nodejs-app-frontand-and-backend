@@ -447,7 +447,11 @@
           // Recent logins
           const tbody = document.getElementById("recentLogins");
           const filteredLogins = (Array.isArray(loginLogs) ? loginLogs : [])
-            .filter((l) => String(l.role || "").toLowerCase() !== "engineer")
+            .sort((a, b) => {
+              const ta = a.loginTime ? new Date(a.loginTime).getTime() : 0;
+              const tb = b.loginTime ? new Date(b.loginTime).getTime() : 0;
+              return tb - ta;
+            })
             .slice(0, 8);
           tbody.innerHTML = filteredLogins
             .map(
