@@ -134,6 +134,9 @@
           Edit Material Entry
         </h2>
         <input type="hidden" id="editId" />
+        <input type="hidden" id="editRoCode" />
+        <input type="hidden" id="editDate" />
+        <input type="hidden" id="editEngineer" />
         <div class="grid grid-cols-1 gap-3">
           <label class="text-[12px] text-gray-700" for="editDispatchStatus"
             >Material Dispatch Status</label
@@ -192,6 +195,8 @@
       const token = localStorage.getItem("token");
       let allData = [],
         filtered = [];
+      let currentUser = null;
+      let currentEditingRow = null;
 
       function showLoader() {
         document.getElementById("loader").classList.remove("hidden");
@@ -227,7 +232,7 @@
         const jioData = await jioRes.json();
         const planData = await planRes.json();
         const materialData = await materialRes.json();
-        const currentUser = await userRes.json();
+        currentUser = await userRes.json();
 
         const planMap = {};
         planData.forEach((p) => {
@@ -302,11 +307,6 @@
         });
 
         renderTable();
-        // Ensure engineers can view details (no role-based hide)
-        const role = String(currentUser.role || "").toLowerCase();
-        if (role === "engineer") {
-          // No changes needed: table shows all filtered rows
-        }
         hideLoader();
       }
 
@@ -391,10 +391,16 @@
           alert("No matching row found");
           return;
         }
+        currentEditingRow = row;
 
         if (!row) return alert("Row not found!");
 
         document.getElementById("editId").value = row._id || ""; // empty for new
+        document.getElementById("editRoCode").value = row.roCode || "";
+        document.getElementById("editDate").value = String(
+          row.date || ""
+        ).slice(0, 10);
+        document.getElementById("editEngineer").value = row.engineer || "";
         document.getElementById("editDispatchStatus").value =
           row.materialDispatchStatus || "";
         document.getElementById("editRequestTo").value =
@@ -417,7 +423,7 @@
       function saveEdit() {
         const id = document.getElementById("editId").value;
         const current = filtered.find((r) => r._id === id);
-        let target = current;
+        let target = current || currentEditingRow;
         if (!target) {
           // If new, match by key triplet to update existing or create
           const roCode = document.getElementById("editRoCode")?.value || "";
@@ -467,8 +473,9 @@
           },
           body: JSON.stringify(updatedData),
         })
-          .then((res) => res.json())
-          .then(() => {
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || "Save failed");
             closeModal();
             fetchData(); // refresh table
           })
