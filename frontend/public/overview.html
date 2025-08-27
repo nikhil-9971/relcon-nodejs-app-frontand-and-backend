@@ -42,6 +42,23 @@
           </div>
         </div>
 
+        <!-- Hold Engineers (NO PLAN + IN LEAVE) -->
+        <div
+          id="holdEngineersCard"
+          class="bg-white rounded-xl shadow p-4 flex items-center gap-3"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-user-slash"></i>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500">Hold Engineers</div>
+            <div id="kpiHold" class="text-xl font-semibold">—</div>
+            <div id="kpiHoldBreakdown" class="text-[10px] text-gray-500">—</div>
+          </div>
+        </div>
+
         <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
           <div
             class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center"
@@ -74,9 +91,7 @@
             <i class="fa-solid fa-hourglass-half"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500">
-              Status Pending (HPCL + RBML)
-            </div>
+            <div class="text-xs text-gray-500">Today Pending (HPCL + RBML)</div>
             <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
             <div id="kpiPendingBreakdown" class="text-[10px] text-gray-500">
               —
@@ -222,6 +237,25 @@
               purpose === "NO PLAN" || purpose === "IN LEAVE";
             return isToday && !isNoPlanOrLeave;
           });
+          const holdToday = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const isToday = String(p.date || "").slice(0, 10) === today;
+            const purpose = String(p.purpose || "")
+              .trim()
+              .toUpperCase();
+            return isToday && (purpose === "NO PLAN" || purpose === "IN LEAVE");
+          });
+          const noPlanCount = holdToday.filter(
+            (p) =>
+              String(p.purpose || "")
+                .trim()
+                .toUpperCase() === "NO PLAN"
+          ).length;
+          const inLeaveCount = holdToday.filter(
+            (p) =>
+              String(p.purpose || "")
+                .trim()
+                .toUpperCase() === "IN LEAVE"
+          ).length;
           const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
             (r) => String(r.isVerified).toLowerCase() !== "true"
           );
@@ -295,13 +329,24 @@
           ).textContent = `HPCL: ${pendingTodayHpcl} • RBML: ${pendingTodayRbml}`;
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
+          document.getElementById("kpiHold").textContent = holdToday.length;
+          document.getElementById(
+            "kpiHoldBreakdown"
+          ).textContent = `NO PLAN: ${noPlanCount} • IN LEAVE: ${inLeaveCount}`;
           document.getElementById("lastUpdated").textContent =
             new Date().toLocaleString();
 
-          // Show/hide Recent Logins card based on role
+          // Show/hide cards based on role
           const recentCard = document.getElementById("recentLoginsCard");
           if (recentCard) {
             recentCard.style.display =
+              String(currentUser.role || "").toLowerCase() === "admin"
+                ? ""
+                : "none";
+          }
+          const holdCard = document.getElementById("holdEngineersCard");
+          if (holdCard) {
+            holdCard.style.display =
               String(currentUser.role || "").toLowerCase() === "admin"
                 ? ""
                 : "none";
