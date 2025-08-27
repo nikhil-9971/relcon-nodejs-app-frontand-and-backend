@@ -274,21 +274,12 @@
           </div>
 
           <div class="flex items-center justify-between mt-4">
-            <div class="flex items-center gap-2">
-              <button
-                id="submitBtn"
-                class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded mt-4 flex items-center justify-center gap-2"
-              >
-                <span id="submitText">🚀 Submit</span>
-              </button>
-              <button
-                type="button"
-                onclick="testValidation()"
-                class="bg-blue-500 hover:bg-blue-400 text-white px-3 py-2 rounded mt-4 text-xs"
-              >
-                🧪 Test Validation
-              </button>
-            </div>
+            <button
+              id="submitBtn"
+              class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded mt-4 flex items-center justify-center gap-2"
+            >
+              <span id="submitText">🚀 Submit</span>
+            </button>
             <!-- ✅ Logos beside submit button -->
             <div class="flex items-center gap-3">
               <img src="./assets/HPCL.png" alt="HPCL" class="h-6" />
@@ -779,109 +770,7 @@
         return true;
       }
       
-      // Test function for debugging validation
-      async function testValidation() {
-        const testData = {
-          roCode: "13872800",
-          date: "2025-08-09",
-          zone: "ECZ",
-          roName: "Test RO",
-          region: "Test Region",
-          phase: "HPCL/Phase-X",
-          issueType: "Issue Visit",
-          engineer: "Test Engineer",
-          empId: "12345",
-          amcQtr: "2025-Q3",
-          incidentId: "TEST123",
-          purpose: "TEST PURPOSE"
-        };
-        
-        console.log("🧪 Testing validation with data:", testData);
-        
-        // Test with mock data to verify logic
-        const mockPlans = [
-          {
-            roCode: "13872800",
-            date: "2025-07-04",
-            issueType: "PM Visit",
-            phase: "HPCL/Phase-X"
-          }
-        ];
-        
-        console.log("🧪 Testing with mock data...");
-        const result = await validateHPCLAMCWithMockData(testData, mockPlans);
-        console.log("🧪 Mock test result:", result);
-        
-        // Also test the real validation
-        const realResult = await validateHPCLAMC(testData);
-        console.log("🧪 Real test result:", realResult);
-        
-        showToast(realResult.message || "Test completed", realResult.isValid ? "bg-green-600" : "bg-red-600");
-      }
-      
-      // Test validation with mock data
-      async function validateHPCLAMCWithMockData(data, mockPlans) {
-        console.log("🔍 HPCL Validation with Mock Data:", data);
-        
-        // Only validate for HPCL visits
-        if (!data.phase || !data.phase.includes("HPCL")) {
-          console.log("⏭️ Not HPCL phase, skipping validation. Phase:", data.phase);
-          return { isValid: true, message: "" };
-        }
-        
-        const roCode = data.roCode;
-        const visitDate = data.date;
-        const issueType = data.issueType;
-        
-        console.log("🔍 Validating HPCL - RO Code:", roCode, "IssueType:", issueType);
-        
-        // Check if IssueType is PM Visit or Issue & PM Visit
-        const isPMVisit = issueType === "PM Visit" || issueType === "Issue & PM Visit";
-        console.log("🔍 Is PM Visit:", isPMVisit);
-        
-        // Filter plans for this specific RO Code within quarter date range
-        const roPlans = mockPlans.filter(plan => {
-          const planDate = new Date(plan.date);
-          const startDate = new Date(HPCL_START_QTR_DATE);
-          const endDate = new Date(HPCL_END_QTR_DATE);
-          
-          return plan.roCode === roCode && 
-                 plan.issueType && 
-                 (plan.issueType === "PM Visit" || plan.issueType === "Issue & PM Visit") &&
-                 planDate >= startDate && 
-                 planDate <= endDate;
-        });
-        
-        console.log("🔍 Filtered RO plans:", roPlans);
-        
-        // Case 01: No existing PM visits in quarter, but user is not selecting PM visit
-        if (roPlans.length === 0 && !isPMVisit) {
-          console.log("❌ Case 01: AMC Pending");
-          return {
-            isValid: false,
-            message: "AMC Pending of this RO, Please select Issue & PM Visit OR PM Visit."
-          };
-        }
-        
-        // Case 02: Existing PM visit found, but user is trying to add another PM visit
-        if (roPlans.length > 0 && isPMVisit) {
-          console.log("❌ Case 02: AMC Already Done");
-          // Find the most recent PM visit date
-          const latestPMVisit = roPlans.reduce((latest, plan) => {
-            return new Date(plan.date) > new Date(latest.date) ? plan : latest;
-          });
-          
-          const pmVisitDate = new Date(latestPMVisit.date).toLocaleDateString('en-GB'); // DD-MM-YYYY format
-          
-          return {
-            isValid: false,
-            message: `AMC Already Done at dated ${pmVisitDate}, Please change IssueType.`
-          };
-        }
-        
-        console.log("✅ Validation passed");
-        return { isValid: true, message: "" };
-      }
+
     </script>
   </body>
 </html>
