@@ -412,6 +412,23 @@
                 : "none";
           }
 
+          // Hide export CSV buttons for non-admin
+          const isAdmin = String(currentUser.role || "").toLowerCase() === "admin";
+          const exportIds = [
+            "exportPlansToday",
+            "exportUnverified",
+            "exportOpenInc",
+            "exportActiveUsers",
+            "exportHold",
+            "exportPending",
+          ];
+          if (!isAdmin) {
+            exportIds.forEach((id) => {
+              const el = document.getElementById(id);
+              if (el) el.style.display = "none";
+            });
+          }
+
           // Recent logins
           const tbody = document.getElementById("recentLogins");
           const filteredLogins = (Array.isArray(loginLogs) ? loginLogs : [])
