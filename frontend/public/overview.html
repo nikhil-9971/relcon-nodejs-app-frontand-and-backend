@@ -38,7 +38,16 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">Plans Today</div>
-            <div id="kpiPlansToday" class="text-xl font-semibold">—</div>
+            <div class="flex items-center gap-2">
+              <div id="kpiPlansToday" class="text-xl font-semibold">—</div>
+              <button
+                id="exportPlansToday"
+                class="text-[10px] text-blue-600 underline"
+                title="Export CSV"
+              >
+                CSV
+              </button>
+            </div>
           </div>
         </div>
 
@@ -54,7 +63,16 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">Hold Engineers</div>
-            <div id="kpiHold" class="text-xl font-semibold">—</div>
+            <div class="flex items-center gap-2">
+              <div id="kpiHold" class="text-xl font-semibold">—</div>
+              <button
+                id="exportHold"
+                class="text-[10px] text-blue-600 underline"
+                title="Export CSV"
+              >
+                CSV
+              </button>
+            </div>
             <div id="kpiHoldBreakdown" class="text-[10px] text-gray-500">—</div>
           </div>
         </div>
@@ -67,7 +85,16 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">Unverified Status</div>
-            <div id="kpiUnverified" class="text-xl font-semibold">—</div>
+            <div class="flex items-center gap-2">
+              <div id="kpiUnverified" class="text-xl font-semibold">—</div>
+              <button
+                id="exportUnverified"
+                class="text-[10px] text-blue-600 underline"
+                title="Export CSV"
+              >
+                CSV
+              </button>
+            </div>
           </div>
         </div>
 
@@ -79,7 +106,16 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">Open Incidents</div>
-            <div id="kpiOpenIncidents" class="text-xl font-semibold">—</div>
+            <div class="flex items-center gap-2">
+              <div id="kpiOpenIncidents" class="text-xl font-semibold">—</div>
+              <button
+                id="exportOpenInc"
+                class="text-[10px] text-blue-600 underline"
+                title="Export CSV"
+              >
+                CSV
+              </button>
+            </div>
           </div>
         </div>
 
@@ -92,7 +128,16 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">Today Pending (HPCL + RBML)</div>
-            <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
+            <div class="flex items-center gap-2">
+              <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
+              <button
+                id="exportPending"
+                class="text-[10px] text-blue-600 underline"
+                title="Export CSV"
+              >
+                CSV
+              </button>
+            </div>
             <div id="kpiPendingBreakdown" class="text-[10px] text-gray-500">
               —
             </div>
@@ -107,7 +152,16 @@
           </div>
           <div>
             <div class="text-xs text-gray-500">Active Users Today</div>
-            <div id="kpiActiveUsers" class="text-xl font-semibold">—</div>
+            <div class="flex items-center gap-2">
+              <div id="kpiActiveUsers" class="text-xl font-semibold">—</div>
+              <button
+                id="exportActiveUsers"
+                class="text-[10px] text-blue-600 underline"
+                title="Export CSV"
+              >
+                CSV
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -336,6 +390,175 @@
           document.getElementById("lastUpdated").textContent =
             new Date().toLocaleString();
 
+          // CSV exports for KPI cards
+          const exportCSV = (rows, headers, filename) => {
+            try {
+              const csvHeader = headers.join(",") + "\n";
+              const csvRows = rows
+                .map((r) =>
+                  headers.map((h) => JSON.stringify(r[h] ?? "")).join(",")
+                )
+                .join("\n");
+              const blob = new Blob([csvHeader + csvRows], {
+                type: "text/csv;charset=utf-8;",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              console.error("CSV export failed", e);
+            }
+          };
+
+          // Build exportable datasets
+          const plansTodayRows = plansToday.map((p) => ({
+            date: String(p.date || "").slice(0, 10),
+            engineer: p.engineer || "",
+            roCode: p.roCode || "",
+            roName: p.roName || "",
+            region: p.region || "",
+            phase: p.phase || "",
+            purpose: p.purpose || "",
+          }));
+          const unverifiedRows = [
+            ...(unverifiedHpcl || []).map((r) => ({
+              source: "HPCL",
+              date: String(r.date || r.uploadDate || "").slice(0, 10),
+              engineer: r.engineer || "",
+              roCode: r.roCode || "",
+              roName: r.roName || "",
+              region: r.region || "",
+              phase: r.phase || "",
+              status: String(r.isVerified),
+            })),
+            ...(unverifiedJio || []).map((r) => ({
+              source: "RBML/JIO",
+              date: String(r.date || "").slice(0, 10),
+              engineer: r.engineer || "",
+              roCode: r.roCode || "",
+              roName: r.roName || "",
+              region: r.region || "",
+              phase: r.phase || "",
+              status: String(r.isVerified),
+            })),
+          ];
+          const openIncRows = (incJson?.incidents || [])
+            .filter((i) => (i.status || "").toLowerCase() !== "close")
+            .map((i) => ({
+              incidentId: i.incidentId || "",
+              roCode: i.roCode || "",
+              siteName: i.siteName || "",
+              region: i.region || "",
+              status: i.status || "",
+            }));
+          const activeUserRows = Array.from(activeUsernames).map((name) => ({
+            user: name,
+          }));
+          const holdRows = holdToday.map((p) => ({
+            date: String(p.date || "").slice(0, 10),
+            engineer: p.engineer || "",
+            roCode: p.roCode || "",
+            roName: p.roName || "",
+            purpose: p.purpose || "",
+          }));
+          const pendingRows = [
+            ...plansTodayHpcl
+              .filter(
+                (p) =>
+                  !hpclStatusTodaySet.has(
+                    `${String(p.roCode || "")
+                      .trim()
+                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`
+                  )
+              )
+              .map((p) => ({
+                customer: "HPCL",
+                date: String(p.date || "").slice(0, 10),
+                roCode: p.roCode || "",
+                roName: p.roName || "",
+                region: p.region || "",
+              })),
+            ...plansTodayRbml
+              .filter(
+                (p) =>
+                  !rbmlStatusTodaySet.has(
+                    `${String(p.roCode || "")
+                      .trim()
+                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`
+                  )
+              )
+              .map((p) => ({
+                customer: "RBML",
+                date: String(p.date || "").slice(0, 10),
+                roCode: p.roCode || "",
+                roName: p.roName || "",
+                region: p.region || "",
+              })),
+          ];
+
+          // Wire export buttons
+          const byId = (id) => document.getElementById(id);
+          byId("exportPlansToday")?.addEventListener("click", () =>
+            exportCSV(
+              plansTodayRows,
+              [
+                "date",
+                "engineer",
+                "roCode",
+                "roName",
+                "region",
+                "phase",
+                "purpose",
+              ],
+              "plans_today.csv"
+            )
+          );
+          byId("exportUnverified")?.addEventListener("click", () =>
+            exportCSV(
+              unverifiedRows,
+              [
+                "source",
+                "date",
+                "engineer",
+                "roCode",
+                "roName",
+                "region",
+                "phase",
+                "status",
+              ],
+              "unverified_status.csv"
+            )
+          );
+          byId("exportOpenInc")?.addEventListener("click", () =>
+            exportCSV(
+              openIncRows,
+              ["incidentId", "roCode", "siteName", "region", "status"],
+              "open_incidents.csv"
+            )
+          );
+          byId("exportActiveUsers")?.addEventListener("click", () =>
+            exportCSV(activeUserRows, ["user"], "active_users_today.csv")
+          );
+          byId("exportHold")?.addEventListener("click", () =>
+            exportCSV(
+              holdRows,
+              ["date", "engineer", "roCode", "roName", "purpose"],
+              "hold_engineers_today.csv"
+            )
+          );
+          byId("exportPending")?.addEventListener("click", () =>
+            exportCSV(
+              pendingRows,
+              ["customer", "date", "roCode", "roName", "region"],
+              "pending_today.csv"
+            )
+          );
+
           // Show/hide cards based on role
           const recentCard = document.getElementById("recentLoginsCard");
           if (recentCard) {
@@ -350,6 +573,24 @@
               String(currentUser.role || "").toLowerCase() === "admin"
                 ? ""
                 : "none";
+          }
+
+          // Hide export CSV buttons for non-admin
+          const isAdmin =
+            String(currentUser.role || "").toLowerCase() === "admin";
+          const exportIds = [
+            "exportPlansToday",
+            "exportUnverified",
+            "exportOpenInc",
+            "exportActiveUsers",
+            "exportHold",
+            "exportPending",
+          ];
+          if (!isAdmin) {
+            exportIds.forEach((id) => {
+              const el = document.getElementById(id);
+              if (el) el.style.display = "none";
+            });
           }
 
           // Recent logins
