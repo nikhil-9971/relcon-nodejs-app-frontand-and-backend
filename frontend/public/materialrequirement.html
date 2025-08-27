@@ -127,7 +127,7 @@
     <!-- Edit Modal -->
     <div
       id="editModal"
-      class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50"
     >
       <div class="bg-white p-6 rounded shadow-lg w-[90%] max-w-md">
         <h2 class="text-lg font-semibold mb-4 text-green-700">
@@ -135,33 +135,30 @@
         </h2>
         <input type="hidden" id="editId" />
         <div class="grid grid-cols-1 gap-3">
-          <input
-            id="editDispatchStatus"
-            class="border p-2 rounded"
-            placeholder="Material Dispatch Status"
-          />
-          <input
-            id="editRequestTo"
-            class="border p-2 rounded"
-            placeholder="Material Request To"
-          />
-          <input
-            type="date"
-            id="editRequestDate"
-            class="border p-2 rounded"
-            placeholder="Material Request Date"
-          />
-          <input
-            id="editArrangeFrom"
-            class="border p-2 rounded"
-            placeholder="Material Arrange From"
-          />
-          <input
-            type="date"
-            id="editReceivedDate"
-            class="border p-2 rounded"
-            placeholder="Material Received Date"
-          />
+          <label class="text-[12px] text-gray-700" for="editDispatchStatus"
+            >Material Dispatch Status</label
+          >
+          <input id="editDispatchStatus" class="border p-2 rounded" />
+
+          <label class="text-[12px] text-gray-700" for="editRequestTo"
+            >Material Request To</label
+          >
+          <input id="editRequestTo" class="border p-2 rounded" />
+
+          <label class="text-[12px] text-gray-700" for="editRequestDate"
+            >Material Request Date</label
+          >
+          <input type="date" id="editRequestDate" class="border p-2 rounded" />
+
+          <label class="text-[12px] text-gray-700" for="editArrangeFrom"
+            >Material Arrange From</label
+          >
+          <input id="editArrangeFrom" class="border p-2 rounded" />
+
+          <label class="text-[12px] text-gray-700" for="editReceivedDate"
+            >Material Received Date</label
+          >
+          <input type="date" id="editReceivedDate" class="border p-2 rounded" />
         </div>
         <div class="flex justify-end gap-3 mt-4">
           <button
@@ -207,25 +204,30 @@
       async function fetchData() {
         showLoader();
 
-        const [hpclRes, jioRes, planRes, materialRes] = await Promise.all([
-          fetch(`${baseUrl}/getMergedStatusRecords`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${baseUrl}/getDailyPlans`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${baseUrl}/materialRequirement`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        const [hpclRes, jioRes, planRes, materialRes, userRes] =
+          await Promise.all([
+            fetch(`${baseUrl}/getMergedStatusRecords`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${baseUrl}/getDailyPlans`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${baseUrl}/materialRequirement`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${baseUrl}/user`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
         const hpclData = await hpclRes.json();
         const jioData = await jioRes.json();
         const planData = await planRes.json();
         const materialData = await materialRes.json();
+        const currentUser = await userRes.json();
 
         const planMap = {};
         planData.forEach((p) => {
@@ -300,6 +302,11 @@
         });
 
         renderTable();
+        // Ensure engineers can view details (no role-based hide)
+        const role = String(currentUser.role || "").toLowerCase();
+        if (role === "engineer") {
+          // No changes needed: table shows all filtered rows
+        }
         hideLoader();
       }
 
@@ -324,9 +331,9 @@
     <td>${row.materialArrangeFrom || "-"}</td>
     <td>${row.materialReceivedDate || "-"}</td>
     <td>
-  <button class="text-blue-600" onclick="editRow('${
-    row._id || ""
-  }')">✏️</button>
+  <button class="text-blue-600" onclick="editRow('${row._id || ""}', '${
+                row.roCode
+              }', '${row.date}', '${row.engineer}')">✏️</button>
   <button class="text-red-600 ml-2" onclick="deleteRow('${
     row._id || ""
   }')">🗑️</button>
@@ -362,14 +369,27 @@
         document.getElementById("toDate").value = "";
         applyFilters();
       }
-      function editRow(id) {
+      function editRow(id, roCode, date, engineer) {
         let row = id ? filtered.find((r) => r._id === id) : null;
 
-        // Agar id nhi mila, fir bhi filtered row find karo (date+engineer match)
+        // Fallback: strict match by RO Code + Date + Engineer
         if (!row) {
-          alert("No backend entry found. Creating new...");
-          // fallback: row without _id
-          row = filtered.find((r) => r.material && r.material.trim());
+          row = filtered.find(
+            (r) =>
+              String(r.roCode || "").trim() === String(roCode || "").trim() &&
+              String(r.date || "").slice(0, 10) ===
+                String(date || "").slice(0, 10) &&
+              String(r.engineer || "")
+                .trim()
+                .toLowerCase() ===
+                String(engineer || "")
+                  .trim()
+                  .toLowerCase()
+          );
+        }
+        if (!row) {
+          alert("No matching row found");
+          return;
         }
 
         if (!row) return alert("Row not found!");
@@ -396,11 +416,26 @@
 
       function saveEdit() {
         const id = document.getElementById("editId").value;
-
-        // Row identify by date+engineer+roCode
-        const fallbackRow =
-          filtered.find((r) => r._id === id) ||
-          filtered.find((r) => r.material && r.material.trim());
+        const current = filtered.find((r) => r._id === id);
+        let target = current;
+        if (!target) {
+          // If new, match by key triplet to update existing or create
+          const roCode = document.getElementById("editRoCode")?.value || "";
+          const date = document.getElementById("editDate")?.value || "";
+          const engineer = document.getElementById("editEngineer")?.value || "";
+          target = filtered.find(
+            (r) =>
+              String(r.roCode || "").trim() === String(roCode || "").trim() &&
+              String(r.date || "").slice(0, 10) ===
+                String(date || "").slice(0, 10) &&
+              String(r.engineer || "")
+                .trim()
+                .toLowerCase() ===
+                String(engineer || "")
+                  .trim()
+                  .toLowerCase()
+          );
+        }
 
         const updatedData = {
           materialDispatchStatus:
@@ -410,13 +445,13 @@
           materialArrangeFrom: document.getElementById("editArrangeFrom").value,
           materialReceivedDate:
             document.getElementById("editReceivedDate").value,
-          engineer: fallbackRow?.engineer || "",
-          region: fallbackRow?.region || "",
-          roCode: fallbackRow?.roCode || "",
-          roName: fallbackRow?.roName || "",
-          phase: fallbackRow?.phase || "",
-          date: fallbackRow?.date || "",
-          material: fallbackRow?.material || "",
+          engineer: target?.engineer || "",
+          region: target?.region || "",
+          roCode: target?.roCode || "",
+          roName: target?.roName || "",
+          phase: target?.phase || "",
+          date: target?.date || "",
+          material: target?.material || "",
         };
 
         const method = id ? "PUT" : "POST";
