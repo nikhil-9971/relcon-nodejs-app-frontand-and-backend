@@ -368,8 +368,18 @@
         setTimeout(() => {
           const tbody = document.getElementById("tableBody");
           tbody.innerHTML = filtered
-            .map(
-              (row) => `
+            .map((row) => {
+              const editBtn = `<button class="text-blue-600" onclick="editRow('${
+                row._id || ""
+              }', '${row.roCode}', '${row.date}', '${
+                row.engineer
+              }')">✏️</button>`;
+              const delBtn = `<button class=\"text-red-600 ml-2\" onclick=\"deleteRowWrapper('${
+                row._id || ""
+              }', '${row.roCode}', '${String(row.date || "").slice(0, 10)}', '${
+                row.engineer
+              }')\">🗑️</button>`;
+              return `
           <tr class="border-b text-center">
             <td>${row.engineer}</td>
             <td>${row.region}</td>
@@ -380,21 +390,12 @@
             <td class="text-red-900 font-bold">${row.material}</td>
             <td>${row.materialDispatchStatus || "-"}</td>
             <td>${row.materialRequestTo || "-"}</td>
-    <td>${row.materialRequestDate || "-"}</td>
-    <td>${row.materialArrangeFrom || "-"}</td>
-    <td>${row.materialReceivedDate || "-"}</td>
-    <td>
-  <button class="text-blue-600" onclick="editRow('${row._id || ""}', '${
-                row.roCode
-              }', '${row.date}', '${row.engineer}')">✏️</button>
-  <button class="text-red-600 ml-2" onclick="deleteRow('${
-    row._id || ""
-  }')">🗑️</button>
-</td>
-
-          </tr>
-        `
-            )
+            <td>${row.materialRequestDate || "-"}</td>
+            <td>${row.materialArrangeFrom || "-"}</td>
+            <td>${row.materialReceivedDate || "-"}</td>
+            <td>${editBtn} ${delBtn}</td>
+          </tr>`;
+            })
             .join("");
           hideLoader();
         }, 100);
@@ -557,6 +558,51 @@
             .then((res) => res.json())
             .then(() => fetchData())
             .catch((err) => alert("Delete failed"));
+        }
+      }
+
+      async function deleteRowWrapper(id, roCode, date, engineer) {
+        if (!confirm("Are you sure you want to delete this entry?")) return;
+        try {
+          if (id) {
+            const res = await fetch(`${baseUrl}/materialRequirement/${id}`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Delete failed");
+            await fetchData();
+            return;
+          }
+          // Lookup by keys to find _id
+          const keyMatch = filtered.find(
+            (r) =>
+              String(r.roCode || "").trim() === String(roCode || "").trim() &&
+              String(r.date || "").slice(0, 10) ===
+                String(date || "").slice(0, 10) &&
+              String(r.engineer || "")
+                .trim()
+                .toLowerCase() ===
+                String(engineer || "")
+                  .trim()
+                  .toLowerCase()
+          );
+          const lookupId = keyMatch?._id;
+          if (!lookupId) {
+            alert("No saved entry found for delete");
+            return;
+          }
+          const res2 = await fetch(
+            `${baseUrl}/materialRequirement/${lookupId}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (!res2.ok) throw new Error("Delete failed");
+          await fetchData();
+        } catch (e) {
+          alert("Delete failed");
+          console.error(e);
         }
       }
 
