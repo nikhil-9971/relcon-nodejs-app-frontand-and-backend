@@ -98,10 +98,10 @@
       </div>
 
       <div
-        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded"
+        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-200 rounded-lg shadow-sm"
       >
-        <table class="min-w-full bg-white border border-gray-300 table-auto">
-          <thead class="bg-blue-400 sticky top-0 z-10">
+        <table class="min-w-full bg-white border border-gray-200 table-auto">
+          <thead class="sticky top-0 z-10 bg-gray-100 text-gray-700 uppercase tracking-wide text-[10px]">
             <tr>
               <th>Engineer</th>
               <th>Region</th>
@@ -115,7 +115,7 @@
               <th>Material Request Date</th>
               <th>Material Arrange From</th>
               <th>Material Received Date</th>
-              <th>Action</th>
+              <th id="actionHeader">Action</th>
             </tr>
           </thead>
 
@@ -272,6 +272,13 @@
         const materialData = await materialRes.json();
         currentUser = await userRes.json();
 
+        // Hide Action column for engineers
+        const role = String(currentUser?.role || "").toLowerCase();
+        if (role === "engineer") {
+          const actionHeader = document.getElementById("actionHeader");
+          if (actionHeader) actionHeader.classList.add("hidden");
+        }
+
         const planMap = {};
         planData.forEach((p) => {
           const key = p._id?.toString();
@@ -367,20 +374,27 @@
         showLoader();
         setTimeout(() => {
           const tbody = document.getElementById("tableBody");
+          const role = String(currentUser?.role || "").toLowerCase();
+          const canEdit = role !== "engineer";
+
           tbody.innerHTML = filtered
             .map((row) => {
-              const editBtn = `<button class="text-blue-600" onclick="editRow('${
-                row._id || ""
-              }', '${row.roCode}', '${row.date}', '${
-                row.engineer
-              }')">✏️</button>`;
-              const delBtn = `<button class=\"text-red-600 ml-2\" onclick=\"deleteRowWrapper('${
-                row._id || ""
-              }', '${row.roCode}', '${String(row.date || "").slice(0, 10)}', '${
-                row.engineer
-              }')\">🗑️</button>`;
+              const editBtn = canEdit
+                ? `<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100" onclick="editRow('${
+                    row._id || ""
+                  }', '${row.roCode}', '${row.date}', '${
+                    row.engineer
+                  }')">Edit</button>`
+                : "";
+              const delBtn = canEdit
+                ? `<button class=\"px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2\" onclick=\"deleteRowWrapper('${
+                    row._id || ""
+                  }', '${row.roCode}', '${String(row.date || "").slice(0, 10)}', '${
+                    row.engineer
+                  }')\">Delete</button>`
+                : "";
               return `
-          <tr class="border-b text-center">
+          <tr class="border-b text-center hover:bg-gray-50">
             <td>${row.engineer}</td>
             <td>${row.region}</td>
             <td>${row.roCode}</td>
@@ -393,7 +407,7 @@
             <td>${row.materialRequestDate || "-"}</td>
             <td>${row.materialArrangeFrom || "-"}</td>
             <td>${row.materialReceivedDate || "-"}</td>
-            <td>${editBtn} ${delBtn}</td>
+            ${canEdit ? `<td>${editBtn} ${delBtn}</td>` : ""}
           </tr>`;
             })
             .join("");
