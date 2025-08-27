@@ -452,7 +452,7 @@
               const tb = b.loginTime ? new Date(b.loginTime).getTime() : 0;
               return tb - ta;
             })
-            .slice(0, 8);
+            .slice(0, 16);
           tbody.innerHTML = filteredLogins
             .map(
               (l) => `
