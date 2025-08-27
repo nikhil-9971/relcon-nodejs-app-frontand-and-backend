@@ -326,8 +326,13 @@
         setTimeout(() => {
           const tbody = document.getElementById("tableBody");
           tbody.innerHTML = filtered
-            .map(
-              (row) => `
+            .map((row) => {
+              const hasId = !!row._id;
+              const editBtn = `<button class="text-blue-600" onclick="editRow('${row._id || ''}', '${row.roCode}', '${row.date}', '${row.engineer}')">✏️</button>`;
+              const delBtn = hasId
+                ? `<button class=\"text-red-600 ml-2\" onclick=\"deleteRow('${row._id}')\">🗑️</button>`
+                : `<button class=\"text-gray-400 ml-2 cursor-not-allowed\" title=\"No saved entry to delete\" disabled>🗑️</button>`;
+              return `
           <tr class="border-b text-center">
             <td>${row.engineer}</td>
             <td>${row.region}</td>
@@ -338,17 +343,12 @@
             <td class="text-red-900 font-bold">${row.material}</td>
             <td>${row.materialDispatchStatus || "-"}</td>
             <td>${row.materialRequestTo || "-"}</td>
-    <td>${row.materialRequestDate || "-"}</td>
-    <td>${row.materialArrangeFrom || "-"}</td>
-    <td>${row.materialReceivedDate || "-"}</td>
-    <td>
-  <button class="text-blue-600" onclick="editRow('${row._id || ''}', '${row.roCode}', '${row.date}', '${row.engineer}')">✏️</button>
-  <button class="text-red-600 ml-2" onclick="deleteRow('${row._id || ''}')">🗑️</button>
-</td>
-
-          </tr>
-        `
-            )
+            <td>${row.materialRequestDate || "-"}</td>
+            <td>${row.materialArrangeFrom || "-"}</td>
+            <td>${row.materialReceivedDate || "-"}</td>
+            <td>${editBtn} ${delBtn}</td>
+          </tr>`;
+            })
             .join("");
           hideLoader();
         }, 100);
