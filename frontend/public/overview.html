@@ -14,6 +14,7 @@
     />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
     <style>
       body {
         font-family: "Poppins", sans-serif;
@@ -233,7 +234,7 @@
           </div>
           <div class="flex items-center gap-2">
             <button id="exportEngMonth" onclick="exportEngineerMonthlyCSV()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow">
-              Export CSV
+              Export Excel
             </button>
             <label for="monthSelect" class="text-xs text-gray-500"
               >Select Month</label
@@ -956,30 +957,40 @@
           });
           const grandTotal = customers.filter((c) => c !== "IN LEAVE").reduce((s, c) => s + (totals.get(c) || 0), 0);
 
-          // Build CSV
-          const header = ["Engineer", ...customers, "Total"];
-          const csvRows = [header.join(",")];
-          rows.forEach(([eng, row]) => {
+          // Build aggregated sheet (Sheet1)
+          const aggHeader = ["Engineer", ...customers, "Total"];
+          const aggRows = rows.map(([eng, row]) => {
             const total = customers.filter((c) => c !== "IN LEAVE").reduce((s, c) => s + (row.get(c) || 0), 0);
-            const cells = customers.map((c) => String(row.get(c) || 0));
-            csvRows.push([eng, ...cells, String(total)].join(","));
+            const cells = customers.map((c) => row.get(c) || 0);
+            return { Engineer: eng, ...Object.fromEntries(customers.map((c, i) => [c, cells[i]])), Total: total };
           });
-          const totalsLine = [
-            "Total",
-            ...customers.map((c) => String(totals.get(c) || 0)),
-            String(grandTotal),
-          ];
-          csvRows.push(totalsLine.join(","));
+          const totalObj = { Engineer: "Total", ...Object.fromEntries(customers.map((c) => [c, totals.get(c) || 0])), Total: grandTotal };
+          const sheet1Data = [Object.fromEntries(aggHeader.map((h) => [h, h])), ...aggRows.map((r) => r), totalObj];
 
-          const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `engineer_monthly_${ym}.csv`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          // Build detail sheet (Sheet2)
+          const detailRows = data.map((p) => {
+            const purposeUpper = String(p.issueType || p.purpose || "").trim().toUpperCase();
+            const cust = purposeUpper === "IN LEAVE" ? "IN LEAVE" : customerFromPlan(p);
+            const totalEligible = cust !== "IN LEAVE";
+            return {
+              Date: String(p.date || "").slice(0, 10),
+              Engineer: p.engineer || "",
+              ROCode: p.roCode || "",
+              ROName: p.roName || "",
+              Phase: p.phase || "",
+              IssueType: p.issueType || p.purpose || "",
+              Customer: cust,
+              CountsTowardsTotal: totalEligible ? "Yes" : "No",
+            };
+          });
+
+          // Create workbook with two sheets
+          const wb = XLSX.utils.book_new();
+          const ws1 = XLSX.utils.json_to_sheet(sheet1Data, { skipHeader: true });
+          const ws2 = XLSX.utils.json_to_sheet(detailRows);
+          XLSX.utils.book_append_sheet(wb, ws1, "Engineer Monthly");
+          XLSX.utils.book_append_sheet(wb, ws2, "Detail Rows");
+          XLSX.writeFile(wb, `engineer_monthly_${ym}.xlsx`);
         } catch (e) {
           console.error("export csv error", e);
         }
