@@ -250,8 +250,8 @@
                 <th class="px-3 py-2 text-left">RBML</th>
                 <th class="px-3 py-2 text-left">BPCL</th>
                 <th class="px-3 py-2 text-left">NPL</th>
-                <th class="px-3 py-2 text-left">JIO BP</th>
                 <th class="px-3 py-2 text-left">OTHER</th>
+                <th class="px-3 py-2 text-left">IN LEAVE</th>
                 <th class="px-3 py-2 text-left">Total</th>
               </tr>
             </thead>
@@ -486,7 +486,6 @@
               roCode: i.roCode || "",
               siteName: i.siteName || "",
               region: i.region || "",
-              complaintRemark: i.complaintRemark || "",
               status: i.status || "",
             }));
           const activeUserRows = Array.from(activeUsernames).map((name) => ({
@@ -571,14 +570,7 @@
           byId("exportOpenInc")?.addEventListener("click", () =>
             exportCSV(
               openIncRows,
-              [
-                "incidentId",
-                "roCode",
-                "siteName",
-                "region",
-                "complaintRemark",
-                "status",
-              ],
+              ["incidentId", "roCode", "siteName", "region", "status"],
               "open_incidents.csv"
             )
           );
@@ -775,7 +767,6 @@
         if (ph.includes("RBML")) return "RBML";
         if (ph.includes("BPCL")) return "BPCL";
         if (ph.includes("NPL")) return "NPL";
-        if (ph.includes("JIO")) return "JIO BP";
         return "OTHER";
       }
 
@@ -788,7 +779,6 @@
           ["RBML", "#f59e0b"],
           ["BPCL", "#60a5fa"],
           ["NPL", "#34d399"],
-          ["JIO BP", "#a78bfa"],
           ["OTHER", "#9ca3af"],
         ]);
 
@@ -891,10 +881,14 @@
 
         // Aggregate: engineer -> customer -> count
         const map = new Map();
-        const customers = ["HPCL", "RBML", "BPCL", "NPL", "JIO BP", "OTHER"];
+        const customers = ["HPCL", "RBML", "BPCL", "NPL", "OTHER", "IN LEAVE"];
         data.forEach((p) => {
           const eng = String(p.engineer || "").trim() || "-";
-          const cust = customerFromPlan(p);
+          const purposeUpper = String(p.issueType || p.purpose || "")
+            .trim()
+            .toUpperCase();
+          const cust =
+            purposeUpper === "IN LEAVE" ? "IN LEAVE" : customerFromPlan(p);
           if (!map.has(eng))
             map.set(eng, new Map(customers.map((c) => [c, 0])));
           const row = map.get(eng);
@@ -909,7 +903,9 @@
             const cells = customers
               .map((c) => `<td class="px-3 py-2">${row.get(c) || 0}</td>`)
               .join("");
-            const total = customers.reduce((s, c) => s + (row.get(c) || 0), 0);
+            const total = customers
+              .filter((c) => c !== "IN LEAVE")
+              .reduce((s, c) => s + (row.get(c) || 0), 0);
             return `<tr class="border-b"><td class="px-3 py-2 font-medium">${eng}</td>${cells}<td class="px-3 py-2 font-semibold">${total}</td></tr>`;
           })
           .join("");
