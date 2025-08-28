@@ -486,6 +486,7 @@
               roCode: i.roCode || "",
               siteName: i.siteName || "",
               region: i.region || "",
+              complaintRemark: i.complaintRemark || "",
               status: i.status || "",
             }));
           const activeUserRows = Array.from(activeUsernames).map((name) => ({
@@ -570,7 +571,14 @@
           byId("exportOpenInc")?.addEventListener("click", () =>
             exportCSV(
               openIncRows,
-              ["incidentId", "roCode", "siteName", "region", "status"],
+              [
+                "incidentId",
+                "roCode",
+                "siteName",
+                "region",
+                "complaintRemark",
+                "status",
+              ],
               "open_incidents.csv"
             )
           );
