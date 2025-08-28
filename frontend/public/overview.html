@@ -872,10 +872,11 @@
         if (!body) return;
         const data = (plans || []).filter((p) => {
           if (ymKey(p.date) !== ym) return false;
-          const purpose = String(p.purpose || "")
+          const purposeUpper = String(p.issueType || p.purpose || "")
             .trim()
             .toUpperCase();
-          if (purpose === "NO PLAN" || purpose === "IN LEAVE") return false;
+          // Exclude NO PLAN only; keep IN LEAVE so it can be counted
+          if (purposeUpper === "NO PLAN") return false;
           return true;
         });
 
