@@ -392,7 +392,7 @@
       }
 
       // Set current date as default in Date of Visit field
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format in local timezone
       date.value = today;
 
       function showToast(message, bgColor = "bg-green-600") {
@@ -659,9 +659,7 @@
 
         // Check if IssueType is PM Visit or Issue & PM Visit
         const isPMVisit =
-          issueType === "PM Visit" ||
-          issueType === "Issue & PM Visit" ||
-          issueType === "ATG & PM Visit";
+          issueType === "PM Visit" || issueType === "Issue & PM Visit";
         console.log("🔍 Is PM Visit:", isPMVisit);
 
         try {
@@ -709,8 +707,7 @@
               plan.roCode === roCode &&
               plan.issueType &&
               (plan.issueType === "PM Visit" ||
-                plan.issueType === "Issue & PM Visit" ||
-                plan.issueType === "ATG & PM Visit") &&
+                plan.issueType === "Issue & PM Visit") &&
               planDate >= startDate &&
               planDate <= endDate
             );
