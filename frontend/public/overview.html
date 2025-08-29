@@ -231,10 +231,8 @@
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
             <thead class="bg-gray-50">
-              <tr>
-                <th class="px-3 py-2 text-left">Engineer Name</th>
+              <tr id="relconConnectivityHeader">
                 <th class="px-3 py-2 text-left">Region</th>
-                <th class="px-3 py-2 text-left">Total RELCON Connectivity Site</th>
               </tr>
             </thead>
             <tbody id="relconConnectivityBody" class="text-sm"></tbody>
@@ -1086,7 +1084,9 @@
 
       function renderRelconConnectivity(statusRecords) {
         const tbody = document.getElementById("relconConnectivityBody");
-        if (!tbody) return;
+        const header = document.getElementById("relconConnectivityHeader");
+        if (!tbody || !header) return;
+        
         // Filter records with ConnectivityType = RELCON SIM
         const relcon = (statusRecords || []).filter((r) =>
           String(r.connectivityType || r.ConnectivityType || "")
@@ -1094,38 +1094,65 @@
             .toUpperCase()
             .includes("RELCON")
         );
-        // engineer-region wise unique RO count
-        const map = new Map(); // key: engineer|region -> Set(roCode)
+        
+        // Create pivot table: region -> phase -> count
+        const regionPhaseMap = new Map(); // region -> Map(phase -> Set(roCode))
+        const allPhases = new Set();
+        
         relcon.forEach((r) => {
-          const eng = String(r.engineer || r.Engineer || "").trim() || "-";
           const region = String(r.region || r.Region || "").trim() || "-";
+          const phase = String(r.phase || r.Phase || "").trim() || "-";
           const ro = String(r.roCode || r.ROCode || r.rocode || "").trim();
-          const key = `${eng}|${region}`;
-          if (!map.has(key)) map.set(key, new Set());
-          if (ro) map.get(key).add(ro);
+          
+          if (!regionPhaseMap.has(region)) {
+            regionPhaseMap.set(region, new Map());
+          }
+          if (!regionPhaseMap.get(region).has(phase)) {
+            regionPhaseMap.get(region).set(phase, new Set());
+          }
+          if (ro) {
+            regionPhaseMap.get(region).get(phase).add(ro);
+            allPhases.add(phase);
+          }
         });
-        const rows = Array.from(map.entries())
-          .map(([key, set]) => {
-            const [eng, region] = key.split("|");
-            return { eng, region, count: set.size };
-          })
-          .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
-          .sort((a, b) => a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region));
         
-        // Calculate total
-        const totalCount = rows.reduce((sum, r) => sum + r.count, 0);
+        // Sort phases and regions
+        const sortedPhases = Array.from(allPhases).sort();
+        const sortedRegions = Array.from(regionPhaseMap.keys()).sort();
         
-        tbody.innerHTML = rows
-          .map(
-            (r) => `<tr class="border-b"><td class="px-3 py-2 font-medium">${r.eng}</td><td class="px-3 py-2">${r.region}</td><td class="px-3 py-2">${r.count}</td></tr>`
-          )
-          .join("");
+        // Build header with phases as columns
+        header.innerHTML = `<th class="px-3 py-2 text-left">Region</th>` + 
+          sortedPhases.map(phase => `<th class="px-3 py-2 text-left">${phase}</th>`).join("") +
+          `<th class="px-3 py-2 text-left">Total</th>`;
+        
+        // Build rows
+        let totalRow = new Array(sortedPhases.length + 1).fill(0); // +1 for region column
+        
+        tbody.innerHTML = sortedRegions.map(region => {
+          const phaseCounts = sortedPhases.map(phase => {
+            const count = regionPhaseMap.get(region).get(phase)?.size || 0;
+            totalRow[sortedPhases.indexOf(phase) + 1] += count; // +1 because index 0 is region
+            return count;
+          });
+          const regionTotal = phaseCounts.reduce((sum, count) => sum + count, 0);
+          totalRow[0] += regionTotal;
+          
+          return `<tr class="border-b">
+            <td class="px-3 py-2 font-medium">${region}</td>
+            ${phaseCounts.map(count => `<td class="px-3 py-2">${count}</td>`).join("")}
+            <td class="px-3 py-2 font-semibold">${regionTotal}</td>
+          </tr>`;
+        }).join("");
         
         // Add total row
-        if (rows.length > 0) {
-          tbody.innerHTML += `<tr class="border-t bg-gray-50"><td class="px-3 py-2 font-bold">Total</td><td class="px-3 py-2 font-bold"></td><td class="px-3 py-2 font-bold">${totalCount}</td></tr>`;
+        if (sortedRegions.length > 0) {
+          tbody.innerHTML += `<tr class="border-t bg-gray-50">
+            <td class="px-3 py-2 font-bold">Total</td>
+            ${totalRow.slice(1, -1).map(count => `<td class="px-3 py-2 font-bold">${count}</td>`).join("")}
+            <td class="px-3 py-2 font-bold">${totalRow[totalRow.length - 1]}</td>
+          </tr>`;
         } else {
-          tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="${sortedPhases.length + 2}" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
         }
       }
 
