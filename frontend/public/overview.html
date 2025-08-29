@@ -223,7 +223,7 @@
             <div class="text-sm font-semibold text-gray-700">
               RELCON Connectivity Provided (All Time)
             </div>
-            <div id="relconOverallCount" class="text-xs text-gray-500 mt-1">Total: <span class="font-semibold">0</span> sites</div>
+            <div id="relconOverallCount" class="text-xs text-gray-500 mt-1">Total: <span class="font-semibold">0</span> sites | Unique Sites: <span class="font-semibold">0</span></div>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="exportRelconConnectivityCSV()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow">
@@ -1155,11 +1155,21 @@
             <td class="px-3 py-2 font-bold">${totalRow[totalRow.length - 1]}</td>
           </tr>`;
           
+          // Calculate unique sites count
+          const uniqueSites = new Set();
+          relcon.forEach((r) => {
+            const roCode = String(r.roCode || r.ROCode || r.rocode || "").trim();
+            if (roCode) {
+              uniqueSites.add(roCode);
+            }
+          });
+          
           // Update overall count display
           const overallCountElement = document.getElementById("relconOverallCount");
           if (overallCountElement) {
             const totalSites = totalRow[totalRow.length - 1];
-            overallCountElement.innerHTML = `Total: <span class="font-semibold">${totalSites}</span> sites`;
+            const uniqueSitesCount = uniqueSites.size;
+            overallCountElement.innerHTML = `Total: <span class="font-semibold">${totalSites}</span> sites | Unique Sites: <span class="font-semibold">${uniqueSitesCount}</span>`;
           }
         } else {
           tbody.innerHTML = `<tr><td colspan="${sortedPhases.length + 2}" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
@@ -1167,7 +1177,7 @@
           // Update overall count display for no data
           const overallCountElement = document.getElementById("relconOverallCount");
           if (overallCountElement) {
-            overallCountElement.innerHTML = `Total: <span class="font-semibold">0</span> sites`;
+            overallCountElement.innerHTML = `Total: <span class="font-semibold">0</span> sites | Unique Sites: <span class="font-semibold">0</span>`;
           }
         }
       }
