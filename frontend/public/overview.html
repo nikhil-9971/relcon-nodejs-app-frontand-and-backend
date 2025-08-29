@@ -49,7 +49,7 @@
   <body class="p-4">
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-black dark:text-gray-200">Dashboard Overview</h2>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-200 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Dashboard Overview</h2>
         <div id="lastUpdated" class="text-xs text-gray-500 dark:text-gray-400">—</div>
       </div>
 
@@ -57,7 +57,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+          class="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-green-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <div
             class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 flex items-center justify-center"
@@ -65,7 +65,7 @@
             <i class="fa-solid fa-calendar-check"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Plans Today</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">Plans Today</div>
             <div class="flex items-center gap-2">
               <div id="kpiPlansToday" class="text-xl font-semibold text-gray-800 dark:text-gray-200">—</div>
               <button
@@ -82,7 +82,7 @@
         <!-- Hold Engineers (NO PLAN + IN LEAVE) -->
         <div
           id="holdEngineersCard"
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+          class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-blue-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <div
             class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center"
@@ -106,7 +106,7 @@
         </div>
 
         <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+          class="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-amber-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <div
             class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 flex items-center justify-center"
@@ -114,7 +114,7 @@
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Unverified Status</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">Unverified Status</div>
             <div class="flex items-center gap-2">
               <div id="kpiUnverified" class="text-xl font-semibold text-gray-800 dark:text-gray-200">—</div>
               <button
@@ -129,7 +129,7 @@
         </div>
 
         <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+          class="bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-red-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <div
             class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 flex items-center justify-center"
@@ -137,7 +137,7 @@
             <i class="fa-solid fa-bell"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Open Incidents</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">Open Incidents</div>
             <div class="flex items-center gap-2">
               <div id="kpiOpenIncidents" class="text-xl font-semibold text-gray-800 dark:text-gray-200">—</div>
               <button
@@ -153,7 +153,7 @@
 
         <!-- Today Pending Status (HPCL + RBML) -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+          class="bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-teal-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <div
             class="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 flex items-center justify-center"
@@ -161,7 +161,7 @@
             <i class="fa-solid fa-hourglass-half"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">
               Status Pending (HPCL + RBML)
             </div>
             <div class="flex items-center gap-2">
@@ -181,7 +181,7 @@
         </div>
 
         <div
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
+          class="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-purple-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <div
             class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center"
@@ -189,7 +189,7 @@
             <i class="fa-solid fa-user-check"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Active Users Today</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">Active Users Today</div>
             <div class="flex items-center gap-2">
               <div id="kpiActiveUsers" class="text-xl font-semibold text-gray-800 dark:text-gray-200">—</div>
               <button
@@ -205,13 +205,13 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+        <div class="bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 border border-indigo-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105">
           <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
             Verification Split
           </div>
           <canvas id="chartVerify" height="160"></canvas>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:col-span-2 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+        <div class="bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 lg:col-span-2 border border-sky-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105">
           <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
             Plans by Region (Today)
           </div>
@@ -220,7 +220,7 @@
       </div>
 
       <!-- RELCON Connectivity Provided (All Time) -->
-      <div id="relconConnectivityCard" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+      <div id="relconConnectivityCard" class="bg-gradient-to-br from-emerald-50 to-green-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 border border-emerald-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105">
         <div class="flex items-center justify-between mb-2">
           <div>
                           <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
@@ -236,9 +236,9 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-800 dark:bg-gray-700">
+            <thead class="bg-gradient-to-r from-emerald-600 to-green-600 dark:from-gray-700 dark:to-gray-600">
               <tr id="relconConnectivityHeader">
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Region</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Region</th>
               </tr>
             </thead>
             <tbody id="relconConnectivityBody" class="text-sm text-gray-800 dark:text-gray-200"></tbody>
@@ -247,7 +247,7 @@
       </div>
 
       <!-- Power Protection PCB Installation Status (All Time) -->
-      <div id="pcbInstallationCard" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+      <div id="pcbInstallationCard" class="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 border border-orange-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
             Power Protection PCB Installation Status (All Time)
@@ -260,12 +260,12 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-800 dark:bg-gray-700">
+            <thead class="bg-gradient-to-r from-orange-600 to-amber-600 dark:from-gray-700 dark:to-gray-600">
               <tr>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Engineer Name</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Total PCB Provided (A)</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Total PCB Install (B)</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Total PCB Installation Pending</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Engineer Name</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Total PCB Provided (A)</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Total PCB Install (B)</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Total PCB Installation Pending</th>
               </tr>
             </thead>
             <tbody id="pcbInstallationBody" class="text-sm text-gray-800 dark:text-gray-200"></tbody>
@@ -277,7 +277,7 @@
       </div>
 
       <!-- Customer-wise visits -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+      <div class="bg-gradient-to-br from-rose-50 to-pink-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 border border-rose-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105">
         <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Customer-wise Visits (Today)
         </div>
@@ -289,7 +289,7 @@
       </div>
 
       <!-- Engineer Monthly Visits by Customer -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+      <div class="bg-gradient-to-br from-lime-50 to-green-100 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 border border-lime-200 dark:border-gray-600 hover:shadow-xl transition-all duration-300 hover:scale-105">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
             Engineer Monthly Visits by Customer
@@ -309,16 +309,16 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-800 dark:bg-gray-700">
+            <thead class="bg-gradient-to-r from-lime-600 to-green-600 dark:from-gray-700 dark:to-gray-600">
               <tr>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Engineer</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">HPCL</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">RBML</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">BPCL</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">NPL</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">OTHER</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">IN LEAVE</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Total</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Engineer</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">HPCL</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">RBML</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">BPCL</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">NPL</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">OTHER</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">IN LEAVE</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold">Total</th>
               </tr>
             </thead>
             <tbody id="engMonthBody" class="text-sm text-gray-800 dark:text-gray-200"></tbody>
