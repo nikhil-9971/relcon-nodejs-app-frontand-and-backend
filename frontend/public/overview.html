@@ -1086,6 +1086,7 @@
       }
 
       function renderRelconConnectivity(statusRecords) {
+        console.log("🚀 renderRelconConnectivity called");
         const tbody = document.getElementById("relconConnectivityBody");
         const header = document.getElementById("relconConnectivityHeader");
         if (!tbody || !header) return;
@@ -1093,6 +1094,11 @@
         // Get user role and engineer name
         const userRole = localStorage.getItem("role") || "";
         const currentEngineer = localStorage.getItem("engineer") || "";
+        
+        console.log("🚀 User role from localStorage:", userRole);
+        console.log("🚀 Current engineer from localStorage:", currentEngineer);
+        console.log("🚀 All localStorage keys:", Object.keys(localStorage));
+        console.log("🚀 All localStorage values:", Object.values(localStorage));
         
         // Filter records with ConnectivityType = RELCON SIM
         let relcon = (statusRecords || []).filter((r) =>
