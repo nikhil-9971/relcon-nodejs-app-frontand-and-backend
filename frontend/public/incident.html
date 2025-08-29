@@ -182,7 +182,7 @@
       function formatExcelDate(excelDate) {
         if (typeof excelDate === "number") {
           const date = new Date((excelDate - 25569) * 86400 * 1000);
-          return date.toISOString().split("T")[0];
+          return date.toLocaleDateString('en-CA');
         }
         return excelDate || "";
       }

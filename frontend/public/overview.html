@@ -503,7 +503,7 @@
           const incJson = await incidentRes.json();
           const loginLogs = await loginLogsRes.json();
 
-          const today = new Date().toISOString().slice(0, 10);
+          const today = new Date().toLocaleDateString('en-CA');
           const plansToday = (Array.isArray(plans) ? plans : []).filter((p) => {
             const isToday = String(p.date || "").slice(0, 10) === today;
             const purpose = String(p.purpose || "")
@@ -1003,7 +1003,7 @@
       // ===== Monthly Engineer x Customer table =====
       function ymKey(d) {
         try {
-          return new Date(d).toISOString().slice(0, 7);
+          return new Date(d).toLocaleDateString('en-CA').slice(0, 7);
         } catch {
           return "";
         }
@@ -1016,7 +1016,7 @@
         );
         // Fallback: include current month if none
         if (keys.size === 0) {
-          keys.add(new Date().toISOString().slice(0, 7));
+                      keys.add(new Date().toLocaleDateString('en-CA').slice(0, 7));
         }
         const sorted = Array.from(keys).sort().reverse();
         sel.innerHTML = sorted
@@ -1165,7 +1165,7 @@
       function saveDeviceProvidedCounts() {
         try {
           const sel = document.getElementById("monthSelect");
-          const ym = sel ? sel.value : new Date().toISOString().slice(0, 7);
+          const ym = sel ? sel.value : new Date().toLocaleDateString('en-CA').slice(0, 7);
           const inputs = document.querySelectorAll('#deviceInstallBody input[data-eng]');
           const payload = {};
           inputs.forEach((inp) => {
@@ -1527,7 +1527,7 @@
         try {
           const plans = window.__allPlans || [];
           const sel = document.getElementById("monthSelect");
-          const ym = sel ? sel.value : new Date().toISOString().slice(0, 7);
+          const ym = sel ? sel.value : new Date().toLocaleDateString('en-CA').slice(0, 7);
           // Recompute the same aggregation as renderEngineerMonthly
           const data = (plans || []).filter((p) => {
             if (ymKey(p.date) !== ym) return false;

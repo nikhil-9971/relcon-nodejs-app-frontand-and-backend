@@ -389,7 +389,7 @@
         XLSX.utils.book_append_sheet(wb, ws, "ATG_Export");
 
         const visitDateRaw = filteredData[0]?.date || new Date().toISOString();
-        const visitDate = new Date(visitDateRaw).toISOString().slice(0, 10);
+        const visitDate = new Date(visitDateRaw).toLocaleDateString('en-CA');
 
         XLSX.writeFile(
           wb,

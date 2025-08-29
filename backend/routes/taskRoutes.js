@@ -27,7 +27,7 @@ router.put("/updateTask/:id", authMiddleware, async (req, res) => {
     if (mailReply) task.mailReply = mailReply;
 
     // Track follow-up dates
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString('en-CA');
     if (!task.followUpDates) task.followUpDates = [];
 
     if (
