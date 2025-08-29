@@ -294,6 +294,26 @@
             >
               Export CSV
             </button>
+            <select
+              id="pcbFilterSelect"
+              onchange="filterPcbInstallation()"
+              class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+            >
+              <option value="today">Today</option>
+              <option value="all">All</option>
+              <option value="2025-01">January 2025</option>
+              <option value="2025-02">February 2025</option>
+              <option value="2025-03">March 2025</option>
+              <option value="2025-04">April 2025</option>
+              <option value="2025-05">May 2025</option>
+              <option value="2025-06">June 2025</option>
+              <option value="2025-07">July 2025</option>
+              <option value="2025-08">August 2025</option>
+              <option value="2025-09">September 2025</option>
+              <option value="2025-10">October 2025</option>
+              <option value="2025-11">November 2025</option>
+              <option value="2025-12">December 2025</option>
+            </select>
           </div>
         </div>
         <div class="overflow-auto">
@@ -1316,7 +1336,7 @@
         return `pcb_provided_alltime`;
       }
 
-      function renderPcbInstallation(statusRecords) {
+      function renderPcbInstallation(statusRecords, filter = "today") {
         const tbody = document.getElementById("pcbInstallationBody");
         const saveBtn = document.getElementById("savePcbProvidedBtn");
         if (!tbody) return;
@@ -1357,6 +1377,21 @@
                 ""
             ).trim();
             return engineer.toLowerCase() === currentEngineer.toLowerCase();
+          });
+        }
+
+        // Apply date filtering
+        const today = new Date().toISOString().slice(0, 10);
+        if (filter === "today") {
+          filteredRecords = filteredRecords.filter((r) => {
+            const recordDate = String(r.date || r.Date || "").slice(0, 10);
+            return recordDate === today;
+          });
+        } else if (filter !== "all") {
+          // Filter by month (format: YYYY-MM)
+          filteredRecords = filteredRecords.filter((r) => {
+            const recordDate = String(r.date || r.Date || "");
+            return recordDate.startsWith(filter);
           });
         }
 
@@ -1419,6 +1454,12 @@
         if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
       }
 
+      function filterPcbInstallation() {
+        const filterSelect = document.getElementById("pcbFilterSelect");
+        const selectedFilter = filterSelect ? filterSelect.value : "today";
+        renderPcbInstallation(window.__statusRecords, selectedFilter);
+      }
+
       function savePcbProvidedCounts() {
         try {
           const inputs = document.querySelectorAll(
@@ -1434,8 +1475,10 @@
             pcbProvidedStorageKey(),
             JSON.stringify(payload)
           );
-          // Re-render to update pending calculations
-          renderPcbInstallation(window.__statusRecords);
+          // Re-render to update pending calculations with current filter
+          const filterSelect = document.getElementById("pcbFilterSelect");
+          const selectedFilter = filterSelect ? filterSelect.value : "today";
+          renderPcbInstallation(window.__statusRecords, selectedFilter);
         } catch (e) {
           console.error("save pcb provided error", e);
         }
@@ -1575,6 +1618,10 @@
           const currentEngineer =
             currentUser.engineerName || currentUser.username || "";
 
+          // Get current filter
+          const filterSelect = document.getElementById("pcbFilterSelect");
+          const selectedFilter = filterSelect ? filterSelect.value : "today";
+
           let pcbRecords = statusRecords.filter((r) => {
             const purpose = String(
               r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
@@ -1600,6 +1647,21 @@
                   ""
               ).trim();
               return engineer.toLowerCase() === currentEngineer.toLowerCase();
+            });
+          }
+
+          // Apply date filtering
+          const today = new Date().toISOString().slice(0, 10);
+          if (selectedFilter === "today") {
+            pcbRecords = pcbRecords.filter((r) => {
+              const recordDate = String(r.date || r.Date || "").slice(0, 10);
+              return recordDate === today;
+            });
+          } else if (selectedFilter !== "all") {
+            // Filter by month (format: YYYY-MM)
+            pcbRecords = pcbRecords.filter((r) => {
+              const recordDate = String(r.date || r.Date || "");
+              return recordDate.startsWith(selectedFilter);
             });
           }
 
