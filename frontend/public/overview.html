@@ -248,6 +248,59 @@
         </div>
       </div>
 
+      <!-- RELCON Connectivity Provided (All Time) -->
+      <div id="relconConnectivityCard" class="bg-white rounded-xl shadow p-4">
+        <div class="text-sm font-semibold text-gray-700 mb-2">
+          RELCON Connectivity Provided (All Time)
+        </div>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left">Engineer Name</th>
+                <th class="px-3 py-2 text-left">Region</th>
+                <th class="px-3 py-2 text-left">
+                  Total RELCON Connectivity Site
+                </th>
+              </tr>
+            </thead>
+            <tbody id="relconConnectivityBody" class="text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Power Protection PCB Installation Status (All Time) -->
+      <div id="pcbInstallationCard" class="bg-white rounded-xl shadow p-4">
+        <div class="text-sm font-semibold text-gray-700 mb-2">
+          Power Protection PCB Installation Status (All Time)
+        </div>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left">Engineer Name</th>
+                <th class="px-3 py-2 text-left">Region</th>
+                <th class="px-3 py-2 text-left">Total PCB Provided (A)</th>
+                <th class="px-3 py-2 text-left">Total PCB Install (B)</th>
+                <th class="px-3 py-2 text-left">
+                  Total PCB Installation Pending
+                </th>
+              </tr>
+            </thead>
+            <tbody id="pcbInstallationBody" class="text-sm"></tbody>
+          </table>
+          <div class="flex justify-end mt-2">
+            <button
+              id="savePcbProvidedBtn"
+              onclick="savePcbProvidedCounts()"
+              class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Customer-wise visits -->
       <div class="bg-white rounded-xl shadow p-4">
         <div class="text-sm font-semibold text-gray-700 mb-2">
@@ -748,6 +801,8 @@
 
           // Engineer monthly by customer (dropdown + table)
           window.__allPlans = Array.isArray(plans) ? plans : [];
+          window.__statusRecords = Array.isArray(hpcl) ? hpcl : [];
+          window.__currentUser = currentUser || {};
           buildMonthDropdown(window.__allPlans);
           const sel = document.getElementById("monthSelect");
           renderEngineerMonthly(window.__allPlans, sel.value);
@@ -758,6 +813,10 @@
 
           // Initial render of device installations
           renderDeviceInstallations(window.__allPlans, sel.value);
+
+          // Render RELCON connectivity and PCB status (all-time from statusRecords)
+          renderRelconConnectivity(window.__statusRecords);
+          renderPcbInstallation(window.__statusRecords);
         } catch (e) {
           console.error("overview load error", e);
         }
@@ -1082,6 +1141,140 @@
           );
         } catch (e) {
           console.error("save device provided error", e);
+        }
+      }
+
+      function renderRelconConnectivity(statusRecords) {
+        const tbody = document.getElementById("relconConnectivityBody");
+        if (!tbody) return;
+        // Filter records with ConnectivityType = RELCON SIM
+        const relcon = (statusRecords || []).filter((r) =>
+          String(r.connectivityType || r.ConnectivityType || "")
+            .trim()
+            .toUpperCase()
+            .includes("RELCON")
+        );
+        // engineer-region wise unique RO count
+        const map = new Map(); // key: engineer|region -> Set(roCode)
+        relcon.forEach((r) => {
+          const eng = String(r.engineer || r.Engineer || "").trim() || "-";
+          const region = String(r.region || r.Region || "").trim() || "-";
+          const ro = String(r.roCode || r.ROCode || r.rocode || "").trim();
+          const key = `${eng}|${region}`;
+          if (!map.has(key)) map.set(key, new Set());
+          if (ro) map.get(key).add(ro);
+        });
+        const rows = Array.from(map.entries())
+          .map(([key, set]) => {
+            const [eng, region] = key.split("|");
+            return { eng, region, count: set.size };
+          })
+          .sort(
+            (a, b) =>
+              a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region)
+          );
+        tbody.innerHTML = rows
+          .map(
+            (r) =>
+              `<tr class="border-b"><td class="px-3 py-2 font-medium">${r.eng}</td><td class="px-3 py-2">${r.region}</td><td class="px-3 py-2">${r.count}</td></tr>`
+          )
+          .join("");
+        if (rows.length === 0)
+          tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+      }
+
+      function pcbProvidedStorageKey() {
+        return `pcb_provided_alltime`;
+      }
+
+      function renderPcbInstallation(statusRecords) {
+        const tbody = document.getElementById("pcbInstallationBody");
+        const saveBtn = document.getElementById("savePcbProvidedBtn");
+        if (!tbody) return;
+        const isAdmin = (window.__currentUser || {}).role === "admin";
+        const providedMap = JSON.parse(
+          localStorage.getItem(pcbProvidedStorageKey()) || "{}"
+        );
+
+        // Count POWER PROTECTION PCB INSTALL from Purpose of Visit
+        const isPcbInstall = (purpose) => {
+          const t = String(purpose || "")
+            .trim()
+            .toUpperCase();
+          return (
+            t.includes("POWER PROTECTION PCB") &&
+            (t.includes("INSTALL") || t.includes("INSTAL"))
+          );
+        };
+
+        const map = new Map(); // engineer|region -> { provided, installed }
+        (statusRecords || []).forEach((r) => {
+          const eng = String(r.engineer || r.Engineer || "").trim() || "-";
+          const region = String(r.region || r.Region || "").trim() || "-";
+          const key = `${eng}|${region}`;
+          if (!map.has(key))
+            map.set(key, {
+              provided: Number(providedMap[eng] || 0) || 0,
+              installed: 0,
+            });
+          if (isPcbInstall(r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT)) {
+            map.get(key).installed += 1;
+          }
+        });
+
+        const rows = Array.from(map.entries())
+          .map(([key, rec]) => {
+            const [eng, region] = key.split("|");
+            return {
+              eng,
+              region,
+              provided: rec.provided,
+              installed: rec.installed,
+              pending: Math.max(0, rec.provided - rec.installed),
+            };
+          })
+          .sort(
+            (a, b) =>
+              a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region)
+          );
+
+        tbody.innerHTML = rows
+          .map((r) => {
+            const providedCell = isAdmin
+              ? `<input type="number" min="0" value="${r.provided}" data-eng="${r.eng}" class="border px-2 py-1 rounded w-28" />`
+              : `<span>${r.provided}</span>`;
+            return `<tr class="border-b">
+              <td class="px-3 py-2 font-medium">${r.eng}</td>
+              <td class="px-3 py-2">${r.region}</td>
+              <td class="px-3 py-2">${providedCell}</td>
+              <td class="px-3 py-2">${r.installed}</td>
+              <td class="px-3 py-2">${r.pending}</td>
+            </tr>`;
+          })
+          .join("");
+        if (rows.length === 0)
+          tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+
+        if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
+      }
+
+      function savePcbProvidedCounts() {
+        try {
+          const inputs = document.querySelectorAll(
+            "#pcbInstallationBody input[data-eng]"
+          );
+          const payload = {};
+          inputs.forEach((inp) => {
+            const eng = inp.getAttribute("data-eng");
+            const val = Number(inp.value || 0) || 0;
+            payload[eng] = val;
+          });
+          localStorage.setItem(
+            pcbProvidedStorageKey(),
+            JSON.stringify(payload)
+          );
+        } catch (e) {
+          console.error("save pcb provided error", e);
         }
       }
       function exportEngineerMonthlyCSV() {
