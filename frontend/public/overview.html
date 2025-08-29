@@ -1343,6 +1343,7 @@
               "Region",
               "RO Code",
               "RO Name",
+              "Phase",
               "Connectivity Type",
               "SIM1 Provider",
               "SIM1 Number",
@@ -1359,30 +1360,32 @@
               r.roCode || r.ROCode || r.rocode || ""
             ).trim();
             const roName = String(r.roName || r.ROName || "").trim();
+            const phase = String(r.phase || r.Phase || "").trim();
             const connectivityType = String(
               r.connectivityType || r.ConnectivityType || ""
             ).trim();
             const sim1Provider = String(
               r.sim1Provider || r.SIM1Provider || ""
             ).trim();
-            const sim1Number = String(
+            const sim1Number = `\`${String(
               r.sim1Number || r.SIM1Number || ""
-            ).trim();
+            ).trim()}`;
             const sim2Provider = String(
               r.sim2Provider || r.SIM2Provider || ""
             ).trim();
-            const sim2Number = String(
+            const sim2Number = `\`${String(
               r.sim2Number || r.SIM2Number || ""
-            ).trim();
-            const iemiNumber = String(
+            ).trim()}`;
+            const iemiNumber = `\`${String(
               r.iemiNumber || r.IEMINumber || r.imeiNumber || ""
-            ).trim();
+            ).trim()}`;
 
             csvRows.push([
               eng,
               region,
               roCode,
               roName,
+              phase,
               connectivityType,
               sim1Provider,
               sim1Number,
@@ -1391,6 +1394,10 @@
               iemiNumber,
             ]);
           });
+
+          // Add total connectivity count at the end
+          csvRows.push([]); // Empty row
+          csvRows.push(["Total RELCON Connectivity", relcon.length]);
 
           const blob = new Blob(
             [csvRows.map((row) => row.join(",")).join("\n")],
