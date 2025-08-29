@@ -49,7 +49,7 @@
   <body class="p-4">
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+        <h2 class="text-xl font-semibold text-black dark:text-gray-200">
           Dashboard Overview
         </h2>
         <div id="lastUpdated" class="text-xs text-gray-500 dark:text-gray-400">
@@ -300,12 +300,17 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-800 dark:bg-gray-700">
               <tr id="relconConnectivityHeader">
-                <th class="px-3 py-2 text-left">Region</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Region
+                </th>
               </tr>
             </thead>
-            <tbody id="relconConnectivityBody" class="text-sm"></tbody>
+            <tbody
+              id="relconConnectivityBody"
+              class="text-sm text-gray-800 dark:text-gray-200"
+            ></tbody>
           </table>
         </div>
       </div>
@@ -330,17 +335,26 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-800 dark:bg-gray-700">
               <tr>
-                <th class="px-3 py-2 text-left">Engineer Name</th>
-                <th class="px-3 py-2 text-left">Total PCB Provided (A)</th>
-                <th class="px-3 py-2 text-left">Total PCB Install (B)</th>
-                <th class="px-3 py-2 text-left">
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Engineer Name
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Total PCB Provided (A)
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Total PCB Install (B)
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
                   Total PCB Installation Pending
                 </th>
               </tr>
             </thead>
-            <tbody id="pcbInstallationBody" class="text-sm"></tbody>
+            <tbody
+              id="pcbInstallationBody"
+              class="text-sm text-gray-800 dark:text-gray-200"
+            ></tbody>
           </table>
           <div class="flex justify-end mt-2">
             <button
@@ -397,19 +411,38 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-800 dark:bg-gray-700">
               <tr>
-                <th class="px-3 py-2 text-left">Engineer</th>
-                <th class="px-3 py-2 text-left">HPCL</th>
-                <th class="px-3 py-2 text-left">RBML</th>
-                <th class="px-3 py-2 text-left">BPCL</th>
-                <th class="px-3 py-2 text-left">NPL</th>
-                <th class="px-3 py-2 text-left">OTHER</th>
-                <th class="px-3 py-2 text-left">IN LEAVE</th>
-                <th class="px-3 py-2 text-left">Total</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Engineer
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  HPCL
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  RBML
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  BPCL
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  NPL
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  OTHER
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  IN LEAVE
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Total
+                </th>
               </tr>
             </thead>
-            <tbody id="engMonthBody" class="text-sm"></tbody>
+            <tbody
+              id="engMonthBody"
+              class="text-sm text-gray-800 dark:text-gray-200"
+            ></tbody>
           </table>
         </div>
       </div>
@@ -425,14 +458,23 @@
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-800 dark:bg-gray-700">
               <tr>
-                <th class="px-3 py-2 text-left">User</th>
-                <th class="px-3 py-2 text-left">Time</th>
-                <th class="px-3 py-2 text-left">IP</th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  User
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  Time
+                </th>
+                <th class="px-3 py-2 text-left text-white dark:text-gray-200">
+                  IP
+                </th>
               </tr>
             </thead>
-            <tbody id="recentLogins" class="text-sm"></tbody>
+            <tbody
+              id="recentLogins"
+              class="text-sm text-gray-800 dark:text-gray-200"
+            ></tbody>
           </table>
         </div>
       </div>
