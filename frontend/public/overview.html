@@ -1139,11 +1139,6 @@
         const currentEngineer =
           currentUser.engineerName || currentUser.username || "";
 
-        // Debug: Check what's in currentUser
-        console.log("🔍 DEBUG - currentUser:", currentUser);
-        console.log("🔍 DEBUG - userRole:", userRole);
-        console.log("🔍 DEBUG - currentEngineer:", currentEngineer);
-
         // Filter records with ConnectivityType = RELCON SIM
         let relcon = (statusRecords || []).filter((r) =>
           String(r.connectivityType || r.ConnectivityType || "")
@@ -1153,15 +1148,7 @@
         );
 
         // Filter by engineer if role is engineer
-        console.log("🔍 DEBUG - User role:", userRole);
-        console.log("🔍 DEBUG - Current engineer:", currentEngineer);
-        console.log(
-          "🔍 DEBUG - Total records before filtering:",
-          relcon.length
-        );
-
         if (userRole === "engineer" && currentEngineer) {
-          console.log("🔍 DEBUG - Applying engineer filter");
           relcon = relcon.filter((r) => {
             // Try multiple possible field names for engineer
             const engineer = String(
@@ -1173,18 +1160,8 @@
                 r.ENGINEERNAME ||
                 ""
             ).trim();
-            const matches =
-              engineer.toLowerCase() === currentEngineer.toLowerCase();
-            console.log(
-              `🔍 DEBUG - Record engineer: "${engineer}" vs current: "${currentEngineer}" -> ${matches}`
-            );
-            return matches;
+            return engineer.toLowerCase() === currentEngineer.toLowerCase();
           });
-          console.log("🔍 DEBUG - Records after filtering:", relcon.length);
-        } else {
-          console.log(
-            "🔍 DEBUG - No filtering applied (not engineer role or no engineer name)"
-          );
         }
 
         // Create pivot table: region -> phase -> count
