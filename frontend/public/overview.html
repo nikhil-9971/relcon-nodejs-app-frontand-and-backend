@@ -222,7 +222,7 @@
               RELCON Connectivity Provided (All Time)
             </div>
             <div id="relconOverallCount" class="text-xs text-gray-500 mt-1">
-              Total: <span class="font-semibold">0</span> sites | Unique Sites:
+              Total RELCON Connectivity Sites:
               <span class="font-semibold">0</span>
             </div>
           </div>
@@ -1213,7 +1213,7 @@
             }</td>
           </tr>`;
 
-          // Calculate unique sites count
+          // Calculate unique sites count (sum of all unique RO codes across all phases)
           const uniqueSites = new Set();
           relcon.forEach((r) => {
             const roCode = String(
@@ -1228,9 +1228,8 @@
           const overallCountElement =
             document.getElementById("relconOverallCount");
           if (overallCountElement) {
-            const totalSites = totalRow[totalRow.length - 1];
             const uniqueSitesCount = uniqueSites.size;
-            overallCountElement.innerHTML = `Total: <span class="font-semibold">${totalSites}</span> sites | Unique Sites: <span class="font-semibold">${uniqueSitesCount}</span>`;
+            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold">${uniqueSitesCount}</span>`;
           }
         } else {
           tbody.innerHTML = `<tr><td colspan="${
@@ -1241,7 +1240,7 @@
           const overallCountElement =
             document.getElementById("relconOverallCount");
           if (overallCountElement) {
-            overallCountElement.innerHTML = `Total: <span class="font-semibold">0</span> sites | Unique Sites: <span class="font-semibold">0</span>`;
+            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold">0</span>`;
           }
         }
       }
