@@ -326,23 +326,7 @@
         </div>
       </div>
 
-      <div id="recentLoginsCard" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
-        <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
-          Recent Logins
-        </div>
-        <div class="overflow-auto">
-          <table class="min-w-max w-full table-auto">
-            <thead class="bg-gray-800 dark:bg-gray-700">
-              <tr>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">User</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">Time</th>
-                <th class="px-3 py-2 text-left text-white dark:text-gray-200">IP</th>
-              </tr>
-            </thead>
-            <tbody id="recentLogins" class="text-sm text-gray-800 dark:text-gray-200"></tbody>
-          </table>
-        </div>
-      </div>
+
     </section>
 
     <script>
@@ -658,14 +642,7 @@
             )
           );
 
-          // Show/hide cards based on role
-          const recentCard = document.getElementById("recentLoginsCard");
-          if (recentCard) {
-            recentCard.style.display =
-              String(currentUser.role || "").toLowerCase() === "admin"
-                ? ""
-                : "none";
-          }
+
           const holdCard = document.getElementById("holdEngineersCard");
           if (holdCard) {
             holdCard.style.display =
@@ -692,32 +669,7 @@
             });
           }
 
-          // Recent logins
-          const tbody = document.getElementById("recentLogins");
-          const filteredLogins = (Array.isArray(loginLogs) ? loginLogs : [])
-            .sort((a, b) => {
-              const ta = a.loginTime ? new Date(a.loginTime).getTime() : 0;
-              const tb = b.loginTime ? new Date(b.loginTime).getTime() : 0;
-              return tb - ta;
-            })
-            .slice(0, 16);
-          tbody.innerHTML = filteredLogins
-            .map(
-              (l) => `
-            <tr class="border-b">
-              <td class="px-3 py-2">${
-                l.engineerName || l.username
-              } <span class="text-[10px] text-gray-500">(${
-                l.role || ""
-              })</span></td>
-              <td class="px-3 py-2">${
-                l.loginTime ? new Date(l.loginTime).toLocaleString() : ""
-              }</td>
-              <td class="px-3 py-2">${l.ip || ""}</td>
-            </tr>
-          `
-            )
-            .join("");
+
 
           // Verification Split chart role-based
           const userRole = String(currentUser.role || "").toLowerCase();
