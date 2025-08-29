@@ -392,7 +392,7 @@
       }
 
       // Set current date as default in Date of Visit field
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
       date.value = today;
 
       function showToast(message, bgColor = "bg-green-600") {
