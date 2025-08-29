@@ -219,8 +219,11 @@
       <!-- RELCON Connectivity Provided (All Time) -->
       <div id="relconConnectivityCard" class="bg-white rounded-xl shadow p-4">
         <div class="flex items-center justify-between mb-2">
-          <div class="text-sm font-semibold text-gray-700">
-            RELCON Connectivity Provided (All Time)
+          <div>
+            <div class="text-sm font-semibold text-gray-700">
+              RELCON Connectivity Provided (All Time)
+            </div>
+            <div id="relconOverallCount" class="text-xs text-gray-500 mt-1">Total: <span class="font-semibold">0</span> sites</div>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="exportRelconConnectivityCSV()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow">
@@ -1151,8 +1154,21 @@
             ${totalRow.slice(1, -1).map(count => `<td class="px-3 py-2 font-bold">${count}</td>`).join("")}
             <td class="px-3 py-2 font-bold">${totalRow[totalRow.length - 1]}</td>
           </tr>`;
+          
+          // Update overall count display
+          const overallCountElement = document.getElementById("relconOverallCount");
+          if (overallCountElement) {
+            const totalSites = totalRow[totalRow.length - 1];
+            overallCountElement.innerHTML = `Total: <span class="font-semibold">${totalSites}</span> sites`;
+          }
         } else {
           tbody.innerHTML = `<tr><td colspan="${sortedPhases.length + 2}" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+          
+          // Update overall count display for no data
+          const overallCountElement = document.getElementById("relconOverallCount");
+          if (overallCountElement) {
+            overallCountElement.innerHTML = `Total: <span class="font-semibold">0</span> sites`;
+          }
         }
       }
 
@@ -1257,11 +1273,20 @@
               .includes("RELCON")
           );
           
+          // Remove duplicate sites (unique RO codes)
+          const uniqueSites = new Map(); // roCode -> record
+          relcon.forEach((r) => {
+            const roCode = String(r.roCode || r.ROCode || r.rocode || "").trim();
+            if (roCode && !uniqueSites.has(roCode)) {
+              uniqueSites.set(roCode, r);
+            }
+          });
+          
           const csvRows = [
             ["EngineerName", "Region", "RO Code", "RO Name", "Phase", "Connectivity Type", "SIM1 Provider", "SIM1 Number", "SIM2 Provider", "SIM2 Number", "IEMI Number"]
           ];
           
-          relcon.forEach((r) => {
+          uniqueSites.forEach((r) => {
             const eng = String(r.engineer || r.Engineer || "").trim();
             const region = String(r.region || r.Region || "").trim();
             const roCode = String(r.roCode || r.ROCode || r.rocode || "").trim();
@@ -1282,7 +1307,7 @@
           
           // Add total connectivity count at the end
           csvRows.push([]); // Empty row
-          csvRows.push(["Total RELCON Connectivity", relcon.length]);
+          csvRows.push(["Total RELCON Connectivity", uniqueSites.size]);
           
           const blob = new Blob([csvRows.map(row => row.join(",")).join("\n")], { type: "text/csv;charset=utf-8;" });
           const url = URL.createObjectURL(blob);
