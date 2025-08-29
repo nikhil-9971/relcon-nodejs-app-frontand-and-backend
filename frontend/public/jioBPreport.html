@@ -419,7 +419,7 @@
         });
 
         // Build dynamic filename
-        const today = new Date().toISOString().slice(0, 10);
+        const today = new Date().toLocaleDateString("en-CA");
         const fromDate = document.getElementById("fromDate").value;
         const toDate = document.getElementById("toDate").value;
 

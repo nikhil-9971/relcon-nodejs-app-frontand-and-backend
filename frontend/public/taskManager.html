@@ -389,7 +389,7 @@
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
 
-        const today = new Date().toISOString().slice(0, 10);
+        const today = new Date().toLocaleDateString("en-CA");
         XLSX.writeFile(workbook, `Task_Manager_${today}.xlsx`);
       }
     </script>

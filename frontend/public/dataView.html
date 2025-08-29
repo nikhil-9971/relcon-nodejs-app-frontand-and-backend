@@ -1607,7 +1607,7 @@
 
       function exportStyledExcel() {
         const wb = XLSX.utils.book_new();
-        const date = new Date().toISOString().slice(0, 10);
+        const date = new Date().toLocaleDateString("en-CA");
 
         const titleRow = [
           ["Coordinator Name: Nikhil Trivedi", "", "", "", "", "Date: " + date],
@@ -2063,7 +2063,7 @@
         //document.getElementById("loadingOverlay").style.display = "flex";
 
         try {
-          const today = new Date().toISOString().split("T")[0];
+          const today = new Date().toLocaleDateString("en-CA");
           document.getElementById("fromDate").value = today;
           document.getElementById("toDate").value = today;
 

@@ -413,7 +413,7 @@
   XLSX.utils.book_append_sheet(wb, ws, "StatusRecords");
   XLSX.writeFile(
     wb,
-    `Filtered_Status_Records_${new Date().toISOString().slice(0, 10)}_${Math.floor(1000 + Math.random() * 9000)}.csv`
+            `Filtered_Status_Records_${new Date().toLocaleDateString('en-CA')}_${Math.floor(1000 + Math.random() * 9000)}.csv`
 
   );
 }
@@ -905,7 +905,7 @@ if (!("isVerified" in updated)) {
   const ws = XLSX.utils.json_to_sheet(trimmedData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "SelectedFields");
-  XLSX.writeFile(wb, `Daily_Status_ECZ_NIKHIL_${new Date().toISOString().slice(0, 10)}_${Math.floor(1000 + Math.random() * 9000)}.csv`
+  XLSX.writeFile(wb, `Daily_Status_ECZ_NIKHIL_${new Date().toLocaleDateString('en-CA')}_${Math.floor(1000 + Math.random() * 9000)}.csv`
 );
 }
 
