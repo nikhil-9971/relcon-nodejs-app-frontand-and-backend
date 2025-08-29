@@ -71,7 +71,12 @@
               Plans Today
             </div>
             <div class="flex items-center gap-2">
-              <div id="kpiPlansToday" class="text-xl font-semibold">—</div>
+              <div
+                id="kpiPlansToday"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200"
+              >
+                —
+              </div>
               <button
                 id="exportPlansToday"
                 class="text-[10px] text-blue-600 kpi-export"
@@ -98,7 +103,12 @@
               Hold Engineers
             </div>
             <div class="flex items-center gap-2">
-              <div id="kpiHold" class="text-xl font-semibold">—</div>
+              <div
+                id="kpiHold"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200"
+              >
+                —
+              </div>
               <button
                 id="exportHold"
                 class="text-[10px] text-blue-600 kpi-export"
@@ -124,7 +134,12 @@
               Unverified Status
             </div>
             <div class="flex items-center gap-2">
-              <div id="kpiUnverified" class="text-xl font-semibold">—</div>
+              <div
+                id="kpiUnverified"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200"
+              >
+                —
+              </div>
               <button
                 id="exportUnverified"
                 class="text-[10px] text-blue-600 kpi-export"
@@ -149,7 +164,12 @@
               Open Incidents
             </div>
             <div class="flex items-center gap-2">
-              <div id="kpiOpenIncidents" class="text-xl font-semibold">—</div>
+              <div
+                id="kpiOpenIncidents"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200"
+              >
+                —
+              </div>
               <button
                 id="exportOpenInc"
                 class="text-[10px] text-blue-600 kpi-export"
@@ -175,7 +195,12 @@
               Status Pending (HPCL + RBML)
             </div>
             <div class="flex items-center gap-2">
-              <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
+              <div
+                id="kpiPendingToday"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200"
+              >
+                —
+              </div>
               <button
                 id="exportPending"
                 class="text-[10px] text-blue-600 kpi-export"
@@ -203,7 +228,12 @@
               Active Users Today
             </div>
             <div class="flex items-center gap-2">
-              <div id="kpiActiveUsers" class="text-xl font-semibold">—</div>
+              <div
+                id="kpiActiveUsers"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200"
+              >
+                —
+              </div>
               <button
                 id="exportActiveUsers"
                 class="text-[10px] text-blue-600 kpi-export"
@@ -221,7 +251,7 @@
           class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
         >
           <div
-            class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+            class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2"
           >
             Verification Split
           </div>
@@ -231,7 +261,7 @@
           class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:col-span-2 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
         >
           <div
-            class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+            class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2"
           >
             Plans by Region (Today)
           </div>
@@ -246,15 +276,17 @@
       >
         <div class="flex items-center justify-between mb-2">
           <div>
-            <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
               RELCON Connectivity Provided (All Time)
             </div>
             <div
               id="relconOverallCount"
-              class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+              class="text-xs text-gray-600 dark:text-gray-400 mt-1"
             >
               Total RELCON Connectivity Sites:
-              <span class="font-semibold">0</span>
+              <span class="font-semibold text-gray-800 dark:text-gray-200"
+                >0</span
+              >
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -284,7 +316,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
       >
         <div class="flex items-center justify-between mb-2">
-          <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
             Power Protection PCB Installation Status (All Time)
           </div>
           <div class="flex items-center gap-2">
@@ -327,7 +359,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
       >
         <div
-          class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+          class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2"
         >
           Customer-wise Visits (Today)
         </div>
@@ -343,7 +375,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
       >
         <div class="flex items-center justify-between mb-2">
-          <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
             Engineer Monthly Visits by Customer
           </div>
           <div class="flex items-center gap-2">
@@ -387,7 +419,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
       >
         <div
-          class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+          class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2"
         >
           Recent Logins
         </div>
