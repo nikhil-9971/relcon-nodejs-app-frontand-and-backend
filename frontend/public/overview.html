@@ -267,7 +267,6 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-3 py-2 text-left">Engineer Name</th>
-                <th class="px-3 py-2 text-left">Region</th>
                 <th class="px-3 py-2 text-left">Total PCB Provided (A)</th>
                 <th class="px-3 py-2 text-left">Total PCB Install (B)</th>
                 <th class="px-3 py-2 text-left">
@@ -1276,7 +1275,14 @@
         const tbody = document.getElementById("pcbInstallationBody");
         const saveBtn = document.getElementById("savePcbProvidedBtn");
         if (!tbody) return;
-        const isAdmin = (window.__currentUser || {}).role === "admin";
+
+        // Get user role and engineer name from currentUser
+        const currentUser = window.__currentUser || {};
+        const userRole = currentUser.role || "";
+        const currentEngineer =
+          currentUser.engineerName || currentUser.username || "";
+        const isAdmin = userRole === "admin";
+
         const providedMap = JSON.parse(
           localStorage.getItem(pcbProvidedStorageKey()) || "{}"
         );
@@ -1292,37 +1298,47 @@
           );
         };
 
-        const map = new Map(); // engineer|region -> { provided, installed }
-        (statusRecords || []).forEach((r) => {
+        // Filter records by engineer if role is engineer
+        let filteredRecords = statusRecords || [];
+        if (userRole === "engineer" && currentEngineer) {
+          filteredRecords = filteredRecords.filter((r) => {
+            const engineer = String(
+              r.engineer ||
+                r.Engineer ||
+                r.engineerName ||
+                r.EngineerName ||
+                r.ENGINEER ||
+                r.ENGINEERNAME ||
+                ""
+            ).trim();
+            return engineer.toLowerCase() === currentEngineer.toLowerCase();
+          });
+        }
+
+        const map = new Map(); // engineer -> { provided, installed }
+        filteredRecords.forEach((r) => {
           const eng = String(r.engineer || r.Engineer || "").trim() || "-";
-          const region = String(r.region || r.Region || "").trim() || "-";
-          const key = `${eng}|${region}`;
-          if (!map.has(key))
-            map.set(key, {
+          if (!map.has(eng))
+            map.set(eng, {
               provided: Number(providedMap[eng] || 0) || 0,
               installed: 0,
             });
           if (isPcbInstall(r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT)) {
-            map.get(key).installed += 1;
+            map.get(eng).installed += 1;
           }
         });
 
         const rows = Array.from(map.entries())
-          .map(([key, rec]) => {
-            const [eng, region] = key.split("|");
+          .map(([eng, rec]) => {
             return {
               eng,
-              region,
               provided: rec.provided,
               installed: rec.installed,
               pending: Math.max(0, rec.provided - rec.installed),
             };
           })
           .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
-          .sort(
-            (a, b) =>
-              a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region)
-          );
+          .sort((a, b) => a.eng.localeCompare(b.eng));
 
         // Calculate totals
         const totalProvided = rows.reduce((sum, r) => sum + r.provided, 0);
@@ -1336,7 +1352,6 @@
               : `<span>${r.provided}</span>`;
             return `<tr class="border-b">
               <td class="px-3 py-2 font-medium">${r.eng}</td>
-              <td class="px-3 py-2">${r.region}</td>
               <td class="px-3 py-2">${providedCell}</td>
               <td class="px-3 py-2">${r.installed}</td>
               <td class="px-3 py-2">${r.pending}</td>
@@ -1348,13 +1363,12 @@
         if (rows.length > 0) {
           tbody.innerHTML += `<tr class="border-t bg-gray-50">
             <td class="px-3 py-2 font-bold">Total</td>
-            <td class="px-3 py-2 font-bold"></td>
             <td class="px-3 py-2 font-bold">${totalProvided}</td>
             <td class="px-3 py-2 font-bold">${totalInstalled}</td>
             <td class="px-3 py-2 font-bold">${totalPending}</td>
           </tr>`;
         } else {
-          tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
         }
 
         if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
@@ -1509,7 +1523,14 @@
       function exportPcbInstallationCSV() {
         try {
           const statusRecords = window.__statusRecords || [];
-          const pcbRecords = statusRecords.filter((r) => {
+
+          // Get user role and engineer name from currentUser
+          const currentUser = window.__currentUser || {};
+          const userRole = currentUser.role || "";
+          const currentEngineer =
+            currentUser.engineerName || currentUser.username || "";
+
+          let pcbRecords = statusRecords.filter((r) => {
             const purpose = String(
               r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
             )
@@ -1521,20 +1542,28 @@
             );
           });
 
+          // Filter by engineer if role is engineer
+          if (userRole === "engineer" && currentEngineer) {
+            pcbRecords = pcbRecords.filter((r) => {
+              const engineer = String(
+                r.engineer ||
+                  r.Engineer ||
+                  r.engineerName ||
+                  r.EngineerName ||
+                  r.ENGINEER ||
+                  r.ENGINEERNAME ||
+                  ""
+              ).trim();
+              return engineer.toLowerCase() === currentEngineer.toLowerCase();
+            });
+          }
+
           const csvRows = [
-            [
-              "EngineerName",
-              "Region",
-              "RO Code",
-              "RO Name",
-              "Date",
-              "Purpose of Visit",
-            ],
+            ["EngineerName", "RO Code", "RO Name", "Date", "Purpose of Visit"],
           ];
 
           pcbRecords.forEach((r) => {
             const eng = String(r.engineer || r.Engineer || "").trim();
-            const region = String(r.region || r.Region || "").trim();
             const roCode = String(
               r.roCode || r.ROCode || r.rocode || ""
             ).trim();
@@ -1544,7 +1573,7 @@
               r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
             ).trim();
 
-            csvRows.push([eng, region, roCode, roName, date, purpose]);
+            csvRows.push([eng, roCode, roName, date, purpose]);
           });
 
           const blob = new Blob(
