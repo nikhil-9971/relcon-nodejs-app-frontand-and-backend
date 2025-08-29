@@ -1147,10 +1147,23 @@
 
         // Filter by engineer if role is engineer
         if (userRole === "engineer" && currentEngineer) {
+          console.log("🔍 Filtering for engineer:", currentEngineer);
+          console.log("🔍 User role:", userRole);
+          console.log("🔍 Total records before filtering:", relcon.length);
+
           relcon = relcon.filter((r) => {
             const engineer = String(r.engineer || r.Engineer || "").trim();
-            return engineer.toLowerCase() === currentEngineer.toLowerCase();
+            const matches =
+              engineer.toLowerCase() === currentEngineer.toLowerCase();
+            if (engineer) {
+              console.log(
+                `🔍 Record engineer: "${engineer}" vs current: "${currentEngineer}" -> ${matches}`
+              );
+            }
+            return matches;
           });
+
+          console.log("🔍 Records after filtering:", relcon.length);
         }
 
         // Create pivot table: region -> phase -> count
@@ -1388,10 +1401,20 @@
 
           // Filter by engineer if role is engineer
           if (userRole === "engineer" && currentEngineer) {
+            console.log("📊 CSV - Filtering for engineer:", currentEngineer);
+            console.log(
+              "📊 CSV - Total records before filtering:",
+              relcon.length
+            );
+
             relcon = relcon.filter((r) => {
               const engineer = String(r.engineer || r.Engineer || "").trim();
-              return engineer.toLowerCase() === currentEngineer.toLowerCase();
+              const matches =
+                engineer.toLowerCase() === currentEngineer.toLowerCase();
+              return matches;
             });
+
+            console.log("📊 CSV - Records after filtering:", relcon.length);
           }
 
           // Remove duplicate sites (unique RO codes)
