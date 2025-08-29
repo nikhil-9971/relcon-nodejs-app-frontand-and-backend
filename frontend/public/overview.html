@@ -50,31 +50,7 @@
         <div id="lastUpdated" class="text-xs text-gray-500">—</div>
       </div>
 
-      <!-- Engineer Device Installations (Monthly) -->
-      <div id="deviceInstallCard" class="bg-white rounded-xl shadow p-4">
-        <div class="flex items-center justify-between mb-2">
-          <div class="text-sm font-semibold text-gray-700">
-            Engineer Device Installations (Monthly)
-          </div>
-          <div class="text-xs text-gray-500">Linked to Select Month</div>
-        </div>
-        <div class="overflow-auto">
-          <table class="min-w-max w-full table-auto" id="deviceInstallTable">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-3 py-2 text-left">Engineer</th>
-                <th class="px-3 py-2 text-left">Power Protection PCB Installs</th>
-                <th class="px-3 py-2 text-left">GSM Module Installs</th>
-                <th class="px-3 py-2 text-left">Total Device Provided</th>
-              </tr>
-            </thead>
-            <tbody id="deviceInstallBody" class="text-sm"></tbody>
-          </table>
-          <div class="flex justify-end mt-2">
-            <button id="saveDeviceProvidedBtn" onclick="saveDeviceProvidedCounts()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow">Save</button>
-          </div>
-        </div>
-      </div>
+      
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div
@@ -786,11 +762,7 @@
           renderEngineerMonthly(window.__allPlans, sel.value);
           sel.addEventListener("change", () => {
             renderEngineerMonthly(window.__allPlans, sel.value);
-            renderDeviceInstallations(window.__allPlans, sel.value);
           });
-
-          // Initial render of device installations
-          renderDeviceInstallations(window.__allPlans, sel.value);
 
           // Render RELCON connectivity and PCB status (all-time from statusRecords)
           renderRelconConnectivity(window.__statusRecords);
@@ -1118,12 +1090,18 @@
           if (!map.has(key)) map.set(key, new Set());
           if (ro) map.get(key).add(ro);
         });
+        const regionOrder = ["PATNA RET RO", "BEGUSARAI RET RO", "LUCKNOW RETAIL RO"];
+        const regionRank = (r) => {
+          const idx = regionOrder.indexOf(String(r || "").toUpperCase());
+          return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+        };
         const rows = Array.from(map.entries())
           .map(([key, set]) => {
             const [eng, region] = key.split("|");
             return { eng, region, count: set.size };
           })
-          .sort((a, b) => a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region));
+          .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
+          .sort((a, b) => a.eng.localeCompare(b.eng) || regionRank(a.region) - regionRank(b.region) || a.region.localeCompare(b.region));
         tbody.innerHTML = rows
           .map(
             (r) => `<tr class="border-b"><td class="px-3 py-2 font-medium">${r.eng}</td><td class="px-3 py-2">${r.region}</td><td class="px-3 py-2">${r.count}</td></tr>`
@@ -1162,12 +1140,18 @@
           }
         });
 
+        const regionOrder2 = ["PATNA RET RO", "BEGUSARAI RET RO", "LUCKNOW RETAIL RO"];
+        const regionRank2 = (r) => {
+          const idx = regionOrder2.indexOf(String(r || "").toUpperCase());
+          return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+        };
         const rows = Array.from(map.entries())
           .map(([key, rec]) => {
             const [eng, region] = key.split("|");
             return { eng, region, provided: rec.provided, installed: rec.installed, pending: Math.max(0, rec.provided - rec.installed) };
           })
-          .sort((a, b) => a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region));
+          .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
+          .sort((a, b) => a.eng.localeCompare(b.eng) || regionRank2(a.region) - regionRank2(b.region) || a.region.localeCompare(b.region));
 
         tbody.innerHTML = rows
           .map((r) => {
