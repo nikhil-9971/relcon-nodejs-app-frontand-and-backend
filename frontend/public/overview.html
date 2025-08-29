@@ -49,10 +49,10 @@
   <body class="p-4">
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-200">
+        <h2 class="text-2xl font-bold text-black dark:text-gray-200">
           Dashboard Overview
         </h2>
-        <div id="lastUpdated" class="text-xs text-gray-500 dark:text-gray-400">
+        <div id="lastUpdated" class="text-xs text-black dark:text-gray-400">
           —
         </div>
       </div>
@@ -414,7 +414,9 @@
             >
               Export Excel
             </button>
-            <label for="monthSelect" class="text-xs text-gray-500"
+            <label
+              for="monthSelect"
+              class="text-xs text-black dark:text-gray-500"
               >Select Month</label
             >
             <select
@@ -999,8 +1001,8 @@
               label
             )}">${label.split(" ")[0][0]}</div>
             <div>
-              <div class="text-[11px] text-gray-500">${label}</div>
-              <div class="text-lg font-semibold">${count}</div>
+              <div class="text-[11px] text-black dark:text-gray-500">${label}</div>
+                              <div class="text-lg font-semibold text-black dark:text-gray-200">${count}</div>
             </div>
           </div>
         `
@@ -1342,18 +1344,18 @@
             document.getElementById("relconOverallCount");
           if (overallCountElement) {
             const uniqueSitesCount = uniqueSites.size;
-            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold">${uniqueSitesCount}</span>`;
+            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold text-black dark:text-gray-200">${uniqueSitesCount}</span>`;
           }
         } else {
           tbody.innerHTML = `<tr><td colspan="${
             sortedPhases.length + 2
-          }" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+          }" class="px-3 py-4 text-center text-black dark:text-gray-400">No data</td></tr>`;
 
           // Update overall count display for no data
           const overallCountElement =
             document.getElementById("relconOverallCount");
           if (overallCountElement) {
-            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold">0</span>`;
+            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold text-black dark:text-gray-200">0</span>`;
           }
         }
       }
@@ -1439,8 +1441,8 @@
         tbody.innerHTML = rows
           .map((r) => {
             const providedCell = isAdmin
-              ? `<input type="number" min="0" value="${r.provided}" data-eng="${r.eng}" class="border px-2 py-1 rounded w-28" />`
-              : `<span>${r.provided}</span>`;
+              ? `<input type="number" min="0" value="${r.provided}" data-eng="${r.eng}" class="border px-2 py-1 rounded w-28 text-black dark:text-gray-200" />`
+              : `<span class="text-black dark:text-gray-200">${r.provided}</span>`;
             return `<tr class="border-b">
               <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${r.eng}</td>
               <td class="px-3 py-2 text-black dark:text-gray-200">${providedCell}</td>
@@ -1459,7 +1461,7 @@
             <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
           </tr>`;
         } else {
-          tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center text-black dark:text-gray-400">No data</td></tr>`;
         }
 
         if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
