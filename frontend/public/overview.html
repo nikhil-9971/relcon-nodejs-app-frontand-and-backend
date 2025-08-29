@@ -216,8 +216,18 @@
 
       <!-- RELCON Connectivity Provided (All Time) -->
       <div id="relconConnectivityCard" class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm font-semibold text-gray-700 mb-2">
-          RELCON Connectivity Provided (All Time)
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-gray-700">
+            RELCON Connectivity Provided (All Time)
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              onclick="exportRelconConnectivityCSV()"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Export CSV
+            </button>
+          </div>
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
@@ -237,8 +247,18 @@
 
       <!-- Power Protection PCB Installation Status (All Time) -->
       <div id="pcbInstallationCard" class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm font-semibold text-gray-700 mb-2">
-          Power Protection PCB Installation Status (All Time)
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-gray-700">
+            Power Protection PCB Installation Status (All Time)
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              onclick="exportPcbInstallationCSV()"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Export CSV
+            </button>
+          </div>
         </div>
         <div class="overflow-auto">
           <table class="min-w-max w-full table-auto">
@@ -1126,15 +1146,6 @@
           if (!map.has(key)) map.set(key, new Set());
           if (ro) map.get(key).add(ro);
         });
-        const regionOrder = [
-          "PATNA RET RO",
-          "BEGUSARAI RET RO",
-          "LUCKNOW RETAIL RO",
-        ];
-        const regionRank = (r) => {
-          const idx = regionOrder.indexOf(String(r || "").toUpperCase());
-          return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
-        };
         const rows = Array.from(map.entries())
           .map(([key, set]) => {
             const [eng, region] = key.split("|");
@@ -1143,18 +1154,25 @@
           .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
           .sort(
             (a, b) =>
-              a.eng.localeCompare(b.eng) ||
-              regionRank(a.region) - regionRank(b.region) ||
-              a.region.localeCompare(b.region)
+              a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region)
           );
+
+        // Calculate total
+        const totalCount = rows.reduce((sum, r) => sum + r.count, 0);
+
         tbody.innerHTML = rows
           .map(
             (r) =>
               `<tr class="border-b"><td class="px-3 py-2 font-medium">${r.eng}</td><td class="px-3 py-2">${r.region}</td><td class="px-3 py-2">${r.count}</td></tr>`
           )
           .join("");
-        if (rows.length === 0)
+
+        // Add total row
+        if (rows.length > 0) {
+          tbody.innerHTML += `<tr class="border-t bg-gray-50"><td class="px-3 py-2 font-bold">Total</td><td class="px-3 py-2 font-bold"></td><td class="px-3 py-2 font-bold">${totalCount}</td></tr>`;
+        } else {
           tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+        }
       }
 
       function pcbProvidedStorageKey() {
@@ -1196,15 +1214,6 @@
           }
         });
 
-        const regionOrder2 = [
-          "PATNA RET RO",
-          "BEGUSARAI RET RO",
-          "LUCKNOW RETAIL RO",
-        ];
-        const regionRank2 = (r) => {
-          const idx = regionOrder2.indexOf(String(r || "").toUpperCase());
-          return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
-        };
         const rows = Array.from(map.entries())
           .map(([key, rec]) => {
             const [eng, region] = key.split("|");
@@ -1219,10 +1228,13 @@
           .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
           .sort(
             (a, b) =>
-              a.eng.localeCompare(b.eng) ||
-              regionRank2(a.region) - regionRank2(b.region) ||
-              a.region.localeCompare(b.region)
+              a.eng.localeCompare(b.eng) || a.region.localeCompare(b.region)
           );
+
+        // Calculate totals
+        const totalProvided = rows.reduce((sum, r) => sum + r.provided, 0);
+        const totalInstalled = rows.reduce((sum, r) => sum + r.installed, 0);
+        const totalPending = rows.reduce((sum, r) => sum + r.pending, 0);
 
         tbody.innerHTML = rows
           .map((r) => {
@@ -1238,8 +1250,19 @@
             </tr>`;
           })
           .join("");
-        if (rows.length === 0)
+
+        // Add total row
+        if (rows.length > 0) {
+          tbody.innerHTML += `<tr class="border-t bg-gray-50">
+            <td class="px-3 py-2 font-bold">Total</td>
+            <td class="px-3 py-2 font-bold"></td>
+            <td class="px-3 py-2 font-bold">${totalProvided}</td>
+            <td class="px-3 py-2 font-bold">${totalInstalled}</td>
+            <td class="px-3 py-2 font-bold">${totalPending}</td>
+          </tr>`;
+        } else {
           tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-gray-400">No data</td></tr>`;
+        }
 
         if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
       }
@@ -1259,8 +1282,150 @@
             pcbProvidedStorageKey(),
             JSON.stringify(payload)
           );
+          // Re-render to update pending calculations
+          renderPcbInstallation(window.__statusRecords);
         } catch (e) {
           console.error("save pcb provided error", e);
+        }
+      }
+
+      function exportRelconConnectivityCSV() {
+        try {
+          const statusRecords = window.__statusRecords || [];
+          const relcon = statusRecords.filter((r) =>
+            String(r.connectivityType || r.ConnectivityType || "")
+              .trim()
+              .toUpperCase()
+              .includes("RELCON")
+          );
+
+          const csvRows = [
+            [
+              "EngineerName",
+              "Region",
+              "RO Code",
+              "RO Name",
+              "Connectivity Type",
+              "SIM1 Provider",
+              "SIM1 Number",
+              "SIM2 Provider",
+              "SIM2 Number",
+              "IEMI Number",
+            ],
+          ];
+
+          relcon.forEach((r) => {
+            const eng = String(r.engineer || r.Engineer || "").trim();
+            const region = String(r.region || r.Region || "").trim();
+            const roCode = String(
+              r.roCode || r.ROCode || r.rocode || ""
+            ).trim();
+            const roName = String(r.roName || r.ROName || "").trim();
+            const connectivityType = String(
+              r.connectivityType || r.ConnectivityType || ""
+            ).trim();
+            const sim1Provider = String(
+              r.sim1Provider || r.SIM1Provider || ""
+            ).trim();
+            const sim1Number = String(
+              r.sim1Number || r.SIM1Number || ""
+            ).trim();
+            const sim2Provider = String(
+              r.sim2Provider || r.SIM2Provider || ""
+            ).trim();
+            const sim2Number = String(
+              r.sim2Number || r.SIM2Number || ""
+            ).trim();
+            const iemiNumber = String(
+              r.iemiNumber || r.IEMINumber || r.imeiNumber || ""
+            ).trim();
+
+            csvRows.push([
+              eng,
+              region,
+              roCode,
+              roName,
+              connectivityType,
+              sim1Provider,
+              sim1Number,
+              sim2Provider,
+              sim2Number,
+              iemiNumber,
+            ]);
+          });
+
+          const blob = new Blob(
+            [csvRows.map((row) => row.join(",")).join("\n")],
+            { type: "text/csv;charset=utf-8;" }
+          );
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "relcon_connectivity_data.csv";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          console.error("export relcon csv error", e);
+        }
+      }
+
+      function exportPcbInstallationCSV() {
+        try {
+          const statusRecords = window.__statusRecords || [];
+          const pcbRecords = statusRecords.filter((r) => {
+            const purpose = String(
+              r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
+            )
+              .trim()
+              .toUpperCase();
+            return (
+              purpose.includes("POWER PROTECTION PCB") &&
+              (purpose.includes("INSTALL") || purpose.includes("INSTAL"))
+            );
+          });
+
+          const csvRows = [
+            [
+              "EngineerName",
+              "Region",
+              "RO Code",
+              "RO Name",
+              "Date",
+              "Purpose of Visit",
+            ],
+          ];
+
+          pcbRecords.forEach((r) => {
+            const eng = String(r.engineer || r.Engineer || "").trim();
+            const region = String(r.region || r.Region || "").trim();
+            const roCode = String(
+              r.roCode || r.ROCode || r.rocode || ""
+            ).trim();
+            const roName = String(r.roName || r.ROName || "").trim();
+            const date = String(r.date || r.Date || "").trim();
+            const purpose = String(
+              r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
+            ).trim();
+
+            csvRows.push([eng, region, roCode, roName, date, purpose]);
+          });
+
+          const blob = new Blob(
+            [csvRows.map((row) => row.join(",")).join("\n")],
+            { type: "text/csv;charset=utf-8;" }
+          );
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "pcb_installation_data.csv";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          console.error("export pcb csv error", e);
         }
       }
       function exportEngineerMonthlyCSV() {
