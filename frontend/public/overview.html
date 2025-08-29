@@ -50,6 +50,40 @@
         <div id="lastUpdated" class="text-xs text-gray-500">—</div>
       </div>
 
+      <!-- Engineer Device Installations (Monthly) -->
+      <div id="deviceInstallCard" class="bg-white rounded-xl shadow p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-gray-700">
+            Engineer Device Installations (Monthly)
+          </div>
+          <div class="text-xs text-gray-500">Linked to Select Month</div>
+        </div>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto" id="deviceInstallTable">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left">Engineer</th>
+                <th class="px-3 py-2 text-left">
+                  Power Protection PCB Installs
+                </th>
+                <th class="px-3 py-2 text-left">GSM Module Installs</th>
+                <th class="px-3 py-2 text-left">Total Device Provided</th>
+              </tr>
+            </thead>
+            <tbody id="deviceInstallBody" class="text-sm"></tbody>
+          </table>
+          <div class="flex justify-end mt-2">
+            <button
+              id="saveDeviceProvidedBtn"
+              onclick="saveDeviceProvidedCounts()"
+              class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div
           class="bg-white rounded-xl shadow p-4 flex items-center gap-3 kpi-card"
@@ -156,7 +190,9 @@
             <i class="fa-solid fa-hourglass-half"></i>
           </div>
           <div>
-            <div class="text-xs text-gray-500">Status Pending</div>
+            <div class="text-xs text-gray-500">
+              Status Pending (HPCL + RBML)
+            </div>
             <div class="flex items-center gap-2">
               <div id="kpiPendingToday" class="text-xl font-semibold">—</div>
               <button
@@ -717,7 +753,11 @@
           renderEngineerMonthly(window.__allPlans, sel.value);
           sel.addEventListener("change", () => {
             renderEngineerMonthly(window.__allPlans, sel.value);
+            renderDeviceInstallations(window.__allPlans, sel.value);
           });
+
+          // Initial render of device installations
+          renderDeviceInstallations(window.__allPlans, sel.value);
         } catch (e) {
           console.error("overview load error", e);
         }
@@ -936,6 +976,114 @@
         body.innerHTML += `<tr class="border-t bg-gray-50"><td class="px-3 py-2 font-bold">Total</td>${totalCells}<td class="px-3 py-2 font-bold">${grandTotal}</td></tr>`;
       }
 
+      function normalizeText(s) {
+        return String(s || "")
+          .trim()
+          .toUpperCase();
+      }
+
+      function isPowerProtectionInstall(purpose) {
+        const t = normalizeText(purpose);
+        return (
+          t.includes("POWER PROTECTION PCB") &&
+          (t.includes("INSTALL") || t.includes("INSTAL"))
+        );
+      }
+
+      function isGsmModuleInstall(purpose) {
+        const t = normalizeText(purpose);
+        return (
+          (t.includes("GSM MODULE") &&
+            (t.includes("INSTALL") || t.includes("INSTAL"))) ||
+          t.includes("GSM MODULE INSTALLATION")
+        );
+      }
+
+      function deviceProvidedStorageKey(ym) {
+        return `device_provided_${ym}`;
+      }
+
+      function renderDeviceInstallations(plans, ym) {
+        const tbody = document.getElementById("deviceInstallBody");
+        const saveBtn = document.getElementById("saveDeviceProvidedBtn");
+        if (!tbody) return;
+        const data = (plans || []).filter((p) => {
+          if (ymKey(p.date) !== ym) return false;
+          const purposeUpper = normalizeText(p.issueType || p.purpose);
+          if (purposeUpper === "NO PLAN") return false;
+          return true;
+        });
+
+        const isAdmin = (window.__currentUser || {}).role === "admin";
+        const stored = JSON.parse(
+          localStorage.getItem(deviceProvidedStorageKey(ym)) || "{}"
+        );
+
+        const map = new Map(); // engineer -> { power: n, gsm: n, provided: n }
+        data.forEach((p) => {
+          const eng = String(p.engineer || "").trim() || "-";
+          const purpose = p.purpose || p.issueType || "";
+          if (!map.has(eng))
+            map.set(eng, { power: 0, gsm: 0, provided: stored[eng] || 0 });
+          const rec = map.get(eng);
+          if (isPowerProtectionInstall(purpose)) rec.power += 1;
+          if (isGsmModuleInstall(purpose)) rec.gsm += 1;
+        });
+
+        const rows = Array.from(map.entries()).sort((a, b) =>
+          a[0].localeCompare(b[0])
+        );
+        const total = { power: 0, gsm: 0, provided: 0 };
+        tbody.innerHTML = rows
+          .map(([eng, rec]) => {
+            total.power += rec.power;
+            total.gsm += rec.gsm;
+            total.provided += Number(rec.provided) || 0;
+            const providedCell = isAdmin
+              ? `<input type="number" min="0" value="${rec.provided}" data-eng="${eng}" class="border px-2 py-1 rounded w-24" />`
+              : `<span>${rec.provided}</span>`;
+            return `<tr class="border-b">
+              <td class="px-3 py-2 font-medium">${eng}</td>
+              <td class="px-3 py-2">${rec.power}</td>
+              <td class="px-3 py-2">${rec.gsm}</td>
+              <td class="px-3 py-2">${providedCell}</td>
+            </tr>`;
+          })
+          .join("");
+
+        // Totals row
+        tbody.innerHTML += `<tr class="border-t bg-gray-50">
+          <td class="px-3 py-2 font-bold">Total</td>
+          <td class="px-3 py-2 font-bold">${total.power}</td>
+          <td class="px-3 py-2 font-bold">${total.gsm}</td>
+          <td class="px-3 py-2 font-bold">${total.provided}</td>
+        </tr>`;
+
+        // Show save button for admin only
+        if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
+      }
+
+      function saveDeviceProvidedCounts() {
+        try {
+          const sel = document.getElementById("monthSelect");
+          const ym = sel ? sel.value : new Date().toISOString().slice(0, 7);
+          const inputs = document.querySelectorAll(
+            "#deviceInstallBody input[data-eng]"
+          );
+          const payload = {};
+          inputs.forEach((inp) => {
+            const eng = inp.getAttribute("data-eng");
+            const val = Number(inp.value || 0) || 0;
+            payload[eng] = val;
+          });
+          localStorage.setItem(
+            deviceProvidedStorageKey(ym),
+            JSON.stringify(payload)
+          );
+        } catch (e) {
+          console.error("save device provided error", e);
+        }
+      }
       function exportEngineerMonthlyCSV() {
         try {
           const plans = window.__allPlans || [];
@@ -1024,7 +1172,6 @@
               ROCode: p.roCode || "",
               ROName: p.roName || "",
               Phase: p.phase || "",
-              Purpose: p.purpose || "",
               IssueType: p.issueType || p.purpose || "",
               Customer: cust,
               CountsTowardsTotal: totalEligible ? "Yes" : "No",
