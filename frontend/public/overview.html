@@ -200,13 +200,17 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div class="bg-white rounded-xl shadow p-4">
+        <div
+          class="bg-gradient-to-br from-pink-50 to-rose-100 rounded-xl shadow-lg p-4 border border-pink-200"
+        >
           <div class="text-sm font-semibold text-gray-700 mb-2">
             Verification Split
           </div>
           <canvas id="chartVerify" height="160"></canvas>
         </div>
-        <div class="bg-white rounded-xl shadow p-4 lg:col-span-2">
+        <div
+          class="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl shadow-lg p-4 lg:col-span-2 border border-slate-200"
+        >
           <div class="text-sm font-semibold text-gray-700 mb-2">
             Plans by Region (Today)
           </div>
@@ -215,7 +219,10 @@
       </div>
 
       <!-- RELCON Connectivity Provided (All Time) -->
-      <div id="relconConnectivityCard" class="bg-white rounded-xl shadow p-4">
+      <div
+        id="relconConnectivityCard"
+        class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-lg p-4 border border-blue-200"
+      >
         <div class="flex items-center justify-between mb-2">
           <div>
             <div class="text-sm font-semibold text-gray-700">
@@ -248,7 +255,10 @@
       </div>
 
       <!-- Power Protection PCB Installation Status (All Time) -->
-      <div id="pcbInstallationCard" class="bg-white rounded-xl shadow p-4">
+      <div
+        id="pcbInstallationCard"
+        class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg p-4 border border-green-200"
+      >
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-semibold text-gray-700">
             Power Protection PCB Installation Status (All Time)
@@ -289,7 +299,9 @@
       </div>
 
       <!-- Customer-wise visits -->
-      <div class="bg-white rounded-xl shadow p-4">
+      <div
+        class="bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl shadow-lg p-4 border border-purple-200"
+      >
         <div class="text-sm font-semibold text-gray-700 mb-2">
           Customer-wise Visits (Today)
         </div>
@@ -301,7 +313,9 @@
       </div>
 
       <!-- Engineer Monthly Visits by Customer -->
-      <div class="bg-white rounded-xl shadow p-4">
+      <div
+        class="bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg p-4 border border-orange-200"
+      >
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-semibold text-gray-700">
             Engineer Monthly Visits by Customer
@@ -342,7 +356,10 @@
         </div>
       </div>
 
-      <div id="recentLoginsCard" class="bg-white rounded-xl shadow p-4">
+      <div
+        id="recentLoginsCard"
+        class="bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl shadow-lg p-4 border border-teal-200"
+      >
         <div class="text-sm font-semibold text-gray-700 mb-2">
           Recent Logins
         </div>
@@ -1559,11 +1576,19 @@
           }
 
           const csvRows = [
-            ["EngineerName", "RO Code", "RO Name", "Date", "Purpose of Visit"],
+            [
+              "EngineerName",
+              "Region",
+              "RO Code",
+              "RO Name",
+              "Date",
+              "Purpose of Visit",
+            ],
           ];
 
           pcbRecords.forEach((r) => {
             const eng = String(r.engineer || r.Engineer || "").trim();
+            const region = String(r.region || r.Region || "").trim();
             const roCode = String(
               r.roCode || r.ROCode || r.rocode || ""
             ).trim();
@@ -1573,7 +1598,7 @@
               r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
             ).trim();
 
-            csvRows.push([eng, roCode, roName, date, purpose]);
+            csvRows.push([eng, region, roCode, roName, date, purpose]);
           });
 
           const blob = new Blob(
