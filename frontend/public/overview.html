@@ -1090,9 +1090,15 @@
         const header = document.getElementById("relconConnectivityHeader");
         if (!tbody || !header) return;
         
-        // Get user role and engineer name
-        const userRole = localStorage.getItem("role") || "";
-        const currentEngineer = localStorage.getItem("engineer") || "";
+        // Get user role and engineer name from currentUser
+        const currentUser = window.__currentUser || {};
+        const userRole = currentUser.role || "";
+        const currentEngineer = currentUser.engineerName || currentUser.username || "";
+        
+        // Debug: Check what's in currentUser
+        console.log("🔍 DEBUG - currentUser:", currentUser);
+        console.log("🔍 DEBUG - userRole:", userRole);
+        console.log("🔍 DEBUG - currentEngineer:", currentEngineer);
         
         // Filter records with ConnectivityType = RELCON SIM
         let relcon = (statusRecords || []).filter((r) =>
@@ -1299,9 +1305,10 @@
         try {
           const statusRecords = window.__statusRecords || [];
           
-          // Get user role and engineer name
-          const userRole = localStorage.getItem("role") || "";
-          const currentEngineer = localStorage.getItem("engineer") || "";
+          // Get user role and engineer name from currentUser
+          const currentUser = window.__currentUser || {};
+          const userRole = currentUser.role || "";
+          const currentEngineer = currentUser.engineerName || currentUser.username || "";
           
           let relcon = statusRecords.filter((r) =>
             String(r.connectivityType || r.ConnectivityType || "")
