@@ -222,7 +222,8 @@
               RELCON Connectivity Provided (All Time)
             </div>
             <div id="relconOverallCount" class="text-xs text-gray-500 mt-1">
-              Total: <span class="font-semibold">0</span> sites
+              Total: <span class="font-semibold">0</span> sites | Unique Sites:
+              <span class="font-semibold">0</span>
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -1212,12 +1213,24 @@
             }</td>
           </tr>`;
 
+          // Calculate unique sites count
+          const uniqueSites = new Set();
+          relcon.forEach((r) => {
+            const roCode = String(
+              r.roCode || r.ROCode || r.rocode || ""
+            ).trim();
+            if (roCode) {
+              uniqueSites.add(roCode);
+            }
+          });
+
           // Update overall count display
           const overallCountElement =
             document.getElementById("relconOverallCount");
           if (overallCountElement) {
             const totalSites = totalRow[totalRow.length - 1];
-            overallCountElement.innerHTML = `Total: <span class="font-semibold">${totalSites}</span> sites`;
+            const uniqueSitesCount = uniqueSites.size;
+            overallCountElement.innerHTML = `Total: <span class="font-semibold">${totalSites}</span> sites | Unique Sites: <span class="font-semibold">${uniqueSitesCount}</span>`;
           }
         } else {
           tbody.innerHTML = `<tr><td colspan="${
@@ -1228,7 +1241,7 @@
           const overallCountElement =
             document.getElementById("relconOverallCount");
           if (overallCountElement) {
-            overallCountElement.innerHTML = `Total: <span class="font-semibold">0</span> sites`;
+            overallCountElement.innerHTML = `Total: <span class="font-semibold">0</span> sites | Unique Sites: <span class="font-semibold">0</span>`;
           }
         }
       }
