@@ -1090,13 +1090,25 @@
         const header = document.getElementById("relconConnectivityHeader");
         if (!tbody || !header) return;
         
+        // Get user role and engineer name
+        const userRole = localStorage.getItem("role") || "";
+        const currentEngineer = localStorage.getItem("engineer") || "";
+        
         // Filter records with ConnectivityType = RELCON SIM
-        const relcon = (statusRecords || []).filter((r) =>
+        let relcon = (statusRecords || []).filter((r) =>
           String(r.connectivityType || r.ConnectivityType || "")
             .trim()
             .toUpperCase()
             .includes("RELCON")
         );
+        
+        // Filter by engineer if role is engineer
+        if (userRole === "engineer" && currentEngineer) {
+          relcon = relcon.filter((r) => {
+            const engineer = String(r.engineer || r.Engineer || "").trim();
+            return engineer.toLowerCase() === currentEngineer.toLowerCase();
+          });
+        }
         
         // Create pivot table: region -> phase -> count
         const regionPhaseMap = new Map(); // region -> Map(phase -> Set(roCode))
@@ -1275,12 +1287,25 @@
       function exportRelconConnectivityCSV() {
         try {
           const statusRecords = window.__statusRecords || [];
-          const relcon = statusRecords.filter((r) =>
+          
+          // Get user role and engineer name
+          const userRole = localStorage.getItem("role") || "";
+          const currentEngineer = localStorage.getItem("engineer") || "";
+          
+          let relcon = statusRecords.filter((r) =>
             String(r.connectivityType || r.ConnectivityType || "")
               .trim()
               .toUpperCase()
               .includes("RELCON")
           );
+          
+          // Filter by engineer if role is engineer
+          if (userRole === "engineer" && currentEngineer) {
+            relcon = relcon.filter((r) => {
+              const engineer = String(r.engineer || r.Engineer || "").trim();
+              return engineer.toLowerCase() === currentEngineer.toLowerCase();
+            });
+          }
           
           // Remove duplicate sites (unique RO codes)
           const uniqueSites = new Map(); // roCode -> record
