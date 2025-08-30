@@ -643,6 +643,12 @@
           return { isValid: true, message: "" };
         }
         
+        // Skip validation for POWER ON OR SAT issue type
+        if (data.issueType === "POWER ON OR SAT") {
+          console.log("⏭️ POWER ON OR SAT issue type, skipping AMC validation. IssueType:", data.issueType);
+          return { isValid: true, message: "" };
+        }
+        
         const roCode = data.roCode;
         const visitDate = data.date;
         const issueType = data.issueType;
