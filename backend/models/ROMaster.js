@@ -7,6 +7,7 @@ const ROMasterSchema = new mongoose.Schema({
   region: String,
   phase: String,
   engineer: String,
+  siteStatus: String,
   amcQtr: String,
 });
 
