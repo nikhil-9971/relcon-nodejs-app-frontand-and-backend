@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const ROMaster = require("../models/ROMaster");
+const DailyPlan = require("../models/DailyPlan");
 
 router.get("/getROInfo/:roCode", async (req, res) => {
   try {
@@ -51,6 +52,84 @@ router.post("/add", async (req, res) => {
   } catch (err) {
     console.error("Error saving new site:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// New endpoint for AMC Count Status
+router.get("/amcCountStatus", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "Start date and end date are required" });
+    }
+
+    // Get all RO Master entries (assuming all are AMC sites for now)
+    const roMasterData = await ROMaster.find({});
+    
+    // Get all daily plans within the date range
+    const dailyPlans = await DailyPlan.find({
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      issueType: {
+        $in: ["Issue & PM Visit", "PM Visit", "ATG & PM Visit"]
+      }
+    });
+
+    // Create a map to track completed AMC visits by RO Code
+    const completedAMCVisits = new Map();
+    dailyPlans.forEach(plan => {
+      const roCode = plan.roCode;
+      if (!completedAMCVisits.has(roCode)) {
+        completedAMCVisits.set(roCode, []);
+      }
+      completedAMCVisits.get(roCode).push(plan);
+    });
+
+    // Group by engineer
+    const engineerStats = new Map();
+    
+    roMasterData.forEach(ro => {
+      const engineer = ro.engineer || "Unknown";
+      const roCode = ro.roCode;
+      
+      if (!engineerStats.has(engineer)) {
+        engineerStats.set(engineer, {
+          engineerName: engineer,
+          totalAMCAssigned: 0,
+          totalAMCCompleted: 0,
+          pendingAMC: 0
+        });
+      }
+      
+      const stats = engineerStats.get(engineer);
+      stats.totalAMCAssigned++;
+      
+      // Check if this RO has completed AMC visits
+      if (completedAMCVisits.has(roCode)) {
+        stats.totalAMCCompleted++;
+      } else {
+        stats.pendingAMC++;
+      }
+    });
+
+    const result = Array.from(engineerStats.values());
+    
+    res.json({
+      success: true,
+      data: result,
+      summary: {
+        totalSites: roMasterData.length,
+        totalCompleted: result.reduce((sum, stat) => sum + stat.totalAMCCompleted, 0),
+        totalPending: result.reduce((sum, stat) => sum + stat.pendingAMC, 0)
+      }
+    });
+
+  } catch (err) {
+    console.error("Error in AMC count status:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
