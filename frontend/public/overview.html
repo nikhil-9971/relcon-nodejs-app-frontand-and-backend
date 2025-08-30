@@ -413,6 +413,88 @@
         </div>
       </div>
 
+      <!-- AMC Visit Status -->
+      <div
+        id="amcVisitStatusCard"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div class="text-sm font-semibold text-black dark:text-gray-200">
+              AMC Visit Status
+            </div>
+            <div class="flex items-center gap-4 mt-1">
+              <div class="text-xs text-black dark:text-gray-400">
+                <label for="amcStartDate" class="mr-2">Start Date:</label>
+                <input
+                  type="date"
+                  id="amcStartDate"
+                  class="border rounded px-2 py-1 text-xs"
+                  value="2025-07-01"
+                />
+              </div>
+              <div class="text-xs text-black dark:text-gray-400">
+                <label for="amcEndDate" class="mr-2">End Date:</label>
+                <input
+                  type="date"
+                  id="amcEndDate"
+                  class="border rounded px-2 py-1 text-xs"
+                  value="2025-09-30"
+                />
+              </div>
+              <button
+                onclick="loadAMCVisitStatus()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow"
+              >
+                Load Data
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              onclick="exportAMCVisitStatusCSV()"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead
+              class="bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-gray-700 dark:to-gray-600"
+            >
+              <tr>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Engineer Name
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total AMC Assigned
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total AMC Completed
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Pending AMC
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="amcVisitStatusBody"
+              class="text-sm text-black dark:text-gray-200"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- RELCON Connectivity Provided (All Time) -->
       <div
         id="relconConnectivityCard"
@@ -710,6 +792,9 @@
             unverifiedHpcl.length + unverifiedJio.length;
           document.getElementById("kpiOpenIncidents").textContent =
             openIncidents.length;
+
+          // Load AMC Visit Status data
+          await loadAMCVisitStatus();
           // Today Pending (HPCL + RBML) = Today's plans minus submitted statuses from their respective sources
           const key = (rc, d) =>
             `${String(rc || "")
@@ -1942,6 +2027,146 @@
           XLSX.writeFile(wb, `engineer_monthly_${ym}.xlsx`);
         } catch (e) {
           console.error("export csv error", e);
+        }
+      }
+
+      // AMC Visit Status Functions
+      async function loadAMCVisitStatus() {
+        try {
+          const startDate = document.getElementById("amcStartDate").value;
+          const endDate = document.getElementById("amcEndDate").value;
+
+          if (!startDate || !endDate) {
+            alert("Please select both start and end dates");
+            return;
+          }
+
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("No token found");
+            return;
+          }
+
+          const response = await fetch(
+            `${baseUrl}/romaster/amcCountStatus?startDate=${startDate}&endDate=${endDate}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            }
+          );
+
+          if (!response.ok) {
+            console.error("Error fetching AMC status:", response.status);
+            return;
+          }
+
+          const result = await response.json();
+          renderAMCVisitStatus(result.data);
+        } catch (error) {
+          console.error("Error loading AMC visit status:", error);
+        }
+      }
+
+      function renderAMCVisitStatus(data) {
+        const tbody = document.getElementById("amcVisitStatusBody");
+        if (!tbody) return;
+
+        if (!data || data.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="4" class="px-3 py-2 text-center text-black dark:text-gray-400">No data available</td></tr>';
+          return;
+        }
+
+        // Filter out NAVAL KISHOR PANDEY
+        const filteredData = data.filter(
+          (item) => item.engineerName !== "NAVAL KISHOR PANDEY"
+        );
+
+        // Sort by engineer name
+        filteredData.sort((a, b) =>
+          a.engineerName.localeCompare(b.engineerName)
+        );
+
+        let totalAssigned = 0;
+        let totalCompleted = 0;
+        let totalPending = 0;
+
+        tbody.innerHTML = filteredData
+          .map((item) => {
+            totalAssigned += item.totalAMCAssigned;
+            totalCompleted += item.totalAMCCompleted;
+            totalPending += item.pendingAMC;
+
+            return `
+            <tr class="border-b">
+              <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${item.engineerName}</td>
+              <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
+              <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
+              <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
+            </tr>
+          `;
+          })
+          .join("");
+
+        // Add total row
+        tbody.innerHTML += `
+          <tr class="border-t bg-gray-50">
+            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
+            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
+            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
+            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
+          </tr>
+        `;
+      }
+
+      function exportAMCVisitStatusCSV() {
+        try {
+          const tbody = document.getElementById("amcVisitStatusBody");
+          if (!tbody) return;
+
+          const rows = [];
+          const header = [
+            "Engineer Name",
+            "Total AMC Assigned",
+            "Total AMC Completed",
+            "Pending AMC",
+          ];
+          rows.push(header);
+
+          // Get all data rows (excluding total row)
+          const dataRows = tbody.querySelectorAll("tr:not(:last-child)");
+          dataRows.forEach((row) => {
+            const cells = row.querySelectorAll("td");
+            if (cells.length === 4) {
+              const rowData = [
+                cells[0].textContent.trim(),
+                cells[1].textContent.trim(),
+                cells[2].textContent.trim(),
+                cells[3].textContent.trim(),
+              ];
+              rows.push(rowData);
+            }
+          });
+
+          const csvContent = rows.map((row) => row.join(",")).join("\n");
+          const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `amc_visit_status_${new Date().toLocaleDateString(
+            "en-CA"
+          )}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error("Error exporting AMC visit status CSV:", error);
         }
       }
 
