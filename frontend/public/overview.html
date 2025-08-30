@@ -2065,6 +2065,9 @@
 
           const result = await response.json();
           renderAMCVisitStatus(result.data);
+
+          // Store detailed data for CSV export
+          window.__amcDetailedData = result.detailedData || [];
         } catch (error) {
           console.error("Error loading AMC visit status:", error);
         }
@@ -2124,31 +2127,52 @@
 
       function exportAMCVisitStatusCSV() {
         try {
-          const tbody = document.getElementById("amcVisitStatusBody");
-          if (!tbody) return;
+          const detailedData = window.__amcDetailedData || [];
+
+          if (detailedData.length === 0) {
+            alert("No data available for export. Please load AMC data first.");
+            return;
+          }
 
           const rows = [];
           const header = [
             "Engineer Name",
-            "Total AMC Assigned",
-            "Total AMC Completed",
-            "Pending AMC",
+            "RO Code",
+            "RO Name",
+            "Region",
+            "Phase",
+            "AMC Status",
+            "Visit Date",
+            "Issue Type",
           ];
           rows.push(header);
 
-          // Get all data rows (excluding total row)
-          const dataRows = tbody.querySelectorAll("tr:not(:last-child)");
-          dataRows.forEach((row) => {
-            const cells = row.querySelectorAll("td");
-            if (cells.length === 4) {
-              const rowData = [
-                cells[0].textContent.trim(),
-                cells[1].textContent.trim(),
-                cells[2].textContent.trim(),
-                cells[3].textContent.trim(),
-              ];
-              rows.push(rowData);
+          // Filter out NAVAL KISHOR PANDEY
+          const filteredData = detailedData.filter(
+            (item) => item.engineerName !== "NAVAL KISHOR PANDEY"
+          );
+
+          // Sort by engineer name, then by RO code
+          filteredData.sort((a, b) => {
+            if (a.engineerName !== b.engineerName) {
+              return a.engineerName.localeCompare(b.engineerName);
             }
+            return a.roCode.localeCompare(b.roCode);
+          });
+
+          // Add detailed data rows
+          filteredData.forEach((item) => {
+            const rowData = [
+              item.engineerName,
+              item.roCode,
+              item.roName,
+              item.region,
+              item.phase,
+              item.amcStatus,
+              item.visitDate,
+              item.issueType,
+            ];
+            rows.push(rowData);
           });
 
           const csvContent = rows.map((row) => row.join(",")).join("\n");
@@ -2158,7 +2182,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `amc_visit_status_${new Date().toLocaleDateString(
+          a.download = `amc_visit_detailed_status_${new Date().toLocaleDateString(
             "en-CA"
           )}.csv`;
           document.body.appendChild(a);
