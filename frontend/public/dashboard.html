@@ -708,6 +708,22 @@
           </div>
 
           <div>
+            <label class="block font-medium mb-1 text-gray-700"
+              >siteStatus:</label
+            >
+            <select
+              id="newsiteStatus"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Site Status</option>
+              <option>AMC</option>
+              <option>PROJECT</option>
+              <option>WARRANTY</option>
+              <option>OTHER</option>
+            </select>
+          </div>
+
+          <div>
             <label class="block font-medium mb-1 text-gray-700">AMC Qtr:</label>
             <input
               id="newAmcQtr"
@@ -1011,6 +1027,9 @@
           .toUpperCase();
         const phase = document.getElementById("newPhase").value.trim();
         const engineer = document.getElementById("newEngineer").value.trim();
+        const siteStatus = document
+          .getElementById("newsiteStatus")
+          .value.trim();
         const amcQtr = document
           .getElementById("newAmcQtr")
           .value.trim()
@@ -1023,6 +1042,7 @@
           !region ||
           !phase ||
           !engineer ||
+          !siteStatus ||
           !amcQtr
         ) {
           alert("❌ All fields are required");
@@ -1043,6 +1063,7 @@
               region,
               phase,
               engineer,
+              siteStatus,
               amcQtr,
             }),
           });
