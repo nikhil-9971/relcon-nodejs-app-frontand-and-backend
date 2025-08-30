@@ -64,8 +64,8 @@ router.get("/amcCountStatus", async (req, res) => {
       return res.status(400).json({ error: "Start date and end date are required" });
     }
 
-    // Get all RO Master entries (assuming all are AMC sites for now)
-    const roMasterData = await ROMaster.find({});
+    // Get only RO Master entries with siteStatus = "AMC"
+    const roMasterData = await ROMaster.find({ siteStatus: "AMC" });
     
     // Get all daily plans within the date range
     const dailyPlans = await DailyPlan.find({
@@ -90,10 +90,14 @@ router.get("/amcCountStatus", async (req, res) => {
 
     // Group by engineer
     const engineerStats = new Map();
+    const detailedData = []; // For CSV export
     
     roMasterData.forEach(ro => {
       const engineer = ro.engineer || "Unknown";
       const roCode = ro.roCode;
+      const roName = ro.roName;
+      const region = ro.region;
+      const phase = ro.phase;
       
       if (!engineerStats.has(engineer)) {
         engineerStats.set(engineer, {
@@ -108,11 +112,29 @@ router.get("/amcCountStatus", async (req, res) => {
       stats.totalAMCAssigned++;
       
       // Check if this RO has completed AMC visits
-      if (completedAMCVisits.has(roCode)) {
+      const hasCompletedAMC = completedAMCVisits.has(roCode);
+      if (hasCompletedAMC) {
         stats.totalAMCCompleted++;
       } else {
         stats.pendingAMC++;
       }
+
+      // Add detailed data for CSV export
+      const latestVisit = hasCompletedAMC ? 
+        completedAMCVisits.get(roCode).reduce((latest, plan) => 
+          new Date(plan.date) > new Date(latest.date) ? plan : latest
+        ) : null;
+
+      detailedData.push({
+        engineerName: engineer,
+        roCode: roCode,
+        roName: roName,
+        region: region,
+        phase: phase,
+        amcStatus: hasCompletedAMC ? "Completed" : "Pending",
+        visitDate: hasCompletedAMC ? latestVisit.date : "",
+        issueType: hasCompletedAMC ? latestVisit.issueType : ""
+      });
     });
 
     const result = Array.from(engineerStats.values());
@@ -120,6 +142,7 @@ router.get("/amcCountStatus", async (req, res) => {
     res.json({
       success: true,
       data: result,
+      detailedData: detailedData,
       summary: {
         totalSites: roMasterData.length,
         totalCompleted: result.reduce((sum, stat) => sum + stat.totalAMCCompleted, 0),
