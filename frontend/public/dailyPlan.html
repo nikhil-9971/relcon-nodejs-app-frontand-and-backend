@@ -637,9 +637,17 @@
       async function validateHPCLAMC(data) {
         console.log("🔍 HPCL Validation - Data:", data);
         
-        // Only validate for HPCL visits
-        if (!data.phase || !data.phase.includes("HPCL")) {
-          console.log("⏭️ Not HPCL phase, skipping validation. Phase:", data.phase);
+        // Only validate for specific HPCL phases
+        const validHPCLPhases = [
+          "HPCL/Phase-X",
+          "HPCL/Phase-IX", 
+          "HPCL/Phase-XI",
+          "HPCL/Phase-XII",
+          "HPCL/Phase-XIII"
+        ];
+        
+        if (!data.phase || !validHPCLPhases.includes(data.phase)) {
+          console.log("⏭️ Not a valid HPCL phase for AMC validation, skipping. Phase:", data.phase);
           return { isValid: true, message: "" };
         }
         
