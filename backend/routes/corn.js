@@ -39,10 +39,18 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
       (i) => i.status === "Pending"
     );
 
-    // Remove previous system chatbot messages (table or system=true)
+    // Remove previous system chatbot messages (table or system=true) from today only
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    
     await Chat.deleteMany({
       roomId: "group",
       from: "🤖 Chatbot",
+      createdAt: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      },
       $or: [
         { system: true },
         { text: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
@@ -91,7 +99,7 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
 
       tableHTML += "</tbody></table>";
 
-      // Save to DB
+      // Save to DB with proper timestamp
       const messageDoc = await Chat.create({
         from: "🤖 Chatbot",
         to: "group",
@@ -100,6 +108,8 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         delivered: true,
         read: false,
         system: true,
+        createdAt: new Date(), // This will be the current time when cron runs
+        updatedAt: new Date()
       });
 
       // Broadcast as HTML
@@ -119,6 +129,8 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         delivered: true,
         read: false,
         system: true,
+        createdAt: new Date(), // This will be the current time when cron runs
+        updatedAt: new Date()
       });
 
       broadcastToAll({

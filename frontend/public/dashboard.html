@@ -1333,9 +1333,12 @@
         // Table styling (applies to any <table> inside the wrapper)
 
         // If msg.html provided (chatbot table), wrap it so style applies
+        // For system messages with text containing HTML, use the text directly
         const messageContent = msg.html
           ? `<div class="chat-table-wrapper">${msg.html}</div>`
-          : `<div>${highlightedText}</div>`;
+          : msg.system && msg.text && msg.text.includes('<table')
+            ? `<div class="chat-table-wrapper">${msg.text}</div>`
+            : `<div>${highlightedText}</div>`;
 
         const isBot = (msg.from || "").toLowerCase().includes("chatbot");
         const showReplyButton =
@@ -1347,13 +1350,12 @@
     <div style="font-size:10px;"><b>${msg.from}</b></div>
     ${replyHTML}
     ${messageContent}
-    <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
+    <div style="font-size:9px; text-align:right; color:#888" data-timestamp="${date.toISOString()}">${formattedTime}</div>
    ${replyButtonHTML}
   `;
 
         // ===== ordering logic =====
-        // Always append messages in chronological order
-        // For real-time messages, they should come after existing messages
+        // Insert messages at correct chronological position
         
         if (isOwn) {
           // User's own message - append to end
@@ -1369,8 +1371,28 @@
           // Clear stored user message so single reply maps to that message only
           lastUserMessageEl = null;
         } else {
-          // Other messages - append to end in chronological order
-          chatMessages.append(div);
+          // For system messages or other messages, insert at correct chronological position
+          const msgTime = new Date(msg.createdAt || Date.now());
+          const existingMessages = Array.from(chatMessages.children);
+          
+          let insertPosition = null;
+          for (let i = 0; i < existingMessages.length; i++) {
+            const existingMsg = existingMessages[i];
+            const existingTime = existingMsg.querySelector('[data-timestamp]');
+            if (existingTime) {
+              const existingMsgTime = new Date(existingTime.getAttribute('data-timestamp'));
+              if (msgTime < existingMsgTime) {
+                insertPosition = existingMsg;
+                break;
+              }
+            }
+          }
+          
+          if (insertPosition) {
+            chatMessages.insertBefore(div, insertPosition);
+          } else {
+            chatMessages.append(div);
+          }
         }
 
         // Scroll to bottom
