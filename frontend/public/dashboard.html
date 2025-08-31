@@ -1352,11 +1352,11 @@
   `;
 
         // ===== ordering logic =====
-        // If local user's message => append and store element
-        // If bot message and there's a stored lastUserMessageEl, insert after it
-        // Otherwise append normally.
-
+        // Always append messages in chronological order
+        // For real-time messages, they should come after existing messages
+        
         if (isOwn) {
+          // User's own message - append to end
           chatMessages.append(div);
           lastUserMessageEl = div; // remember this element so bot reply can be inserted after it
         } else if (
@@ -1364,11 +1364,12 @@
           lastUserMessageEl &&
           chatMessages.contains(lastUserMessageEl)
         ) {
-          // Insert bot reply right after the user's message
+          // Bot reply to user's message - insert right after user's message
           lastUserMessageEl.insertAdjacentElement("afterend", div);
           // Clear stored user message so single reply maps to that message only
           lastUserMessageEl = null;
         } else {
+          // Other messages - append to end in chronological order
           chatMessages.append(div);
         }
 
@@ -1396,7 +1397,15 @@
           });
           const data = await res.json();
           chatMessages.innerHTML = "";
-          data.forEach(renderMessage);
+          
+          // Sort messages by createdAt timestamp to ensure proper chronological order
+          const sortedMessages = data.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateA - dateB; // Ascending order (oldest first)
+          });
+          
+          sortedMessages.forEach(renderMessage);
           //after rendering history Jump to Bottom
           scrolltoBottom();
         } catch (err) {

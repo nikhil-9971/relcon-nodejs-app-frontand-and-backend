@@ -22,4 +22,8 @@ const ChatSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Add indexes for better performance and proper ordering
+ChatSchema.index({ roomId: 1, createdAt: 1 });
+ChatSchema.index({ createdAt: 1 });
+
 module.exports = mongoose.model("Chat", ChatSchema);

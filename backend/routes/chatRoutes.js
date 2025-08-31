@@ -54,38 +54,30 @@ router.post("/mark-read", async (req, res) => {
 // chatRoutes.js
 router.get("/history/group", async (req, res) => {
   try {
-    // Get normal chat messages (exclude system)
-    const userMessages = await Chat.find({
+    // Get all messages (both user and system) in chronological order
+    const allMessages = await Chat.find({
       roomId: "group",
-      $or: [{ system: { $exists: false } }, { system: false }],
-      text: { $not: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
     })
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: 1 }) // Ensure chronological order
       .lean();
 
-    // Get the latest system message
-    let latestSystem = await Chat.findOne({
-      roomId: "group",
-      system: true,
-    })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    if (latestSystem) {
-      // ⚡ Convert text → html so frontend renders table formatting
-      const txt =
-        typeof latestSystem.text === "string" ? latestSystem.text : "";
-      if (/<table[\s\S]*<\/table>/i.test(txt)) {
-        latestSystem.html = txt;
-        delete latestSystem.text;
+    // Process messages to handle system messages properly
+    const processedMessages = allMessages.map(msg => {
+      if (msg.system && msg.text) {
+        // ⚡ Convert system message text → html so frontend renders table formatting
+        const txt = typeof msg.text === "string" ? msg.text : "";
+        if (/<table[\s\S]*<\/table>/i.test(txt)) {
+          return {
+            ...msg,
+            html: txt,
+            text: undefined // Remove text since we're using html
+          };
+        }
       }
-    }
+      return msg;
+    });
 
-    const messages = latestSystem
-      ? [...userMessages, latestSystem]
-      : userMessages;
-
-    res.json(messages);
+    res.json(processedMessages);
   } catch (err) {
     res
       .status(500)
