@@ -845,7 +845,7 @@
     </div>
 
     <script>
-      const baseUrl = "https://relcon-backend-jwt.onrender.com";
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
 
       let replyContext = null;
 
@@ -1048,6 +1048,7 @@
           .toUpperCase();
         const phase = document.getElementById("newPhase").value.trim();
         const engineer = document.getElementById("newEngineer").value.trim();
+        const siteStatus = document.getElementById("siteStatus").value.trim();
         const amcQtr = document
           .getElementById("newAmcQtr")
           .value.trim()
@@ -1060,6 +1061,7 @@
           !region ||
           !phase ||
           !engineer ||
+          !siteStatus ||
           !amcQtr
         ) {
           alert("❌ All fields are required");
@@ -1080,6 +1082,7 @@
               region,
               phase,
               engineer,
+              siteStatus,
               amcQtr,
             }),
           });
@@ -1207,7 +1210,7 @@
 
       function initWS() {
         ws = new WebSocket(
-          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
+          `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(
             token
           )}`
         );
@@ -1694,7 +1697,7 @@
       // 🔹 WS integration for presence
       function initWS() {
         ws = new WebSocket(
-          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
+          `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(
             token
           )}`
         );
