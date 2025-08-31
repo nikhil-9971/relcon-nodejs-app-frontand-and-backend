@@ -85,6 +85,52 @@ router.get("/history/group", async (req, res) => {
   }
 });
 
+// Delete message endpoint (admin only)
+router.delete("/delete/:messageId", async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    
+    // Get user from token to check admin role
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    // Verify token and get user
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if user is admin
+    const user = await User.findById(decoded.userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: "Only admins can delete messages" });
+    }
+
+    // Find and delete the message
+    const message = await Chat.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    // Delete the message
+    await Chat.findByIdAndDelete(messageId);
+
+    // Broadcast deletion to all connected clients
+    const { broadcastToAll } = require('../chat.ws');
+    if (broadcastToAll) {
+      broadcastToAll({
+        type: "message_deleted",
+        messageId: messageId
+      });
+    }
+
+    res.json({ success: true, message: "Message deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting message:", err);
+    res.status(500).json({ error: "Failed to delete message", details: err.message });
+  }
+});
+
 router.get("/userlist", async (req, res) => {
   try {
     const users = await User.find({}, "username engineerName").lean();
