@@ -3,7 +3,7 @@ const cron = require("node-cron");
 const fetch = require("node-fetch");
 const Chat = require("../models/Chat");
 
-const BASE_URL = "https://relcon-backend-jwt.onrender.com";
+const BASE_URL = "https://relcon-backend-jwt-backup.onrender.com";
 
 function startCronJobs(broadcastToAll) {
   // 🔹 Morning 07:30 AM job
@@ -18,7 +18,7 @@ function startCronJobs(broadcastToAll) {
 
   // 🔹 Evening 07:30 PM job
   cron.schedule(
-    "30 19 * * *",
+    "28 21 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 07:30 PM IST");
       await runPendingIncidentJob(broadcastToAll, "Good Evening !");
