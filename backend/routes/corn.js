@@ -1,7 +1,9 @@
 // corn.js
 const cron = require("node-cron");
+const fetch = require("node-fetch");
 const Chat = require("../models/Chat");
-const Incident = require("../models/Incident"); // Direct database access
+
+const BASE_URL = "https://relcon-backend-jwt.onrender.com";
 
 function startCronJobs(broadcastToAll) {
   // 🔹 Morning 07:30 AM job
@@ -28,26 +30,38 @@ function startCronJobs(broadcastToAll) {
 // 🔁 Common function to handle pending incident job
 async function runPendingIncidentJob(broadcastToAll, greetingText) {
   try {
-    console.log("🔍 Starting pending incident job...");
+    const res = await fetch(`${BASE_URL}/getAllIncidents`);
+    const result = await res.json();
 
-    // Direct database query instead of HTTP call to avoid network issues
-    const incidents = await Incident.find().sort({ incidentDate: -1 });
+    if (!result?.success) return;
 
-    console.log(`📊 Found ${incidents.length} total incidents in database`);
+    const pending = (result.incidents || []).filter(
+      (i) => i.status === "Pending"
+    );
 
-    if (!incidents || incidents.length === 0) {
-      console.log("❌ No incidents found in database");
-      return;
-    }
+    // Remove previous system chatbot messages (table or system=true) from today only
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
 
-    const pending = incidents.filter((i) => i.status === "Pending");
-
-    console.log(`⏳ Found ${pending.length} pending incidents`);
-
-    // Remove previous system chatbot messages (table or system=true)
     await Chat.deleteMany({
       roomId: "group",
       from: "🤖 Chatbot",
+      createdAt: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
       $or: [
         { system: true },
         { text: { $regex: /^\s*<table[\s\S]*<\/table>\s*$/i } },
@@ -96,7 +110,7 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
 
       tableHTML += "</tbody></table>";
 
-      // Save to DB
+      // Save to DB with proper timestamp
       const messageDoc = await Chat.create({
         from: "🤖 Chatbot",
         to: "group",
@@ -105,6 +119,8 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         delivered: true,
         read: false,
         system: true,
+        createdAt: new Date(), // This will be the current time when cron runs
+        updatedAt: new Date(),
       });
 
       // Broadcast as HTML
@@ -114,8 +130,6 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         html: tableHTML,
         createdAt: messageDoc.createdAt,
       });
-
-      console.log("✅ Successfully broadcasted pending incidents table");
     } else {
       // Save + broadcast "No pending..." message
       const messageDoc = await Chat.create({
@@ -126,6 +140,8 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         delivered: true,
         read: false,
         system: true,
+        createdAt: new Date(), // This will be the current time when cron runs
+        updatedAt: new Date(),
       });
 
       broadcastToAll({
@@ -134,16 +150,9 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         text: "✅ No pending incidents today.",
         createdAt: messageDoc.createdAt,
       });
-
-      console.log("✅ Successfully broadcasted 'no pending incidents' message");
     }
   } catch (err) {
     console.error("❌ Cron job error:", err);
-    console.error("❌ Error details:", {
-      message: err.message,
-      stack: err.stack,
-      type: err.constructor.name,
-    });
   }
 }
 
