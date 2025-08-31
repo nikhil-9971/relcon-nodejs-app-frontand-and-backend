@@ -2064,16 +2064,24 @@
           }
 
           const result = await response.json();
-          renderAMCVisitStatus(result.data);
 
-          // Store detailed data for CSV export
+          // Get logged in user info
+          const userRes = await fetch(`${baseUrl}/user`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const currentUser = await userRes.json();
+
+          // Store for CSV export
           window.__amcDetailedData = result.detailedData || [];
+
+          // Render table with role-based filter
+          renderAMCVisitStatus(result.data, currentUser);
         } catch (error) {
           console.error("Error loading AMC visit status:", error);
         }
       }
 
-      function renderAMCVisitStatus(data) {
+      function renderAMCVisitStatus(data, currentUser) {
         const tbody = document.getElementById("amcVisitStatusBody");
         if (!tbody) return;
 
@@ -2083,10 +2091,25 @@
           return;
         }
 
-        // Filter out NAVAL KISHOR PANDEY
-        const filteredData = data.filter(
+        const role = String(currentUser.role || "").toLowerCase();
+        const currentEngineer = (
+          currentUser.engineerName ||
+          currentUser.username ||
+          ""
+        ).trim();
+
+        // Filter out unwanted + role-based filter
+        let filteredData = data.filter(
           (item) => item.engineerName !== "NAVAL KISHOR PANDEY"
         );
+
+        if (role === "engineer" && currentEngineer) {
+          filteredData = filteredData.filter(
+            (item) =>
+              String(item.engineerName || "").toLowerCase() ===
+              currentEngineer.toLowerCase()
+          );
+        }
 
         // Sort by engineer name
         filteredData.sort((a, b) =>
@@ -2104,28 +2127,30 @@
             totalPending += item.pendingAMC;
 
             return `
-            <tr class="border-b">
-              <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${item.engineerName}</td>
-              <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
-              <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
-              <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
-            </tr>
-          `;
+        <tr class="border-b">
+          <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${item.engineerName}</td>
+          <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
+          <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
+          <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
+        </tr>
+      `;
           })
           .join("");
 
-        // Add total row
-        tbody.innerHTML += `
-          <tr class="border-t bg-gray-50">
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
-          </tr>
-        `;
+        // Add total row only if Admin (Engineer should not see overall totals)
+        if (role === "admin") {
+          tbody.innerHTML += `
+      <tr class="border-t bg-gray-50">
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
+      </tr>
+    `;
+        }
       }
 
-      function exportAMCVisitStatusCSV() {
+      async function exportAMCVisitStatusCSV() {
         try {
           const detailedData = window.__amcDetailedData || [];
 
@@ -2134,23 +2159,43 @@
             return;
           }
 
-          const rows = [];
-          const header = [
-            "Engineer Name",
-            "RO Code",
-            "RO Name",
-            "Region",
-            "Phase",
-            "AMC Status",
-            "Visit Date",
-            "Issue Type",
-          ];
-          rows.push(header);
+          // Get logged-in user info
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("User not logged in.");
+            return;
+          }
+
+          const userRes = await fetch(`${baseUrl}/user`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const currentUser = await userRes.json();
+
+          const role = String(currentUser.role || "").toLowerCase();
+          const currentEngineer = (
+            currentUser.engineerName ||
+            currentUser.username ||
+            ""
+          ).trim();
 
           // Filter out NAVAL KISHOR PANDEY
-          const filteredData = detailedData.filter(
+          let filteredData = detailedData.filter(
             (item) => item.engineerName !== "NAVAL KISHOR PANDEY"
           );
+
+          // 🔑 Role-based filter: engineers only get their own data
+          if (role === "engineer" && currentEngineer) {
+            filteredData = filteredData.filter(
+              (item) =>
+                String(item.engineerName || "").toLowerCase() ===
+                currentEngineer.toLowerCase()
+            );
+          }
+
+          if (filteredData.length === 0) {
+            alert("No AMC records available for your role.");
+            return;
+          }
 
           // Sort by engineer name, then by RO code
           filteredData.sort((a, b) => {
@@ -2160,7 +2205,21 @@
             return a.roCode.localeCompare(b.roCode);
           });
 
-          // Add detailed data rows
+          // Prepare CSV rows
+          const rows = [];
+          const header = [
+            "Engineer Name",
+            "RO Code",
+            "RO Name",
+            "Region",
+            "Phase",
+            "AMC Status",
+            "Visit Date",
+            "AMC QTR",
+            "Issue Type",
+          ];
+          rows.push(header);
+
           filteredData.forEach((item) => {
             const rowData = [
               item.engineerName,
@@ -2170,16 +2229,19 @@
               item.phase,
               item.amcStatus,
               item.visitDate,
+              item.amcQtr,
               item.issueType,
             ];
             rows.push(rowData);
           });
 
+          // Generate CSV
           const csvContent = rows.map((row) => row.join(",")).join("\n");
           const blob = new Blob([csvContent], {
             type: "text/csv;charset=utf-8;",
           });
           const url = URL.createObjectURL(blob);
+
           const a = document.createElement("a");
           a.href = url;
           a.download = `amc_visit_detailed_status_${new Date().toLocaleDateString(
