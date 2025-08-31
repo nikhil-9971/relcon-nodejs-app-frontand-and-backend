@@ -25,7 +25,8 @@ router.post("/add", async (req, res) => {
       !region ||
       !phase ||
       !engineer ||
-      !amcQtr
+      !amcQtr ||
+      !siteStatus
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -45,6 +46,7 @@ router.post("/add", async (req, res) => {
       phase,
       engineer,
       amcQtr,
+      siteStatus,
     });
 
     await newEntry.save();
@@ -138,7 +140,7 @@ router.get("/amcCountStatus", async (req, res) => {
         phase: phase,
         amcStatus: hasCompletedAMC ? "Completed" : "Pending",
         visitDate: hasCompletedAMC ? latestVisit.date : "",
-        amcQtr: amcQtr,
+        amcQtr: ro.amcQtr,
         issueType: hasCompletedAMC ? latestVisit.issueType : "",
       });
     });
