@@ -1,14 +1,12 @@
 // corn.js
 const cron = require("node-cron");
-const fetch = require("node-fetch");
 const Chat = require("../models/Chat");
-
-const BASE_URL = "https://relcon-backend-jwt-backup.onrender.com";
+const Incident = require("../models/Incident"); // Direct database access
 
 function startCronJobs(broadcastToAll) {
   // 🔹 Morning 07:30 AM job
   cron.schedule(
-    "41 9 * * *",
+    "21 10 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 07:30 AM IST");
       await runPendingIncidentJob(broadcastToAll, "Good Morning !");
@@ -30,14 +28,21 @@ function startCronJobs(broadcastToAll) {
 // 🔁 Common function to handle pending incident job
 async function runPendingIncidentJob(broadcastToAll, greetingText) {
   try {
-    const res = await fetch(`${BASE_URL}/getAllIncidents`);
-    const result = await res.json();
+    console.log("🔍 Starting pending incident job...");
 
-    if (!result?.success) return;
+    // Direct database query instead of HTTP call to avoid network issues
+    const incidents = await Incident.find().sort({ incidentDate: -1 });
 
-    const pending = (result.incidents || []).filter(
-      (i) => i.status === "Pending"
-    );
+    console.log(`📊 Found ${incidents.length} total incidents in database`);
+
+    if (!incidents || incidents.length === 0) {
+      console.log("❌ No incidents found in database");
+      return;
+    }
+
+    const pending = incidents.filter((i) => i.status === "Pending");
+
+    console.log(`⏳ Found ${pending.length} pending incidents`);
 
     // Remove previous system chatbot messages (table or system=true)
     await Chat.deleteMany({
@@ -109,6 +114,8 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         html: tableHTML,
         createdAt: messageDoc.createdAt,
       });
+
+      console.log("✅ Successfully broadcasted pending incidents table");
     } else {
       // Save + broadcast "No pending..." message
       const messageDoc = await Chat.create({
@@ -127,9 +134,16 @@ async function runPendingIncidentJob(broadcastToAll, greetingText) {
         text: "✅ No pending incidents today.",
         createdAt: messageDoc.createdAt,
       });
+
+      console.log("✅ Successfully broadcasted 'no pending incidents' message");
     }
   } catch (err) {
     console.error("❌ Cron job error:", err);
+    console.error("❌ Error details:", {
+      message: err.message,
+      stack: err.stack,
+      type: err.constructor.name,
+    });
   }
 }
 
