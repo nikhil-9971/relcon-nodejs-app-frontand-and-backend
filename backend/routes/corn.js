@@ -3,7 +3,7 @@ const cron = require("node-cron");
 const fetch = require("node-fetch");
 const Chat = require("../models/Chat");
 
-const BASE_URL = "https://relcon-backend-jwt.onrender.com";
+const BASE_URL = "https://relcon-backend-jwt-backup.onrender.com";
 
 function startCronJobs(broadcastToAll) {
   // 🔹 Morning 07:30 AM job
