@@ -23,7 +23,7 @@ router.post("/login", async (req, res) => {
     engineerName: user.engineerName,
   };
 
-  const token = jwt.sign(payload, SECRET, { expiresIn: "2h" });
+  const token = jwt.sign(payload, SECRET, { expiresIn: "24h" });
 
   // ✅ Get real IP
   const ipAddress =
