@@ -6,7 +6,7 @@ const Incident = require("../models/Incident"); // Direct database access
 function startCronJobs(broadcastToAll) {
   // 🔹 Morning 07:30 AM job
   cron.schedule(
-    "21 10 * * *",
+    "30 7 * * *",
     async () => {
       console.log("⏰ Running pending incidents cron job at 07:30 AM IST");
       await runPendingIncidentJob(broadcastToAll, "Good Morning !");
