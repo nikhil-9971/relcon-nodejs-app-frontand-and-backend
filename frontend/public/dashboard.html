@@ -708,22 +708,6 @@
           </div>
 
           <div>
-            <label class="block font-medium mb-1 text-gray-700"
-              >siteStatus:</label
-            >
-            <select
-              id="newsiteStatus"
-              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
-            >
-              <option disabled selected>Select Site Status</option>
-              <option>AMC</option>
-              <option>PROJECT</option>
-              <option>WARRANTY</option>
-              <option>OTHER</option>
-            </select>
-          </div>
-
-          <div>
             <label class="block font-medium mb-1 text-gray-700">AMC Qtr:</label>
             <input
               id="newAmcQtr"
@@ -861,7 +845,7 @@
     </div>
 
     <script>
-      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      const baseUrl = "https://relcon-backend-jwt.onrender.com";
 
       let replyContext = null;
 
@@ -1027,9 +1011,6 @@
           .toUpperCase();
         const phase = document.getElementById("newPhase").value.trim();
         const engineer = document.getElementById("newEngineer").value.trim();
-        const siteStatus = document
-          .getElementById("newsiteStatus")
-          .value.trim();
         const amcQtr = document
           .getElementById("newAmcQtr")
           .value.trim()
@@ -1042,7 +1023,6 @@
           !region ||
           !phase ||
           !engineer ||
-          !siteStatus ||
           !amcQtr
         ) {
           alert("❌ All fields are required");
@@ -1063,7 +1043,6 @@
               region,
               phase,
               engineer,
-              siteStatus,
               amcQtr,
             }),
           });
@@ -1183,7 +1162,7 @@
 
       function initWS() {
         ws = new WebSocket(
-          `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(
+          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
             token
           )}`
         );
@@ -1208,6 +1187,16 @@
           // 💬 Chat message
           if (msg.type === "group" && msg.from !== currentUser) {
             renderMessage(msg);
+          }
+
+          // 🗑️ Message deleted
+          if (msg.type === "message_deleted") {
+            const messageElement = document.querySelector(
+              `[data-message-id="${msg.messageId}"]`
+            );
+            if (messageElement) {
+              messageElement.remove();
+            }
           }
         };
 
@@ -1311,6 +1300,9 @@
 
         const div = document.createElement("div");
         div.className = "msg " + (isOwn ? "me" : "them");
+        if (msg._id) {
+          div.setAttribute("data-message-id", msg._id);
+        }
 
         const date = msg.createdAt ? new Date(msg.createdAt) : new Date();
         const options = {
@@ -1354,8 +1346,11 @@
         // Table styling (applies to any <table> inside the wrapper)
 
         // If msg.html provided (chatbot table), wrap it so style applies
+        // For system messages with text containing HTML, use the text directly
         const messageContent = msg.html
           ? `<div class="chat-table-wrapper">${msg.html}</div>`
+          : msg.system && msg.text && msg.text.includes("<table")
+          ? `<div class="chat-table-wrapper">${msg.text}</div>`
           : `<div>${highlightedText}</div>`;
 
         const isBot = (msg.from || "").toLowerCase().includes("chatbot");
@@ -1364,20 +1359,28 @@
         const replyButtonHTML = showReplyButton
           ? '<button class="replyBtn" style="font-size:10px; color:#15803d;">↩️ Reply</button>'
           : "";
+
+        // Show delete button for admin users
+        const isAdmin = currentUser && currentUser.role === "admin";
+        const deleteButtonHTML = isAdmin
+          ? `<button class="deleteBtn" style="font-size:10px; color:#dc2626; margin-left: 5px;" data-message-id="${msg._id}">🗑️ Delete</button>`
+          : "";
         div.innerHTML = `
     <div style="font-size:10px;"><b>${msg.from}</b></div>
     ${replyHTML}
     ${messageContent}
-    <div style="font-size:9px; text-align:right; color:#888">${formattedTime}</div>
-   ${replyButtonHTML}
+    <div style="font-size:9px; text-align:right; color:#888" data-timestamp="${date.toISOString()}">${formattedTime}</div>
+    <div style="display: flex; gap: 5px; margin-top: 2px;">
+      ${replyButtonHTML}
+      ${deleteButtonHTML}
+    </div>
   `;
 
         // ===== ordering logic =====
-        // If local user's message => append and store element
-        // If bot message and there's a stored lastUserMessageEl, insert after it
-        // Otherwise append normally.
+        // Insert messages at correct chronological position
 
         if (isOwn) {
+          // User's own message - append to end
           chatMessages.append(div);
           lastUserMessageEl = div; // remember this element so bot reply can be inserted after it
         } else if (
@@ -1385,12 +1388,35 @@
           lastUserMessageEl &&
           chatMessages.contains(lastUserMessageEl)
         ) {
-          // Insert bot reply right after the user's message
+          // Bot reply to user's message - insert right after user's message
           lastUserMessageEl.insertAdjacentElement("afterend", div);
           // Clear stored user message so single reply maps to that message only
           lastUserMessageEl = null;
         } else {
-          chatMessages.append(div);
+          // For system messages or other messages, insert at correct chronological position
+          const msgTime = new Date(msg.createdAt || Date.now());
+          const existingMessages = Array.from(chatMessages.children);
+
+          let insertPosition = null;
+          for (let i = 0; i < existingMessages.length; i++) {
+            const existingMsg = existingMessages[i];
+            const existingTime = existingMsg.querySelector("[data-timestamp]");
+            if (existingTime) {
+              const existingMsgTime = new Date(
+                existingTime.getAttribute("data-timestamp")
+              );
+              if (msgTime < existingMsgTime) {
+                insertPosition = existingMsg;
+                break;
+              }
+            }
+          }
+
+          if (insertPosition) {
+            chatMessages.insertBefore(div, insertPosition);
+          } else {
+            chatMessages.append(div);
+          }
         }
 
         // Scroll to bottom
@@ -1408,6 +1434,44 @@
             chatInput.focus();
           });
         }
+
+        // delete button behavior (admin only)
+        const deleteBtn = div.querySelector(".deleteBtn");
+        if (deleteBtn) {
+          deleteBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to delete this message?")) {
+              deleteMessage(msg._id, div);
+            }
+          });
+        }
+      }
+
+      // Delete message function
+      async function deleteMessage(messageId, messageElement) {
+        try {
+          const response = await fetch(`${baseUrl}/chat/delete/${messageId}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.ok) {
+            // Remove message from UI
+            messageElement.remove();
+            showToast("✅ Message deleted successfully", "bg-green-600");
+          } else {
+            const error = await response.json();
+            showToast(
+              `❌ Failed to delete message: ${error.error}`,
+              "bg-red-600"
+            );
+          }
+        } catch (error) {
+          console.error("Error deleting message:", error);
+          showToast("❌ Error deleting message", "bg-red-600");
+        }
       }
 
       async function loadGroupHistory() {
@@ -1417,7 +1481,15 @@
           });
           const data = await res.json();
           chatMessages.innerHTML = "";
-          data.forEach(renderMessage);
+
+          // Sort messages by createdAt timestamp to ensure proper chronological order
+          const sortedMessages = data.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateA - dateB; // Ascending order (oldest first)
+          });
+
+          sortedMessages.forEach(renderMessage);
           //after rendering history Jump to Bottom
           scrolltoBottom();
         } catch (err) {
@@ -1577,7 +1649,7 @@
       // 🔹 WS integration for presence
       function initWS() {
         ws = new WebSocket(
-          `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(
+          `wss://relcon-backend-jwt.onrender.com?token=${encodeURIComponent(
             token
           )}`
         );
