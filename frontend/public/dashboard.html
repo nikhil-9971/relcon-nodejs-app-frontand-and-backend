@@ -716,6 +716,22 @@
               class="w-full border border-gray-300 p-2 rounded uppercase focus:outline-none focus:ring focus:ring-green-300"
             />
           </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700"
+              >Site Status:</label
+            >
+            <select
+              id="newsiteStatus"
+              class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring focus:ring-green-300"
+            >
+              <option disabled selected>Select Site Status</option>
+              <option>AMC</option>
+              <option>PROJECT</option>
+              <option>WARRANTY</option>
+              <option>OTHER</option>
+            </select>
+          </div>
         </div>
 
         <div class="flex justify-end mt-6">
@@ -759,7 +775,7 @@
       onclick="openChatBox()"
       class="fixed bottom-6 right-6 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg z-[9999]"
     >
-      💬
+      💬Chat
       <span
         id="mentionBadge"
         style="
@@ -1048,11 +1064,13 @@
           .toUpperCase();
         const phase = document.getElementById("newPhase").value.trim();
         const engineer = document.getElementById("newEngineer").value.trim();
-        const siteStatus = document.getElementById("siteStatus").value.trim();
         const amcQtr = document
           .getElementById("newAmcQtr")
           .value.trim()
           .toUpperCase();
+        const siteStatus = document
+          .getElementById("newsiteStatus")
+          .value.trim();
 
         if (
           !zone ||
@@ -1061,8 +1079,8 @@
           !region ||
           !phase ||
           !engineer ||
-          !siteStatus ||
-          !amcQtr
+          !amcQtr ||
+          !siteStatus
         ) {
           alert("❌ All fields are required");
           return;
@@ -1082,8 +1100,8 @@
               region,
               phase,
               engineer,
-              siteStatus,
               amcQtr,
+              siteStatus,
             }),
           });
 
