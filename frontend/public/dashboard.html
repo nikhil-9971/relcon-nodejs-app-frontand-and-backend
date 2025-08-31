@@ -853,6 +853,19 @@
         return localStorage.getItem("token");
       }
 
+      function isTokenExpired(token) {
+        if (!token) return true;
+        
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          const currentTime = Math.floor(Date.now() / 1000);
+          return payload.exp < currentTime;
+        } catch (error) {
+          console.error("Error parsing token:", error);
+          return true;
+        }
+      }
+
       function openNewSiteModal() {
         document.getElementById("newSiteModal").classList.remove("hidden");
       }
@@ -863,7 +876,10 @@
 
       function logout() {
         localStorage.removeItem("token");
-        window.location.href = "login.html";
+        // Check if we're not already on login page to prevent infinite redirects
+        if (!window.location.href.includes("login.html")) {
+          window.location.href = "login.html";
+        }
       }
 
       function loadPage(page, linkElement) {
@@ -919,7 +935,17 @@
 
       async function fetchUser() {
         const token = getToken();
-        if (!token) return logout();
+        if (!token) {
+          console.log("No token found, redirecting to login");
+          return logout();
+        }
+
+        // Check if token is expired
+        if (isTokenExpired(token)) {
+          console.log("Token is expired, redirecting to login");
+          localStorage.removeItem("token");
+          return logout();
+        }
 
         try {
           const res = await fetch(`${baseUrl}/user`, {
@@ -928,19 +954,23 @@
             },
           });
 
-          if (res.status === 403 || res.status === 401)
+          if (res.status === 403 || res.status === 401) {
+            console.log("Token expired or invalid, redirecting to login");
             throw new Error("Expired");
+          }
+          
           const user = await res.json();
+          console.log("User authenticated successfully:", user.username);
 
           const text = `${user.engineerName || user.username} (${user.role})`;
           document.getElementById("userDetails").textContent = `👤 ${text}`;
 
           // Only show Status Record & Task Report to admin
-
           document.getElementById("statusLink").style.display =
             user.role === "admin" ? "flex" : "none";
           document.getElementById("tasklink").style.display =
             user.role === "admin" ? "flex" : "none";
+          
           // Show Audit Report only to admin + Nikhil Trivedi
           if (user.role === "admin" && user.engineerName === "Nikhil Trivedi") {
             document.getElementById("auditLink").style.display = "block";
@@ -953,14 +983,20 @@
 
           // Show Task Management to admins only
           if (user.role === "admin") {
-            document.getElementById("taskManagementLink").style.display =
-              "flex";
+            document.getElementById("taskManagementLink").style.display = "flex";
           }
 
           if (user.role === "admin") {
             document.getElementById("incidentId").style.display = "flex";
           }
         } catch (err) {
+          console.error("Authentication error:", err);
+          // Show a more user-friendly error message
+          if (err.message === "Expired") {
+            alert("Your session has expired. Please login again.");
+          } else {
+            alert("Authentication failed. Please login again.");
+          }
           logout();
         }
       }
@@ -1059,12 +1095,16 @@
         }
       }
 
-      window.onload = () => {
-        fetchUser();
-        // Assign event handlers safely
-        document.getElementById("addSiteBtn").onclick = openNewSiteModal;
-        resetInactivityTimer();
-        initThemeControls();
+      window.onload = async () => {
+        try {
+          await fetchUser();
+          // Assign event handlers safely
+          document.getElementById("addSiteBtn").onclick = openNewSiteModal;
+          resetInactivityTimer();
+          initThemeControls();
+        } catch (error) {
+          console.error("Error during page load:", error);
+        }
       };
 
       function initThemeControls() {
@@ -1135,7 +1175,11 @@
         }, 500); // Wait for animation to finish
       }
       const token = getToken();
-      if (!token) logout();
+      // Only logout if we're not already on login page
+      if (!token && !window.location.href.includes("login.html")) {
+        console.log("No token found on page load, redirecting to login");
+        logout();
+      }
 
       function parseUser() {
         try {
