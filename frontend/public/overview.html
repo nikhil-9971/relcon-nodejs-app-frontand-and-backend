@@ -830,17 +830,58 @@
               .map((r) => key(r.roCode, r.date))
           );
 
-          const pendingTodayHpcl = plansTodayHpcl.filter(
-            (p) => !hpclStatusTodaySet.has(key(p.roCode, p.date))
-          ).length;
-          const pendingTodayRbml = plansTodayRbml.filter(
-            (p) => !rbmlStatusTodaySet.has(key(p.roCode, p.date))
-          ).length;
+          // const pendingTodayHpcl = plansTodayHpcl.filter(
+          //   (p) => !hpclStatusTodaySet.has(key(p.roCode, p.date))
+          // ).length;
+
+          //const pendingTodayRbml = plansTodayRbml.filter(
+          //  (p) => !rbmlStatusTodaySet.has(key(p.roCode, p.date))
+          // ).length;
+          //  document.getElementById("kpiPendingToday").textContent =
+          //   pendingTodayHpcl + pendingTodayRbml;
+          //  document.getElementById(
+          //    "kpiPendingBreakdown"
+          //  ).textContent = `HPCL: ${pendingTodayHpcl} • RBML: ${pendingTodayRbml}`;
+
+          // ---------- DEBUG LOGS ADDED ----------
+          const pendingTodayHpcl = plansTodayHpcl.filter((p) => {
+            const keyVal = key(p.roCode, p.date);
+            const isPending = !hpclStatusTodaySet.has(keyVal);
+            if (isPending) {
+              console.warn(
+                "⚠️ HPCL Pending → No matching status found for:",
+                keyVal,
+                p
+              );
+            }
+            return isPending;
+          }).length;
+
+          const pendingTodayRbml = plansTodayRbml.filter((p) => {
+            const keyVal = key(p.roCode, p.date);
+            const isPending = !rbmlStatusTodaySet.has(keyVal);
+            if (isPending) {
+              console.warn(
+                "⚠️ RBML Pending → No matching status found for:",
+                keyVal,
+                p
+              );
+            }
+            return isPending;
+          }).length;
+
+          console.log("✅ plansTodayHpcl", plansTodayHpcl);
+          console.log("✅ plansTodayRbml", plansTodayRbml);
+          console.log("✅ hpclStatusTodaySet", Array.from(hpclStatusTodaySet));
+          console.log("✅ rbmlStatusTodaySet", Array.from(rbmlStatusTodaySet));
+
           document.getElementById("kpiPendingToday").textContent =
             pendingTodayHpcl + pendingTodayRbml;
           document.getElementById(
             "kpiPendingBreakdown"
           ).textContent = `HPCL: ${pendingTodayHpcl} • RBML: ${pendingTodayRbml}`;
+          // ---------- DEBUG END ----------
+
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
           document.getElementById("kpiHold").textContent = holdToday.length;
