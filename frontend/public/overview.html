@@ -838,9 +838,21 @@
                 ).slice(0, 10);
                 return statusDate === today;
               })
-              .map((r) =>
-                key(r.roCode, r.date || r.uploadDate || r.planId?.date)
-              )
+              .map((r) => {
+                const ro = (
+                  r.roCode ||
+                  r.siteCode ||
+                  r.ro ||
+                  r.planId?.roCode ||
+                  ""
+                )
+                  .trim()
+                  .toUpperCase();
+                const dt = String(
+                  r.date || r.uploadDate || r.planId?.date || ""
+                ).slice(0, 10);
+                return key(ro, dt);
+              })
           );
 
           // const pendingTodayHpcl = plansTodayHpcl.filter(
