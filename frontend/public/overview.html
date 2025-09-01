@@ -824,10 +824,23 @@
               )
               .map((r) => key(r.roCode, r.date || r.uploadDate))
           );
+          //  const rbmlStatusTodaySet = new Set(
+          //   (Array.isArray(jio) ? jio : [])
+          //     .filter((r) => String(r.date || "").slice(0, 10) === today)
+          //     .map((r) => key(r.roCode, r.date))
+          // );
+
           const rbmlStatusTodaySet = new Set(
             (Array.isArray(jio) ? jio : [])
-              .filter((r) => String(r.date || "").slice(0, 10) === today)
-              .map((r) => key(r.roCode, r.date))
+              .filter((r) => {
+                const statusDate = String(
+                  r.date || r.uploadDate || r.planId?.date || ""
+                ).slice(0, 10);
+                return statusDate === today;
+              })
+              .map((r) =>
+                key(r.roCode, r.date || r.uploadDate || r.planId?.date)
+              )
           );
 
           // const pendingTodayHpcl = plansTodayHpcl.filter(
