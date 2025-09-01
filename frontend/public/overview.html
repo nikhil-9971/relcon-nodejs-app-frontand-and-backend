@@ -895,6 +895,8 @@
           ).textContent = `HPCL: ${pendingTodayHpcl} • RBML: ${pendingTodayRbml}`;
           // ---------- DEBUG END ----------
 
+          console.log("🔍 JioBP Raw Data", jio);
+
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
           document.getElementById("kpiHold").textContent = holdToday.length;
