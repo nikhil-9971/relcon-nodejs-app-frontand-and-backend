@@ -580,6 +580,12 @@
                 <th
                   class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
                 >
+                  Today PCB Installation
+                </th>
+
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
                   Total PCB Install (B)
                 </th>
                 <th
@@ -1623,7 +1629,6 @@
         const saveBtn = document.getElementById("savePcbProvidedBtn");
         if (!tbody) return;
 
-        // Get user role and engineer name from currentUser
         const currentUser = window.__currentUser || {};
         const userRole = currentUser.role || "";
         const currentEngineer =
@@ -1634,7 +1639,9 @@
           localStorage.getItem(pcbProvidedStorageKey()) || "{}"
         );
 
-        // Count POWER PROTECTION PCB INSTALL from Purpose of Visit
+        // today date
+        const today = new Date().toISOString().slice(0, 10);
+
         const isPcbInstall = (purpose) => {
           const t = String(purpose || "")
             .trim()
@@ -1645,7 +1652,6 @@
           );
         };
 
-        // Filter records by engineer if role is engineer
         let filteredRecords = statusRecords || [];
         if (userRole === "engineer" && currentEngineer) {
           filteredRecords = filteredRecords.filter((r) => {
@@ -1662,16 +1668,27 @@
           });
         }
 
-        const map = new Map(); // engineer -> { provided, installed }
+        const map = new Map(); // engineer -> { provided, installed, todayInstalled }
         filteredRecords.forEach((r) => {
           const eng = String(r.engineer || r.Engineer || "").trim() || "-";
           if (!map.has(eng))
             map.set(eng, {
               provided: Number(providedMap[eng] || 0) || 0,
               installed: 0,
+              todayInstalled: 0,
             });
+
           if (isPcbInstall(r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT)) {
             map.get(eng).installed += 1;
+
+            // check if today's installation
+            const recordDate = String(r.date || r.Date || r.DATE || "").slice(
+              0,
+              10
+            );
+            if (recordDate === today) {
+              map.get(eng).todayInstalled += 1;
+            }
           }
         });
 
@@ -1680,6 +1697,7 @@
             return {
               eng,
               provided: rec.provided,
+              todayInstalled: rec.todayInstalled,
               installed: rec.installed,
               pending: Math.max(0, rec.provided - rec.installed),
             };
@@ -1687,10 +1705,13 @@
           .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
           .sort((a, b) => a.eng.localeCompare(b.eng));
 
-        // Calculate totals
         const totalProvided = rows.reduce((sum, r) => sum + r.provided, 0);
         const totalInstalled = rows.reduce((sum, r) => sum + r.installed, 0);
         const totalPending = rows.reduce((sum, r) => sum + r.pending, 0);
+        const totalTodayInstalled = rows.reduce(
+          (sum, r) => sum + r.todayInstalled,
+          0
+        );
 
         tbody.innerHTML = rows
           .map((r) => {
@@ -1698,24 +1719,25 @@
               ? `<input type="number" min="0" value="${r.provided}" data-eng="${r.eng}" class="border px-2 py-1 rounded w-28 text-black dark:text-gray-200" />`
               : `<span class="text-black dark:text-gray-200">${r.provided}</span>`;
             return `<tr class="border-b">
-              <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${r.eng}</td>
-              <td class="px-3 py-2 text-black dark:text-gray-200">${providedCell}</td>
-              <td class="px-3 py-2 text-black dark:text-gray-200">${r.installed}</td>
-              <td class="px-3 py-2 text-black dark:text-gray-200">${r.pending}</td>
-            </tr>`;
+        <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${r.eng}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${providedCell}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${r.todayInstalled}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${r.installed}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${r.pending}</td>
+      </tr>`;
           })
           .join("");
 
-        // Add total row
         if (rows.length > 0) {
           tbody.innerHTML += `<tr class="border-t bg-gray-50 dark:bg-gray-700">
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalProvided}</td>
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalInstalled}</td>
-            <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
-          </tr>`;
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalProvided}</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalTodayInstalled}</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalInstalled}</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
+    </tr>`;
         } else {
-          tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center text-black dark:text-gray-400">No data</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-black dark:text-gray-400">No data</td></tr>`;
         }
 
         if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
