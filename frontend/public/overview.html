@@ -949,9 +949,38 @@
               region: i.region || "",
               status: i.status || "",
             }));
-          const activeUserRows = Array.from(activeUsernames).map((name) => ({
-            user: name,
-          }));
+          //const activeUserRows = Array.from(activeUsernames).map((name) => ({
+          // user: name,
+          // }));
+
+          // ✅ Group login logs by user
+          const todayLogins = (
+            Array.isArray(loginLogs) ? loginLogs : []
+          ).filter(
+            (l) =>
+              (l.loginTime && new Date(l.loginTime)).toDateString() ===
+              new Date().toDateString()
+          );
+
+          const userLoginMap = new Map();
+          todayLogins.forEach((l) => {
+            const user = l.engineerName || l.username;
+            const time = new Date(l.loginTime).toLocaleString();
+            if (!userLoginMap.has(user)) {
+              userLoginMap.set(user, []);
+            }
+            userLoginMap.get(user).push(time);
+          });
+
+          // Prepare CSV rows
+          const activeUserRows = Array.from(userLoginMap.entries()).map(
+            ([user, times]) => ({
+              user,
+              totalLogins: times.length,
+              loginTimes: times.join(" | "), // sab times ek column me aa jayenge
+            })
+          );
+
           const holdRows = holdToday.map((p) => ({
             date: String(p.date || "").slice(0, 10),
             engineer: p.engineer || "",
@@ -1036,8 +1065,13 @@
             )
           );
           byId("exportActiveUsers")?.addEventListener("click", () =>
-            exportCSV(activeUserRows, ["user"], "active_users_today.csv")
+            exportCSV(
+              activeUserRows,
+              ["user", "totalLogins", "loginTimes"],
+              "active_users_today.csv"
+            )
           );
+
           byId("exportHold")?.addEventListener("click", () =>
             exportCSV(
               holdRows,
