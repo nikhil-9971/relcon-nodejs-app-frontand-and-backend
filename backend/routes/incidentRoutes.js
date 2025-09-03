@@ -3,6 +3,7 @@ const router = express.Router();
 const Incident = require("../models/Incident"); // Mongoose model
 
 // ========== 1. BULK IMPORT INCIDENT ========== //
+// incidentRoutes.js
 router.post("/bulkImportIncident", async (req, res) => {
   try {
     const { incidents } = req.body;
@@ -10,14 +11,25 @@ router.post("/bulkImportIncident", async (req, res) => {
       return res.status(400).json({ error: "No data to import" });
     }
 
-    await Incident.insertMany(incidents);
-    res.json({ success: true, message: "Incidents imported to MongoDB" });
+    for (const inc of incidents) {
+      await Incident.findOneAndUpdate(
+        { incidentId: inc.incidentId }, // match by Incident ID
+        { $set: inc }, // update if exists
+        { upsert: true } // insert if not exist
+      );
+    }
+
+    res.json({
+      success: true,
+      message: "Incidents imported/updated successfully",
+    });
   } catch (err) {
     console.error("Bulk import error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
+// ========== 2. UPDATE INCIDENT STATUS ========== //
 // ========== 2. UPDATE INCIDENT STATUS ========== //
 router.put("/updateIncidentStatus", async (req, res) => {
   try {
@@ -33,11 +45,13 @@ router.put("/updateIncidentStatus", async (req, res) => {
       return res.status(400).json({ error: "Missing incidentId" });
     }
 
-    const updateFields = {};
-    if (status) updateFields.status = status;
-    if (assignEngineer) updateFields.assignEngineer = assignEngineer;
-    if (closeRemark) updateFields.closeRemark = closeRemark;
-    if (incidentcloseDate) updateFields.incidentcloseDate = incidentcloseDate;
+    // Always include fields, even if empty
+    const updateFields = {
+      status,
+      assignEngineer,
+      closeRemark,
+      incidentcloseDate,
+    };
 
     const updated = await Incident.findOneAndUpdate(
       { incidentId },
