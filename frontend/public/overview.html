@@ -1963,7 +1963,7 @@
             });
           }
 
-          // 1️⃣ Details sheet
+          // 1️⃣ Build Detail Sheet Data
           const detailRows = pcbRecords.map((r) => ({
             EngineerName: String(r.engineer || r.Engineer || "").trim(),
             Region: String(r.region || r.Region || "").trim(),
@@ -1975,10 +1975,26 @@
             ).trim(),
           }));
 
-          // 2️⃣ Summary sheet — read directly from DOM table
-          const table = document.querySelector("table");
-          const rows = table.querySelectorAll("tbody tr");
+          // 2️⃣ Build Summary Sheet Data
+          const summaryMap = {};
 
+          detailRows.forEach((r) => {
+            const eng = r.EngineerName || "Unknown";
+            if (!summaryMap[eng]) {
+              summaryMap[eng] = { Provided: 0, Today: 0, Total: 0, Pending: 0 };
+            }
+
+            summaryMap[eng].Provided = summaryMap[eng].Provided || 0; // agar provided ki value aap UI se aa rahi hai toh adjust karna padega
+            summaryMap[eng].Total += 1;
+
+            // Check if visit date is today
+            const today = new Date().toISOString().split("T")[0];
+            if (r.Date && r.Date.startsWith(today)) {
+              summaryMap[eng].Today += 1;
+            }
+          });
+
+          // Convert to array
           const summaryRows = [
             [
               "Engineer Name",
@@ -1988,38 +2004,34 @@
               "Total PCB Installation Pending",
             ],
           ];
-
-          let totalProvided = 0,
-            totalToday = 0,
-            totalInstall = 0,
-            totalPending = 0;
-
-          rows.forEach((row) => {
-            const cells = row.querySelectorAll("td");
-            if (cells.length >= 5) {
-              const eng = cells[0].innerText.trim();
-              const provided = parseInt(
-                cells[1].querySelector("input")?.value ||
-                  cells[1].innerText ||
-                  "0",
-                10
-              );
-              const today = parseInt(cells[2].innerText || "0", 10);
-              const total = parseInt(cells[3].innerText || "0", 10);
-              const pending = parseInt(cells[4].innerText || "0", 10);
-
-              if (eng.toLowerCase() !== "total") {
-                summaryRows.push([eng, provided, today, total, pending]);
-              }
-
-              totalProvided += provided;
-              totalToday += today;
-              totalInstall += total;
-              totalPending += pending;
-            }
+          Object.entries(summaryMap).forEach(([eng, val]) => {
+            summaryRows.push([
+              eng,
+              val.Provided,
+              val.Today,
+              val.Total,
+              (val.Provided || 0) - val.Total,
+            ]);
           });
 
-          // Add grand total row
+          // Totals row
+          const totalProvided = Object.values(summaryMap).reduce(
+            (sum, v) => sum + (v.Provided || 0),
+            0
+          );
+          const totalToday = Object.values(summaryMap).reduce(
+            (sum, v) => sum + v.Today,
+            0
+          );
+          const totalInstall = Object.values(summaryMap).reduce(
+            (sum, v) => sum + v.Total,
+            0
+          );
+          const totalPending = Object.values(summaryMap).reduce(
+            (sum, v) => sum + ((v.Provided || 0) - v.Total),
+            0
+          );
+
           summaryRows.push([
             "Total",
             totalProvided,
@@ -2028,16 +2040,16 @@
             totalPending,
           ]);
 
-          // 3️⃣ Convert to worksheets
+          // 3️⃣ Convert to Worksheet
           const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
           const ws2 = XLSX.utils.json_to_sheet(detailRows);
 
-          // 4️⃣ Create workbook and append sheets
+          // 4️⃣ Create Workbook
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws1, "Summary");
           XLSX.utils.book_append_sheet(wb, ws2, "Details");
 
-          // 5️⃣ Save as file
+          // 5️⃣ Export
           XLSX.writeFile(wb, "pcb_installation_report.xlsx");
         } catch (e) {
           console.error("export pcb excel error", e);
