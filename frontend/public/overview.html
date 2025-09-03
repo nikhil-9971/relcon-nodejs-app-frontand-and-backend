@@ -1923,9 +1923,11 @@
         }
       }
 
-      function exportPcbInstallationCSV() {
+      //export POWER PCB INstall Data
+
+      function exportPcbInstallationExcel() {
         try {
-          const statusRecords = window.__statusRecords || [];
+          let statusRecords = window.__statusRecords || [];
 
           // Get user role and engineer name from currentUser
           const currentUser = window.__currentUser || {};
@@ -1933,7 +1935,7 @@
           const currentEngineer =
             currentUser.engineerName || currentUser.username || "";
 
-          const pcbRecords = statusRecords.filter((r) => {
+          let pcbRecords = statusRecords.filter((r) => {
             const purpose = String(
               r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
             )
@@ -1961,48 +1963,99 @@
             });
           }
 
-          const csvRows = [
-            [
-              "EngineerName",
-              "Region",
-              "RO Code",
-              "RO Name",
-              "Date",
-              "Purpose of Visit",
-            ],
-          ];
-
-          pcbRecords.forEach((r) => {
-            const eng = String(r.engineer || r.Engineer || "").trim();
-            const region = String(r.region || r.Region || "").trim();
-            const roCode = String(
-              r.roCode || r.ROCode || r.rocode || ""
-            ).trim();
-            const roName = String(r.roName || r.ROName || "").trim();
-            const date = String(r.date || r.Date || "").trim();
-            const purpose = String(
+          // 1️⃣ Build Detail Sheet Data
+          const detailRows = pcbRecords.map((r) => ({
+            EngineerName: String(r.engineer || r.Engineer || "").trim(),
+            Region: String(r.region || r.Region || "").trim(),
+            ROCode: String(r.roCode || r.ROCode || r.rocode || "").trim(),
+            ROName: String(r.roName || r.ROName || "").trim(),
+            Date: String(r.date || r.Date || "").trim(),
+            PurposeOfVisit: String(
               r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || ""
-            ).trim();
+            ).trim(),
+          }));
 
-            csvRows.push([eng, region, roCode, roName, date, purpose]);
+          // 2️⃣ Build Summary Sheet Data
+          const summaryMap = {};
+
+          detailRows.forEach((r) => {
+            const eng = r.EngineerName || "Unknown";
+            if (!summaryMap[eng]) {
+              summaryMap[eng] = { Provided: 0, Today: 0, Total: 0, Pending: 0 };
+            }
+
+            summaryMap[eng].Provided = summaryMap[eng].Provided || 0; // agar provided ki value aap UI se aa rahi hai toh adjust karna padega
+            summaryMap[eng].Total += 1;
+
+            // Check if visit date is today
+            const today = new Date().toISOString().split("T")[0];
+            if (r.Date && r.Date.startsWith(today)) {
+              summaryMap[eng].Today += 1;
+            }
           });
 
-          const blob = new Blob(
-            [csvRows.map((row) => row.join(",")).join("\n")],
-            { type: "text/csv;charset=utf-8;" }
+          // Convert to array
+          const summaryRows = [
+            [
+              "Engineer Name",
+              "Total PCB Provided (A)",
+              "Today PCB Installation",
+              "Total PCB Install (B)",
+              "Total PCB Installation Pending",
+            ],
+          ];
+          Object.entries(summaryMap).forEach(([eng, val]) => {
+            summaryRows.push([
+              eng,
+              val.Provided,
+              val.Today,
+              val.Total,
+              (val.Provided || 0) - val.Total,
+            ]);
+          });
+
+          // Totals row
+          const totalProvided = Object.values(summaryMap).reduce(
+            (sum, v) => sum + (v.Provided || 0),
+            0
           );
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "pcb_installation_data.csv";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          const totalToday = Object.values(summaryMap).reduce(
+            (sum, v) => sum + v.Today,
+            0
+          );
+          const totalInstall = Object.values(summaryMap).reduce(
+            (sum, v) => sum + v.Total,
+            0
+          );
+          const totalPending = Object.values(summaryMap).reduce(
+            (sum, v) => sum + ((v.Provided || 0) - v.Total),
+            0
+          );
+
+          summaryRows.push([
+            "Total",
+            totalProvided,
+            totalToday,
+            totalInstall,
+            totalPending,
+          ]);
+
+          // 3️⃣ Convert to Worksheet
+          const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
+          const ws2 = XLSX.utils.json_to_sheet(detailRows);
+
+          // 4️⃣ Create Workbook
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws1, "Summary");
+          XLSX.utils.book_append_sheet(wb, ws2, "Details");
+
+          // 5️⃣ Export
+          XLSX.writeFile(wb, "pcb_installation_report.xlsx");
         } catch (e) {
-          console.error("export pcb csv error", e);
+          console.error("export pcb excel error", e);
         }
       }
+
       function exportEngineerMonthlyCSV() {
         try {
           const plans = window.__allPlans || [];
