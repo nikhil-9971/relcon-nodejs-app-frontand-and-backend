@@ -724,7 +724,8 @@
               plan.roCode === roCode &&
               plan.issueType &&
               (plan.issueType === "PM Visit" ||
-                plan.issueType === "Issue & PM Visit") &&
+                plan.issueType === "Issue & PM Visit" ||
+                plan.issueType === "ATG & PM Visit") &&
               planDate >= startDate &&
               planDate <= endDate
             );
