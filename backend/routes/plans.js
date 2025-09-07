@@ -187,27 +187,34 @@ router.get("/getLastVisit/:roCode", async (req, res) => {
 });
 
 // This should be in plans.js or your backend route file
-router.get("/getSimDetails/:roCode", async (req, res) => {
+// server.js
+app.get("/getSimDetails/:roCode", async (req, res) => {
   try {
     const { roCode } = req.params;
-    if (!roCode) return res.status(400).send("Missing RO Code");
 
-    // Find the latest Status with this roCode from its associated plan
-    const status = await Status.findOne({})
-      .populate("planId")
-      .where("planId.roCode")
-      .equals(roCode.toUpperCase().trim())
-      .sort({ _id: -1 });
+    const result = await Status.aggregate([
+      {
+        $lookup: {
+          from: "dailyplans", // 👈 dailyPlan collection name
+          localField: "planId", // status.planId
+          foreignField: "_id", // dailyPlan._id
+          as: "plan",
+        },
+      },
+      { $unwind: "$plan" },
+      { $match: { "plan.roCode": roCode } },
+      {
+        $project: {
+          sim1Number: 1,
+          sim1Provider: 1,
+          sim2Number: 1,
+          sim2Provider: 1,
+          iemiNumber: 1,
+        },
+      },
+    ]);
 
-    if (status && status.connectivityType === "RELCON SIM") {
-      return res.json({
-        sim1Number: status.sim1Number || "",
-        sim1Provider: status.sim1Provider || "",
-        sim2Number: status.sim2Number || "",
-        sim2Provider: status.sim2Provider || "",
-        iemiNumber: status.iemiNumber || "",
-      });
-    } else {
+    if (result.length === 0) {
       return res.json({
         sim1Number: "",
         sim1Provider: "",
@@ -216,9 +223,11 @@ router.get("/getSimDetails/:roCode", async (req, res) => {
         iemiNumber: "",
       });
     }
+
+    res.json(result[0]);
   } catch (err) {
-    console.error("Error fetching SIM details:", err);
-    res.status(500).send("Server error");
+    console.error("Error in getSimDetails:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
