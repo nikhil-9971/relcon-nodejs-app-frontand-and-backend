@@ -16,7 +16,16 @@ router.get("/getROInfo/:roCode", async (req, res) => {
 
 router.post("/add", async (req, res) => {
   try {
-    const { zone, roCode, roName, region, phase, engineer, amcQtr } = req.body;
+    const {
+      zone,
+      roCode,
+      roName,
+      region,
+      phase,
+      engineer,
+      amcQtr,
+      siteStatus,
+    } = req.body;
 
     if (
       !zone ||
