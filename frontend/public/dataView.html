@@ -217,7 +217,10 @@
               <th class="px-1 py-1">Engg. InTime</th>
               <th class="px-1 py-1">Engg. OutTime</th>
               <th class="px-1 py-1">Support Taken From</th>
-              <th class="px-1 py-1">What has done at Site</th>
+              <th class="px-1 py-1">Incident Status</th>
+              <th class="px-1 py-1">Reason of Unresolved</th>
+              <th class="px-1 py-1">Reason of Reach site after 12:00 PM</th>
+              <th class="px-1 py-1">Reason of Left site after 06:00 PM</th>
               <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
@@ -322,9 +325,29 @@
             placeholder="Support Taken From"
             class="border px-3 py-1 rounded"
           />
+          <input
+            type="text"
+            id="editIncidentStatus"
+            placeholder="Incident Status"
+            class="border px-3 py-1 rounded"
+          />
+
           <textarea
             id="editWhatDone"
-            placeholder="What has done at Site"
+            placeholder="Reason of UnResolved"
+            class="border px-3 py-1 rounded"
+          >
+          </textarea>
+          <textarea
+            id="editReason12PM"
+            placeholder="Reason of Reach Site after 12:00 PM"
+            class="border px-3 py-1 rounded"
+          >
+          </textarea>
+
+          <textarea
+            id="editReason06PM"
+            placeholder="Reason of Left Site after 06:00 PM"
             class="border px-3 py-1 rounded"
           >
           </textarea>
@@ -1471,7 +1494,10 @@
         <td class="border px-1 py-1">${plan.arrivalTime || "-"}</td>
         <td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
         <td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
+        <td class="border px-1 py-1">${plan.incidentStatus || "-"}</td>
         <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
+        <td class="border px-1 py-1">${plan.reasonAfter12PM || "-"}</td>
+        <td class="border px-1 py-1">${plan.reasonAfter6PM || "-"}</td>
 
         <!-- ❌ ACTION COLUMN: admin only -->
         ${
@@ -1520,7 +1546,13 @@
         document.getElementById("editLeaveTime").value = plan.leaveTime || "";
         document.getElementById("editSupportTakenFrom").value =
           plan.supportTakenFrom || "";
+        document.getElementById("editIncidentStatus").value =
+          plan.incidentStatus || "";
         document.getElementById("editWhatDone").value = plan.whatDone || "";
+        document.getElementById("editReason12PM").value =
+          plan.reasonAfter12PM || "";
+        document.getElementById("editReason06PM").value =
+          plan.reasonAfter6PM || "";
         document.getElementById("editModal").classList.remove("hidden");
       }
 
@@ -1548,7 +1580,10 @@
           leaveTime: document.getElementById("editLeaveTime").value,
           supportTakenFrom: document.getElementById("editSupportTakenFrom")
             .value,
+          incidentStatus: document.getElementById("editIncidentStatus").value,
           whatDone: document.getElementById("editWhatDone").value,
+          reasonAfter12PM: document.getElementById("editReason12PM").value,
+          reasonAfter6PM: document.getElementById("editReason06PM").value,
         };
 
         const res = await fetch(`${baseUrl}/updateDailyPlan/` + id, {
