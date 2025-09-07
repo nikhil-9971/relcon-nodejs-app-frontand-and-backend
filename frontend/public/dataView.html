@@ -1975,6 +1975,13 @@
         }
       }
 
+      // Example: Add this above or below openStatusModal(planId)
+      function getCurrentRoCode() {
+        const planId = document.getElementById("statusPlanId").value;
+        const plan = fullData.find((p) => p._id === planId);
+        return plan ? plan.roCode : null;
+      }
+
       function closeStatusModal() {
         document.getElementById("statusModal").classList.add("hidden");
       }
