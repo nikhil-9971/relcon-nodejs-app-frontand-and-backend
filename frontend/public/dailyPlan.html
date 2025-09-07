@@ -676,7 +676,9 @@
 
         // Check if IssueType is PM Visit or Issue & PM Visit
         const isPMVisit =
-          issueType === "PM Visit" || issueType === "Issue & PM Visit";
+          issueType === "PM Visit" ||
+          issueType === "Issue & PM Visit" ||
+          issueType === "ATG & PM Visit";
         console.log("🔍 Is PM Visit:", isPMVisit);
 
         try {
