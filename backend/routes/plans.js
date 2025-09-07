@@ -205,7 +205,6 @@ router.get("/getSimDetails/:roCode", async (req, res) => {
       {
         $match: {
           "plan.roCode": roCode.trim().toUpperCase(),
-          "plan.connectivityType": "RELCON SIM",
         },
       },
 
