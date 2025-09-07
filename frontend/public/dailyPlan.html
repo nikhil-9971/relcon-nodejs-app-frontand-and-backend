@@ -635,7 +635,7 @@
 
       // HPCL AMC Validation Function
       async function validateHPCLAMC(data) {
-        console.log("🔍 HPCL Validation - Data:", data);
+        // console.log("🔍 HPCL Validation - Data:", data);
 
         // Only validate for specific HPCL phases
         const validHPCLPhases = [
@@ -647,19 +647,19 @@
         ];
 
         if (!data.phase || !validHPCLPhases.includes(data.phase)) {
-          console.log(
-            "⏭️ Not a valid HPCL phase for AMC validation, skipping. Phase:",
-            data.phase
-          );
+          // console.log(
+          //   "⏭️ Not a valid HPCL phase for AMC validation, skipping. Phase:",
+          //    data.phase
+          // );
           return { isValid: true, message: "" };
         }
 
         // Skip validation for POWER ON OR SAT issue type
         if (data.issueType === "POWER ON OR SAT") {
-          console.log(
-            "⏭️ POWER ON OR SAT issue type, skipping AMC validation. IssueType:",
-            data.issueType
-          );
+          // console.log(
+          //   "⏭️ POWER ON OR SAT issue type, skipping AMC validation. IssueType:",
+          //  data.issueType
+          // );
           return { isValid: true, message: "" };
         }
 
@@ -679,18 +679,18 @@
           issueType === "PM Visit" ||
           issueType === "Issue & PM Visit" ||
           issueType === "ATG & PM Visit";
-        console.log("🔍 Is PM Visit:", isPMVisit);
+        //  console.log("🔍 Is PM Visit:", isPMVisit);
 
         try {
           // Get token from localStorage
           const token = localStorage.getItem("token");
 
           if (!token) {
-            console.log("🔐 No token found, allowing submission");
+            // console.log("🔐 No token found, allowing submission");
             return { isValid: true, message: "" };
           }
 
-          console.log("🔐 Token found, proceeding with validation");
+          // console.log("🔐 Token found, proceeding with validation");
 
           // Fetch existing plans for this RO Code within the quarter date range
           const response = await fetch(`${baseUrl}/getDailyPlans`, {
@@ -708,7 +708,7 @@
               response.statusText
             );
             if (response.status === 401) {
-              console.log("🔐 User not authenticated, allowing submission");
+              //   console.log("🔐 User not authenticated, allowing submission");
             }
             return { isValid: true, message: "" }; // Allow submission if API fails
           }
@@ -733,11 +733,11 @@
             );
           });
 
-          console.log("🔍 Filtered RO plans:", roPlans);
+          //  console.log("🔍 Filtered RO plans:", roPlans);
 
           // Case 01: No existing PM visits in quarter, but user is not selecting PM visit
           if (roPlans.length === 0 && !isPMVisit) {
-            console.log("❌ Case 01: AMC Pending");
+            // console.log("❌ Case 01: AMC Pending");
             return {
               isValid: false,
               message:
@@ -747,7 +747,7 @@
 
           // Case 02: Existing PM visit found, but user is trying to add another PM visit
           if (roPlans.length > 0 && isPMVisit) {
-            console.log("❌ Case 02: AMC Already Done");
+            //  console.log("❌ Case 02: AMC Already Done");
             // Find the most recent PM visit date
             const latestPMVisit = roPlans.reduce((latest, plan) => {
               return new Date(plan.date) > new Date(latest.date)
@@ -765,7 +765,7 @@
             };
           }
 
-          console.log("✅ Validation passed");
+          // console.log("✅ Validation passed");
           return { isValid: true, message: "" };
         } catch (error) {
           console.error("❌ Error in HPCL AMC validation:", error);
