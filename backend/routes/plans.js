@@ -188,7 +188,7 @@ router.get("/getLastVisit/:roCode", async (req, res) => {
 
 // This should be in plans.js or your backend route file
 // server.js
-app.get("/getSimDetails/:roCode", async (req, res) => {
+router.get("/getSimDetails/:roCode", async (req, res) => {
   try {
     const { roCode } = req.params;
 
