@@ -186,4 +186,40 @@ router.get("/getLastVisit/:roCode", async (req, res) => {
   }
 });
 
+// This should be in plans.js or your backend route file
+router.get("/getSimDetails/:roCode", async (req, res) => {
+  try {
+    const { roCode } = req.params;
+    if (!roCode) return res.status(400).send("Missing RO Code");
+
+    // Find the latest Status with this roCode from its associated plan
+    const status = await Status.findOne({})
+      .populate("planId")
+      .where("planId.roCode")
+      .equals(roCode.toUpperCase().trim())
+      .sort({ _id: -1 });
+
+    if (status && status.connectivityType === "RELCON SIM") {
+      return res.json({
+        sim1Number: status.sim1Number || "",
+        sim1Provider: status.sim1Provider || "",
+        sim2Number: status.sim2Number || "",
+        sim2Provider: status.sim2Provider || "",
+        iemiNumber: status.iemiNumber || "",
+      });
+    } else {
+      return res.json({
+        sim1Number: "",
+        sim1Provider: "",
+        sim2Number: "",
+        sim2Provider: "",
+        iemiNumber: "",
+      });
+    }
+  } catch (err) {
+    console.error("Error fetching SIM details:", err);
+    res.status(500).send("Server error");
+  }
+});
+
 module.exports = router;
