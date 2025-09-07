@@ -195,9 +195,9 @@ router.get("/getSimDetails/:roCode", async (req, res) => {
     const result = await Status.aggregate([
       {
         $lookup: {
-          from: "dailyplans", // join with dailyplans
-          localField: "planId",
-          foreignField: "_id",
+          from: "dailyplans", // 👈 dailyPlan collection name
+          localField: "planId", // status.planId
+          foreignField: "_id", // dailyPlan._id
           as: "plan",
         },
       },
@@ -205,16 +205,16 @@ router.get("/getSimDetails/:roCode", async (req, res) => {
       {
         $match: {
           "plan.roCode": roCode,
-          "plan.connectivityType": "RELCON SIM", // ✅ only RELCON SIM
+          "plan.connectivityType": "RELCON SIM",
         },
       },
       {
         $project: {
-          sim1Number: { $ifNull: ["$sim1Number", ""] },
-          sim1Provider: { $ifNull: ["$sim1Provider", ""] },
-          sim2Number: { $ifNull: ["$sim2Number", ""] },
-          sim2Provider: { $ifNull: ["$sim2Provider", ""] },
-          iemiNumber: { $ifNull: ["$iemiNumber", ""] },
+          sim1Number: 1,
+          sim1Provider: 1,
+          sim2Number: 1,
+          sim2Provider: 1,
+          iemiNumber: 1,
         },
       },
     ]);
