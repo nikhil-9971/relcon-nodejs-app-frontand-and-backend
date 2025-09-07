@@ -1897,7 +1897,43 @@
             const sim2Number = document.getElementById("sim2Number");
             const iemiNumber = document.getElementById("iemiNumber");
 
-            if (selected !== "RELCON SIM") {
+            if (selected === "RELCON SIM") {
+              // ✅ Enable fields
+              sim1Provider.removeAttribute("disabled");
+              sim1Number.removeAttribute("disabled");
+              sim2Provider.removeAttribute("disabled");
+              sim2Number.removeAttribute("disabled");
+              iemiNumber.removeAttribute("disabled");
+
+              // Clear first
+              sim1Provider.value = "";
+              sim1Number.value = "";
+              sim2Provider.value = "";
+              sim2Number.value = "";
+              iemiNumber.value = "";
+
+              // ✅ Fetch SIM details from backend if RO Code exists
+              const roCode = getCurrentRoCode(); // implement this function
+              if (roCode) {
+                fetch(`${baseUrl}/getSimDetails/${roCode}`, {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
+                })
+                  .then((res) => res.json())
+                  .then((data) => {
+                    sim1Number.value = data.sim1Number || "";
+                    sim1Provider.value = data.sim1Provider || "";
+                    sim2Number.value = data.sim2Number || "";
+                    sim2Provider.value = data.sim2Provider || "";
+                    iemiNumber.value = data.iemiNumber || "";
+                  })
+                  .catch((err) => {
+                    console.error("❌ Failed to fetch SIM details", err);
+                  });
+              }
+            } else {
+              // ❌ Not RELCON SIM → disable & NA
               sim1Provider.value = "NA";
               sim1Number.value = "NA";
               sim2Provider.value = "NA";
@@ -1909,39 +1945,6 @@
               sim2Provider.setAttribute("disabled", true);
               sim2Number.setAttribute("disabled", true);
               iemiNumber.setAttribute("disabled", true);
-            } else {
-              sim1Provider.removeAttribute("disabled");
-              sim1Number.removeAttribute("disabled");
-              sim2Provider.removeAttribute("disabled");
-              sim2Number.removeAttribute("disabled");
-              iemiNumber.removeAttribute("disabled");
-
-              sim1Provider.value = "";
-              sim1Number.value = "";
-              sim2Provider.value = "";
-              sim2Number.value = "";
-              iemiNumber.value = "";
-
-              // ✅ Fetch SIM details from backend if RO Code exists
-              const roCode = getCurrentRoCode(); // You need to implement or fetch this roCode
-              if (!roCode) return;
-
-              fetch(`${baseUrl}/getSimDetails/${roCode}`, {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.sim1Number) sim1Number.value = data.sim1Number;
-                  if (data.sim1Provider) sim1Provider.value = data.sim1Provider;
-                  if (data.sim2Number) sim2Number.value = data.sim2Number;
-                  if (data.sim2Provider) sim2Provider.value = data.sim2Provider;
-                  if (data.iemiNumber) iemiNumber.value = data.iemiNumber;
-                })
-                .catch((err) => {
-                  console.error("Failed to fetch SIM details", err);
-                });
             }
           });
 
