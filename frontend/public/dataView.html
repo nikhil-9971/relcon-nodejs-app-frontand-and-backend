@@ -1921,6 +1921,27 @@
               sim2Provider.value = "";
               sim2Number.value = "";
               iemiNumber.value = "";
+
+              // ✅ Fetch SIM details from backend if RO Code exists
+              const roCode = getCurrentRoCode(); // You need to implement or fetch this roCode
+              if (!roCode) return;
+
+              fetch(`${baseUrl}/getSimDetails/${roCode}`, {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.sim1Number) sim1Number.value = data.sim1Number;
+                  if (data.sim1Provider) sim1Provider.value = data.sim1Provider;
+                  if (data.sim2Number) sim2Number.value = data.sim2Number;
+                  if (data.sim2Provider) sim2Provider.value = data.sim2Provider;
+                  if (data.iemiNumber) iemiNumber.value = data.iemiNumber;
+                })
+                .catch((err) => {
+                  console.error("Failed to fetch SIM details", err);
+                });
             }
           });
 
