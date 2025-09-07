@@ -1663,11 +1663,15 @@
             "Issue Type",
             "AMC_QTR_DETAIL",
             "Date of Visit",
-            "Completion Status",
             "Arrival Time",
             "Leave Time",
+            "Completion Status",
             "Support Taken from",
-            "Whats has to be done",
+            "Final Status Of Incident (Open/Resolve/WIP/UnResolved)",
+            "Reason Of UnResolved/Failure Incident Along with Next Action Plan",
+            "Reason - After allocation of site and reach at site at 2.30 Hours",
+            "Reason - Why Engg. At site after 6 PM ",
+            "",
           ],
         ];
 
@@ -1688,11 +1692,14 @@
             (d.issueType || "").trim(),
             (d.amcQtr || "").trim(),
             (d.date || "").trim(),
-            (d.completionStatus || "").trim(),
             (d.arrivalTime || "").trim(),
             (d.leaveTime || "").trim(),
+            (d.completionStatus || "").trim(),
             (d.supportTakenFrom || "").trim(),
+            (d.incidentStatus || "").trim(),
             (d.whatDone || "").trim(),
+            (d.reasonAfter12PM || "").trim(),
+            (d.reasonAfter6PM || "").trim(),
           ];
         });
 
