@@ -18,6 +18,9 @@ const PlanSchema = new mongoose.Schema({
   leaveTime: String,
   supportTakenFrom: String,
   whatDone: String,
+  incidentStatus: String,
+  reasonAfter12PM: String,
+  reasonAfter6PM: String,
 });
 
 module.exports =
