@@ -21,6 +21,9 @@ const PlanSchema = new mongoose.Schema({
   incidentStatus: String,
   reasonAfter12PM: String,
   reasonAfter6PM: String,
+  separateearthingStatus: String,
+  earthingCheckedby: String,
+  detailEarthingremark: String,
 });
 
 module.exports =
