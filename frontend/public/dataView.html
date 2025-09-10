@@ -1882,6 +1882,9 @@
         const wb = XLSX.utils.book_new();
         const date = new Date().toLocaleDateString("en-CA");
 
+        // ✅ fromDate ko yahan se lo
+        const fromDate = document.getElementById("fromDate").value || "";
+
         // ✅ Header Row only — title row hata diya
         const headerRow = [
           [
@@ -1938,7 +1941,7 @@
         XLSX.utils.book_append_sheet(wb, ws, "Earthing Status");
         XLSX.writeFile(
           wb,
-          `Earthing Status Report_LKO PAT BEG Site_Nikhil Trivedi_${Math.floor(
+          `Earthing Status Report_LKO PAT BEG Site_${safeName}_${fromDate}_${Math.floor(
             1000 + Math.random() * 9000
           )}.xlsx`
         );
