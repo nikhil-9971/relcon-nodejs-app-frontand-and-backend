@@ -1909,6 +1909,7 @@
           ],
         ];
 
+        // ✅ Filter valid data jisme at least ek field available ho
         const validData = filteredData.filter(
           (d) =>
             d &&
@@ -1919,6 +1920,7 @@
               d.detailEarthingremark)
         );
 
+        // ✅ Safe mapping jisme har field ko string banake trim karte hain
         const tableRows = validData.map((d) => {
           const [customer, phasePart] = String(d.phase || "").split("/") || [
             "",
