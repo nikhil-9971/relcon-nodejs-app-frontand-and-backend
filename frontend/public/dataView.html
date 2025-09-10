@@ -1910,15 +1910,19 @@
         ];
 
         const tableRows = filteredData.map((d) => {
-          const [customer, phasePart] = (d.phase || "").split("/") || ["", ""];
+          const [customer, phasePart] = String(d.phase || "").split("/") || [
+            "",
+            "",
+          ];
+
           return [
             customer.trim(),
             phasePart.trim(),
-            (d.roCode || "").trim(),
-            (d.roName || "").trim(),
-            (d.separateearthingStatus || "").trim(),
-            (d.earthingCheckedby || "").trim(),
-            (d.detailEarthingremark || "").trim(),
+            String(d.roCode || "").trim(),
+            String(d.roName || "").trim(),
+            String(d.separateearthingStatus || "").trim(),
+            String(d.earthingCheckedby || "").trim(),
+            String(d.detailEarthingremark || "").trim(),
           ];
         });
 
