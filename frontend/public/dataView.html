@@ -221,6 +221,14 @@
               <th class="px-1 py-1">Reason of Unresolved</th>
               <th class="px-1 py-1">Reason of Reach site after 12:00 PM</th>
               <th class="px-1 py-1">Reason of Left site after 06:00 PM</th>
+              <th class="px-1 py-1">
+                Seperate Earthing Provide Barrier Card (Yes/No)
+              </th>
+              <th class="px-1 py-1">
+                Seperate Earthing for Barrier Photo Checked By
+              </th>
+
+              <th class="px-1 py-1">Detail Earthing Status Remark</th>
               <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
@@ -348,6 +356,27 @@
           <textarea
             id="editReason06PM"
             placeholder="Reason of Left Site after 06:00 PM"
+            class="border px-3 py-1 rounded"
+          >
+          </textarea>
+
+          <textarea
+            id="editearthingStatus"
+            placeholder="Seperate Earthing Provide Barrier Card (Yes/No)"
+            class="border px-3 py-1 rounded"
+          >
+          </textarea>
+
+          <textarea
+            id="editearthingCheckedby"
+            placeholder="Seperate Earthing for Barrier Photo Checked By"
+            class="border px-3 py-1 rounded"
+          >
+          </textarea>
+
+          <textarea
+            id="editdetailEarthingremark"
+            placeholder="Detail Earthing Status Remark"
             class="border px-3 py-1 rounded"
           >
           </textarea>
@@ -1498,6 +1527,9 @@
         <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
         <td class="border px-1 py-1">${plan.reasonAfter12PM || "-"}</td>
         <td class="border px-1 py-1">${plan.reasonAfter6PM || "-"}</td>
+        <td class="border px-1 py-1">${plan.separateearthingStatus || "-"}</td>
+        <td class="border px-1 py-1">${plan.earthingCheckedby || "-"}</td>
+        <td class="border px-1 py-1">${plan.detailEarthingremark || "-"}</td>
 
         <!-- ❌ ACTION COLUMN: admin only -->
         ${
@@ -1553,6 +1585,13 @@
           plan.reasonAfter12PM || "";
         document.getElementById("editReason06PM").value =
           plan.reasonAfter6PM || "";
+        document.getElementById("editearthingStatus").value =
+          plan.separateearthingStatus || "";
+        document.getElementById("editearthingCheckedby").value =
+          plan.earthingCheckedby || "";
+        document.getElementById("editdetailEarthingremark").value =
+          plan.detailEarthingremark || "";
+
         document.getElementById("editModal").classList.remove("hidden");
       }
 
@@ -1584,6 +1623,13 @@
           whatDone: document.getElementById("editWhatDone").value,
           reasonAfter12PM: document.getElementById("editReason12PM").value,
           reasonAfter6PM: document.getElementById("editReason06PM").value,
+          separateearthingStatus:
+            document.getElementById("editearthingStatus").value,
+          earthingCheckedby: document.getElementById("editearthingCheckedby")
+            .value,
+          detailEarthingremark: document.getElementById(
+            "editdetailEarthingremark"
+          ).value,
         };
 
         const res = await fetch(`${baseUrl}/updateDailyPlan/` + id, {
