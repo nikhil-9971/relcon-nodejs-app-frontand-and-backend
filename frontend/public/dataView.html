@@ -1882,35 +1882,35 @@
         const wb = XLSX.utils.book_new();
         const date = new Date().toLocaleDateString("en-CA");
 
-        const titleRow = [
-          [
-            "Coordinator Name: Nikhil Trivedi",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "Date: " + date,
-          ],
-        ];
-
+        // ✅ Header Row only — title row hata diya
         const headerRow = [
           [
             "Customer",
             "Phase",
-            "RO Code",
-            "RO Name",
-            "Separate Earthing Status",
-            "Checked By",
-            "Detail Remark",
+            "Site Code",
+            "Site Name",
+            "Separate earthing cable for Barrier (Yes/No)",
+            "Separate earthing for barrier photo checked by",
+            "Detail earthing status remark",
           ],
         ];
 
-        // ✅ Safely map filteredData even if some fields missing
-        const tableRows = filteredData.map((d) => {
+        // ✅ Filter valid data and exclude unwanted entries
+        const validData = filteredData.filter(
+          (d) =>
+            d &&
+            (d.roCode ||
+              d.roName ||
+              d.separateearthingStatus ||
+              d.earthingCheckedby ||
+              d.detailEarthingremark) &&
+            d.roName &&
+            !["NO PLAN", "IN LEAVE", "HPCL OFFICE"].includes(
+              d.roName.trim().toUpperCase()
+            )
+        );
+
+        const tableRows = validData.map((d) => {
           const [customer = "", phasePart = ""] = d.phase
             ? String(d.phase).split("/")
             : ["", ""];
@@ -1928,10 +1928,8 @@
           ];
         });
 
-        const allRows = [...titleRow, ...headerRow, ...tableRows];
+        const allRows = [...headerRow, ...tableRows];
         const ws = XLSX.utils.aoa_to_sheet(allRows);
-
-        ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
 
         const userName =
           loggedInUser.engineerName || loggedInUser.username || "User";
@@ -1940,7 +1938,7 @@
         XLSX.utils.book_append_sheet(wb, ws, "Earthing Status");
         XLSX.writeFile(
           wb,
-          `${safeName}_EarthingStatus_${date}_${Math.floor(
+          `Earthing Status Report_LKO PAT BEG Site_Nikhil Trivedi_${Math.floor(
             1000 + Math.random() * 9000
           )}.xlsx`
         );
