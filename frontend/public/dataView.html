@@ -1719,6 +1719,13 @@
         }
       }
 
+      function closeExportMenu() {
+        const menu = document.getElementById("exportMenu");
+        if (menu) {
+          menu.classList.add("hidden");
+        }
+      }
+
       function exportStyledExcel() {
         const wb = XLSX.utils.book_new();
         const date = new Date().toLocaleDateString("en-CA");
@@ -1858,6 +1865,7 @@
             1000 + Math.random() * 9000
           )}.xlsx`
         );
+        closeExportMenu();
       }
 
       function logout() {
@@ -1945,6 +1953,7 @@
             1000 + Math.random() * 9000
           )}.xlsx`
         );
+        closeExportMenu();
       }
 
       //Status model
