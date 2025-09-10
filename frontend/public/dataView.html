@@ -1929,7 +1929,6 @@
         const allRows = [...titleRow, ...headerRow, ...tableRows];
         const ws = XLSX.utils.aoa_to_sheet(allRows);
 
-        // Merge title cells
         ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
 
         const userName =
