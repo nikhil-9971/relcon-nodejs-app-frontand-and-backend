@@ -1909,32 +1909,22 @@
           ],
         ];
 
-        // ✅ Filter valid data jisme at least ek field available ho
-        const validData = filteredData.filter(
-          (d) =>
-            d &&
-            (d.roCode ||
-              d.roName ||
-              d.separateearthingStatus ||
-              d.earthingCheckedby ||
-              d.detailEarthingremark)
-        );
-
-        // ✅ Safe mapping jisme har field ko string banake trim karte hain
-        const tableRows = validData.map((d) => {
-          const [customer, phasePart] = String(d.phase || "").split("/") || [
-            "",
-            "",
-          ];
+        // ✅ Safely map filteredData even if some fields missing
+        const tableRows = filteredData.map((d) => {
+          const [customer = "", phasePart = ""] = d.phase
+            ? String(d.phase).split("/")
+            : ["", ""];
 
           return [
             customer.trim(),
             phasePart.trim(),
-            String(d.roCode || "").trim(),
-            String(d.roName || "").trim(),
-            String(d.separateearthingStatus || "").trim(),
-            String(d.earthingCheckedby || "").trim(),
-            String(d.detailEarthingremark || "").trim(),
+            d.roCode ? String(d.roCode).trim() : "",
+            d.roName ? String(d.roName).trim() : "",
+            d.separateearthingStatus
+              ? String(d.separateearthingStatus).trim()
+              : "",
+            d.earthingCheckedby ? String(d.earthingCheckedby).trim() : "",
+            d.detailEarthingremark ? String(d.detailEarthingremark).trim() : "",
           ];
         });
 
