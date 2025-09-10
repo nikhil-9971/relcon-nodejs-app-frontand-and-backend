@@ -174,7 +174,7 @@
         />
       </div>
 
-      <div class="flex justify-between items-center mb-4">
+      <!-- <div class="flex justify-between items-center mb-4">
         <button
           onclick="exportStyledExcel()"
           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
@@ -182,6 +182,33 @@
           <i class="fa-solid fa-file-excel mr-2"></i>
           Export to Excel
         </button>
+      </div> -->
+
+      <div class="relative inline-block text-left">
+        <button
+          onclick="toggleExportMenu()"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+        >
+          <i class="fa-solid fa-file-excel mr-2"></i>
+          Export to Excel ▼
+        </button>
+        <div
+          id="exportMenu"
+          class="hidden absolute mt-2 w-48 bg-white border rounded shadow-lg z-50"
+        >
+          <button
+            onclick="exportStyledExcel()"
+            class="w-full text-left px-4 py-2 hover:bg-gray-100"
+          >
+            📋 Daily Plan Report
+          </button>
+          <button
+            onclick="exportEarthingStatusExcel()"
+            class="w-full text-left px-4 py-2 hover:bg-gray-100"
+          >
+            ⚙️ Earthing Status Report
+          </button>
+        </div>
       </div>
 
       <div
@@ -1410,6 +1437,12 @@
         populateTable(result); // 👈 Corrected function call
       }
 
+      //Export Button Toggele
+      function toggleExportMenu() {
+        const menu = document.getElementById("exportMenu");
+        menu.classList.toggle("hidden");
+      }
+
       const debouncedSearch = debounce(applySearch, 300);
 
       function populateTable(data) {
@@ -1841,6 +1874,71 @@
         const toDate = document.getElementById("toDate").value;
         const applyBtn = document.getElementById("applyBtn");
         applyBtn.disabled = !(fromDate && toDate);
+      }
+
+      //Earthing Report
+
+      function exportEarthingStatusExcel() {
+        const wb = XLSX.utils.book_new();
+        const date = new Date().toLocaleDateString("en-CA");
+
+        const titleRow = [
+          [
+            "Coordinator Name: Nikhil Trivedi",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Date: " + date,
+          ],
+        ];
+
+        const headerRow = [
+          [
+            "Customer",
+            "Phase",
+            "RO Code",
+            "RO Name",
+            "Separate Earthing Status",
+            "Checked By",
+            "Detail Remark",
+          ],
+        ];
+
+        const tableRows = filteredData.map((d) => {
+          const [customer, phasePart] = (d.phase || "").split("/") || ["", ""];
+          return [
+            customer.trim(),
+            phasePart.trim(),
+            (d.roCode || "").trim(),
+            (d.roName || "").trim(),
+            (d.separateearthingStatus || "").trim(),
+            (d.earthingCheckedby || "").trim(),
+            (d.detailEarthingremark || "").trim(),
+          ];
+        });
+
+        const allRows = [...titleRow, ...headerRow, ...tableRows];
+        const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+        // Merge title cells
+        ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+
+        const userName =
+          loggedInUser.engineerName || loggedInUser.username || "User";
+        const safeName = userName.replace(/\s+/g, "_");
+
+        XLSX.utils.book_append_sheet(wb, ws, "Earthing Status");
+        XLSX.writeFile(
+          wb,
+          `${safeName}_EarthingStatus_${date}_${Math.floor(
+            1000 + Math.random() * 9000
+          )}.xlsx`
+        );
       }
 
       //Status model
