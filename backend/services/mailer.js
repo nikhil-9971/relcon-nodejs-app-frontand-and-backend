@@ -34,11 +34,22 @@ if (
 }
 
 //---- Email transport ----
+// const transporter = nodemailer.createTransport({
+//   host: SMTP_HOST,
+//   port: Number(SMTP_PORT),
+//   secure: Number(SMTP_PORT) === 465, // 465 => SSL
+//   auth: { user: SMTP_USER, pass: SMTP_PASS },
+// });
+
+// ---- Email transport (SendGrid) ----
 const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // 465 => SSL
-  auth: { user: SMTP_USER, pass: SMTP_PASS },
+  host: SMTP_HOST, // smtp.sendgrid.net
+  port: Number(SMTP_PORT), // 587
+  secure: false, // SendGrid TLS के लिए false रखना है
+  auth: {
+    user: SMTP_USER, // हमेशा 'apikey'
+    pass: SMTP_PASS, // आपकी SendGrid API key
+  },
 });
 
 function safe(val) {
@@ -1099,7 +1110,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "30 17 * * *";
+const CRON_SCHEDULE = "16 18 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
