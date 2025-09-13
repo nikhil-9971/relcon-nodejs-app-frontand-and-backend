@@ -34,11 +34,21 @@ if (
 }
 
 // ---- Email transport ----
+// const transporter = nodemailer.createTransport({
+//   host: SMTP_HOST,
+//   port: Number(SMTP_PORT),
+//   secure: Number(SMTP_PORT) === 465, // 465 => SSL
+//   auth: { user: SMTP_USER, pass: SMTP_PASS },
+// });
+
 const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // 465 => SSL
-  auth: { user: SMTP_USER, pass: SMTP_PASS },
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false, // TLS (STARTTLS) use करेगा
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 function safe(val) {
