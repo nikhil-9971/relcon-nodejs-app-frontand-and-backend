@@ -3,15 +3,26 @@ require("dotenv").config();
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
-const sgMail = require("@sendgrid/mail");
 const { EmailLog } = require("../models/AuditLog");
 
 // ---- ENV ----
-const { SENDGRID_API_KEY, MAIL_FROM, MAIL_TO, BASE_URL, APP_USER, APP_PASS } =
-  process.env;
+const {
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  MAIL_FROM,
+  MAIL_TO,
+  BASE_URL,
+  APP_USER,
+  APP_PASS,
+} = process.env;
 
 if (
-  !SENDGRID_API_KEY ||
+  !SMTP_HOST ||
+  !SMTP_PORT ||
+  !SMTP_USER ||
+  !SMTP_PASS ||
   !MAIL_FROM ||
   !MAIL_TO ||
   !BASE_URL ||
@@ -22,26 +33,13 @@ if (
   process.exit(1);
 }
 
-// ---- Init SendGrid ----
-sgMail.setApiKey(SENDGRID_API_KEY);
-//---- Email transport ----
-// const transporter = nodemailer.createTransport({
-//   host: SMTP_HOST,
-//   port: Number(SMTP_PORT),
-//   secure: Number(SMTP_PORT) === 465, // 465 => SSL
-//   auth: { user: SMTP_USER, pass: SMTP_PASS },
-// });
-
-// ---- Email transport (SendGrid) ----
-// const transporter = nodemailer.createTransport({
-//   host: SMTP_HOST, // smtp.sendgrid.net
-//   port: Number(SMTP_PORT), // 587
-//   secure: false, // SendGrid TLS के लिए false रखना है
-//   auth: {
-//     user: SMTP_USER, // हमेशा 'apikey'
-//     pass: SMTP_PASS, // आपकी SendGrid API key
-//   },
-// });
+// ---- Email transport ----
+const transporter = nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: Number(SMTP_PORT),
+  secure: Number(SMTP_PORT) === 465, // 465 => SSL
+  auth: { user: SMTP_USER, pass: SMTP_PASS },
+});
 
 function safe(val) {
   return (val ?? "").toString();
@@ -390,7 +388,7 @@ async function sendUnverifiedEmail() {
 
     const jioCSV = toCSV(jio, jioKeys, jioHeaderMap);
 
-    const info = await sgMail.send({
+    const info = await transporter.sendMail({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -560,7 +558,7 @@ async function sendWeeklyPlanEmail() {
       </div>
     </div>`;
 
-    const info = await sgMail.send({
+    const info = await transporter.sendMail({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -1051,7 +1049,7 @@ async function sendWeeklyStatusEmail() {
       },
     ];
 
-    const info = await sgMail.send({
+    const info = await transporter.sendMail({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -1101,7 +1099,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "56 21 * * *";
+const CRON_SCHEDULE = "46 10 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
@@ -1114,7 +1112,7 @@ cron.schedule(
 );
 
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
-const WEEKLY_CRON_SCHEDULE = "05 22 * * *"; // 1 = Monday
+const WEEKLY_CRON_SCHEDULE = "25 10 * * *"; // 1 = Monday
 cron.schedule(
   WEEKLY_CRON_SCHEDULE,
   () => {
