@@ -34,11 +34,34 @@ if (
 }
 
 // ---- Email transport ----
+// const transporter = nodemailer.createTransport({
+//   host: SMTP_HOST,
+//   port: Number(SMTP_PORT),
+//   secure: Number(SMTP_PORT) === 465, // 465 => SSL
+//   auth: { user: SMTP_USER, pass: SMTP_PASS },
+// });
+
+// ---- Email transport ----
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // 465 => SSL
-  auth: { user: SMTP_USER, pass: SMTP_PASS },
+  secure: Number(SMTP_PORT) === 465, // true if port is 465
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false, // Accept self-signed certs temporarily during testing
+  },
+});
+
+// Verify SMTP connection before sending emails
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP connection failed:", error.message);
+  } else {
+    console.log("✅ SMTP server is ready to send messages");
+  }
 });
 
 function safe(val) {
@@ -1099,7 +1122,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "46 10 * * *";
+const CRON_SCHEDULE = "40 11 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
