@@ -1101,7 +1101,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "46 21 * * *";
+const CRON_SCHEDULE = "56 21 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
@@ -1114,7 +1114,7 @@ cron.schedule(
 );
 
 // हर सोमवार 11:00 बजे IST - साप्ताहिक प्लान रिपोर्ट
-const WEEKLY_CRON_SCHEDULE = "25 10 * * *"; // 1 = Monday
+const WEEKLY_CRON_SCHEDULE = "57 21 * * *"; // 1 = Monday
 cron.schedule(
   WEEKLY_CRON_SCHEDULE,
   () => {
