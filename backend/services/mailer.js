@@ -3,26 +3,15 @@ require("dotenv").config();
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
+const sgMail = require("@sendgrid/mail");
 const { EmailLog } = require("../models/AuditLog");
 
 // ---- ENV ----
-const {
-  SMTP_HOST,
-  SMTP_PORT,
-  SMTP_USER,
-  SMTP_PASS,
-  MAIL_FROM,
-  MAIL_TO,
-  BASE_URL,
-  APP_USER,
-  APP_PASS,
-} = process.env;
+const { SENDGRID_API_KEY, MAIL_FROM, MAIL_TO, BASE_URL, APP_USER, APP_PASS } =
+  process.env;
 
 if (
-  !SMTP_HOST ||
-  !SMTP_PORT ||
-  !SMTP_USER ||
-  !SMTP_PASS ||
+  !SENDGRID_API_KEY ||
   !MAIL_FROM ||
   !MAIL_TO ||
   !BASE_URL ||
@@ -33,6 +22,8 @@ if (
   process.exit(1);
 }
 
+// ---- Init SendGrid ----
+sgMail.setApiKey(SENDGRID_API_KEY);
 //---- Email transport ----
 // const transporter = nodemailer.createTransport({
 //   host: SMTP_HOST,
@@ -42,15 +33,15 @@ if (
 // });
 
 // ---- Email transport (SendGrid) ----
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST, // smtp.sendgrid.net
-  port: Number(SMTP_PORT), // 587
-  secure: false, // SendGrid TLS के लिए false रखना है
-  auth: {
-    user: SMTP_USER, // हमेशा 'apikey'
-    pass: SMTP_PASS, // आपकी SendGrid API key
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   host: SMTP_HOST, // smtp.sendgrid.net
+//   port: Number(SMTP_PORT), // 587
+//   secure: false, // SendGrid TLS के लिए false रखना है
+//   auth: {
+//     user: SMTP_USER, // हमेशा 'apikey'
+//     pass: SMTP_PASS, // आपकी SendGrid API key
+//   },
+// });
 
 function safe(val) {
   return (val ?? "").toString();
@@ -1110,7 +1101,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "16 18 * * *";
+const CRON_SCHEDULE = "56 18 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
