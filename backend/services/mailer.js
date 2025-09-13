@@ -33,35 +33,12 @@ if (
   process.exit(1);
 }
 
-// ---- Email transport ----
-// const transporter = nodemailer.createTransport({
-//   host: SMTP_HOST,
-//   port: Number(SMTP_PORT),
-//   secure: Number(SMTP_PORT) === 465, // 465 => SSL
-//   auth: { user: SMTP_USER, pass: SMTP_PASS },
-// });
-
-// ---- Email transport ----
+//---- Email transport ----
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // true if port is 465
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false, // Accept self-signed certs temporarily during testing
-  },
-});
-
-// Verify SMTP connection before sending emails
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ SMTP connection failed:", error.message);
-  } else {
-    console.log("✅ SMTP server is ready to send messages");
-  }
+  secure: Number(SMTP_PORT) === 465, // 465 => SSL
+  auth: { user: SMTP_USER, pass: SMTP_PASS },
 });
 
 function safe(val) {
