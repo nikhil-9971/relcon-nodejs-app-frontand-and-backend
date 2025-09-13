@@ -390,7 +390,7 @@ async function sendUnverifiedEmail() {
 
     const jioCSV = toCSV(jio, jioKeys, jioHeaderMap);
 
-    const info = await transporter.sendMail({
+    const info = await sgMail.send({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -560,7 +560,7 @@ async function sendWeeklyPlanEmail() {
       </div>
     </div>`;
 
-    const info = await transporter.sendMail({
+    const info = await sgMail.send({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -1051,7 +1051,7 @@ async function sendWeeklyStatusEmail() {
       },
     ];
 
-    const info = await transporter.sendMail({
+    const info = await sgMail.send({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -1101,7 +1101,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "56 18 * * *";
+const CRON_SCHEDULE = "08 19 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
