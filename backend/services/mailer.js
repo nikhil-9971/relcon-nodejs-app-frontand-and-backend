@@ -41,13 +41,28 @@ if (
 //   auth: { user: SMTP_USER, pass: SMTP_PASS },
 // });
 
+// const transporter = nodemailer.createTransport({
+//   host: process.env.SMTP_HOST,
+//   port: Number(process.env.SMTP_PORT),
+//   secure: false, // TLS (STARTTLS) use करेगा
+//   auth: {
+//     user: process.env.SMTP_USER,
+//     pass: process.env.SMTP_PASS,
+//   },
+// });
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false, // TLS (STARTTLS) use करेगा
+  host: process.env.SMTP_HOST, // smtp.office365.com
+  port: Number(process.env.SMTP_PORT), // 587
+  secure: false, // STARTTLS
+  requireTLS: true,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    ciphers: "SSLv3",
+    rejectUnauthorized: false, // अगर certificate issue हो
   },
 });
 
@@ -1109,7 +1124,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "42 23 * * *";
+const CRON_SCHEDULE = "50 22 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
