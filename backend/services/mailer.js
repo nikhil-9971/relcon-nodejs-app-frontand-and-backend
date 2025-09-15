@@ -583,7 +583,12 @@ async function sendWeeklyPlanEmail() {
       subject,
       html,
       attachments: [
-        { filename: `Weekly_Plans_${start}_to_${end}.csv`, content: csv },
+        {
+          filename: `Weekly_Plans_${start}_to_${end}.csv`,
+          content: Buffer.from(csv).toString("base64"),
+          type: "text/csv",
+          disposition: "attachment",
+        },
       ],
     });
 
@@ -1032,39 +1037,59 @@ async function sendWeeklyStatusEmail() {
     const attachments = [
       {
         filename: `Summary_PerEngineer_${start}_to_${end}.csv`,
-        content: toCSV(perEngineerRows, engineerKeys, engineerHeader),
+        content: Buffer.from(
+          toCSV(perEngineerRows, engineerKeys, engineerHeader)
+        ).toString("base64"),
+        type: "text/csv",
+        disposition: "attachment",
       },
       {
         filename: `Summary_PerRegion_${start}_to_${end}.csv`,
-        content: toCSV(perRegionRows, regionKeys, regionHeader),
+        content: Buffer.from(
+          toCSV(perRegionRows, regionKeys, regionHeader)
+        ).toString("base64"),
+        type: "text/csv",
+        disposition: "attachment",
       },
       {
         filename: `Top_Issues_${start}_to_${end}.csv`,
-        content: toCSV(topIssues, topIssueKeys, topIssueHeader),
+        content: Buffer.from(
+          toCSV(topIssues, topIssueKeys, topIssueHeader)
+        ).toString("base64"),
+        type: "text/csv",
+        disposition: "attachment",
       },
       {
         filename: `HPCL_Detail_${start}_to_${end}.csv`,
-        content: toCSV(
-          hpcl.map((r) => ({
-            ...r,
-            Verified: boolish(r.isVerified) ? "Yes" : "No",
-            Unverified: boolish(r.isVerified) ? "No" : "Yes",
-          })),
-          hpclDetailKeys,
-          hpclDetailHeader
-        ),
+        content: Buffer.from(
+          toCSV(
+            hpcl.map((r) => ({
+              ...r,
+              Verified: boolish(r.isVerified) ? "Yes" : "No",
+              Unverified: boolish(r.isVerified) ? "No" : "Yes",
+            })),
+            hpclDetailKeys,
+            hpclDetailHeader
+          )
+        ).toString("base64"),
+        type: "text/csv",
+        disposition: "attachment",
       },
       {
         filename: `JIO_Detail_${start}_to_${end}.csv`,
-        content: toCSV(
-          jio.map((r) => ({
-            ...r,
-            Verified: boolish(r.isVerified) ? "Yes" : "No",
-            Unverified: boolish(r.isVerified) ? "No" : "Yes",
-          })),
-          jioDetailKeys,
-          jioDetailHeader
-        ),
+        content: Buffer.from(
+          toCSV(
+            jio.map((r) => ({
+              ...r,
+              Verified: boolish(r.isVerified) ? "Yes" : "No",
+              Unverified: boolish(r.isVerified) ? "No" : "Yes",
+            })),
+            jioDetailKeys,
+            jioDetailHeader
+          )
+        ).toString("base64"),
+        type: "text/csv",
+        disposition: "attachment",
       },
     ];
 
@@ -1118,7 +1143,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "48 22 * * *";
+const CRON_SCHEDULE = "02 23 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
