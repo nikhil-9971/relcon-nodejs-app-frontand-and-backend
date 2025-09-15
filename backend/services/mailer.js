@@ -1,33 +1,30 @@
 // mailer.js
 require("dotenv").config();
 const axios = require("axios");
-const nodemailer = require("nodemailer");
+//const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 const cron = require("node-cron");
 const { EmailLog } = require("../models/AuditLog");
 
 // ---- ENV ----
 const {
-  SMTP_HOST,
-  SMTP_PORT,
-  SMTP_USER,
-  SMTP_PASS,
+  SENDGRID_API_KEY,
   MAIL_FROM,
   MAIL_TO,
   BASE_URL,
   APP_USER,
   APP_PASS,
+  SESSION_SECRET,
 } = process.env;
 
 if (
-  !SMTP_HOST ||
-  !SMTP_PORT ||
-  !SMTP_USER ||
-  !SMTP_PASS ||
+  !SENDGRID_API_KEY ||
   !MAIL_FROM ||
   !MAIL_TO ||
   !BASE_URL ||
   !APP_USER ||
-  !APP_PASS
+  !APP_PASS ||
+  !SESSION_SECRET
 ) {
   console.error("❌ Please set all required ENV vars in .env");
   process.exit(1);
@@ -51,20 +48,7 @@ if (
 //   },
 // });
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // smtp.office365.com
-  port: Number(process.env.SMTP_PORT), // 587
-  secure: false, // STARTTLS
-  requireTLS: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    ciphers: "SSLv3",
-    rejectUnauthorized: false, // अगर certificate issue हो
-  },
-});
+sgMail.setApiKey(SENDGRID_API_KEY);
 
 function safe(val) {
   return (val ?? "").toString();
@@ -413,7 +397,7 @@ async function sendUnverifiedEmail() {
 
     const jioCSV = toCSV(jio, jioKeys, jioHeaderMap);
 
-    const info = await transporter.sendMail({
+    const info = await sgMail.send({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -583,7 +567,7 @@ async function sendWeeklyPlanEmail() {
       </div>
     </div>`;
 
-    const info = await transporter.sendMail({
+    const info = await sgMail.send({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -1074,7 +1058,7 @@ async function sendWeeklyStatusEmail() {
       },
     ];
 
-    const info = await transporter.sendMail({
+    const info = await sgMail.send({
       from: MAIL_FROM,
       to: MAIL_TO,
       subject,
@@ -1124,7 +1108,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "50 22 * * *";
+const CRON_SCHEDULE = "38 22 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
