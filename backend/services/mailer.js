@@ -403,8 +403,18 @@ async function sendUnverifiedEmail() {
       subject,
       html,
       attachments: [
-        { filename: "HPCL_unverified.csv", content: hpclCSV },
-        { filename: "JIO_BP_unverified.csv", content: jioCSV },
+        {
+          filename: "HPCL_unverified.csv",
+          content: Buffer.from(hpclCSV).toString("base64"),
+          type: "text/csv",
+          disposition: "attachment",
+        },
+        {
+          filename: "JIO_BP_unverified.csv",
+          content: Buffer.from(jioCSV).toString("base64"),
+          type: "text/csv",
+          disposition: "attachment",
+        },
       ],
     });
 
@@ -1108,7 +1118,7 @@ if (require.main === module) {
 
 // ---- CRON (auto) ----
 // रोज़ाना सुबह 10:00 बजे IST
-const CRON_SCHEDULE = "38 22 * * *";
+const CRON_SCHEDULE = "48 22 * * *";
 cron.schedule(
   CRON_SCHEDULE,
   () => {
