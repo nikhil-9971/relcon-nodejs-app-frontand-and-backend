@@ -1218,6 +1218,9 @@
               const unverifiedHpcl = window.__unverifiedHpcl || [];
               const unverifiedJio = window.__unverifiedJio || [];
 
+              console.log("HPCL Unverified:", window.__unverifiedHpcl);
+              console.log("JIO Unverified:", window.__unverifiedJio);
+
               const engineerMap = new Map();
               [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
                 console.log("DEBUG ROW", r);
