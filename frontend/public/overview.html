@@ -293,6 +293,13 @@
                 <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
+            <!-- ✅ Breakdown line add karo -->
+            <div
+              id="kpiUnverifiedBreakdown"
+              class="text-[10px] text-black dark:text-gray-400"
+            >
+              —
+            </div>
           </div>
         </div>
 
@@ -796,6 +803,11 @@
             plansToday.length;
           document.getElementById("kpiUnverified").textContent =
             unverifiedHpcl.length + unverifiedJio.length;
+          // ✅ Breakdown line update karo
+          document.getElementById(
+            "kpiUnverifiedBreakdown"
+          ).textContent = `HPCL: ${unverifiedHpcl.length} • RBML: ${unverifiedJio.length}`;
+
           document.getElementById("kpiOpenIncidents").textContent =
             openIncidents.length;
 
