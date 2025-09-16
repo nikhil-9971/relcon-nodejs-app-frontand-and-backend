@@ -1220,6 +1220,7 @@
 
               const engineerMap = new Map();
               [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
+                console.log("DEBUG ROW", r);
                 // ✅ Backend field = engineer
                 const eng = String(r.engineer || "").trim() || "-";
                 engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
