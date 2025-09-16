@@ -729,6 +729,11 @@
 
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
       function getToken() {
         return localStorage.getItem("token");
       }
