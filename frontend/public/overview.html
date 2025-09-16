@@ -827,10 +827,10 @@
 
           document.getElementById("kpiPlansToday").textContent =
             plansToday.length;
-          byId("kpiUnverified").textContent =
+          document.getElementById("kpiUnverified").textContent =
             window._unverifiedHpcl.length + window._unverifiedJio.length;
           // ✅ Breakdown line update karo
-          byId(
+          document.getElementById(
             "kpiUnverifiedBreakdown"
           ).textContent = `HPCL: ${window._unverifiedHpcl.length} • RBML: ${window._unverifiedJio.length}`;
 
