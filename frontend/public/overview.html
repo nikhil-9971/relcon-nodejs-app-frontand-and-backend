@@ -292,6 +292,16 @@
               >
                 <i class="fa-solid fa-download text-[11px]"></i>
               </button>
+
+              <!-- mail clipboard added -->
+
+              <button
+                id="copyUnverifiedMail"
+                class="text-[10px] text-green-600 kpi-export"
+                title="Copy Mail Content"
+              >
+                <i class="fa-solid fa-copy text-[11px]"></i>
+              </button>
             </div>
             <!-- ✅ Breakdown line add karo -->
             <div
@@ -1193,6 +1203,66 @@
         } catch (e) {
           console.error("overview load error", e);
         }
+
+        //Mail Clip Added
+
+        byId("copyUnverifiedMail")?.addEventListener("click", () => {
+          try {
+            // Engineer-wise grouping
+            const engineerMap = new Map();
+            [...(unverifiedHpcl || []), ...(unverifiedJio || [])].forEach(
+              (r) => {
+                const eng = String(r.engineer || "").trim() || "-";
+                engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
+              }
+            );
+
+            // ✅ Mail body with table
+            let mailHtml = `
+      <p>Dear Anurag,</p>
+      <p>Please find below the <b>Unverified Status Report</b> of HPCL &RBML Cutomer.</p>
+
+      <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; font-family:Poppins, Arial; font-size:10px; width:100%;">
+        <thead style="background:#f1f5f9;">
+          <tr>
+            <th style="text-align:left;">Engineer Name</th>
+            <th style="text-align:center;">Unverified Count</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+            engineerMap.forEach((count, eng) => {
+              mailHtml += `
+        <tr>
+          <td>${eng}</td>
+          <td style="text-align:center;">${count}</td>
+        </tr>
+      `;
+            });
+
+            mailHtml += `
+        </tbody>
+      </table>
+
+      <p><b>Note:</b> Kindly verify the pending status within <b>01 day</b> to avoid escalation.</p>
+      <p>Regards,<br/>Nikhil Trivedi</p>
+    `;
+
+            // Clipboard copy
+            navigator.clipboard
+              .writeText(mailHtml)
+              .then(() => {
+                alert("✅ Mail content copied!");
+              })
+              .catch((err) => {
+                console.error("Clipboard copy failed", err);
+                alert("❌ Copy failed");
+              });
+          } catch (e) {
+            console.error("copy mail table error", e);
+          }
+        });
       }
 
       function renderVerifyChart(unverified, verified) {
