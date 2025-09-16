@@ -1220,15 +1220,8 @@
 
               const engineerMap = new Map();
               [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
-                // ✅ Check multiple possible field names
-                const eng =
-                  String(
-                    r.engineerName ||
-                      r.enggName ||
-                      r.userName ||
-                      r.engineer ||
-                      ""
-                  ).trim() || "-";
+                // ✅ Backend field = engineer
+                const eng = String(r.engineer || "").trim() || "-";
                 engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
               });
 
