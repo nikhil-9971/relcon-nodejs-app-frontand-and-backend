@@ -1217,21 +1217,19 @@
             try {
               const unverifiedHpcl = window.__unverifiedHpcl || [];
               const unverifiedJio = window.__unverifiedJio || [];
-              // Engineer-wise grouping
-              const engineerMap = new Map();
-              [...(unverifiedHpcl || []), ...(unverifiedJio || [])].forEach(
-                (r) => {
-                  const eng = String(r.engineer || "").trim() || "-";
-                  engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
-                }
-              );
 
-              // ✅ Mail body with table
+              const engineerMap = new Map();
+              [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
+                const eng = String(r.engineer || "").trim() || "-";
+                engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
+              });
+
+              // Mail body
               let mailHtml = `
       <p>Dear Anurag,</p>
-      <p>Please find below the <b>Unverified Status Report</b> of HPCL &RBML Cutomer.</p>
+      <p>Please find below the <b>Unverified Status Report</b> of HPCL & RBML Customer.</p>
 
-      <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; font-family:Poppins, Arial; font-size:10px; width:100%;">
+      <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; font-family:Poppins, Arial; font-size:12px; width:100%;">
         <thead style="background:#f1f5f9;">
           <tr>
             <th style="text-align:left;">Engineer Name</th>
@@ -1258,18 +1256,28 @@
       <p>Regards,<br/>Nikhil Trivedi</p>
     `;
 
-              // Clipboard copy
+              // ✅ Copy with formatting
+              const blobHtml = new Blob([mailHtml], { type: "text/html" });
+              const blobText = new Blob([mailHtml.replace(/<[^>]+>/g, "")], {
+                type: "text/plain",
+              });
+
               navigator.clipboard
-                .writeText(mailHtml)
+                .write([
+                  new ClipboardItem({
+                    "text/html": blobHtml,
+                    "text/plain": blobText,
+                  }),
+                ])
                 .then(() => {
-                  alert("✅ Mail content copied!");
+                  alert("✅ Mail content copied with formatting!");
                 })
                 .catch((err) => {
                   console.error("Clipboard copy failed", err);
                   alert("❌ Copy failed");
                 });
             } catch (e) {
-              console.error("copy mail table error", e);
+              console.error("copy mail error", e);
             }
           });
       }
