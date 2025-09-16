@@ -1215,6 +1215,8 @@
           .getElementById("copyUnverifiedMail")
           ?.addEventListener("click", () => {
             try {
+              const unverifiedHpcl = window.__unverifiedHpcl || [];
+              const unverifiedJio = window.__unverifiedJio || [];
               // Engineer-wise grouping
               const engineerMap = new Map();
               [...(unverifiedHpcl || []), ...(unverifiedJio || [])].forEach(
