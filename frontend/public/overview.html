@@ -1220,7 +1220,15 @@
 
               const engineerMap = new Map();
               [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
-                const eng = String(r.engineer || "").trim() || "-";
+                // ✅ Check multiple possible field names
+                const eng =
+                  String(
+                    r.engineerName ||
+                      r.enggName ||
+                      r.userName ||
+                      r.engineer ||
+                      ""
+                  ).trim() || "-";
                 engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
               });
 
@@ -1228,7 +1236,6 @@
               let mailHtml = `
       <p>Dear Anurag,</p>
       <p>Please find below the <b>Unverified Status Report</b> of HPCL & RBML Customer.</p>
-
       <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; font-family:Poppins, Arial; font-size:12px; width:100%;">
         <thead style="background:#f1f5f9;">
           <tr>
@@ -1251,12 +1258,11 @@
               mailHtml += `
         </tbody>
       </table>
-
       <p><b>Note:</b> Kindly verify the pending status within <b>01 day</b> to avoid escalation.</p>
       <p>Regards,<br/>Nikhil Trivedi</p>
     `;
 
-              // ✅ Copy with formatting
+              // Copy with formatting
               const blobHtml = new Blob([mailHtml], { type: "text/html" });
               const blobText = new Blob([mailHtml.replace(/<[^>]+>/g, "")], {
                 type: "text/plain",
@@ -1270,11 +1276,7 @@
                   }),
                 ])
                 .then(() => {
-                  alert("✅ Mail content copied with formatting!");
-                })
-                .catch((err) => {
-                  console.error("Clipboard copy failed", err);
-                  alert("❌ Copy failed");
+                  alert("✅ Mail content copied with engineer rows!");
                 });
             } catch (e) {
               console.error("copy mail error", e);
