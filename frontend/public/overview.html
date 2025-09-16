@@ -795,12 +795,23 @@
                 .trim()
                 .toUpperCase() === "IN LEAVE"
           ).length;
-          const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
+          // const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
+          //    (r) => String(r.isVerified).toLowerCase() !== "true"
+          //  );
+          window.__unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
             (r) => String(r.isVerified).toLowerCase() !== "true"
           );
-          const unverifiedJio = (Array.isArray(jio) ? jio : []).filter(
+          //  const unverifiedJio = (Array.isArray(jio) ? jio : []).filter(
+          //   (r) => String(r.isVerified).toLowerCase() !== "true"
+          //  );
+
+          window.__unverifiedJio = (Array.isArray(jio) ? jio : []).filter(
             (r) => String(r.isVerified).toLowerCase() !== "true"
           );
+
+          console.log("HPCL Unverified:", window.__unverifiedHpcl);
+          console.log("JIO Unverified:", window.__unverifiedJio);
+
           const openIncidents = (incJson?.incidents || []).filter(
             (i) => (i.status || "").toLowerCase() !== "close"
           );
@@ -816,12 +827,12 @@
 
           document.getElementById("kpiPlansToday").textContent =
             plansToday.length;
-          document.getElementById("kpiUnverified").textContent =
-            unverifiedHpcl.length + unverifiedJio.length;
+          byId("kpiUnverified").textContent =
+            window._unverifiedHpcl.length + window._unverifiedJio.length;
           // ✅ Breakdown line update karo
-          document.getElementById(
+          byId(
             "kpiUnverifiedBreakdown"
-          ).textContent = `HPCL: ${unverifiedHpcl.length} • RBML: ${unverifiedJio.length}`;
+          ).textContent = `HPCL: ${window._unverifiedHpcl.length} • RBML: ${window._unverifiedJio.length}`;
 
           document.getElementById("kpiOpenIncidents").textContent =
             openIncidents.length;
@@ -1217,9 +1228,6 @@
             try {
               const unverifiedHpcl = window.__unverifiedHpcl || [];
               const unverifiedJio = window.__unverifiedJio || [];
-
-              console.log("HPCL Unverified:", window.__unverifiedHpcl);
-              console.log("JIO Unverified:", window.__unverifiedJio);
 
               const engineerMap = new Map();
               [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
