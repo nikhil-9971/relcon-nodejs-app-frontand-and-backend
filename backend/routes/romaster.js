@@ -112,6 +112,7 @@ router.get("/amcCountStatus", async (req, res) => {
       const region = ro.region;
       const phase = ro.phase;
       const purpose = ro.purpose;
+      const siteActivestatus = ro.siteActivestatus;
 
       if (!engineerStats.has(engineer)) {
         engineerStats.set(engineer, {
