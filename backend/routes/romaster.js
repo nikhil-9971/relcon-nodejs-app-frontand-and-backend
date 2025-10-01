@@ -111,7 +111,7 @@ router.get("/amcCountStatus", async (req, res) => {
       const roName = ro.roName;
       const region = ro.region;
       const phase = ro.phase;
-      const purpose = ro.purpose;
+      const purpose = hasCompletedAMC ? latestVisit.purpose : "";
       const siteActivestatus = ro.siteActivestatus;
 
       if (!engineerStats.has(engineer)) {
