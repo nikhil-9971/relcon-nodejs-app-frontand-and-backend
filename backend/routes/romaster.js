@@ -111,7 +111,6 @@ router.get("/amcCountStatus", async (req, res) => {
       const roName = ro.roName;
       const region = ro.region;
       const phase = ro.phase;
-      const purpose = hasCompletedAMC ? latestVisit.purpose : "";
       const siteActivestatus = ro.siteActivestatus;
 
       if (!engineerStats.has(engineer)) {
@@ -149,11 +148,11 @@ router.get("/amcCountStatus", async (req, res) => {
         roName: roName,
         region: region,
         phase: phase,
-        purpose: purpose,
+        purpose: hasCompletedAMC ? latestVisit.purpose : "-",
         amcStatus: hasCompletedAMC ? "Completed" : "Pending",
-        visitDate: hasCompletedAMC ? latestVisit.date : "",
-        amcQtr: hasCompletedAMC ? ro.amcQtr : "", // ✅ only if completed
-        issueType: hasCompletedAMC ? latestVisit.issueType : "",
+        visitDate: hasCompletedAMC ? latestVisit.date : "-",
+        amcQtr: hasCompletedAMC ? ro.amcQtr : "-", // ✅ only if completed
+        issueType: hasCompletedAMC ? latestVisit.issueType : "-",
         siteActivestatus: siteActivestatus,
       });
     });
