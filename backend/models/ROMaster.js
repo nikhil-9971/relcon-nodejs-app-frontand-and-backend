@@ -9,6 +9,8 @@ const ROMasterSchema = new mongoose.Schema({
   engineer: String,
   amcQtr: String,
   siteStatus: String,
+  siteActivestatus: String,
+  lastAMCqtr: String,
 });
 
 module.exports =
