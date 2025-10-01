@@ -147,10 +147,12 @@ router.get("/amcCountStatus", async (req, res) => {
         roName: roName,
         region: region,
         phase: phase,
+        purpose: purpose,
         amcStatus: hasCompletedAMC ? "Completed" : "Pending",
         visitDate: hasCompletedAMC ? latestVisit.date : "",
         amcQtr: hasCompletedAMC ? ro.amcQtr : "", // ✅ only if completed
         issueType: hasCompletedAMC ? latestVisit.issueType : "",
+        siteActivestatus: siteActivestatus,
       });
     });
 
