@@ -108,6 +108,8 @@ router.post("/saveStatus", async (req, res) => {
       tankOffline,
       tankDependency,
       tankRemark,
+      bosIP,
+      fccIP,
       locationField,
     } = req.body;
 
@@ -146,6 +148,8 @@ router.post("/saveStatus", async (req, res) => {
         tankOffline,
         tankDependency,
         tankRemark,
+        bosIP,
+        fccIP,
         locationField,
       },
       { upsert: true, new: true }
@@ -216,6 +220,8 @@ router.get("/getMergedStatusRecords", async (req, res) => {
           tankOffline: status.tankOffline || "",
           tankDependency: status.tankDependency || "",
           tankRemark: status.tankRemark || "",
+          bosIP: status.bosIP || "",
+          fccIP: status.fccIP || "",
           locationField: status.locationField || "",
           isVerified: status.isVerified || false,
           taskGenerated: !!taskExists, // ✅ new field
@@ -299,6 +305,8 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       "tankOffline",
       "tankDependency",
       "tankRemark",
+      "bosIP",
+      "fccIP",
       "locationField",
       "isVerified",
       "taskGenerated",
