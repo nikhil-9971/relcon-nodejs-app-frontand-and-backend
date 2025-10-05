@@ -516,6 +516,12 @@
                 >
                   Pending AMC
                 </th>
+
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  AMC Completion %
+                </th>
               </tr>
             </thead>
             <tbody
@@ -2361,12 +2367,18 @@
             totalCompleted += item.totalAMCCompleted;
             totalPending += item.pendingAMC;
 
+            const completionPct =
+              item.totalAMCAssigned > 0
+                ? ((item.pendingAMC / item.totalAMCAssigned) * 100).toFixed(2)
+                : "0.00";
+
             return `
         <tr class="border-b">
           <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${item.engineerName}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
+           <td class="px-3 py-2 text-black dark:text-gray-200">${completionPct}%</td>
         </tr>
       `;
           })
@@ -2374,12 +2386,17 @@
 
         // Add total row only if Admin (Engineer should not see overall totals)
         if (role === "admin") {
+          const totalPct =
+            totalAssigned > 0
+              ? ((totalPending / totalAssigned) * 100).toFixed(2)
+              : "0.00";
           tbody.innerHTML += `
       <tr class="border-t bg-gray-50">
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPct}%</td>
       </tr>
     `;
         }
