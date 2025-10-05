@@ -2389,7 +2389,7 @@
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
-           <td class="px-3 py-2 text-black dark:text-gray-200">${completionPct}%</td>
+           <td class="px-3 py-2 ${colorClass}">${completionPct}%</td>
         </tr>
       `;
           })
@@ -2414,7 +2414,7 @@
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
-        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPct}%</td>
+        <td class="px-3 py-2 ${totalColor}">${totalPct}%</td>
       </tr>
     `;
         }
