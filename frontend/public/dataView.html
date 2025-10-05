@@ -876,6 +876,28 @@
               ></textarea>
             </div>
 
+            <!-- BOS IP  -->
+            <div>
+              <label class="text-sm font-semibold">BOS IP:</label>
+              <textarea
+                id="bosIP"
+                required
+                placeholder="Example: 10.121.21.46"
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
+            <!-- FCC IP -->
+            <div>
+              <label class="text-sm font-semibold">FCC IP:</label>
+              <textarea
+                id="fccIP"
+                required
+                placeholder="Example: 10.121.21.47"
+                class="w-full p-2 mt-1 border rounded"
+              ></textarea>
+            </div>
+
             <!-- location finder -->
 
             <div>
@@ -2181,6 +2203,8 @@
           "tankOffline",
           "tankDependency",
           "tankRemark",
+          "bosIP",
+          "fccIP",
           "locationField",
         ];
         // ⛔ Check if location is valid before save
@@ -2240,6 +2264,8 @@
           tankOffline: document.getElementById("tankOffline").value,
           tankDependency: document.getElementById("tankDependency").value,
           tankRemark: document.getElementById("tankRemark").value,
+          bosIP: document.getElementById("bosIP").value,
+          fccIP: document.getElementById("fccIP").value,
           locationField: document.getElementById("locationField").value,
         };
 
@@ -2474,6 +2500,8 @@
               ["No Of Tank Offline", cleanText(status.tankOffline)],
               ["Tank Dependency", cleanText(status.tankDependency)],
               ["Tank Offline Remark", cleanText(status.tankRemark)],
+              ["BOS IP", cleanText(status.bosIP)],
+              ["FCC IP", cleanText(status.fccIP)],
               ["Site Location", cleanText(status.locationField)]
             );
           }
