@@ -2369,7 +2369,9 @@
 
             const completionPct =
               item.totalAMCAssigned > 0
-                ? ((item.pendingAMC / item.totalAMCAssigned) * 100).toFixed(2)
+                ? ((item.totalCompleted / item.totalAMCAssigned) * 100).toFixed(
+                    2
+                  )
                 : "0.00";
 
             return `
@@ -2388,7 +2390,7 @@
         if (role === "admin") {
           const totalPct =
             totalAssigned > 0
-              ? ((totalPending / totalAssigned) * 100).toFixed(2)
+              ? ((totalCompleted / totalAssigned) * 100).toFixed(2)
               : "0.00";
           tbody.innerHTML += `
       <tr class="border-t bg-gray-50">
