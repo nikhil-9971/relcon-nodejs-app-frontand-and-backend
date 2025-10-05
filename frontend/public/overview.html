@@ -2328,7 +2328,7 @@
 
         if (!data || data.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="4" class="px-3 py-2 text-center text-black dark:text-gray-400">No data available</td></tr>';
+            '<tr><td colspan="5" class="px-3 py-2 text-center text-black dark:text-gray-400">No data available</td></tr>';
           return;
         }
 
@@ -2375,12 +2375,12 @@
                   ).toFixed(2)
                 : "0.00";
 
-            // ✅ Decide color based on %
-            let colorClass = "text-red-600 font-semibold"; // default low
+            // ✅ Badge color logic
+            let badgeClass = "bg-red-100 text-red-700";
             if (completionPct >= 70) {
-              colorClass = "text-green-600 font-semibold";
+              badgeClass = "bg-green-100 text-green-700";
             } else if (completionPct >= 40) {
-              colorClass = "text-yellow-600 font-semibold";
+              badgeClass = "bg-yellow-100 text-yellow-700";
             }
 
             return `
@@ -2389,7 +2389,11 @@
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
           <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
-           <td class="px-3 py-2 ${colorClass}">${completionPct}%</td>
+          <td class="px-3 py-2">
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}">
+              ${completionPct}%
+            </span>
+          </td>
         </tr>
       `;
           })
@@ -2402,19 +2406,24 @@
               ? ((totalCompleted / totalAssigned) * 100).toFixed(2)
               : "0.00";
 
-          let totalColor = "text-red-600 font-bold";
+          let totalBadge = "bg-red-100 text-red-700";
           if (totalPct >= 70) {
-            totalColor = "text-green-600 font-bold";
+            totalBadge = "bg-green-100 text-green-700";
           } else if (totalPct >= 40) {
-            totalColor = "text-yellow-600 font-bold";
+            totalBadge = "bg-yellow-100 text-yellow-700";
           }
+
           tbody.innerHTML += `
       <tr class="border-t bg-gray-50">
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
-        <td class="px-3 py-2 ${totalColor}">${totalPct}%</td>
+        <td class="px-3 py-2">
+          <span class="px-2 py-1 rounded-full text-xs font-bold ${totalBadge}">
+            ${totalPct}%
+          </span>
+        </td>
       </tr>
     `;
         }
