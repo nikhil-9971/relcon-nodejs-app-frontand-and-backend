@@ -34,6 +34,8 @@ const StatusSchema = new mongoose.Schema({
   tankOffline: String,
   tankDependency: String,
   tankRemark: String,
+  bosIP: String,
+  fccIP: String,
   locationField: String,
   isVerified: {
     type: Boolean,
