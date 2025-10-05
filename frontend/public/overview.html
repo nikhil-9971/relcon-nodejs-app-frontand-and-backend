@@ -2375,6 +2375,14 @@
                   ).toFixed(2)
                 : "0.00";
 
+            // ✅ Decide color based on %
+            let colorClass = "text-red-600 font-semibold"; // default low
+            if (completionPct >= 70) {
+              colorClass = "text-green-600 font-semibold";
+            } else if (completionPct >= 40) {
+              colorClass = "text-yellow-600 font-semibold";
+            }
+
             return `
         <tr class="border-b">
           <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${item.engineerName}</td>
@@ -2393,6 +2401,13 @@
             totalAssigned > 0
               ? ((totalCompleted / totalAssigned) * 100).toFixed(2)
               : "0.00";
+
+          let totalColor = "text-red-600 font-bold";
+          if (totalPct >= 70) {
+            totalColor = "text-green-600 font-bold";
+          } else if (totalPct >= 40) {
+            totalColor = "text-yellow-600 font-bold";
+          }
           tbody.innerHTML += `
       <tr class="border-t bg-gray-50">
         <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
