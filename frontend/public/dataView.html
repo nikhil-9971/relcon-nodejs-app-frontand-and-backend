@@ -256,6 +256,7 @@
               </th>
 
               <th class="px-1 py-1">Detail Earthing Status Remark</th>
+              <th class="px-1 py-1">Earthing Cable Required in Mtr.</th>
               <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
@@ -404,6 +405,13 @@
           <textarea
             id="editdetailEarthingremark"
             placeholder="Detail Earthing Status Remark"
+            class="border px-3 py-1 rounded"
+          >
+          </textarea>
+
+          <textarea
+            id="editcablerequirment"
+            placeholder="Enter cable length in mtr."
             class="border px-3 py-1 rounded"
           >
           </textarea>
@@ -1585,6 +1593,7 @@
         <td class="border px-1 py-1">${plan.separateearthingStatus || "-"}</td>
         <td class="border px-1 py-1">${plan.earthingCheckedby || "-"}</td>
         <td class="border px-1 py-1">${plan.detailEarthingremark || "-"}</td>
+        <td class="border px-1 py-1">${plan.cableRequirmentremark || "-"}</td>
 
         <!-- ❌ ACTION COLUMN: admin only -->
         ${
@@ -1647,6 +1656,9 @@
         document.getElementById("editdetailEarthingremark").value =
           plan.detailEarthingremark || "";
 
+        document.getElementById("editcablerequirment").value =
+          plan.detailEarthingremark || "";
+
         document.getElementById("editModal").classList.remove("hidden");
       }
 
@@ -1685,6 +1697,9 @@
           detailEarthingremark: document.getElementById(
             "editdetailEarthingremark"
           ).value,
+
+          detailEarthingremark: document.getElementById("editcablerequirment")
+            .value,
         };
 
         const res = await fetch(`${baseUrl}/updateDailyPlan/` + id, {
@@ -1925,6 +1940,8 @@
             "Separate earthing cable for Barrier (Yes/No)",
             "Separate earthing for barrier photo checked by",
             "Detail earthing status remark",
+            "Date of Visit",
+            "Barrier to Earthpit Cable required in Mtr.",
           ],
         ];
 
@@ -1936,7 +1953,9 @@
               d.roName ||
               d.separateearthingStatus ||
               d.earthingCheckedby ||
-              d.detailEarthingremark) &&
+              d.detailEarthingremark ||
+              d.date ||
+              d.cableRequirmentremark) &&
             d.roName &&
             !["NO PLAN", "IN LEAVE", "HPCL OFFICE"].includes(
               d.roName.trim().toUpperCase()
