@@ -24,6 +24,7 @@ const PlanSchema = new mongoose.Schema({
   separateearthingStatus: String,
   earthingCheckedby: String,
   detailEarthingremark: String,
+  cableRequirmentremark: String,
 });
 
 module.exports =
