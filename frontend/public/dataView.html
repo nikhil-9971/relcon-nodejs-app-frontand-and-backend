@@ -1927,14 +1927,15 @@
         const wb = XLSX.utils.book_new();
         const date = new Date().toLocaleDateString("en-CA");
 
-        // ✅ fromDate ko yahan se lo
         const fromDate = document.getElementById("fromDate").value || "";
 
-        // ✅ Header Row only — title row hata diya
+        // ✅ Header Row (added "Duplicacy" column)
         const headerRow = [
           [
             "Customer",
             "Phase",
+            "Engineer",
+            "Region",
             "Site Code",
             "Site Name",
             "Separate earthing cable for Barrier (Yes/No)",
@@ -1942,14 +1943,16 @@
             "Detail earthing status remark",
             "Date of Visit",
             "Barrier to Earthpit Cable required in Mtr.",
+            "Duplicacy",
           ],
         ];
 
-        // ✅ Filter valid data and exclude unwanted entries
+        // ✅ Filter valid data
         const validData = filteredData.filter(
           (d) =>
             d &&
-            (d.roCode ||
+            (d.engineer ||
+              d.roCode ||
               d.roName ||
               d.separateearthingStatus ||
               d.earthingCheckedby ||
@@ -1962,15 +1965,28 @@
             )
         );
 
+        // ✅ Count RO Code occurrences to detect duplicates
+        const roCodeCount = {};
+        validData.forEach((d) => {
+          const code = (d.roCode || "").trim();
+          if (code) roCodeCount[code] = (roCodeCount[code] || 0) + 1;
+        });
+
+        // ✅ Prepare table rows with "Duplicacy" column
         const tableRows = validData.map((d) => {
           const [customer = "", phasePart = ""] = d.phase
             ? String(d.phase).split("/")
             : ["", ""];
+          const roCode = d.roCode ? String(d.roCode).trim() : "";
+          const duplicateStatus =
+            roCode && roCodeCount[roCode] > 1 ? "Duplicate" : "";
 
           return [
             customer.trim(),
             phasePart.trim(),
-            d.roCode ? String(d.roCode).trim() : "",
+            d.engineer ? String(d.engineer).trim() : "",
+            d.region ? String(d.region).trim() : "",
+            roCode,
             d.roName ? String(d.roName).trim() : "",
             d.separateearthingStatus
               ? String(d.separateearthingStatus).trim()
@@ -1979,6 +1995,7 @@
             d.detailEarthingremark ? String(d.detailEarthingremark).trim() : "",
             d.date ? String(d.date).trim() : "",
             d.cableRequirmentremark ? d.cableRequirmentremark.trim() : "",
+            duplicateStatus, // ✅ New column added here
           ];
         });
 
