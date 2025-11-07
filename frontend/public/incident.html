@@ -220,8 +220,15 @@
         ];
 
         const user = JSON.parse(localStorage.getItem("user")) || {};
+        //const isAdminUser =
+        // user.username === "nikhil.trivedi" && user.role === "admin";
+
+        // Define a list of admin usernames
+        const adminUsers = ["nikhil.trivedi", "anurag.mishra"];
+
+        // Check if current user is an admin
         const isAdminUser =
-          user.username === "nikhil.trivedi" && user.role === "admin";
+          adminUsers.includes(user.username) && user.role === "admin";
 
         const tbody = document.getElementById("incidentTable");
         tbody.innerHTML = "";
