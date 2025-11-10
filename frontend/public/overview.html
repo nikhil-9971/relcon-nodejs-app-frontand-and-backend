@@ -1337,6 +1337,7 @@
         if (ph.includes("RBML")) return "RBML";
         if (ph.includes("BPCL")) return "BPCL";
         if (ph.includes("NPL")) return "NPL";
+        if (ph.includes("NAYARA")) return "NAYARA";
         return "OTHER";
       }
 
@@ -1347,6 +1348,7 @@
         const labelColorMap = new Map([
           ["HPCL", "#16a34a"],
           ["RBML", "#f59e0b"],
+          ["NAYARA", "#1347ad"],
           ["BPCL", "#60a5fa"],
           ["NPL", "#34d399"],
           ["OTHER", "#9ca3af"],
@@ -1383,6 +1385,7 @@
             HPCL: "#16a34a",
             RBML: "#f59e0b",
             BPCL: "#60a5fa",
+            NAYARA: "#1347ad",
             NPL: "#34d399",
             "JIO BP": "#a78bfa",
             OTHER: "#9ca3af",
@@ -1452,7 +1455,15 @@
 
         // Aggregate: engineer -> customer -> count
         const map = new Map();
-        const customers = ["HPCL", "RBML", "BPCL", "NPL", "OTHER", "IN LEAVE"];
+        const customers = [
+          "HPCL",
+          "RBML",
+          "BPCL",
+          "NAYARA",
+          "NPL",
+          "OTHER",
+          "IN LEAVE",
+        ];
         data.forEach((p) => {
           const eng = String(p.engineer || "").trim() || "-";
           const purposeUpper = String(p.issueType || p.purpose || "")
