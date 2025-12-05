@@ -349,10 +349,12 @@
 
       // Helper UI funcs
       function showLoader() {
-        document.getElementById("loader").classList.remove("hidden");
+        const el = document.getElementById("loader");
+        if (el) el.classList.remove("hidden");
       }
       function hideLoader() {
-        document.getElementById("loader").classList.add("hidden");
+        const el = document.getElementById("loader");
+        if (el) el.classList.add("hidden");
       }
       function showToast(msg = "Done") {
         const t = document.getElementById("toast");
@@ -399,10 +401,12 @@
       }
 
       async function loadData() {
+        // Show loader before we start network + rendering work
         showLoader();
         currentPage = 1;
         const user = await getCurrentUser();
         if (!user) {
+          // hide because we won't render table
           hideLoader();
           document.getElementById("tableBody").innerHTML =
             '<tr><td colspan="' +
@@ -438,8 +442,8 @@
           filteredData = allData.slice();
         }
 
+        // Important: do NOT hide loader here — renderTable will hide it after DOM paints
         renderTable(filteredData);
-        hideLoader();
       }
 
       function populateFilters(rows) {
@@ -470,10 +474,6 @@
 
       function applySearch() {
         currentPage = 1;
-        const q = document
-          .getElementById("searchInput")
-          .value.trim()
-          .toLowerCase();
         applyFilters();
       }
 
@@ -518,7 +518,6 @@
 
           filteredData = out;
           renderTable(filteredData);
-          hideLoader();
         }, 80);
       }
 
@@ -532,15 +531,22 @@
 
       // Table render with pagination
       function renderTable(data) {
+        // show loader (keep visible until DOM painted)
         showLoader();
         const start = (currentPage - 1) * rowsPerPage;
         const pageData = data.slice(start, start + rowsPerPage);
 
+        // use requestAnimationFrame + setTimeout pattern so we hide loader after paint
         requestAnimationFrame(() => {
           setTimeout(() => {
             _renderTableNow(pageData);
             renderPagination(data.length);
-            hideLoader();
+
+            // ensure browser painted the table before hiding loader
+            requestAnimationFrame(() => {
+              // tiny delay to make sure paint finished on slower devices
+              setTimeout(() => hideLoader(), 30);
+            });
           }, 0);
         });
       }
