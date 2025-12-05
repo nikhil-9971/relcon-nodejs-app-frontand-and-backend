@@ -114,16 +114,6 @@
         display: none;
       }
 
-      /* loader */
-      #loader {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.28);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      }
       .toast {
         position: fixed;
         top: 16px;
@@ -316,12 +306,6 @@
       </div>
     </div>
 
-    <!-- Loader & Toast -->
-    <div id="loader" class="hidden">
-      <div
-        class="w-12 h-12 border-4 border-white border-t-blue-600 rounded-full animate-spin"
-      ></div>
-    </div>
     <div id="toast" class="toast"></div>
 
     <script>
@@ -348,14 +332,9 @@
       ];
 
       // Helper UI funcs
-      function showLoader() {
-        const el = document.getElementById("loader");
-        if (el) el.classList.remove("hidden");
-      }
-      function hideLoader() {
-        const el = document.getElementById("loader");
-        if (el) el.classList.add("hidden");
-      }
+      // Spinner removed: showLoader/hideLoader are now no-ops so calls remain safe but no spinner shown.
+      function showLoader() {}
+      function hideLoader() {}
       function showToast(msg = "Done") {
         const t = document.getElementById("toast");
         t.textContent = msg;
@@ -401,13 +380,10 @@
       }
 
       async function loadData() {
-        // Show loader before we start network + rendering work
-        showLoader();
+        // loader removed — we keep the calls safe via no-op functions
         currentPage = 1;
         const user = await getCurrentUser();
         if (!user) {
-          // hide because we won't render table
-          hideLoader();
           document.getElementById("tableBody").innerHTML =
             '<tr><td colspan="' +
             columns.length +
@@ -417,7 +393,6 @@
 
         const data = await fetchROMasterList();
         if (!data) {
-          hideLoader();
           document.getElementById("tableBody").innerHTML =
             '<tr><td colspan="' +
             columns.length +
@@ -442,7 +417,6 @@
           filteredData = allData.slice();
         }
 
-        // Important: do NOT hide loader here — renderTable will hide it after DOM paints
         renderTable(filteredData);
       }
 
@@ -478,7 +452,6 @@
       }
 
       function applyFilters() {
-        showLoader();
         setTimeout(() => {
           const q = document
             .getElementById("searchInput")
@@ -531,22 +504,13 @@
 
       // Table render with pagination
       function renderTable(data) {
-        // show loader (keep visible until DOM painted)
-        showLoader();
         const start = (currentPage - 1) * rowsPerPage;
         const pageData = data.slice(start, start + rowsPerPage);
 
-        // use requestAnimationFrame + setTimeout pattern so we hide loader after paint
         requestAnimationFrame(() => {
           setTimeout(() => {
             _renderTableNow(pageData);
             renderPagination(data.length);
-
-            // ensure browser painted the table before hiding loader
-            requestAnimationFrame(() => {
-              // tiny delay to make sure paint finished on slower devices
-              setTimeout(() => hideLoader(), 30);
-            });
           }, 0);
         });
       }
