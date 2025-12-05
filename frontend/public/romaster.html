@@ -236,6 +236,18 @@
           </select>
         </div>
 
+        <!-- NEW: Phase filter -->
+        <div class="control">
+          <label class="muted">Phase</label>
+          <select
+            id="phaseFilter"
+            class="border px-2 py-1 rounded"
+            onchange="applyFilters()"
+          >
+            <option value="">All Phases</option>
+          </select>
+        </div>
+
         <div class="control">
           <label class="muted">Site Status</label>
           <select
@@ -332,7 +344,7 @@
       ];
 
       // Helper UI funcs
-      // Spinner removed: showLoader/hideLoader are now no-ops so calls remain safe but no spinner shown.
+      // Spinner removed: showLoader/hideLoader are no-ops to keep API compatibility
       function showLoader() {}
       function hideLoader() {}
       function showToast(msg = "Done") {
@@ -355,7 +367,7 @@
         }
       }
 
-      // Fetch ROMaster list with fallbacks (same approach as previous romaster.html)
+      // Fetch ROMaster list with fallbacks
       async function fetchROMasterList() {
         const candidates = [
           "/romaster/list",
@@ -380,7 +392,6 @@
       }
 
       async function loadData() {
-        // loader removed — we keep the calls safe via no-op functions
         currentPage = 1;
         const user = await getCurrentUser();
         if (!user) {
@@ -401,7 +412,7 @@
         }
 
         allData = data;
-        // Build filter dropdowns
+        // Build filter dropdowns (now including phase)
         populateFilters(allData);
 
         // Default visibility: non-admin see only their engineer rows
@@ -421,12 +432,14 @@
       }
 
       function populateFilters(rows) {
-        // zones and engineers unique lists
+        // zones, engineers and phases unique lists
         const zones = new Set();
         const engs = new Set();
+        const phases = new Set();
         rows.forEach((r) => {
           if (r.zone) zones.add(r.zone);
           if (r.engineer) engs.add(r.engineer);
+          if (r.phase) phases.add(r.phase);
         });
 
         const zoneSel = document.getElementById("zoneFilter");
@@ -444,6 +457,14 @@
           .forEach((e) => {
             engSel.innerHTML += `<option>${e}</option>`;
           });
+
+        const phaseSel = document.getElementById("phaseFilter");
+        phaseSel.innerHTML = '<option value="">All Phases</option>';
+        Array.from(phases)
+          .sort()
+          .forEach((p) => {
+            phaseSel.innerHTML += `<option>${p}</option>`;
+          });
       }
 
       function applySearch() {
@@ -459,6 +480,7 @@
             .toLowerCase();
           const zone = document.getElementById("zoneFilter").value;
           const eng = document.getElementById("engineerFilter").value;
+          const phase = document.getElementById("phaseFilter").value; // NEW
           const status = document.getElementById("siteStatusFilter").value;
 
           const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -478,6 +500,7 @@
           let out = base.filter((r) => {
             if (zone && (r.zone || "") !== zone) return false;
             if (eng && (r.engineer || "") !== eng) return false;
+            if (phase && (r.phase || "") !== phase) return false; // NEW
             if (status && (r.siteStatus || "") !== status) return false;
 
             if (q) {
@@ -498,6 +521,7 @@
         document.getElementById("searchInput").value = "";
         document.getElementById("zoneFilter").value = "";
         document.getElementById("engineerFilter").value = "";
+        document.getElementById("phaseFilter").value = ""; // NEW
         document.getElementById("siteStatusFilter").value = "";
         applyFilters();
       }
