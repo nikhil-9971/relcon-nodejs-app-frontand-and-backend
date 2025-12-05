@@ -59,10 +59,110 @@ router.post("/add", async (req, res) => {
     });
 
     await newEntry.save();
-    res.status(200).json({ message: "Site added successfully" });
+    //     res.status(200).json({ message: "Site added successfully" });
+    //   } catch (err) {
+    //     console.error("Error saving new site:", err);
+    //     res.status(500).json({ message: "Server error" });
+    //   }
+    // });
+
+    res
+      .status(200)
+      .json({ message: "Site added successfully", data: newEntry });
   } catch (err) {
     console.error("Error saving new site:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* List all RO Master records */
+router.get("/list", async (req, res) => {
+  try {
+    // Optional query params for pagination / filtering can be added later
+    const data = await ROMaster.find({}).sort({ roCode: 1 });
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching ROMaster list:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* Alias for list (some frontends try /all) */
+router.get("/all", async (req, res) => {
+  try {
+    const data = await ROMaster.find({}).sort({ roCode: 1 });
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching ROMaster all:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* Get single record by id */
+router.get("/get/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await ROMaster.findById(id);
+    if (!data) return res.status(404).json({ error: "Record not found" });
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching ROMaster by id:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* Update record by id */
+router.put("/update/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updateFields = {};
+
+    // Only allow certain fields to be updated
+    const allowed = [
+      "zone",
+      "roCode",
+      "roName",
+      "region",
+      "phase",
+      "engineer",
+      "amcQtr",
+      "siteStatus",
+      "siteActivestatus",
+      "lastAMCqtr",
+    ];
+
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) {
+        updateFields[key] =
+          key === "roCode" && typeof req.body[key] === "string"
+            ? req.body[key].toUpperCase()
+            : req.body[key];
+      }
+    });
+
+    const updated = await ROMaster.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: "Record not found" });
+    res.json({ message: "Updated successfully", data: updated });
+  } catch (err) {
+    console.error("Error updating ROMaster:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* Delete record by id */
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await ROMaster.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ error: "Record not found" });
+    res.json({ message: "Deleted successfully", data: deleted });
+  } catch (err) {
+    console.error("Error deleting ROMaster:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
