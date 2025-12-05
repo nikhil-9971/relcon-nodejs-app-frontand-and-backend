@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>RO Master</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        padding: 18px;
+        background: transparent;
+        color: inherit;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        padding: 8px 10px;
+        border: 1px solid #e5e7eb;
+        text-align: left;
+      }
+      th {
+        background: #15803d;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background: #f8fafc;
+      }
+      .actions button {
+        margin-right: 6px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .btn-edit {
+        background: #f59e0b;
+        color: white;
+      }
+      .btn-delete {
+        background: #ef4444;
+        color: white;
+      }
+      .btn-refresh {
+        background: #10b981;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+      }
+      .filters {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 12px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .modal {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 520px;
+      }
+      .form-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .form-row input,
+      .form-row select {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+        "
+      >
+        <div>
+          <h3 style="margin: 0">RO Master</h3>
+          <div class="muted">
+            View RO master records. Normal users see their own records. Admin
+            sees all and can edit/delete.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <button id="refreshBtn" class="btn-refresh">
+            <i class="fa-solid fa-sync"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: 12px" id="contentArea">
+        <div class="muted">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="hidden">
+      <div class="modal-backdrop">
+        <div class="modal">
+          <h4>Edit RO Master</h4>
+          <div id="editForm">
+            <div class="form-row">
+              <input id="eZone" placeholder="Zone" />
+              <input id="eRoCode" placeholder="RO Code" disabled />
+            </div>
+            <div class="form-row">
+              <input id="eRoName" placeholder="RO Name" />
+              <input id="eRegion" placeholder="Region" />
+            </div>
+            <div class="form-row">
+              <input id="ePhase" placeholder="Phase" />
+              <input id="eEngineer" placeholder="Engineer" />
+            </div>
+            <div class="form-row">
+              <input id="eAmcQtr" placeholder="AMC Qtr" />
+              <select id="eSiteStatus">
+                <option value="AMC">AMC</option>
+                <option value="PROJECT">PROJECT</option>
+                <option value="WARRANTY">WARRANTY</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 8px;
+              "
+            >
+              <button
+                id="cancelEdit"
+                style="padding: 8px 12px; border-radius: 6px"
+              >
+                Cancel
+              </button>
+              <button
+                id="saveEdit"
+                style="
+                  padding: 8px 12px;
+                  border-radius: 6px;
+                  background: #16a34a;
+                  color: white;
+                "
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      const token = localStorage.getItem("token");
+      if (!token) {
+        document.getElementById("contentArea").innerHTML =
+          '<div class="muted">Not authenticated. Please login.</div>';
+        throw new Error("No token");
+      }
+
+      function isAdmin(user) {
+        return user && user.role === "admin";
+      }
+
+      async function getCurrentUser() {
+        try {
+          const res = await fetch(baseUrl + "/user", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!res.ok) throw new Error("Failed to fetch user");
+          return await res.json();
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
+      }
+
+      // Try multiple endpoints (fallback) in case backend route varies.
+      async function fetchROMasterList() {
+        const candidates = [
+          "/romaster/list",
+          "/romaster/all",
+          "/romaster",
+          "/api/romaster",
+          "/api/romaster/list",
+        ];
+        for (const path of candidates) {
+          try {
+            const res = await fetch(baseUrl + path, {
+              headers: { Authorization: "Bearer " + token },
+            });
+            if (!res.ok) continue;
+            const data = await res.json();
+            // Expect an array; if API wraps in {data: [...]}, normalize
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data.data)) return data.data;
+          } catch (err) {
+            // try next
+          }
+        }
+        // As final fallback: attempt to call /romaster/getAll (common name)
+        try {
+          const res = await fetch(baseUrl + "/romaster/getAll", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data.data)) return data.data;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function renderTable(rows, user) {
+        if (!rows || rows.length === 0) {
+          document.getElementById("contentArea").innerHTML =
+            '<div class="muted">No records found.</div>';
+          return;
+        }
+
+        // If not admin filter by user's engineerName
+        let visibleRows = rows;
+        if (!isAdmin(user)) {
+          const name = (user.engineerName || user.username || "")
+            .trim()
+            .toLowerCase();
+          visibleRows = rows.filter((r) => {
+            const eng = (r.engineer || r.engineerName || "")
+              .trim()
+              .toLowerCase();
+            // also allow matching by username/ro owner if present
+            return eng === name;
+          });
+        }
+
+        if (visibleRows.length === 0) {
+          document.getElementById("contentArea").innerHTML =
+            '<div class="muted">No records available for your account.</div>';
+          return;
+        }
+
+        // Build table
+        let html = '<div style="overflow:auto;"><table><thead><tr>';
+        html +=
+          "<th>RO Code</th><th>RO Name</th><th>Zone</th><th>Region</th><th>Phase</th><th>Engineer</th><th>AMC Qtr</th><th>Site Status</th>";
+        if (isAdmin(user)) html += "<th>Actions</th>";
+        html += "</tr></thead><tbody>";
+
+        visibleRows.forEach((r) => {
+          // determine unique id: try _id or id or roCode
+          const id = r._id || r.id || r.roCode || JSON.stringify(r);
+          html += `<tr data-id="${id}">
+            <td>${escapeHtml(r.roCode)}</td>
+            <td>${escapeHtml(r.roName)}</td>
+            <td>${escapeHtml(r.zone)}</td>
+            <td>${escapeHtml(r.region)}</td>
+            <td>${escapeHtml(r.phase)}</td>
+            <td>${escapeHtml(r.engineer)}</td>
+            <td>${escapeHtml(r.amcQtr)}</td>
+            <td>${escapeHtml(r.siteStatus)}</td>`;
+          if (isAdmin(user)) {
+            html += `<td class="actions">
+              <button class="btn-edit" data-id="${id}"><i class="fa-solid fa-edit"></i> Edit</button>
+              <button class="btn-delete" data-id="${id}"><i class="fa-solid fa-trash"></i> Delete</button>
+            </td>`;
+          }
+          html += "</tr>";
+        });
+
+        html += "</tbody></table></div>";
+        document.getElementById("contentArea").innerHTML = html;
+
+        // hook actions
+        if (isAdmin(user)) {
+          document.querySelectorAll(".btn-delete").forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+              const id = btn.getAttribute("data-id");
+              if (
+                !confirm(
+                  "Are you sure you want to delete this RO Master record?"
+                )
+              )
+                return;
+              // Attempt multiple delete endpoints (fallback)
+              const deleteCandidates = [
+                `/romaster/${id}`,
+                `/romaster/delete/${id}`,
+                `/api/romaster/${id}`,
+                `/api/romaster/delete/${id}`,
+              ];
+              let deleted = false;
+              for (const path of deleteCandidates) {
+                try {
+                  const res = await fetch(baseUrl + path, {
+                    method: "DELETE",
+                    headers: { Authorization: "Bearer " + token },
+                  });
+                  if (res.ok) {
+                    deleted = true;
+                    break;
+                  } else {
+                    // try next
+                  }
+                } catch (err) {}
+              }
+              if (deleted) {
+                // Optimistic UI remove
+                const row = document.querySelector(
+                  `tr[data-id='${CSS.escape(id)}']`
+                );
+                if (row) row.remove();
+                alert("✅ Deleted successfully");
+              } else {
+                alert(
+                  "❌ Delete failed. The backend may not expose a matching delete endpoint."
+                );
+              }
+            });
+          });
+
+          document.querySelectorAll(".btn-edit").forEach((btn) => {
+            btn.addEventListener("click", (e) =>
+              openEditModal(btn.getAttribute("data-id"), rows)
+            );
+          });
+        }
+      }
+
+      function escapeHtml(s) {
+        if (s === undefined || s === null) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      async function load() {
+        document.getElementById("contentArea").innerHTML =
+          '<div class="muted">Loading…</div>';
+        const user = await getCurrentUser();
+        if (!user) {
+          document.getElementById("contentArea").innerHTML =
+            '<div class="muted">Failed to load user. Please login again.</div>';
+          return;
+        }
+
+        const rows = await fetchROMasterList();
+        if (!rows) {
+          document.getElementById("contentArea").innerHTML =
+            '<div class="muted">Failed to fetch RO Master data. Backend endpoint not found. Please ensure backend exposes /romaster/list or /romaster.</div>';
+          return;
+        }
+
+        // normalize if items are nested
+        renderTable(rows, user);
+      }
+
+      document.getElementById("refreshBtn").addEventListener("click", load);
+
+      // Edit modal implementation
+      function openEditModal(id, rows) {
+        const record = rows.find(
+          (r) => (r._id || r.id || r.roCode) == id || r.roCode == id
+        );
+        if (!record) {
+          alert("Record not found");
+          return;
+        }
+        document.getElementById("eZone").value = record.zone || "";
+        document.getElementById("eRoCode").value = record.roCode || "";
+        document.getElementById("eRoName").value = record.roName || "";
+        document.getElementById("eRegion").value = record.region || "";
+        document.getElementById("ePhase").value = record.phase || "";
+        document.getElementById("eEngineer").value = record.engineer || "";
+        document.getElementById("eAmcQtr").value = record.amcQtr || "";
+        document.getElementById("eSiteStatus").value =
+          record.siteStatus || "AMC";
+        document.getElementById("editModal").classList.remove("hidden");
+
+        // save handler
+        const save = async () => {
+          const payload = {
+            zone: document.getElementById("eZone").value.trim(),
+            roName: document.getElementById("eRoName").value.trim(),
+            region: document.getElementById("eRegion").value.trim(),
+            phase: document.getElementById("ePhase").value.trim(),
+            engineer: document.getElementById("eEngineer").value.trim(),
+            amcQtr: document
+              .getElementById("eAmcQtr")
+              .value.trim()
+              .toUpperCase(),
+            siteStatus: document.getElementById("eSiteStatus").value,
+          };
+
+          // Try update API variants
+          const candidates = [
+            `/romaster/${id}`,
+            `/romaster/update/${id}`,
+            `/api/romaster/${id}`,
+            `/api/romaster/update/${id}`,
+          ];
+          let updated = false;
+          for (const path of candidates) {
+            try {
+              const res = await fetch(baseUrl + path, {
+                method: "PUT",
+                headers: {
+                  Authorization: "Bearer " + token,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              });
+              if (res.ok) {
+                updated = true;
+                break;
+              } else {
+                // try next
+              }
+            } catch (err) {}
+          }
+
+          if (updated) {
+            alert("✅ Updated successfully. Refreshing view.");
+            closeModal();
+            load();
+          } else {
+            alert(
+              "❌ Update failed. Backend may not expose a matching update endpoint."
+            );
+          }
+        };
+
+        document.getElementById("saveEdit").onclick = save;
+        document.getElementById("cancelEdit").onclick = closeModal;
+      }
+
+      function closeModal() {
+        document.getElementById("editModal").classList.add("hidden");
+      }
+
+      // load immediately
+      load();
+    </script>
+  </body>
+</html>
