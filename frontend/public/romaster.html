@@ -171,6 +171,34 @@
         color: white;
         border-color: #2563eb;
       }
+
+      /* Loader overlay */
+      #loader {
+        position: fixed;
+        inset: 0;
+        background: rgba(11, 15, 23, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+      }
+      #loader.hidden {
+        display: none;
+      }
+      .spinner {
+        width: 64px;
+        height: 64px;
+        border: 6px solid rgba(255, 255, 255, 0.15);
+        border-top-color: #60a5fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
 
@@ -318,6 +346,11 @@
       </div>
     </div>
 
+    <!-- Loader overlay -->
+    <div id="loader" class="hidden" aria-hidden="true">
+      <div class="spinner" role="status" aria-label="Loading"></div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script>
@@ -349,9 +382,14 @@
       ];
 
       // Helper UI funcs
-      // Spinner removed: showLoader/hideLoader are no-ops to keep API compatibility
-      function showLoader() {}
-      function hideLoader() {}
+      function showLoader() {
+        const el = document.getElementById("loader");
+        if (el) el.classList.remove("hidden");
+      }
+      function hideLoader() {
+        const el = document.getElementById("loader");
+        if (el) el.classList.add("hidden");
+      }
       function showToast(msg = "Done") {
         const t = document.getElementById("toast");
         t.textContent = msg;
@@ -424,9 +462,12 @@
       }
 
       async function loadData() {
+        // Show loader until table is painted
+        showLoader();
         currentPage = 1;
         const user = await getCurrentUser();
         if (!user) {
+          hideLoader();
           document.getElementById("tableBody").innerHTML =
             '<tr><td colspan="' +
             columns.length +
@@ -436,6 +477,7 @@
 
         const data = await fetchROMasterList();
         if (!data) {
+          hideLoader();
           document.getElementById("tableBody").innerHTML =
             '<tr><td colspan="' +
             columns.length +
@@ -464,6 +506,7 @@
           filteredData = allData.slice();
         }
 
+        // renderTable will keep loader visible until paint completes
         renderTable(filteredData);
       }
 
@@ -564,13 +607,22 @@
 
       // Table render with pagination
       function renderTable(data) {
+        // Keep loader visible until after paint
+        showLoader();
+
         const start = (currentPage - 1) * rowsPerPage;
         const pageData = data.slice(start, start + rowsPerPage);
 
+        // use RAF + small timeout to ensure paint, then hide loader
         requestAnimationFrame(() => {
           setTimeout(() => {
             _renderTableNow(pageData);
             renderPagination(data.length);
+
+            // ensure browser painted the table before hiding loader
+            requestAnimationFrame(() => {
+              setTimeout(() => hideLoader(), 40);
+            });
           }, 0);
         });
       }
@@ -871,7 +923,9 @@
       }
 
       // refresh button
-      document.getElementById("refreshBtn").addEventListener("click", loadData);
+      document.getElementById("refreshBtn").addEventListener("click", () => {
+        loadData();
+      });
 
       // initial load
       loadData();
