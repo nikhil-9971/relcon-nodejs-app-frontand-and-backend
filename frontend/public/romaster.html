@@ -22,10 +22,9 @@
         background-color: #f1f5f9;
         font-size: 12px;
       }
-      /* Use same compact text scale used in statusRecords.html page */
       .page-body {
         padding: 18px;
-        font-size: 9px; /* match statusRecords.html small UI */
+        font-size: 9px;
         color: #1f2937;
       }
 
@@ -330,7 +329,6 @@
             id="editForm"
             style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"
           ></div>
-
           <div
             style="
               display: flex;
@@ -360,11 +358,8 @@
       let filteredData = [];
       let currentPage = 1;
       const rowsPerPage = 50;
-
-      // latestStatusMap: roCode (upper) => merged status object (latest by date)
       let latestStatusMap = {};
 
-      // Columns definition similar to statusRecords layout, plus BOS/FCC IP columns
       const columns = [
         { key: "roCode", label: "RO Code" },
         { key: "roName", label: "RO Name" },
@@ -381,7 +376,6 @@
         { key: "actions", label: "Actions" },
       ];
 
-      // Helper UI funcs
       function showLoader() {
         const el = document.getElementById("loader");
         if (el) el.classList.remove("hidden");
@@ -397,7 +391,6 @@
         setTimeout(() => (t.style.display = "none"), 3000);
       }
 
-      // Fetch user from backend (used for role checks)
       async function getCurrentUser() {
         try {
           const res = await fetch(baseUrl + "/user", {
@@ -410,7 +403,6 @@
         }
       }
 
-      // Fetch ROMaster list with fallbacks
       async function fetchROMasterList() {
         const candidates = [
           "/romaster/list",
@@ -434,7 +426,6 @@
         return null;
       }
 
-      // Fetch merged status records and build a map of latest status per roCode
       async function fetchLatestStatusMap() {
         try {
           const res = await fetch(baseUrl + "/getMergedStatusRecords", {
@@ -445,12 +436,10 @@
           const map = {};
           statuses.forEach((s) => {
             const rc = (s.roCode || "").toString().trim().toUpperCase();
-            // parse date: prefer plan date, fallback to 0
             const d = s.date ? new Date(s.date) : new Date(0);
             const ts = isNaN(d.getTime()) ? 0 : d.getTime();
             const existing = map[rc];
             if (!existing || (existing._ts || 0) < ts) {
-              // store with timestamp for easy compare
               map[rc] = Object.assign({}, s, { _ts: ts });
             }
           });
@@ -462,38 +451,38 @@
       }
 
       async function loadData() {
-        // Show loader until table is painted
-        showLoader();
+        showLoader(); // show until paint
         currentPage = 1;
         const user = await getCurrentUser();
-        if (!user) {
+
+        // Save user to localStorage so applyFilters (which runs synchronously) can access it.
+        if (user) {
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch (e) {}
+        } else {
+          localStorage.removeItem("user");
           hideLoader();
-          document.getElementById("tableBody").innerHTML =
-            '<tr><td colspan="' +
-            columns.length +
-            '" class="muted">Not authenticated. Please login.</td></tr>';
+          document.getElementById(
+            "tableBody"
+          ).innerHTML = `<tr><td colspan="${columns.length}" class="muted">Not authenticated. Please login.</td></tr>`;
           return;
         }
 
         const data = await fetchROMasterList();
         if (!data) {
           hideLoader();
-          document.getElementById("tableBody").innerHTML =
-            '<tr><td colspan="' +
-            columns.length +
-            '" class="muted">Failed to fetch RO Master data. Backend endpoint not found.</td></tr>';
+          document.getElementById(
+            "tableBody"
+          ).innerHTML = `<tr><td colspan="${columns.length}" class="muted">Failed to fetch RO Master data. Backend endpoint not found.</td></tr>`;
           return;
         }
 
         allData = data;
-
-        // Fetch latest status map (BOS/FCC IPs come from latest visit)
         latestStatusMap = await fetchLatestStatusMap();
-
-        // Build filter dropdowns (zones/engineers/phases)
         populateFilters(allData);
 
-        // Default visibility: non-admin see only their engineer rows
+        // default visibility
         const isAdmin = user.role === "admin";
         if (!isAdmin) {
           const name = (user.engineerName || user.username || "")
@@ -506,15 +495,13 @@
           filteredData = allData.slice();
         }
 
-        // renderTable will keep loader visible until paint completes
         renderTable(filteredData);
       }
 
       function populateFilters(rows) {
-        // zones, engineers and phases unique lists
-        const zones = new Set();
-        const engs = new Set();
-        const phases = new Set();
+        const zones = new Set(),
+          engs = new Set(),
+          phases = new Set();
         rows.forEach((r) => {
           if (r.zone) zones.add(r.zone);
           if (r.engineer) engs.add(r.engineer);
@@ -525,25 +512,19 @@
         zoneSel.innerHTML = '<option value="">All Zones</option>';
         Array.from(zones)
           .sort()
-          .forEach((z) => {
-            zoneSel.innerHTML += `<option>${z}</option>`;
-          });
+          .forEach((z) => (zoneSel.innerHTML += `<option>${z}</option>`));
 
         const engSel = document.getElementById("engineerFilter");
         engSel.innerHTML = '<option value="">All Engineers</option>';
         Array.from(engs)
           .sort()
-          .forEach((e) => {
-            engSel.innerHTML += `<option>${e}</option>`;
-          });
+          .forEach((e) => (engSel.innerHTML += `<option>${e}</option>`));
 
         const phaseSel = document.getElementById("phaseFilter");
         phaseSel.innerHTML = '<option value="">All Phases</option>';
         Array.from(phases)
           .sort()
-          .forEach((p) => {
-            phaseSel.innerHTML += `<option>${p}</option>`;
-          });
+          .forEach((p) => (phaseSel.innerHTML += `<option>${p}</option>`));
       }
 
       function applySearch() {
@@ -562,11 +543,11 @@
           const phase = document.getElementById("phaseFilter").value;
           const status = document.getElementById("siteStatusFilter").value;
 
-          const user = JSON.parse(localStorage.getItem("user")) || {};
+          // Read user from localStorage (ensure loadData sets it)
+          const user = JSON.parse(localStorage.getItem("user") || "null") || {};
           const isAdmin = user.role === "admin";
           let base = allData.slice();
 
-          // Apply role-based restriction: non-admin should only see own engineer
           if (!isAdmin) {
             const name = (user.engineerName || user.username || "")
               .trim()
@@ -576,12 +557,11 @@
             );
           }
 
-          let out = base.filter((r) => {
+          const out = base.filter((r) => {
             if (zone && (r.zone || "") !== zone) return false;
             if (eng && (r.engineer || "") !== eng) return false;
             if (phase && (r.phase || "") !== phase) return false;
             if (status && (r.siteStatus || "") !== status) return false;
-
             if (q) {
               const values = Object.values(r).map((v) =>
                 String(v).toLowerCase()
@@ -593,7 +573,7 @@
 
           filteredData = out;
           renderTable(filteredData);
-        }, 80);
+        }, 60);
       }
 
       function clearFilters() {
@@ -605,24 +585,16 @@
         applyFilters();
       }
 
-      // Table render with pagination
       function renderTable(data) {
-        // Keep loader visible until after paint
         showLoader();
-
         const start = (currentPage - 1) * rowsPerPage;
         const pageData = data.slice(start, start + rowsPerPage);
 
-        // use RAF + small timeout to ensure paint, then hide loader
         requestAnimationFrame(() => {
           setTimeout(() => {
             _renderTableNow(pageData);
             renderPagination(data.length);
-
-            // ensure browser painted the table before hiding loader
-            requestAnimationFrame(() => {
-              setTimeout(() => hideLoader(), 40);
-            });
+            requestAnimationFrame(() => setTimeout(() => hideLoader(), 40));
           }, 0);
         });
       }
@@ -632,7 +604,7 @@
         header.innerHTML = columns.map((c) => `<th>${c.label}</th>`).join("");
 
         const tbody = document.getElementById("tableBody");
-        const user = JSON.parse(localStorage.getItem("user")) || {};
+        const user = JSON.parse(localStorage.getItem("user") || "null") || {};
         const role = user.role || "";
 
         tbody.innerHTML = data
@@ -646,15 +618,12 @@
                 if (col.key === "actions") {
                   let actions = "";
                   if (role === "admin") {
-                    actions = `
-                      <button class="action-btn action-edit" onclick='openEdit("${id}")'><i class="fa-solid fa-edit"></i></button>
-                      <button class="action-btn action-delete" onclick='confirmDelete("${id}")'><i class="fa-solid fa-trash"></i></button>
-                    `;
+                    actions = `<button class="action-btn action-edit" onclick='openEdit("${id}")'><i class="fa-solid fa-edit"></i></button>
+                           <button class="action-btn action-delete" onclick='confirmDelete("${id}")'><i class="fa-solid fa-trash"></i></button>`;
                   }
                   return `<td style="text-align:center">${actions}</td>`;
                 }
 
-                // For bosIP/fccIP prefer latest visit values
                 if (col.key === "bosIP") {
                   const v = latest.bosIP || row.bosIP || "";
                   return `<td style="text-align:left">${escapeHtml(v)}</td>`;
@@ -671,6 +640,7 @@
                 return `<td style="text-align:left">${escapeHtml(val)}</td>`;
               })
               .join("");
+
             return `<tr data-id="${id}">${cells}</tr>`;
           })
           .join("");
@@ -692,23 +662,19 @@
         };
         container.appendChild(prev);
 
-        // limit max page buttons to 7 for compactness
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-        if (endPage - startPage < maxButtons - 1) {
+        if (endPage - startPage < maxButtons - 1)
           startPage = Math.max(1, endPage - maxButtons + 1);
-        }
 
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === currentPage) btn.classList.add("active");
-          btn.onclick = (function (p) {
-            return () => {
-              currentPage = p;
-              renderTable(filteredData);
-            };
+          btn.onclick = ((p) => () => {
+            currentPage = p;
+            renderTable(filteredData);
           })(i);
           container.appendChild(btn);
         }
@@ -725,7 +691,6 @@
         container.appendChild(next);
       }
 
-      // escape
       function escapeHtml(s) {
         if (s === undefined || s === null) return "";
         return String(s)
@@ -736,10 +701,9 @@
           .replaceAll("'", "&#039;");
       }
 
-      // Edit flow
+      // Edit / Save / Delete flows (unchanged)
       let editingId = null;
       async function openEdit(id) {
-        // find record in allData
         const rec = allData.find(
           (r) => r._id === id || r.roCode === id || r.id === id
         );
@@ -748,10 +712,8 @@
           return;
         }
         editingId = rec._id || id;
-
         const form = document.getElementById("editForm");
         form.innerHTML = "";
-
         const keys = [
           "zone",
           "roCode",
@@ -767,16 +729,10 @@
         keys.forEach((k) => {
           const val = rec[k] || "";
           const readonly = k === "roCode" ? "readonly" : "";
-          form.innerHTML += `
-            <div>
-              <label class="muted" style="font-size:12px">${k}</label>
-              <input name="${k}" value="${escapeHtml(
+          form.innerHTML += `<div><label class="muted" style="font-size:12px">${k}</label><input name="${k}" value="${escapeHtml(
             val
-          )}" ${readonly} class="border px-2 py-1 rounded w-full" />
-            </div>
-          `;
+          )}" ${readonly} class="border px-2 py-1 rounded w-full" /></div>`;
         });
-
         document.getElementById("editModal").classList.remove("hidden");
       }
 
@@ -784,7 +740,6 @@
         .getElementById("cancelEdit")
         .addEventListener("click", closeEditModal);
       document.getElementById("saveEdit").addEventListener("click", saveEdit);
-
       function closeEditModal() {
         document.getElementById("editModal").classList.add("hidden");
         editingId = null;
@@ -792,8 +747,8 @@
 
       async function saveEdit() {
         if (!editingId) return alert("No record selected");
-        const form = document.getElementById("editForm");
-        const inputs = form.querySelectorAll("input");
+        const form = document.getElementById("editForm"),
+          inputs = form.querySelectorAll("input");
         const payload = {};
         inputs.forEach((inp) => {
           const name = inp.name;
@@ -802,7 +757,6 @@
           payload[name] = v;
         });
 
-        // attempt update endpoints
         const candidates = [
           `/romaster/update/${editingId}`,
           `/romaster/${editingId}`,
@@ -826,19 +780,16 @@
             }
           } catch (e) {}
         }
-
         if (success) {
           showToast("Updated successfully ✅");
           closeEditModal();
           await loadData();
-        } else {
+        } else
           alert(
             "Update failed. Backend may not expose a matching update endpoint."
           );
-        }
       }
 
-      // Delete flow
       let deleteTarget = null;
       function confirmDelete(id) {
         if (!confirm("Are you sure you want to delete this RO Master record?"))
@@ -846,7 +797,6 @@
         deleteTarget = id;
         performDelete();
       }
-
       async function performDelete() {
         if (!deleteTarget) return;
         const candidates = [
@@ -871,15 +821,13 @@
         if (deleted) {
           showToast("Deleted ✅");
           await loadData();
-        } else {
+        } else
           alert(
             "Delete failed. Backend may not expose a matching delete endpoint."
           );
-        }
         deleteTarget = null;
       }
 
-      // Export CSV (all currently filtered results) — include bosIP & fccIP (from latest visit)
       function exportROMasterCSV() {
         if (!filteredData || filteredData.length === 0)
           return alert("No data to export");
@@ -922,12 +870,9 @@
         URL.revokeObjectURL(url);
       }
 
-      // refresh button
-      document.getElementById("refreshBtn").addEventListener("click", () => {
-        loadData();
-      });
-
-      // initial load
+      document
+        .getElementById("refreshBtn")
+        .addEventListener("click", () => loadData());
       loadData();
     </script>
   </body>
