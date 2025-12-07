@@ -27,19 +27,16 @@
         font-size: 9px;
         color: #1f2937;
       }
-
       .card {
         background: white;
         padding: 14px;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
       }
-
       .muted {
         color: #6b7280;
         font-size: 12px;
       }
-
       table {
         border-collapse: collapse;
         width: 100%;
@@ -61,7 +58,6 @@
       tbody tr:nth-child(even) {
         background: #f8fafc;
       }
-
       .filters {
         display: flex;
         gap: 8px;
@@ -82,13 +78,12 @@
       }
       .btn-primary {
         background: #16a34a;
-        color: white;
+        color: #fff;
       }
       .btn-muted {
         background: #f3f4f6;
         color: #111827;
       }
-
       .modal-backdrop {
         position: fixed;
         inset: 0;
@@ -108,11 +103,9 @@
         overflow: auto;
         font-size: 12px;
       }
-
       .hidden {
         display: none;
       }
-
       .toast {
         position: fixed;
         top: 16px;
@@ -124,8 +117,6 @@
         z-index: 10000;
         display: none;
       }
-
-      /* small action buttons */
       .action-btn {
         padding: 6px 8px;
         border-radius: 6px;
@@ -149,8 +140,6 @@
         padding: 8px 12px;
         border-radius: 8px;
       }
-
-      /* pagination */
       #pagination {
         display: flex;
         gap: 6px;
@@ -170,7 +159,6 @@
         color: white;
         border-color: #2563eb;
       }
-
       /* Loader overlay */
       #loader {
         position: fixed;
@@ -220,7 +208,6 @@
             Records page.
           </div>
         </div>
-
         <div style="display: flex; gap: 8px; align-items: center">
           <button id="refreshBtn" class="action-refresh">
             <i class="fa-solid fa-sync"></i> Refresh
@@ -263,7 +250,6 @@
           </select>
         </div>
 
-        <!-- Phase filter -->
         <div class="control">
           <label class="muted">Phase</label>
           <select
@@ -325,10 +311,7 @@
       <div class="modal-backdrop">
         <div class="modal">
           <h3 style="margin-top: 0">Edit RO Master</h3>
-          <div
-            id="editForm"
-            style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"
-          ></div>
+          <div id="editForm"></div>
           <div
             style="
               display: flex;
@@ -344,11 +327,9 @@
       </div>
     </div>
 
-    <!-- Loader overlay -->
     <div id="loader" class="hidden" aria-hidden="true">
       <div class="spinner" role="status" aria-label="Loading"></div>
     </div>
-
     <div id="toast" class="toast"></div>
 
     <script>
@@ -360,6 +341,7 @@
       const rowsPerPage = 50;
       let latestStatusMap = {};
 
+      // COLUMNS: inserted lastVisitDate immediately after siteStatus
       const columns = [
         { key: "roCode", label: "RO Code" },
         { key: "roName", label: "RO Name" },
@@ -369,6 +351,7 @@
         { key: "engineer", label: "Engineer" },
         { key: "amcQtr", label: "AMC Qtr" },
         { key: "siteStatus", label: "Site Status" },
+        { key: "lastVisitDate", label: "Last Visit Date" }, // <- new column
         { key: "bosIP", label: "BOS IP" },
         { key: "fccIP", label: "FCC IP" },
         { key: "siteActivestatus", label: "Site Active Status" },
@@ -436,6 +419,7 @@
           const map = {};
           statuses.forEach((s) => {
             const rc = (s.roCode || "").toString().trim().toUpperCase();
+            // use plan date (s.date) as visit date
             const d = s.date ? new Date(s.date) : new Date(0);
             const ts = isNaN(d.getTime()) ? 0 : d.getTime();
             const existing = map[rc];
@@ -450,24 +434,35 @@
         }
       }
 
+      function formatVisitDate(d) {
+        if (!d) return "";
+        // accept either date string or Date object
+        const dateObj =
+          typeof d === "string" || typeof d === "number" ? new Date(d) : d;
+        if (!dateObj || isNaN(dateObj.getTime())) return String(d);
+        // Format: DD-MMM-YYYY (e.g. 07-Dec-2025)
+        return dateObj.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+
       async function loadData() {
-        showLoader(); // show until paint
+        showLoader();
         currentPage = 1;
         const user = await getCurrentUser();
-
-        // Save user to localStorage so applyFilters (which runs synchronously) can access it.
-        if (user) {
-          try {
-            localStorage.setItem("user", JSON.stringify(user));
-          } catch (e) {}
-        } else {
-          localStorage.removeItem("user");
+        if (!user) {
           hideLoader();
           document.getElementById(
             "tableBody"
           ).innerHTML = `<tr><td colspan="${columns.length}" class="muted">Not authenticated. Please login.</td></tr>`;
           return;
         }
+        // store user for applyFilters use:
+        try {
+          localStorage.setItem("user", JSON.stringify(user));
+        } catch (e) {}
 
         const data = await fetchROMasterList();
         if (!data) {
@@ -477,12 +472,10 @@
           ).innerHTML = `<tr><td colspan="${columns.length}" class="muted">Failed to fetch RO Master data. Backend endpoint not found.</td></tr>`;
           return;
         }
-
         allData = data;
         latestStatusMap = await fetchLatestStatusMap();
         populateFilters(allData);
 
-        // default visibility
         const isAdmin = user.role === "admin";
         if (!isAdmin) {
           const name = (user.engineerName || user.username || "")
@@ -507,19 +500,16 @@
           if (r.engineer) engs.add(r.engineer);
           if (r.phase) phases.add(r.phase);
         });
-
         const zoneSel = document.getElementById("zoneFilter");
         zoneSel.innerHTML = '<option value="">All Zones</option>';
         Array.from(zones)
           .sort()
           .forEach((z) => (zoneSel.innerHTML += `<option>${z}</option>`));
-
         const engSel = document.getElementById("engineerFilter");
         engSel.innerHTML = '<option value="">All Engineers</option>';
         Array.from(engs)
           .sort()
           .forEach((e) => (engSel.innerHTML += `<option>${e}</option>`));
-
         const phaseSel = document.getElementById("phaseFilter");
         phaseSel.innerHTML = '<option value="">All Phases</option>';
         Array.from(phases)
@@ -543,11 +533,9 @@
           const phase = document.getElementById("phaseFilter").value;
           const status = document.getElementById("siteStatusFilter").value;
 
-          // Read user from localStorage (ensure loadData sets it)
           const user = JSON.parse(localStorage.getItem("user") || "null") || {};
           const isAdmin = user.role === "admin";
           let base = allData.slice();
-
           if (!isAdmin) {
             const name = (user.engineerName || user.username || "")
               .trim()
@@ -589,7 +577,6 @@
         showLoader();
         const start = (currentPage - 1) * rowsPerPage;
         const pageData = data.slice(start, start + rowsPerPage);
-
         requestAnimationFrame(() => {
           setTimeout(() => {
             _renderTableNow(pageData);
@@ -602,7 +589,6 @@
       function _renderTableNow(data) {
         const header = document.getElementById("tableHeader");
         header.innerHTML = columns.map((c) => `<th>${c.label}</th>`).join("");
-
         const tbody = document.getElementById("tableBody");
         const user = JSON.parse(localStorage.getItem("user") || "null") || {};
         const role = user.role || "";
@@ -612,7 +598,6 @@
             const id = row._id || row.roCode || "";
             const rcUpper = (row.roCode || "").toString().trim().toUpperCase();
             const latest = latestStatusMap[rcUpper] || {};
-
             const cells = columns
               .map((col) => {
                 if (col.key === "actions") {
@@ -623,7 +608,13 @@
                   }
                   return `<td style="text-align:center">${actions}</td>`;
                 }
-
+                // special: lastVisitDate (prefer latest.date)
+                if (col.key === "lastVisitDate") {
+                  const v = latest.date || latest.visitDate || "";
+                  return `<td style="text-align:left">${escapeHtml(
+                    formatVisitDate(v)
+                  )}</td>`;
+                }
                 if (col.key === "bosIP") {
                   const v = latest.bosIP || row.bosIP || "";
                   return `<td style="text-align:left">${escapeHtml(v)}</td>`;
@@ -632,7 +623,6 @@
                   const v = latest.fccIP || row.fccIP || "";
                   return `<td style="text-align:left">${escapeHtml(v)}</td>`;
                 }
-
                 const val =
                   row[col.key] !== undefined && row[col.key] !== null
                     ? row[col.key]
@@ -640,7 +630,6 @@
                 return `<td style="text-align:left">${escapeHtml(val)}</td>`;
               })
               .join("");
-
             return `<tr data-id="${id}">${cells}</tr>`;
           })
           .join("");
@@ -650,7 +639,6 @@
         const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
         const container = document.getElementById("pagination");
         container.innerHTML = "";
-
         const prev = document.createElement("button");
         prev.textContent = "⬅ Prev";
         prev.disabled = currentPage === 1;
@@ -661,13 +649,11 @@
           }
         };
         container.appendChild(prev);
-
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
         if (endPage - startPage < maxButtons - 1)
           startPage = Math.max(1, endPage - maxButtons + 1);
-
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
           btn.textContent = i;
@@ -678,7 +664,6 @@
           })(i);
           container.appendChild(btn);
         }
-
         const next = document.createElement("button");
         next.textContent = "Next ➡";
         next.disabled = currentPage === totalPages;
@@ -701,7 +686,7 @@
           .replaceAll("'", "&#039;");
       }
 
-      // Edit / Save / Delete flows (unchanged)
+      // Edit / Save / Delete functions (unchanged)
       let editingId = null;
       async function openEdit(id) {
         const rec = allData.find(
@@ -729,26 +714,21 @@
         keys.forEach((k) => {
           const val = rec[k] || "";
           const readonly = k === "roCode" ? "readonly" : "";
-          form.innerHTML += `<div><label class="muted" style="font-size:12px">${k}</label><input name="${k}" value="${escapeHtml(
+          form.innerHTML += `<div style="display:grid;gap:6px;margin-bottom:6px;"><label class="muted">${k}</label><input name="${k}" value="${escapeHtml(
             val
           )}" ${readonly} class="border px-2 py-1 rounded w-full" /></div>`;
         });
         document.getElementById("editModal").classList.remove("hidden");
       }
-
-      document
-        .getElementById("cancelEdit")
-        .addEventListener("click", closeEditModal);
-      document.getElementById("saveEdit").addEventListener("click", saveEdit);
-      function closeEditModal() {
+      document.getElementById("cancelEdit").addEventListener("click", () => {
         document.getElementById("editModal").classList.add("hidden");
         editingId = null;
-      }
-
+      });
+      document.getElementById("saveEdit").addEventListener("click", saveEdit);
       async function saveEdit() {
         if (!editingId) return alert("No record selected");
-        const form = document.getElementById("editForm"),
-          inputs = form.querySelectorAll("input");
+        const form = document.getElementById("editForm");
+        const inputs = form.querySelectorAll("input");
         const payload = {};
         inputs.forEach((inp) => {
           const name = inp.name;
@@ -756,7 +736,6 @@
           if (name === "roCode" && typeof v === "string") v = v.toUpperCase();
           payload[name] = v;
         });
-
         const candidates = [
           `/romaster/update/${editingId}`,
           `/romaster/${editingId}`,
@@ -782,7 +761,8 @@
         }
         if (success) {
           showToast("Updated successfully ✅");
-          closeEditModal();
+          document.getElementById("editModal").classList.add("hidden");
+          editingId = null;
           await loadData();
         } else
           alert(
@@ -828,6 +808,7 @@
         deleteTarget = null;
       }
 
+      // Export CSV (include lastVisitDate)
       function exportROMasterCSV() {
         if (!filteredData || filteredData.length === 0)
           return alert("No data to export");
@@ -840,6 +821,7 @@
           "engineer",
           "amcQtr",
           "siteStatus",
+          "lastVisitDate",
           "bosIP",
           "fccIP",
           "siteActivestatus",
@@ -851,7 +833,9 @@
           const latest = latestStatusMap[rc] || {};
           const values = keys.map((k) => {
             let v = "";
-            if (k === "bosIP") v = latest.bosIP || r.bosIP || "";
+            if (k === "lastVisitDate")
+              v = latest.date || latest.visitDate || "";
+            else if (k === "bosIP") v = latest.bosIP || r.bosIP || "";
             else if (k === "fccIP") v = latest.fccIP || r.fccIP || "";
             else v = r[k] || "";
             return `"${String(v).replaceAll('"', '""')}"`;
@@ -873,6 +857,7 @@
       document
         .getElementById("refreshBtn")
         .addEventListener("click", () => loadData());
+      // initial load
       loadData();
     </script>
   </body>
