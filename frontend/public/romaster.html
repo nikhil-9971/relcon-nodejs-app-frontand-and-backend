@@ -27,16 +27,19 @@
         font-size: 9px;
         color: #1f2937;
       }
+
       .card {
         background: white;
         padding: 14px;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
       }
+
       .muted {
         color: #6b7280;
         font-size: 12px;
       }
+
       table {
         border-collapse: collapse;
         width: 100%;
@@ -58,6 +61,7 @@
       tbody tr:nth-child(even) {
         background: #f8fafc;
       }
+
       .filters {
         display: flex;
         gap: 8px;
@@ -78,12 +82,13 @@
       }
       .btn-primary {
         background: #16a34a;
-        color: #fff;
+        color: white;
       }
       .btn-muted {
         background: #f3f4f6;
         color: #111827;
       }
+
       .modal-backdrop {
         position: fixed;
         inset: 0;
@@ -103,9 +108,11 @@
         overflow: auto;
         font-size: 12px;
       }
+
       .hidden {
         display: none;
       }
+
       .toast {
         position: fixed;
         top: 16px;
@@ -117,6 +124,8 @@
         z-index: 10000;
         display: none;
       }
+
+      /* small action buttons */
       .action-btn {
         padding: 6px 8px;
         border-radius: 6px;
@@ -140,6 +149,8 @@
         padding: 8px 12px;
         border-radius: 8px;
       }
+
+      /* pagination */
       #pagination {
         display: flex;
         gap: 6px;
@@ -159,7 +170,8 @@
         color: white;
         border-color: #2563eb;
       }
-      /* Loader overlay */
+
+      /* loader */
       #loader {
         position: fixed;
         inset: 0;
@@ -186,6 +198,14 @@
           transform: rotate(360deg);
         }
       }
+
+      /* empty state */
+      .empty-message {
+        padding: 32px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 13px;
+      }
     </style>
   </head>
 
@@ -208,6 +228,7 @@
             Records page.
           </div>
         </div>
+
         <div style="display: flex; gap: 8px; align-items: center">
           <button id="refreshBtn" class="action-refresh">
             <i class="fa-solid fa-sync"></i> Refresh
@@ -224,7 +245,7 @@
             type="text"
             placeholder="Search RO Code / RO Name / Region / Engineer..."
             class="border px-2 py-1 rounded"
-            oninput="applySearch()"
+            oninput="debouncedApplyFilters()"
           />
         </div>
 
@@ -301,6 +322,7 @@
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
+        <div id="emptyState" class="empty-message hidden">No records found.</div>
       </div>
 
       <div id="pagination"></div>
@@ -351,7 +373,7 @@
         { key: "engineer", label: "Engineer" },
         { key: "amcQtr", label: "AMC Qtr" },
         { key: "siteStatus", label: "Site Status" },
-        { key: "lastVisitDate", label: "Last Visit Date" }, // <- new column
+        { key: "lastVisitDate", label: "Last Visit Date" },
         { key: "bosIP", label: "BOS IP" },
         { key: "fccIP", label: "FCC IP" },
         { key: "siteActivestatus", label: "Site Active Status" },
@@ -374,8 +396,23 @@
         setTimeout(() => (t.style.display = "none"), 3000);
       }
 
+      function debounce(fn, ms = 120) {
+        let t;
+        return (...args) => {
+          clearTimeout(t);
+          t = setTimeout(() => fn(...args), ms);
+        };
+      }
+
+      const debouncedApplyFilters = debounce(() => applyFilters(), 120);
+
       async function getCurrentUser() {
         try {
+          if (!token) {
+            // ensure login redirect
+            window.location.href = "login.html";
+            return null;
+          }
           const res = await fetch(baseUrl + "/user", {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -409,6 +446,7 @@
         return null;
       }
 
+      // getMergedStatusRecords returns merged status entries (we pick latest by date)
       async function fetchLatestStatusMap() {
         try {
           const res = await fetch(baseUrl + "/getMergedStatusRecords", {
@@ -419,7 +457,6 @@
           const map = {};
           statuses.forEach((s) => {
             const rc = (s.roCode || "").toString().trim().toUpperCase();
-            // use plan date (s.date) as visit date
             const d = s.date ? new Date(s.date) : new Date(0);
             const ts = isNaN(d.getTime()) ? 0 : d.getTime();
             const existing = map[rc];
@@ -434,18 +471,35 @@
         }
       }
 
+      // Fallback: for codes missing in merged, call getLastVisit per code (fixes sparse cases)
+      async function fetchMissingLastVisits(missingCodes) {
+        const results = {};
+        await Promise.all(
+          missingCodes.map(async (code) => {
+            try {
+              const res = await fetch(
+                `${baseUrl}/getLastVisit/${encodeURIComponent(code)}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (!res.ok) {
+                results[code] = { date: "", lastPurpose: "" };
+                return;
+              }
+              const json = await res.json();
+              results[code] = { date: json.lastDate || "", lastPurpose: json.lastPurpose || "" };
+            } catch (e) {
+              results[code] = { date: "", lastPurpose: "" };
+            }
+          })
+        );
+        return results;
+      }
+
       function formatVisitDate(d) {
         if (!d) return "";
-        // accept either date string or Date object
-        const dateObj =
-          typeof d === "string" || typeof d === "number" ? new Date(d) : d;
+        const dateObj = typeof d === "string" || typeof d === "number" ? new Date(d) : d;
         if (!dateObj || isNaN(dateObj.getTime())) return String(d);
-        // Format: DD-MMM-YYYY (e.g. 07-Dec-2025)
-        return dateObj.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
+        return dateObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
       }
 
       async function loadData() {
@@ -454,12 +508,11 @@
         const user = await getCurrentUser();
         if (!user) {
           hideLoader();
-          document.getElementById(
-            "tableBody"
-          ).innerHTML = `<tr><td colspan="${columns.length}" class="muted">Not authenticated. Please login.</td></tr>`;
+          document.getElementById("tableBody").innerHTML =
+            `<tr><td colspan="${columns.length}" class="muted">Not authenticated. Please login.</td></tr>`;
           return;
         }
-        // store user for applyFilters use:
+
         try {
           localStorage.setItem("user", JSON.stringify(user));
         } catch (e) {}
@@ -467,23 +520,52 @@
         const data = await fetchROMasterList();
         if (!data) {
           hideLoader();
-          document.getElementById(
-            "tableBody"
-          ).innerHTML = `<tr><td colspan="${columns.length}" class="muted">Failed to fetch RO Master data. Backend endpoint not found.</td></tr>`;
+          document.getElementById("tableBody").innerHTML =
+            `<tr><td colspan="${columns.length}" class="muted">Failed to fetch RO Master data. Backend endpoint not found.</td></tr>`;
           return;
         }
+
         allData = data;
+
+        // 1) try merged statuses first (fast / comprehensive)
         latestStatusMap = await fetchLatestStatusMap();
+
+        // 2) find roCodes missing a latest entry and call fallback endpoint in small batches
+        const allCodes = Array.from(
+          new Set(
+            allData
+              .map((r) => (r.roCode || "").toString().trim().toUpperCase())
+              .filter((c) => c)
+          )
+        );
+
+        const missing = allCodes.filter((c) => !latestStatusMap[c]);
+        if (missing.length > 0) {
+          // process in batches of 50 to avoid too many parallel requests
+          const batchSize = 50;
+          for (let i = 0; i < missing.length; i += batchSize) {
+            const batch = missing.slice(i, i + batchSize);
+            const batchRes = await fetchMissingLastVisits(batch);
+            // merge results into latestStatusMap (only providing date & lastPurpose)
+            Object.keys(batchRes).forEach((code) => {
+              if (!latestStatusMap[code]) {
+                latestStatusMap[code] = {
+                  date: batchRes[code].date,
+                  visitDate: batchRes[code].date,
+                  lastPurpose: batchRes[code].lastPurpose,
+                  _ts: batchRes[code].date ? new Date(batchRes[code].date).getTime() : 0,
+                };
+              }
+            });
+          }
+        }
+
         populateFilters(allData);
 
         const isAdmin = user.role === "admin";
         if (!isAdmin) {
-          const name = (user.engineerName || user.username || "")
-            .trim()
-            .toLowerCase();
-          filteredData = allData.filter(
-            (r) => (r.engineer || "").trim().toLowerCase() === name
-          );
+          const name = (user.engineerName || user.username || "").trim().toLowerCase();
+          filteredData = allData.filter((r) => (r.engineer || "").trim().toLowerCase() === name);
         } else {
           filteredData = allData.slice();
         }
@@ -500,21 +582,18 @@
           if (r.engineer) engs.add(r.engineer);
           if (r.phase) phases.add(r.phase);
         });
+
         const zoneSel = document.getElementById("zoneFilter");
         zoneSel.innerHTML = '<option value="">All Zones</option>';
-        Array.from(zones)
-          .sort()
-          .forEach((z) => (zoneSel.innerHTML += `<option>${z}</option>`));
+        Array.from(zones).sort().forEach((z) => zoneSel.innerHTML += `<option>${z}</option>`);
+
         const engSel = document.getElementById("engineerFilter");
         engSel.innerHTML = '<option value="">All Engineers</option>';
-        Array.from(engs)
-          .sort()
-          .forEach((e) => (engSel.innerHTML += `<option>${e}</option>`));
+        Array.from(engs).sort().forEach((e) => engSel.innerHTML += `<option>${e}</option>`);
+
         const phaseSel = document.getElementById("phaseFilter");
         phaseSel.innerHTML = '<option value="">All Phases</option>';
-        Array.from(phases)
-          .sort()
-          .forEach((p) => (phaseSel.innerHTML += `<option>${p}</option>`));
+        Array.from(phases).sort().forEach((p) => phaseSel.innerHTML += `<option>${p}</option>`);
       }
 
       function applySearch() {
@@ -524,10 +603,7 @@
 
       function applyFilters() {
         setTimeout(() => {
-          const q = document
-            .getElementById("searchInput")
-            .value.trim()
-            .toLowerCase();
+          const q = document.getElementById("searchInput").value.trim().toLowerCase();
           const zone = document.getElementById("zoneFilter").value;
           const eng = document.getElementById("engineerFilter").value;
           const phase = document.getElementById("phaseFilter").value;
@@ -536,13 +612,10 @@
           const user = JSON.parse(localStorage.getItem("user") || "null") || {};
           const isAdmin = user.role === "admin";
           let base = allData.slice();
+
           if (!isAdmin) {
-            const name = (user.engineerName || user.username || "")
-              .trim()
-              .toLowerCase();
-            base = base.filter(
-              (r) => (r.engineer || "").trim().toLowerCase() === name
-            );
+            const name = (user.engineerName || user.username || "").trim().toLowerCase();
+            base = base.filter((r) => (r.engineer || "").trim().toLowerCase() === name);
           }
 
           const out = base.filter((r) => {
@@ -551,9 +624,7 @@
             if (phase && (r.phase || "") !== phase) return false;
             if (status && (r.siteStatus || "") !== status) return false;
             if (q) {
-              const values = Object.values(r).map((v) =>
-                String(v).toLowerCase()
-              );
+              const values = Object.values(r).map((v) => String(v).toLowerCase());
               return values.some((val) => val.includes(q));
             }
             return true;
@@ -581,6 +652,7 @@
           setTimeout(() => {
             _renderTableNow(pageData);
             renderPagination(data.length);
+            // small delay so user sees spinner until DOM paints
             requestAnimationFrame(() => setTimeout(() => hideLoader(), 40));
           }, 0);
         });
@@ -593,46 +665,46 @@
         const user = JSON.parse(localStorage.getItem("user") || "null") || {};
         const role = user.role || "";
 
-        tbody.innerHTML = data
-          .map((row) => {
-            const id = row._id || row.roCode || "";
-            const rcUpper = (row.roCode || "").toString().trim().toUpperCase();
-            const latest = latestStatusMap[rcUpper] || {};
-            const cells = columns
-              .map((col) => {
-                if (col.key === "actions") {
-                  let actions = "";
-                  if (role === "admin") {
-                    actions = `<button class="action-btn action-edit" onclick='openEdit("${id}")'><i class="fa-solid fa-edit"></i></button>
+        if (!data || data.length === 0) {
+          tbody.innerHTML = "";
+          document.getElementById("emptyState").classList.remove("hidden");
+          return;
+        } else {
+          document.getElementById("emptyState").classList.add("hidden");
+        }
+
+        tbody.innerHTML = data.map((row) => {
+          const id = row._id || row.roCode || "";
+          const rcUpper = (row.roCode || "").toString().trim().toUpperCase();
+          const latest = latestStatusMap[rcUpper] || {};
+          const lastVisit = latest.date || latest.visitDate || "";
+
+          const cells = columns.map((col) => {
+            if (col.key === "actions") {
+              let actions = "";
+              if (role === "admin") {
+                actions = `<button class="action-btn action-edit" onclick='openEdit("${id}")'><i class="fa-solid fa-edit"></i></button>
                            <button class="action-btn action-delete" onclick='confirmDelete("${id}")'><i class="fa-solid fa-trash"></i></button>`;
-                  }
-                  return `<td style="text-align:center">${actions}</td>`;
-                }
-                // special: lastVisitDate (prefer latest.date)
-                if (col.key === "lastVisitDate") {
-                  const v = latest.date || latest.visitDate || "";
-                  return `<td style="text-align:left">${escapeHtml(
-                    formatVisitDate(v)
-                  )}</td>`;
-                }
-                if (col.key === "bosIP") {
-                  const v = latest.bosIP || row.bosIP || "";
-                  return `<td style="text-align:left">${escapeHtml(v)}</td>`;
-                }
-                if (col.key === "fccIP") {
-                  const v = latest.fccIP || row.fccIP || "";
-                  return `<td style="text-align:left">${escapeHtml(v)}</td>`;
-                }
-                const val =
-                  row[col.key] !== undefined && row[col.key] !== null
-                    ? row[col.key]
-                    : "";
-                return `<td style="text-align:left">${escapeHtml(val)}</td>`;
-              })
-              .join("");
-            return `<tr data-id="${id}">${cells}</tr>`;
-          })
-          .join("");
+              }
+              return `<td style="text-align:center">${actions}</td>`;
+            }
+            if (col.key === "lastVisitDate") {
+              return `<td style="text-align:left">${escapeHtml(formatVisitDate(lastVisit))}</td>`;
+            }
+            if (col.key === "bosIP") {
+              const v = latest.bosIP || row.bosIP || "";
+              return `<td style="text-align:left">${escapeHtml(v)}</td>`;
+            }
+            if (col.key === "fccIP") {
+              const v = latest.fccIP || row.fccIP || "";
+              return `<td style="text-align:left">${escapeHtml(v)}</td>`;
+            }
+            const val = row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : "";
+            return `<td style="text-align:left">${escapeHtml(val)}</td>`;
+          }).join("");
+
+          return `<tr data-id="${id}">${cells}</tr>`;
+        }).join("");
       }
 
       function renderPagination(totalRows) {
@@ -652,8 +724,7 @@
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-        if (endPage - startPage < maxButtons - 1)
-          startPage = Math.max(1, endPage - maxButtons + 1);
+        if (endPage - startPage < maxButtons - 1) startPage = Math.max(1, endPage - maxButtons + 1);
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
           btn.textContent = i;
@@ -689,34 +760,16 @@
       // Edit / Save / Delete functions (unchanged)
       let editingId = null;
       async function openEdit(id) {
-        const rec = allData.find(
-          (r) => r._id === id || r.roCode === id || r.id === id
-        );
-        if (!rec) {
-          alert("Record not found");
-          return;
-        }
+        const rec = allData.find((r) => r._id === id || r.roCode === id || r.id === id);
+        if (!rec) { alert("Record not found"); return; }
         editingId = rec._id || id;
         const form = document.getElementById("editForm");
         form.innerHTML = "";
-        const keys = [
-          "zone",
-          "roCode",
-          "roName",
-          "region",
-          "phase",
-          "engineer",
-          "amcQtr",
-          "siteStatus",
-          "siteActivestatus",
-          "lastAMCqtr",
-        ];
+        const keys = ["zone","roCode","roName","region","phase","engineer","amcQtr","siteStatus","siteActivestatus","lastAMCqtr"];
         keys.forEach((k) => {
           const val = rec[k] || "";
           const readonly = k === "roCode" ? "readonly" : "";
-          form.innerHTML += `<div style="display:grid;gap:6px;margin-bottom:6px;"><label class="muted">${k}</label><input name="${k}" value="${escapeHtml(
-            val
-          )}" ${readonly} class="border px-2 py-1 rounded w-full" /></div>`;
+          form.innerHTML += `<div style="display:grid;gap:6px;margin-bottom:6px;"><label class="muted">${k}</label><input name="${k}" value="${escapeHtml(val)}" ${readonly} class="border px-2 py-1 rounded w-full" /></div>`;
         });
         document.getElementById("editModal").classList.remove("hidden");
       }
@@ -736,105 +789,54 @@
           if (name === "roCode" && typeof v === "string") v = v.toUpperCase();
           payload[name] = v;
         });
-        const candidates = [
-          `/romaster/update/${editingId}`,
-          `/romaster/${editingId}`,
-          `/api/romaster/update/${editingId}`,
-          `/api/romaster/${editingId}`,
-        ];
+        const candidates = [`/romaster/update/${editingId}`,`/romaster/${editingId}`,`/api/romaster/update/${editingId}`,`/api/romaster/${editingId}`];
         let success = false;
         for (const path of candidates) {
           try {
             const res = await fetch(baseUrl + path, {
               method: "PUT",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
-            if (res.ok) {
-              success = true;
-              break;
-            }
+            if (res.ok) { success = true; break; }
           } catch (e) {}
         }
-        if (success) {
-          showToast("Updated successfully ✅");
-          document.getElementById("editModal").classList.add("hidden");
-          editingId = null;
-          await loadData();
-        } else
-          alert(
-            "Update failed. Backend may not expose a matching update endpoint."
-          );
+        if (success) { showToast("Updated successfully ✅"); document.getElementById("editModal").classList.add("hidden"); editingId = null; await loadData(); }
+        else alert("Update failed. Backend may not expose a matching update endpoint.");
       }
 
       let deleteTarget = null;
       function confirmDelete(id) {
-        if (!confirm("Are you sure you want to delete this RO Master record?"))
-          return;
+        if (!confirm("Are you sure you want to delete this RO Master record?")) return;
         deleteTarget = id;
         performDelete();
       }
       async function performDelete() {
         if (!deleteTarget) return;
-        const candidates = [
-          `/romaster/delete/${deleteTarget}`,
-          `/romaster/${deleteTarget}`,
-          `/api/romaster/delete/${deleteTarget}`,
-          `/api/romaster/${deleteTarget}`,
-        ];
+        const candidates = [`/romaster/delete/${deleteTarget}`,`/romaster/${deleteTarget}`,`/api/romaster/delete/${deleteTarget}`,`/api/romaster/${deleteTarget}`];
         let deleted = false;
         for (const path of candidates) {
           try {
-            const res = await fetch(baseUrl + path, {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-              deleted = true;
-              break;
-            }
+            const res = await fetch(baseUrl + path, { method: "DELETE", headers: { Authorization: `Bearer ${token}` }});
+            if (res.ok) { deleted = true; break; }
           } catch (e) {}
         }
-        if (deleted) {
-          showToast("Deleted ✅");
-          await loadData();
-        } else
-          alert(
-            "Delete failed. Backend may not expose a matching delete endpoint."
-          );
+        if (deleted) { showToast("Deleted ✅"); await loadData(); }
+        else alert("Delete failed. Backend may not expose a matching delete endpoint.");
         deleteTarget = null;
       }
 
       // Export CSV (include lastVisitDate)
       function exportROMasterCSV() {
-        if (!filteredData || filteredData.length === 0)
-          return alert("No data to export");
-        const keys = [
-          "roCode",
-          "roName",
-          "zone",
-          "region",
-          "phase",
-          "engineer",
-          "amcQtr",
-          "siteStatus",
-          "lastVisitDate",
-          "bosIP",
-          "fccIP",
-          "siteActivestatus",
-          "lastAMCqtr",
-        ];
+        if (!filteredData || filteredData.length === 0) return alert("No data to export");
+        const keys = ["roCode","roName","zone","region","phase","engineer","amcQtr","siteStatus","lastVisitDate","bosIP","fccIP","siteActivestatus","lastAMCqtr"];
         const header = keys.join(",");
         const rows = filteredData.map((r) => {
           const rc = (r.roCode || "").toString().trim().toUpperCase();
           const latest = latestStatusMap[rc] || {};
           const values = keys.map((k) => {
             let v = "";
-            if (k === "lastVisitDate")
-              v = latest.date || latest.visitDate || "";
+            if (k === "lastVisitDate") v = latest.date || latest.visitDate || "";
             else if (k === "bosIP") v = latest.bosIP || r.bosIP || "";
             else if (k === "fccIP") v = latest.fccIP || r.fccIP || "";
             else v = r[k] || "";
@@ -847,16 +849,12 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `romaster_export_${new Date()
-          .toISOString()
-          .slice(0, 10)}.csv`;
+        a.download = `romaster_export_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
       }
 
-      document
-        .getElementById("refreshBtn")
-        .addEventListener("click", () => loadData());
+      document.getElementById("refreshBtn").addEventListener("click", () => loadData());
       // initial load
       loadData();
     </script>
