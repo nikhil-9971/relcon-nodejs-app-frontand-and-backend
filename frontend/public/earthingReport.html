@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Earthing Status Report</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background: #f1f5f9;
+        font-size: 12px;
+      }
+      .card {
+        background: #fff;
+        padding: 14px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 11px;
+      }
+      th,
+      td {
+        padding: 8px 10px;
+        border: 1px solid #e5e7eb;
+        white-space: nowrap;
+        text-align: left;
+      }
+      thead th {
+        background: #f0f9ff;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        text-align: center;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 12px;
+      }
+      #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="p-6">
+    <div class="max-w-6xl mx-auto card">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h1 class="text-lg font-semibold">⚡ Earthing Status Report</h1>
+          <div class="muted">
+            Shows latest HPCL visits per RO and earthing details (source: Daily
+            Plans)
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input
+            id="searchInput"
+            placeholder="🔎 Search RO / Name / Remark..."
+            class="border px-2 py-1 rounded"
+            oninput="applySearch()"
+          />
+          <button
+            onclick="exportExcel()"
+            class="bg-green-600 text-white px-3 py-1 rounded"
+          >
+            📤 Export
+          </button>
+          <button
+            onclick="refresh()"
+            class="bg-blue-600 text-white px-3 py-1 rounded"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-auto" style="max-height: 70vh">
+        <table id="earthingTable" class="min-w-full">
+          <thead>
+            <tr>
+              <th>RO Code</th>
+              <th>RO Name</th>
+              <th>Phase</th>
+              <th>Last Visit Date</th>
+              <th>Earthing (Separate?)</th>
+              <th>Earthing Remark</th>
+              <th>Cable (m)</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="loadingOverlay">
+      <div class="flex flex-col items-center">
+        <div
+          class="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-2"
+        ></div>
+        <div class="text-sm text-gray-700">Loading data...</div>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      let token = localStorage.getItem("token");
+      let fullData = []; // daily plans
+      let rows = []; // aggregated latest HPCL per RO
+      const tableBody = document.getElementById("tableBody");
+      const loading = document.getElementById("loadingOverlay");
+
+      function showLoading() {
+        loading.style.display = "flex";
+      }
+      function hideLoading() {
+        loading.style.display = "none";
+      }
+
+      async function fetchUserSession() {
+        try {
+          const res = await fetch(baseUrl + "/user", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (!res.ok) {
+            alert("Please login");
+            window.location.href = "login.html";
+            return null;
+          }
+          return await res.json();
+        } catch (e) {
+          console.error(e);
+          alert("Auth error");
+          window.location.href = "login.html";
+        }
+      }
+
+      async function fetchDailyPlans() {
+        try {
+          const res = await fetch(baseUrl + "/getDailyPlans", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (!res.ok) return [];
+          return await res.json();
+        } catch (e) {
+          console.error("Failed to fetch daily plans:", e);
+          return [];
+        }
+      }
+
+      // Build latest plan per RO where phase indicates HPCL (phase contains "HPCL")
+      function buildLatestHpclMap(plans) {
+        const map = {};
+        plans.forEach((p) => {
+          try {
+            const phase = (p.phase || "").toString();
+            if (!phase.toUpperCase().includes("HPCL")) return; // only HPCL phases
+            const rc = (p.roCode || "").toString().trim().toUpperCase();
+            if (!rc) return;
+            const d = p.date ? new Date(p.date) : null;
+            const ts = d && !isNaN(d.getTime()) ? d.getTime() : 0;
+            const existing = map[rc];
+            if (!existing || (existing._ts || 0) < ts) {
+              map[rc] = {
+                roCode: rc,
+                roName: p.roName || "",
+                phase: phase,
+                lastVisitDate: p.date || "",
+                separateEarthing:
+                  p.separateearthingStatus || p.separateearthingstatus || "",
+                earthingRemark:
+                  p.detailEarthingremark || p.detailEarthingRemark || "",
+                cableMeter: p.cableRequirmentremark || p.cableRequirment || "",
+                _ts: ts,
+              };
+            }
+          } catch (e) {
+            /* ignore per-row errors */
+          }
+        });
+        return Object.values(map);
+      }
+
+      function renderTable(data) {
+        tableBody.innerHTML = "";
+        if (!data || data.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="7" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
+          return;
+        }
+        // sort by roCode
+        data.sort((a, b) => (a.roCode || "").localeCompare(b.roCode || ""));
+        tableBody.innerHTML = data
+          .map(
+            (r) => `
+          <tr>
+            <td>${escapeHtml(r.roCode)}</td>
+            <td>${escapeHtml(r.roName)}</td>
+            <td>${escapeHtml(r.phase)}</td>
+            <td>${escapeHtml(formatDate(r.lastVisitDate))}</td>
+            <td>${escapeHtml(normalizeYesNo(r.separateEarthing))}</td>
+            <td>${escapeHtml(r.earthingRemark)}</td>
+            <td>${escapeHtml(r.cableMeter)}</td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      function escapeHtml(s) {
+        if (s === undefined || s === null) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+      function formatDate(d) {
+        if (!d) return "";
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return d;
+        return dt.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+      function normalizeYesNo(v) {
+        if (!v) return "";
+        const s = String(v).trim().toLowerCase();
+        if (
+          s === "yes" ||
+          s === "separate" ||
+          s === "seperate" ||
+          s === "separate earthing"
+        )
+          return "Yes";
+        if (s === "no" || s === "not separate" || s === "not") return "No";
+        return v;
+      }
+
+      async function loadData() {
+        showLoading();
+        const user = await fetchUserSession();
+        if (!user) return;
+        fullData = await fetchDailyPlans();
+        rows = buildLatestHpclMap(fullData);
+        renderTable(rows);
+        hideLoading();
+      }
+
+      function applySearch() {
+        const q = document
+          .getElementById("searchInput")
+          .value.trim()
+          .toLowerCase();
+        if (!q) {
+          renderTable(rows);
+          return;
+        }
+        const out = rows.filter((r) => {
+          return [
+            r.roCode,
+            r.roName,
+            r.phase,
+            r.lastVisitDate,
+            r.separateEarthing,
+            r.earthingRemark,
+            r.cableMeter,
+          ].some((v) => v && String(v).toLowerCase().includes(q));
+        });
+        renderTable(out);
+      }
+
+      function refresh() {
+        loadData();
+      }
+
+      function exportExcel() {
+        if (!rows || rows.length === 0) return alert("No data to export");
+        const wb = XLSX.utils.book_new();
+        const header = [
+          [
+            "RO Code",
+            "RO Name",
+            "Phase",
+            "Last Visit Date",
+            "Earthing Separate (Yes/No)",
+            "Earthing Remark",
+            "Cable (m)",
+          ],
+        ];
+        const dataRows = rows.map((r) => [
+          r.roCode,
+          r.roName,
+          r.phase,
+          r.lastVisitDate,
+          normalizeYesNo(r.separateEarthing),
+          r.earthingRemark,
+          r.cableMeter,
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
+        XLSX.utils.book_append_sheet(wb, ws, "Earthing Status");
+        const name = `Earthing_Status_${new Date()
+          .toISOString()
+          .slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, name);
+      }
+
+      // initial
+      window.addEventListener("load", () => {
+        loadData();
+      });
+    </script>
+  </body>
+</html>
