@@ -224,12 +224,16 @@
       }
 
       // Build latest plan per RO where phase indicates HPCL (phase contains "HPCL")
+      // EXCLUDE entries where phase explicitly contains "HPCL OFFICE"
       function buildLatestHpclMap(plans) {
         const map = {};
         plans.forEach((p) => {
           try {
             const phase = (p.phase || "").toString();
-            if (!phase.toUpperCase().includes("HPCL")) return; // only HPCL phases
+            const uPhase = phase.toUpperCase();
+            // include only HPCL phases but exclude "HPCL OFFICE"
+            if (!uPhase.includes("HPCL")) return;
+            if (uPhase.includes("HPCL OFFICE")) return; // skip HPCL OFFICE
             const rc = (p.roCode || "").toString().trim().toUpperCase();
             if (!rc) return;
             const d = p.date ? new Date(p.date) : null;
