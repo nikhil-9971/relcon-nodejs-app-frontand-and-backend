@@ -75,6 +75,28 @@
           min-width: 140px;
         }
       }
+      #pagination {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      #pagination button {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        background: #f3f4f6;
+        cursor: pointer;
+      }
+      #pagination button.active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+      }
+      .small {
+        font-size: 11px;
+      }
     </style>
   </head>
   <body class="p-6">
@@ -84,15 +106,15 @@
           <h1 class="text-lg font-semibold">⚡ Earthing Status Report</h1>
           <div class="muted">
             Shows latest HPCL visits per RO and earthing details (source: Daily
-            Plans)
+            Plans). "HPCL OFFICE" phases are excluded.
           </div>
         </div>
         <div class="flex items-center gap-2">
           <input
             id="searchInput"
             placeholder="🔎 Search RO / Name / Remark..."
-            class="border px-2 py-1 rounded"
-            oninput="applyFilters()"
+            class="border px-2 py-1 rounded small"
+            oninput="onSearchInput()"
           />
         </div>
       </div>
@@ -103,8 +125,8 @@
           <label class="muted block text-xs">Engineer</label>
           <select
             id="engineerFilter"
-            class="border px-2 py-1 rounded select"
-            onchange="applyFilters()"
+            class="border px-2 py-1 rounded select small"
+            onchange="onFilterChange()"
           >
             <option value="">All Engineers</option>
           </select>
@@ -114,8 +136,8 @@
           <label class="muted block text-xs">Earthing (Separate?)</label>
           <select
             id="earthingFilter"
-            class="border px-2 py-1 rounded select"
-            onchange="applyFilters()"
+            class="border px-2 py-1 rounded select small"
+            onchange="onFilterChange()"
           >
             <option value="">All</option>
             <option value="Yes">Yes</option>
@@ -126,23 +148,26 @@
         <div style="margin-left: auto; display: flex; gap: 8px">
           <button
             onclick="exportExcel()"
-            class="bg-green-600 text-white px-3 py-1 rounded"
+            class="bg-green-600 text-white px-3 py-1 rounded small"
+            title="Export filtered results to Excel"
           >
             📤 Export
           </button>
           <button
             onclick="refresh()"
-            class="bg-blue-600 text-white px-3 py-1 rounded"
+            class="bg-blue-600 text-white px-3 py-1 rounded small"
+            title="Reload data"
           >
             ↻ Refresh
           </button>
         </div>
       </div>
 
-      <div class="overflow-auto" style="max-height: 70vh">
-        <table id="earthingTable" class="min-w-full">
+      <div class="overflow-auto" style="max-height: 60vh">
+        <table id="earthingTable" class="min-w-full small">
           <thead>
             <tr>
+              <th>S.No</th>
               <th>Engineer</th>
               <th>RO Code</th>
               <th>RO Name</th>
@@ -156,6 +181,8 @@
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+
+      <div id="pagination" class="small"></div>
     </div>
 
     <div id="loadingOverlay">
@@ -172,14 +199,19 @@
       let token = localStorage.getItem("token");
       let fullData = []; // daily plans raw
       let rows = []; // aggregated latest HPCL per RO (all)
-      let filteredRows = []; // result after filters
+      let filteredRows = []; // after filters/search
       let loggedInUser = null;
+
+      // pagination
+      let currentPage = 1;
+      const rowsPerPage = 25;
 
       const tableBody = document.getElementById("tableBody");
       const loading = document.getElementById("loadingOverlay");
       const engineerFilterEl = document.getElementById("engineerFilter");
       const earthingFilterEl = document.getElementById("earthingFilter");
       const searchInputEl = document.getElementById("searchInput");
+      const paginationEl = document.getElementById("pagination");
 
       function showLoading() {
         loading.style.display = "flex";
@@ -267,7 +299,7 @@
         listOfRows.forEach((r) => {
           if (r.engineer) set.add(String(r.engineer).trim());
         });
-        // clear existing
+        // clear existing and add
         engineerFilterEl.innerHTML = '<option value="">All Engineers</option>';
         Array.from(set)
           .sort((a, b) => a.localeCompare(b))
@@ -281,7 +313,6 @@
         // If logged in user is engineer, set and disable filter
         if (user && user.role === "engineer") {
           const nameToSet = (user.engineerName || user.username || "").trim();
-          // If engineer not in list, still set the value (will result in no rows)
           engineerFilterEl.value = nameToSet;
           engineerFilterEl.disabled = true;
         } else {
@@ -289,30 +320,96 @@
         }
       }
 
-      function renderTable(data) {
+      // Render only current page slice and show S.No relative to full filtered set
+      function renderCurrentPage() {
         tableBody.innerHTML = "";
-        if (!data || data.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
+        if (!filteredRows || filteredRows.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="9" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
+          renderPagination(0);
           return;
         }
-        // sort by roCode
-        data.sort((a, b) => (a.roCode || "").localeCompare(b.roCode || ""));
-        tableBody.innerHTML = data
-          .map(
-            (r) => `
-          <tr>
-            <td>${escapeHtml(r.engineer)}</td>
-            <td>${escapeHtml(r.roCode)}</td>
-            <td>${escapeHtml(r.roName)}</td>
-            <td>${escapeHtml(r.phase)}</td>
-            <td>${escapeHtml(formatDate(r.lastVisitDate))}</td>
-            <td>${escapeHtml(normalizeYesNo(r.separateEarthing))}</td>
-            <td>${escapeHtml(r.earthingRemark)}</td>
-            <td>${escapeHtml(r.cableMeter)}</td>
-          </tr>
-        `
-          )
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const pageData = filteredRows.slice(start, start + rowsPerPage);
+
+        tableBody.innerHTML = pageData
+          .map((r, idx) => {
+            const sno = start + idx + 1;
+            return `
+            <tr>
+              <td>${sno}</td>
+              <td>${escapeHtml(r.engineer)}</td>
+              <td>${escapeHtml(r.roCode)}</td>
+              <td>${escapeHtml(r.roName)}</td>
+              <td>${escapeHtml(r.phase)}</td>
+              <td>${escapeHtml(formatDate(r.lastVisitDate))}</td>
+              <td>${escapeHtml(normalizeYesNo(r.separateEarthing))}</td>
+              <td>${escapeHtml(r.earthingRemark)}</td>
+              <td>${escapeHtml(r.cableMeter)}</td>
+            </tr>
+          `;
+          })
           .join("");
+
+        renderPagination(total);
+      }
+
+      function renderPagination(totalRows) {
+        paginationEl.innerHTML = "";
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+        const prev = document.createElement("button");
+        prev.textContent = "⬅ Prev";
+        prev.disabled = currentPage === 1;
+        prev.onclick = () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderCurrentPage();
+          }
+        };
+        paginationEl.appendChild(prev);
+
+        // show a window of page buttons
+        const maxButtons = 7;
+        let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if (endPage - startPage < maxButtons - 1) {
+          startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === currentPage) btn.classList.add("active");
+          btn.onclick = ((p) => () => {
+            currentPage = p;
+            renderCurrentPage();
+          })(i);
+          paginationEl.appendChild(btn);
+        }
+
+        const next = document.createElement("button");
+        next.textContent = "Next ➡";
+        next.disabled = currentPage === totalPages;
+        next.onclick = () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderCurrentPage();
+          }
+        };
+        paginationEl.appendChild(next);
+
+        // summary
+        const summary = document.createElement("div");
+        summary.style.marginLeft = "12px";
+        summary.style.color = "#374151";
+        summary.style.fontSize = "12px";
+        summary.textContent = `Showing ${Math.min(
+          totalRows,
+          (currentPage - 1) * rowsPerPage + 1
+        )} - ${Math.min(totalRows, currentPage * rowsPerPage)} of ${totalRows}`;
+        paginationEl.appendChild(summary);
       }
 
       function escapeHtml(s) {
@@ -345,6 +442,20 @@
           return "Yes";
         if (s === "no" || s === "not separate" || s === "not") return "No";
         return v;
+      }
+
+      // called by filter inputs
+      function onFilterChange() {
+        currentPage = 1;
+        applyFilters();
+      }
+      function onSearchInput() {
+        // small debounce to avoid frequent rerenders
+        clearTimeout(window._earthingSearchTimeout);
+        window._earthingSearchTimeout = setTimeout(() => {
+          currentPage = 1;
+          applyFilters();
+        }, 180);
       }
 
       function applyFilters() {
@@ -393,7 +504,7 @@
         }
 
         filteredRows = out;
-        renderTable(filteredRows);
+        renderCurrentPage();
       }
 
       async function loadData() {
@@ -405,6 +516,7 @@
         rows = buildLatestHpclMap(fullData);
         populateEngineerFilter(rows, loggedInUser);
         // default filters: if engineer, apply immediately; else show all
+        currentPage = 1;
         applyFilters();
         hideLoading();
       }
@@ -430,6 +542,7 @@
         const wb = XLSX.utils.book_new();
         const header = [
           [
+            "S.No",
             "Engineer",
             "RO Code",
             "RO Name",
@@ -440,7 +553,8 @@
             "Cable (m)",
           ],
         ];
-        const dataRows = dataToExport.map((r) => [
+        const dataRows = dataToExport.map((r, i) => [
+          i + 1,
           r.engineer,
           r.roCode,
           r.roName,
