@@ -59,6 +59,22 @@
         z-index: 9999;
         display: none;
       }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .controls .select {
+        min-width: 180px;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          flex-wrap: wrap;
+        }
+        .controls .select {
+          min-width: 140px;
+        }
+      }
     </style>
   </head>
   <body class="p-6">
@@ -76,8 +92,38 @@
             id="searchInput"
             placeholder="🔎 Search RO / Name / Remark..."
             class="border px-2 py-1 rounded"
-            oninput="applySearch()"
+            oninput="applyFilters()"
           />
+        </div>
+      </div>
+
+      <!-- Filters row -->
+      <div class="flex items-center controls mb-3">
+        <div>
+          <label class="muted block text-xs">Engineer</label>
+          <select
+            id="engineerFilter"
+            class="border px-2 py-1 rounded select"
+            onchange="applyFilters()"
+          >
+            <option value="">All Engineers</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="muted block text-xs">Earthing (Separate?)</label>
+          <select
+            id="earthingFilter"
+            class="border px-2 py-1 rounded select"
+            onchange="applyFilters()"
+          >
+            <option value="">All</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div style="margin-left: auto; display: flex; gap: 8px">
           <button
             onclick="exportExcel()"
             class="bg-green-600 text-white px-3 py-1 rounded"
@@ -97,6 +143,7 @@
         <table id="earthingTable" class="min-w-full">
           <thead>
             <tr>
+              <th>Engineer</th>
               <th>RO Code</th>
               <th>RO Name</th>
               <th>Phase</th>
@@ -123,10 +170,16 @@
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       let token = localStorage.getItem("token");
-      let fullData = []; // daily plans
-      let rows = []; // aggregated latest HPCL per RO
+      let fullData = []; // daily plans raw
+      let rows = []; // aggregated latest HPCL per RO (all)
+      let filteredRows = []; // result after filters
+      let loggedInUser = null;
+
       const tableBody = document.getElementById("tableBody");
       const loading = document.getElementById("loadingOverlay");
+      const engineerFilterEl = document.getElementById("engineerFilter");
+      const earthingFilterEl = document.getElementById("earthingFilter");
+      const searchInputEl = document.getElementById("searchInput");
 
       function showLoading() {
         loading.style.display = "flex";
@@ -193,6 +246,7 @@
                 earthingRemark:
                   p.detailEarthingremark || p.detailEarthingRemark || "",
                 cableMeter: p.cableRequirmentremark || p.cableRequirment || "",
+                engineer: p.engineer || "",
                 _ts: ts,
               };
             }
@@ -203,10 +257,38 @@
         return Object.values(map);
       }
 
+      function populateEngineerFilter(listOfRows, user) {
+        // unique engineers from rows
+        const set = new Set();
+        listOfRows.forEach((r) => {
+          if (r.engineer) set.add(String(r.engineer).trim());
+        });
+        // clear existing
+        engineerFilterEl.innerHTML = '<option value="">All Engineers</option>';
+        Array.from(set)
+          .sort((a, b) => a.localeCompare(b))
+          .forEach((name) => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            engineerFilterEl.appendChild(opt);
+          });
+
+        // If logged in user is engineer, set and disable filter
+        if (user && user.role === "engineer") {
+          const nameToSet = (user.engineerName || user.username || "").trim();
+          // If engineer not in list, still set the value (will result in no rows)
+          engineerFilterEl.value = nameToSet;
+          engineerFilterEl.disabled = true;
+        } else {
+          engineerFilterEl.disabled = false;
+        }
+      }
+
       function renderTable(data) {
         tableBody.innerHTML = "";
         if (!data || data.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="7" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
           return;
         }
         // sort by roCode
@@ -215,6 +297,7 @@
           .map(
             (r) => `
           <tr>
+            <td>${escapeHtml(r.engineer)}</td>
             <td>${escapeHtml(r.roCode)}</td>
             <td>${escapeHtml(r.roName)}</td>
             <td>${escapeHtml(r.phase)}</td>
@@ -260,48 +343,90 @@
         return v;
       }
 
+      function applyFilters() {
+        const q = (searchInputEl.value || "").trim().toLowerCase();
+        const selEngineer = (engineerFilterEl.value || "").trim();
+        const selEarthing = (earthingFilterEl.value || "").trim(); // "", "Yes", "No"
+
+        let out = rows.slice();
+
+        // Role-based: engineer sees only their own records
+        if (loggedInUser && loggedInUser.role === "engineer") {
+          const myName = (
+            loggedInUser.engineerName ||
+            loggedInUser.username ||
+            ""
+          ).trim();
+          out = out.filter((r) => (r.engineer || "").trim() === myName);
+        } else {
+          // admin or other roles can filter by engineer if selected
+          if (selEngineer) {
+            out = out.filter((r) => (r.engineer || "").trim() === selEngineer);
+          }
+        }
+
+        // earthing filter
+        if (selEarthing === "Yes") {
+          out = out.filter((r) => normalizeYesNo(r.separateEarthing) === "Yes");
+        } else if (selEarthing === "No") {
+          out = out.filter((r) => normalizeYesNo(r.separateEarthing) === "No");
+        }
+
+        // search
+        if (q) {
+          out = out.filter((r) => {
+            return [
+              r.engineer,
+              r.roCode,
+              r.roName,
+              r.phase,
+              r.lastVisitDate,
+              r.separateEarthing,
+              r.earthingRemark,
+              r.cableMeter,
+            ].some((v) => v && String(v).toLowerCase().includes(q));
+          });
+        }
+
+        filteredRows = out;
+        renderTable(filteredRows);
+      }
+
       async function loadData() {
         showLoading();
         const user = await fetchUserSession();
         if (!user) return;
+        loggedInUser = user;
         fullData = await fetchDailyPlans();
         rows = buildLatestHpclMap(fullData);
-        renderTable(rows);
+        populateEngineerFilter(rows, loggedInUser);
+        // default filters: if engineer, apply immediately; else show all
+        applyFilters();
         hideLoading();
       }
 
-      function applySearch() {
-        const q = document
-          .getElementById("searchInput")
-          .value.trim()
-          .toLowerCase();
-        if (!q) {
-          renderTable(rows);
-          return;
-        }
-        const out = rows.filter((r) => {
-          return [
-            r.roCode,
-            r.roName,
-            r.phase,
-            r.lastVisitDate,
-            r.separateEarthing,
-            r.earthingRemark,
-            r.cableMeter,
-          ].some((v) => v && String(v).toLowerCase().includes(q));
-        });
-        renderTable(out);
-      }
-
       function refresh() {
+        // clear search and filters for admin, but keep engineer filter for engineer role
+        if (!loggedInUser || loggedInUser.role !== "engineer") {
+          searchInputEl.value = "";
+          engineerFilterEl.value = "";
+          earthingFilterEl.value = "";
+        } else {
+          earthingFilterEl.value = "";
+          searchInputEl.value = "";
+        }
         loadData();
       }
 
       function exportExcel() {
-        if (!rows || rows.length === 0) return alert("No data to export");
+        const dataToExport =
+          filteredRows && filteredRows.length ? filteredRows : [];
+        if (!dataToExport || dataToExport.length === 0)
+          return alert("No data to export");
         const wb = XLSX.utils.book_new();
         const header = [
           [
+            "Engineer",
             "RO Code",
             "RO Name",
             "Phase",
@@ -311,7 +436,8 @@
             "Cable (m)",
           ],
         ];
-        const dataRows = rows.map((r) => [
+        const dataRows = dataToExport.map((r) => [
+          r.engineer,
           r.roCode,
           r.roName,
           r.phase,
