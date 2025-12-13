@@ -409,29 +409,85 @@
         return null;
       }
 
+      /**
+       * Fetch latest statuses and also fall back to latest dates from daily plans.
+       * This ensures phases like BPCL / RBML (which often have visit dates in dailyplans)
+       * also populate Last Visit Date in ROMaster.
+       */
       async function fetchLatestStatusMap() {
+        const map = {};
+        // 1) merged status records (existing behaviour)
         try {
           const res = await fetch(baseUrl + "/getMergedStatusRecords", {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!res.ok) return {};
-          const statuses = await res.json();
-          const map = {};
-          statuses.forEach((s) => {
-            const rc = (s.roCode || "").toString().trim().toUpperCase();
-            // use plan date (s.date) as visit date
-            const d = s.date ? new Date(s.date) : new Date(0);
-            const ts = isNaN(d.getTime()) ? 0 : d.getTime();
-            const existing = map[rc];
-            if (!existing || (existing._ts || 0) < ts) {
-              map[rc] = Object.assign({}, s, { _ts: ts });
-            }
-          });
-          return map;
+          if (res.ok) {
+            const statuses = await res.json();
+            statuses.forEach((s) => {
+              const rc = (s.roCode || "").toString().trim().toUpperCase();
+              // use plan date (s.date) as visit date
+              const d = s.date ? new Date(s.date) : new Date(0);
+              const ts = isNaN(d.getTime()) ? 0 : d.getTime();
+              const existing = map[rc];
+              if (!existing || (existing._ts || 0) < ts) {
+                map[rc] = Object.assign({}, s, { _ts: ts });
+              }
+            });
+          }
         } catch (err) {
           console.error("Failed to fetch merged status records:", err);
-          return {};
         }
+
+        // 2) ALSO fetch daily plans (dataView.html uses /getDailyPlans) and use plan.date
+        //    This helps populate lastVisitDate for BPCL / RBML phases where merged status might not exist.
+        try {
+          const res2 = await fetch(baseUrl + "/getDailyPlans", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res2.ok) {
+            const plans = await res2.json();
+            if (Array.isArray(plans)) {
+              plans.forEach((p) => {
+                const rc = (p.roCode || "").toString().trim().toUpperCase();
+                if (!rc) return;
+                // some plans might have date as empty or invalid — guard it
+                const d = p.date ? new Date(p.date) : new Date(0);
+                const ts = isNaN(d.getTime()) ? 0 : d.getTime();
+                if (ts === 0) return;
+                const existing = map[rc];
+                // If existing timestamp is older, replace with plan's date
+                if (!existing || (existing._ts || 0) < ts) {
+                  // store minimal info needed (we keep date and _ts, and also mark source)
+                  map[rc] = { date: p.date, _ts: ts, _source: "dailyplan" };
+                }
+              });
+            } else if (plans && Array.isArray(plans.data)) {
+              // handle { data: [...] } shaped response
+              plans.data.forEach((p) => {
+                const rc = (p.roCode || "").toString().trim().toUpperCase();
+                if (!rc) return;
+                const d = p.date ? new Date(p.date) : new Date(0);
+                const ts = isNaN(d.getTime()) ? 0 : d.getTime();
+                if (ts === 0) return;
+                const existing = map[rc];
+                if (!existing || (existing._ts || 0) < ts) {
+                  map[rc] = { date: p.date, _ts: ts, _source: "dailyplan" };
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.error(
+            "Failed to fetch daily plans for last visit dates:",
+            err
+          );
+        }
+
+        // NOTE: if you also maintain separate jioBP or HPCL status endpoints (e.g. /jioBP/getAll),
+        // you can add another fetch here to consider those timestamps as well. For now,
+        // merged statuses + daily plans together should cover BPCL / RBML visits.
+
+        return map;
       }
 
       function formatVisitDate(d) {
