@@ -812,6 +812,221 @@
 
         return true;
       }
+
+      // Earthing status
+
+      <!-- Add this <script> into your dailyPlan.html (near other scripts, before form submit logic) -->
+
+      // cache
+      let _dailyPlansCache = null;
+
+      async function loadDailyPlansCache() {
+        if (_dailyPlansCache) return _dailyPlansCache;
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`${baseUrl}/getDailyPlans`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) return (_dailyPlansCache = []);
+          const data = await res.json();
+          _dailyPlansCache = Array.isArray(data) ? data : data.data || [];
+          return _dailyPlansCache;
+        } catch (err) {
+          console.error("Failed to load daily plans cache:", err);
+          return (_dailyPlansCache = []);
+        }
+      }
+
+      // normalize roCode
+      function normRo(code) {
+        if (!code && code !== 0) return "";
+        return String(code).trim().toUpperCase();
+      }
+
+      // determine HPCL phase (include HPCL but exclude HPCL OFFICE)
+      function isHpclPhase(phase) {
+        if (!phase) return false;
+        const up = String(phase).toUpperCase();
+        return up.includes("HPCL") && !up.includes("HPCL OFFICE");
+      }
+
+      // Find latest previous plan for a given RO Code among cached plans (only HPCL phases)
+      async function findLatestPreviousHpclVisit(roCode) {
+        if (!roCode) return null;
+        const plans = await loadDailyPlansCache();
+        const code = normRo(roCode);
+        // filter: same roCode, HPCL phase (exclude HPCL OFFICE)
+        const candidates = plans.filter((p) => {
+          try {
+            const pCode = normRo(p.roCode || p.rocode || p.ro);
+            if (!pCode || pCode !== code) return false;
+            const phase = p.phase || "";
+            if (!isHpclPhase(phase)) return false;
+            // ignore records without date
+            if (!p.date) return false;
+            return true;
+          } catch (e) {
+            return false;
+          }
+        });
+        if (!candidates.length) return null;
+        // choose the latest by date
+        candidates.sort((a, b) => {
+          const ta = new Date(a.date).getTime() || 0;
+          const tb = new Date(b.date).getTime() || 0;
+          return tb - ta;
+        });
+        return candidates[0];
+      }
+
+      // map field IDs in create form -> update if your form uses other IDs
+      const CREATE_FIELD_IDS = {
+        roCode: "roCode", // id of roCode input in create form (adjust if different)
+        phase: "phase", // id of phase select in create form
+        // earthing fields to prefill (ensure these inputs exist in the form)
+        separateEarthing: "new_separateEarthing", // select (Yes/No)
+        earthingCheckedBy: "new_earthingCheckedBy", // input text
+        earthingRemark: "new_earthingRemark", // textarea
+        cableMeter: "new_cableMeter", // input text / number
+      };
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      // Prefill routine: try to get latest previous HPCL visit for roCode and populate fields
+      async function prefillEarthingFromPrevious(roCodeVal, phaseVal) {
+        try {
+          const ro = normRo(
+            roCodeVal ||
+              ($(CREATE_FIELD_IDS.roCode) && $(CREATE_FIELD_IDS.roCode).value)
+          );
+          const phase =
+            phaseVal ||
+            ($(CREATE_FIELD_IDS.phase) && $(CREATE_FIELD_IDS.phase).value);
+          if (!ro) return;
+          if (!isHpclPhase(phase)) return; // only for HPCL
+          const latest = await findLatestPreviousHpclVisit(ro);
+          if (!latest) return;
+          // Values in dailyplans may use different property names; try common ones
+          const separate =
+            latest.separateearthingStatus ||
+            latest.separateearthingstatus ||
+            latest.separateEarthing ||
+            latest.separate_earthing ||
+            "";
+          const checkedBy =
+            latest.earthingCheckedby ||
+            latest.earthingCheckedBy ||
+            latest.earthing_checked_by ||
+            "";
+          const remark =
+            latest.detailEarthingremark ||
+            latest.detailEarthingRemark ||
+            latest.detail_earthing_remark ||
+            latest.earthingRemark ||
+            "";
+          const cable =
+            latest.cableRequirmentremark ||
+            latest.cableRequirment ||
+            latest.cableRequirement ||
+            latest.cable_meter ||
+            "";
+
+          // set fields only if DOM elements exist
+          if ($(CREATE_FIELD_IDS.separateEarthing))
+            $(CREATE_FIELD_IDS.separateEarthing).value = separate
+              ? String(separate).trim()
+              : "";
+          if ($(CREATE_FIELD_IDS.earthingCheckedBy))
+            $(CREATE_FIELD_IDS.earthingCheckedBy).value = checkedBy
+              ? String(checkedBy).trim()
+              : "";
+          if ($(CREATE_FIELD_IDS.earthingRemark))
+            $(CREATE_FIELD_IDS.earthingRemark).value = remark
+              ? String(remark).trim()
+              : "";
+          if ($(CREATE_FIELD_IDS.cableMeter))
+            $(CREATE_FIELD_IDS.cableMeter).value = cable
+              ? String(cable).trim()
+              : "";
+
+          // small user feedback (non-blocking)
+          showSmallToast(
+            "Earthing fields pre-filled from last HPCL visit (" +
+              (latest.date || "") +
+              ")"
+          );
+        } catch (err) {
+          console.error("prefillEarthingFromPrevious error:", err);
+        }
+      }
+
+      // tiny toast
+      function showSmallToast(msg) {
+        // try to reuse any existing global toast element, else create lightweight
+        let t = document.getElementById("earthingPrefillToast");
+        if (!t) {
+          t = document.createElement("div");
+          t.id = "earthingPrefillToast";
+          t.style.position = "fixed";
+          t.style.bottom = "20px";
+          t.style.right = "20px";
+          t.style.background = "rgba(16,185,129,0.94)";
+          t.style.color = "#fff";
+          t.style.padding = "8px 12px";
+          t.style.borderRadius = "6px";
+          t.style.zIndex = 99999;
+          t.style.fontSize = "13px";
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(t._hideTimeout);
+        t._hideTimeout = setTimeout(() => (t.style.display = "none"), 3500);
+      }
+
+      // hookup listeners (safe: wait until DOM is ready)
+      window.addEventListener("DOMContentLoaded", () => {
+        const roInput = $(CREATE_FIELD_IDS.roCode);
+        const phaseSelect = $(CREATE_FIELD_IDS.phase);
+
+        // If these IDs don't exist in your form, either change CREATE_FIELD_IDS above
+        // or add corresponding id attributes into your form elements.
+
+        if (roInput) {
+          // on blur or change -> attempt prefill (debounced)
+          let _t;
+          const handler = () => {
+            clearTimeout(_t);
+            _t = setTimeout(() => {
+              prefillEarthingFromPrevious();
+            }, 220);
+          };
+          roInput.addEventListener("blur", handler);
+          roInput.addEventListener("change", handler);
+          roInput.addEventListener("keyup", () => {
+            clearTimeout(_t);
+            _t = setTimeout(handler, 600);
+          });
+        }
+
+        if (phaseSelect) {
+          phaseSelect.addEventListener("change", () => {
+            // only trigger if roCode present
+            const roVal = roInput && roInput.value ? roInput.value : "";
+            if (!roVal) return;
+            // wait a moment to ensure any roCode change handler completed
+            setTimeout(
+              () => prefillEarthingFromPrevious(roVal, phaseSelect.value),
+              120
+            );
+          });
+        }
+
+        // optional: add a manual "Load last earthing" button if you prefer explicit action
+        // (left out by default)
+      });
     </script>
   </body>
 </html>
