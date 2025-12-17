@@ -444,7 +444,7 @@
 let currentPage = 1;
 const rowsPerPage = 50;
 
-function renderPagination(totalRows) {
+/*function renderPagination(totalRows) {
   const totalPages = Math.ceil(totalRows / rowsPerPage);
   const paginationDiv = document.getElementById("pagination");
   paginationDiv.innerHTML = "";
@@ -488,7 +488,87 @@ function renderPagination(totalRows) {
     }
   };
   paginationDiv.appendChild(nextBtn);
+}*/
+
+function renderPagination(totalRows) {
+  const paginationEl = document.getElementById("pagination");
+  paginationEl.innerHTML = "";
+
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+  // Prev button
+  const prev = document.createElement("button");
+  prev.textContent = "⬅ Prev";
+  prev.className = "px-3 py-1 border rounded bg-gray-200";
+  prev.disabled = currentPage === 1;
+  prev.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable(filteredData);
+    }
+  };
+  paginationEl.appendChild(prev);
+
+  // page window logic (max 7 buttons like earthingReport)
+  const maxButtons = 7;
+  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+  if (endPage - startPage < maxButtons - 1) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.className =
+      "px-3 py-1 border rounded " + (i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200");
+    btn.onclick = (() => {
+      const page = i;
+      return () => {
+        currentPage = page;
+        renderTable(filteredData);
+      };
+    })();
+    paginationEl.appendChild(btn);
+  }
+
+  // Next button
+  const next = document.createElement("button");
+  next.textContent = "Next ➡";
+  next.className = "px-3 py-1 border rounded bg-gray-200";
+  next.disabled = currentPage === totalPages;
+  next.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTable(filteredData);
+    }
+  };
+  paginationEl.appendChild(next);
+
+  // summary
+  const summary = document.createElement("div");
+  summary.style.marginLeft = "12px";
+  summary.style.color = "#374151";
+  summary.style.fontSize = "12px";
+  const from = totalRows === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+  const to = Math.min(totalRows, currentPage * rowsPerPage);
+  summary.textContent = `Showing ${from} - ${to} of ${totalRows}`;
+  paginationEl.appendChild(summary);
 }
+
+// Keyboard Arrow Navigation
+/*document.addEventListener("keydown", function (event) {
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  if (event.key === "ArrowRight" && currentPage < totalPages) {
+    currentPage++;
+    renderTable(filteredData);
+  }
+  if (event.key === "ArrowLeft" && currentPage > 1) {
+    currentPage--;
+    renderTable(filteredData);
+  }
+}); */
 
 // Keyboard Arrow Navigation
 document.addEventListener("keydown", function (event) {
@@ -502,7 +582,6 @@ document.addEventListener("keydown", function (event) {
     renderTable(filteredData);
   }
 });
-
 
 
 function _renderTableNow(data) {
