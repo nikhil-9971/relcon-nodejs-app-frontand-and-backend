@@ -2,196 +2,424 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>BPCL Visit Records</title>
+    <title>BPCL Visit Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.0/papaparse.min.js"></script>
-    <script>
-      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
-      let fullData = [];
-      let filteredData = [];
-
-      async function fetchBPCLVisits() {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${baseUrl}/getDailyPlans`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-        fullData = data.filter((visit) => visit.phase.includes("BPCL/IOT"));
-        filteredData = [...fullData]; // Initially show all records
-        populateFilters(fullData);
-        populateTable(filteredData);
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background: #f1f5f9;
+        font-size: 12px;
       }
-
-      // Populate Filters (Engineer & Region)
-      function populateFilters(data) {
-        const engineerSelect = document.getElementById("engineerFilter");
-        const regionSelect = document.getElementById("regionFilter");
-
-        const engineers = [...new Set(data.map((record) => record.engineer))];
-        const regions = [...new Set(data.map((record) => record.region))];
-
-        engineers.forEach((engineer) => {
-          const option = document.createElement("option");
-          option.value = engineer;
-          option.textContent = engineer;
-          engineerSelect.appendChild(option);
-        });
-
-        regions.forEach((region) => {
-          const option = document.createElement("option");
-          option.value = region;
-          option.textContent = region;
-          regionSelect.appendChild(option);
-        });
+      .card {
+        background: #fff;
+        padding: 14px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
       }
-
-      // Populate Table
-      function populateTable(data) {
-        const tbody = document.getElementById("bpclTableBody");
-        tbody.innerHTML = "";
-
-        data.forEach((plan, index) => {
-          const row = document.createElement("tr");
-          row.className = index % 2 === 0 ? "bg-white" : "bg-gray-50";
-
-          const completionStatus =
-            plan.completionStatus && plan.completionStatus.trim() !== ""
-              ? plan.completionStatus
-              : "-";
-
-          row.innerHTML = `
-            <td class="border px-1 py-1">${plan.zone || "-"}</td>
-            <td class="border px-1 py-1">${plan.region || "-"}</td>
-            <td class="border px-1 py-1">${plan.engineer || "-"}</td>
-            <td class="border px-1 py-1">${plan.phase || "-"}</td>
-            <td class="border px-1 py-1">${plan.roCode || "-"}</td>
-            <td class="border px-1 py-1">${plan.roName || "-"}</td>
-            <td class="border px-1 py-1">${plan.date || "-"}</td>
-            <td class="border px-1 py-1">${completionStatus}</td>
-          `;
-          tbody.appendChild(row);
-        });
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 11px;
       }
-
-      // Apply Filters
-      function applyFilters() {
-        const engineer = document.getElementById("engineerFilter").value;
-        const region = document.getElementById("regionFilter").value;
-        const search = document
-          .getElementById("searchInput")
-          .value.toLowerCase();
-
-        filteredData = fullData.filter((record) => {
-          const matchesEngineer = !engineer || record.engineer === engineer;
-          const matchesRegion = !region || record.region === region;
-          const matchesSearch =
-            !search ||
-            Object.values(record).some(
-              (value) =>
-                value && value.toString().toLowerCase().includes(search)
-            );
-          return matchesEngineer && matchesRegion && matchesSearch;
-        });
-
-        populateTable(filteredData);
+      th,
+      td {
+        padding: 8px 10px;
+        border: 1px solid #e5e7eb;
+        white-space: nowrap;
+        text-align: left;
       }
-
-      // Export CSV
-      function exportToCSV() {
-        const csvData = filteredData.map((record) => ({
-          Zone: record.zone || "-",
-          Region: record.region || "-",
-          Engineer: record.engineer || "-",
-          Phase: record.phase || "-",
-          ROCode: record.roCode || "-",
-          ROName: record.roName || "-",
-          Date: record.date || "-",
-          CompletionStatus: record.completionStatus || "-",
-        }));
-
-        const csv = Papa.unparse(csvData);
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "BPCL_Visit_Records.csv";
-        link.click();
+      thead th {
+        background: #f0f9ff;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        text-align: center;
       }
-
-      window.onload = fetchBPCLVisits;
-    </script>
+      .muted {
+        color: #6b7280;
+        font-size: 12px;
+      }
+      #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        display: none;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .controls .select {
+        min-width: 180px;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          flex-wrap: wrap;
+        }
+        .controls .select {
+          min-width: 140px;
+        }
+      }
+      #pagination {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      #pagination button {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        background: #f3f4f6;
+        cursor: pointer;
+      }
+      #pagination button.active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+      }
+      .small {
+        font-size: 11px;
+      }
+    </style>
   </head>
-  <body class="bg-gray-100 text-gray-800">
-    <div class="max-w-6xl mx-auto p-6 shadow-md bg-white">
-      <h1 class="text-xl font-bold mb-4">BPCL Visit Records</h1>
-
-      <!-- Filters -->
-      <div class="mb-4 flex flex-wrap gap-4">
+  <body class="p-6">
+    <div class="max-w-6xl mx-auto card">
+      <div class="flex justify-between items-center mb-4">
         <div>
-          <label for="engineerFilter" class="block font-medium mb-1"
-            >Engineer:</label
-          >
-          <select
-            id="engineerFilter"
-            class="border border-gray-300 px-2 py-1 rounded shadow-sm focus:outline-none"
-            onchange="applyFilters()"
-          >
-            <option value="">All</option>
-          </select>
+          <h1 class="text-lg font-semibold">BPCL Visit Report</h1>
+          <div class="muted">
+            Shows latest BPCL/IOT visits based on daily plans filtered with
+            "BPCL/IOT" phase.
+          </div>
         </div>
-        <div>
-          <label for="regionFilter" class="block font-medium mb-1"
-            >Region:</label
-          >
-          <select
-            id="regionFilter"
-            class="border border-gray-300 px-2 py-1 rounded shadow-sm focus:outline-none"
-            onchange="applyFilters()"
-          >
-            <option value="">All</option>
-          </select>
-        </div>
-        <div class="flex flex-grow">
+        <div class="flex items-center gap-2">
           <input
-            type="text"
             id="searchInput"
-            class="border border-gray-300 px-2 py-1 rounded shadow-sm flex-grow"
-            placeholder="Search..."
-            oninput="applyFilters()"
+            placeholder="🔎 Search RO / Name / Phase..."
+            class="border px-2 py-1 rounded small"
+            oninput="onSearchInput()"
           />
         </div>
-        <button
-          class="bg-green-600 text-white px-4 py-2 rounded shadow"
-          onclick="exportToCSV()"
-        >
-          Export to CSV
-        </button>
       </div>
 
-      <!-- Table -->
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-300 table-auto">
-          <thead class="bg-gray-200">
+      <!-- Filters row -->
+      <div class="flex items-center controls mb-3">
+        <div>
+          <label class="muted block text-xs">Engineer</label>
+          <select
+            id="engineerFilter"
+            class="border px-2 py-1 rounded select small"
+            onchange="onFilterChange()"
+          >
+            <option value="">All Engineers</option>
+          </select>
+        </div>
+
+        <div style="margin-left: auto; display: flex; gap: 8px">
+          <button
+            onclick="exportExcel()"
+            class="bg-green-600 text-white px-3 py-1 rounded small"
+            title="Export filtered results to Excel"
+          >
+            📤 Export
+          </button>
+          <button
+            onclick="refresh()"
+            class="bg-blue-600 text-white px-3 py-1 rounded small"
+            title="Reload data"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-auto" style="max-height: 60vh">
+        <table id="bpclTable" class="min-w-full small">
+          <thead>
             <tr>
-              <th class="border px-1 py-1">Zone</th>
-              <th class="border px-1 py-1">Region</th>
-              <th class="border px-1 py-1">Engineer</th>
-              <th class="border px-1 py-1">Phase</th>
-              <th class="border px-1 py-1">RO Code</th>
-              <th class="border px-1 py-1">RO Name</th>
-              <th class="border px-1 py-1">Date</th>
-              <th class="border px-1 py-1">Completion Status</th>
+              <th>S.No</th>
+              <th>Engineer</th>
+              <th>RO Code</th>
+              <th>RO Name</th>
+              <th>Phase</th>
+              <th>Last Visit Date</th>
+              <th>Completion Status</th>
             </tr>
           </thead>
-          <tbody id="bpclTableBody"></tbody>
+          <tbody id="tableBody"></tbody>
         </table>
       </div>
+
+      <div id="pagination" class="small"></div>
     </div>
+
+    <div id="loadingOverlay">
+      <div class="flex flex-col items-center">
+        <div
+          class="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-2"
+        ></div>
+        <div class="text-sm text-gray-700">Loading data...</div>
+      </div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      let token = localStorage.getItem("token");
+      let fullData = [];
+      let rows = [];
+      let filteredRows = [];
+      let loggedInUser = null;
+
+      let currentPage = 1;
+      const rowsPerPage = 25;
+
+      const tableBody = document.getElementById("tableBody");
+      const loading = document.getElementById("loadingOverlay");
+      const engineerFilterEl = document.getElementById("engineerFilter");
+      const searchInputEl = document.getElementById("searchInput");
+      const paginationEl = document.getElementById("pagination");
+
+      function showLoading() {
+        loading.style.display = "flex";
+      }
+      function hideLoading() {
+        loading.style.display = "none";
+      }
+
+      async function fetchUserSession() {
+        try {
+          const res = await fetch(baseUrl + "/user", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (!res.ok) {
+            alert("Please login");
+            window.location.href = "login.html";
+            return null;
+          }
+          return await res.json();
+        } catch (e) {
+          console.error(e);
+          alert("Auth error");
+          window.location.href = "login.html";
+        }
+      }
+
+      async function fetchDailyPlans() {
+        try {
+          const res = await fetch(baseUrl + "/getDailyPlans", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (!res.ok) return [];
+          return await res.json();
+        } catch (e) {
+          console.error("Failed to fetch daily plans:", e);
+          return [];
+        }
+      }
+
+      function buildBpclRows(plans) {
+        const filteredPlans = plans.filter((p) =>
+          (p.phase || "").toString().includes("BPCL/IOT")
+        );
+
+        return filteredPlans.map((p) => ({
+          engineer: p.engineer || "",
+          roCode: p.roCode || "",
+          roName: p.roName || "",
+          phase: p.phase || "",
+          lastVisitDate: p.date || "",
+          completionStatus: p.completionStatus || "-",
+        }));
+      }
+
+      function populateEngineerFilter(listOfRows, user) {
+        const set = new Set();
+        listOfRows.forEach((r) => {
+          if (r.engineer) set.add(String(r.engineer).trim());
+        });
+        engineerFilterEl.innerHTML = '<option value="">All Engineers</option>';
+        Array.from(set)
+          .sort((a, b) => a.localeCompare(b))
+          .forEach((name) => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            engineerFilterEl.appendChild(opt);
+          });
+      }
+
+      function renderCurrentPage() {
+        tableBody.innerHTML = "";
+        if (!filteredRows || filteredRows.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="7" class="muted" style="text-align:center;padding:12px">No data</td></tr>';
+          renderPagination(0);
+          return;
+        }
+
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const pageData = filteredRows.slice(start, start + rowsPerPage);
+
+        tableBody.innerHTML = pageData
+          .map(
+            (r, idx) =>
+              `
+          <tr>
+            <td>${start + idx + 1}</td>
+            <td>${r.engineer}</td>
+            <td>${r.roCode}</td>
+            <td>${r.roName}</td>
+            <td>${r.phase}</td>
+            <td>${r.lastVisitDate}</td>
+            <td>${r.completionStatus}</td>
+          </tr>
+        `
+          )
+          .join("");
+
+        renderPagination(total);
+      }
+
+      function renderPagination(totalRows) {
+        paginationEl.innerHTML = "";
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+        const prev = document.createElement("button");
+        prev.textContent = "⬅ Prev";
+        prev.disabled = currentPage === 1;
+        prev.onclick = () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderCurrentPage();
+          }
+        };
+        paginationEl.appendChild(prev);
+
+        const next = document.createElement("button");
+        next.textContent = "Next ➡";
+        next.disabled = currentPage === totalPages;
+        next.onclick = () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderCurrentPage();
+          }
+        };
+        paginationEl.appendChild(next);
+
+        const summary = document.createElement("div");
+        summary.style.marginLeft = "12px";
+        summary.style.color = "#374151";
+        summary.style.fontSize = "12px";
+        summary.textContent = `Showing ${Math.min(
+          totalRows,
+          (currentPage - 1) * rowsPerPage + 1
+        )} - ${Math.min(totalRows, currentPage * rowsPerPage)} of ${totalRows}`;
+        paginationEl.appendChild(summary);
+      }
+
+      function onFilterChange() {
+        currentPage = 1;
+        applyFilters();
+      }
+      function onSearchInput() {
+        clearTimeout(window._bpclSearchTimeout);
+        window._bpclSearchTimeout = setTimeout(() => {
+          currentPage = 1;
+          applyFilters();
+        }, 180);
+      }
+
+      function applyFilters() {
+        const q = (searchInputEl.value || "").trim().toLowerCase();
+        const selEngineer = (engineerFilterEl.value || "").trim();
+
+        let out = rows.slice();
+
+        if (selEngineer) {
+          out = out.filter((r) => (r.engineer || "").trim() === selEngineer);
+        }
+
+        if (q) {
+          out = out.filter((r) => {
+            return [r.engineer, r.roCode, r.roName, r.phase].some(
+              (v) => v && String(v).toLowerCase().includes(q)
+            );
+          });
+        }
+
+        filteredRows = out;
+        renderCurrentPage();
+      }
+
+      async function loadData() {
+        showLoading();
+        const user = await fetchUserSession();
+        loggedInUser = user;
+        fullData = await fetchDailyPlans();
+        rows = buildBpclRows(fullData);
+        populateEngineerFilter(rows);
+        applyFilters();
+        hideLoading();
+      }
+
+      function refresh() {
+        searchInputEl.value = "";
+        engineerFilterEl.value = "";
+        loadData();
+      }
+
+      function exportExcel() {
+        const wb = XLSX.utils.book_new();
+        const header = [
+          [
+            "S.No",
+            "Engineer",
+            "RO Code",
+            "RO Name",
+            "Phase",
+            "Last Visit Date",
+            "Completion Status",
+          ],
+        ];
+        const dataRows = filteredRows.map((r, idx) => [
+          idx + 1,
+          r.engineer,
+          r.roCode,
+          r.roName,
+          r.phase,
+          r.lastVisitDate,
+          r.completionStatus,
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
+        XLSX.utils.book_append_sheet(wb, ws, "BPCL Visit Records");
+        const name = `BPCL_Visit_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, name);
+      }
+
+      window.addEventListener("load", loadData);
+    </script>
   </body>
 </html>
