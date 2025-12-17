@@ -259,11 +259,12 @@
             roCode: p.roCode || "",
             roName: p.roName || "",
             phase: p.phase || "",
-            lastVisitDate: p.date || "",
+            lastVisitDate: formatDate(p.date || ""),
             completionStatus: p.completionStatus || "-",
-            _ts: p.date ? new Date(p.date).getTime() : 0,
           }))
-          .sort((a, b) => b._ts - a._ts); // Sort by last visit date (descending)
+          .sort(
+            (a, b) => new Date(b.lastVisitDate) - new Date(a.lastVisitDate)
+          ); // Sort by last visit date (descending)
 
         return filteredPlans;
       }
@@ -324,7 +325,7 @@
             <td>${r.roCode}</td>
             <td>${r.roName}</td>
             <td>${r.phase}</td>
-            <td>${new Date(r.lastVisitDate).toLocaleDateString()}</td>
+            <td>${r.lastVisitDate}</td>
             <td>${r.completionStatus}</td>
           </tr>
         `
@@ -380,6 +381,16 @@
           (currentPage - 1) * rowsPerPage + 1
         )} - ${Math.min(totalRows, currentPage * rowsPerPage)} of ${totalRows}`;
         paginationEl.appendChild(summary);
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yyyy = date.getFullYear();
+        return `${dd}-${mm}-${yyyy}`;
       }
 
       function onFilterChange() {
@@ -460,7 +471,7 @@
           r.roCode,
           r.roName,
           r.phase,
-          new Date(r.lastVisitDate).toLocaleDateString(),
+          r.lastVisitDate,
           r.completionStatus,
         ]);
         const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
