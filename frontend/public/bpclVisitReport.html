@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>BPCL Visit Records</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.0/papaparse.min.js"></script>
+    <script>
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      let fullData = [];
+      let filteredData = [];
+
+      async function fetchBPCLVisits() {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${baseUrl}/getDailyPlans`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        fullData = data.filter((visit) => visit.phase.includes("BPCL/IOT"));
+        filteredData = [...fullData]; // Initially show all records
+        populateFilters(fullData);
+        populateTable(filteredData);
+      }
+
+      // Populate Filters (Engineer & Region)
+      function populateFilters(data) {
+        const engineerSelect = document.getElementById("engineerFilter");
+        const regionSelect = document.getElementById("regionFilter");
+
+        const engineers = [...new Set(data.map((record) => record.engineer))];
+        const regions = [...new Set(data.map((record) => record.region))];
+
+        engineers.forEach((engineer) => {
+          const option = document.createElement("option");
+          option.value = engineer;
+          option.textContent = engineer;
+          engineerSelect.appendChild(option);
+        });
+
+        regions.forEach((region) => {
+          const option = document.createElement("option");
+          option.value = region;
+          option.textContent = region;
+          regionSelect.appendChild(option);
+        });
+      }
+
+      // Populate Table
+      function populateTable(data) {
+        const tbody = document.getElementById("bpclTableBody");
+        tbody.innerHTML = "";
+
+        data.forEach((plan, index) => {
+          const row = document.createElement("tr");
+          row.className = index % 2 === 0 ? "bg-white" : "bg-gray-50";
+
+          const completionStatus =
+            plan.completionStatus && plan.completionStatus.trim() !== ""
+              ? plan.completionStatus
+              : "-";
+
+          row.innerHTML = `
+            <td class="border px-1 py-1">${plan.zone || "-"}</td>
+            <td class="border px-1 py-1">${plan.region || "-"}</td>
+            <td class="border px-1 py-1">${plan.engineer || "-"}</td>
+            <td class="border px-1 py-1">${plan.phase || "-"}</td>
+            <td class="border px-1 py-1">${plan.roCode || "-"}</td>
+            <td class="border px-1 py-1">${plan.roName || "-"}</td>
+            <td class="border px-1 py-1">${plan.date || "-"}</td>
+            <td class="border px-1 py-1">${completionStatus}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      // Apply Filters
+      function applyFilters() {
+        const engineer = document.getElementById("engineerFilter").value;
+        const region = document.getElementById("regionFilter").value;
+        const search = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+
+        filteredData = fullData.filter((record) => {
+          const matchesEngineer = !engineer || record.engineer === engineer;
+          const matchesRegion = !region || record.region === region;
+          const matchesSearch =
+            !search ||
+            Object.values(record).some(
+              (value) =>
+                value && value.toString().toLowerCase().includes(search)
+            );
+          return matchesEngineer && matchesRegion && matchesSearch;
+        });
+
+        populateTable(filteredData);
+      }
+
+      // Export CSV
+      function exportToCSV() {
+        const csvData = filteredData.map((record) => ({
+          Zone: record.zone || "-",
+          Region: record.region || "-",
+          Engineer: record.engineer || "-",
+          Phase: record.phase || "-",
+          ROCode: record.roCode || "-",
+          ROName: record.roName || "-",
+          Date: record.date || "-",
+          CompletionStatus: record.completionStatus || "-",
+        }));
+
+        const csv = Papa.unparse(csvData);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "BPCL_Visit_Records.csv";
+        link.click();
+      }
+
+      window.onload = fetchBPCLVisits;
+    </script>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <div class="max-w-6xl mx-auto p-6 shadow-md bg-white">
+      <h1 class="text-xl font-bold mb-4">BPCL Visit Records</h1>
+
+      <!-- Filters -->
+      <div class="mb-4 flex flex-wrap gap-4">
+        <div>
+          <label for="engineerFilter" class="block font-medium mb-1"
+            >Engineer:</label
+          >
+          <select
+            id="engineerFilter"
+            class="border border-gray-300 px-2 py-1 rounded shadow-sm focus:outline-none"
+            onchange="applyFilters()"
+          >
+            <option value="">All</option>
+          </select>
+        </div>
+        <div>
+          <label for="regionFilter" class="block font-medium mb-1"
+            >Region:</label
+          >
+          <select
+            id="regionFilter"
+            class="border border-gray-300 px-2 py-1 rounded shadow-sm focus:outline-none"
+            onchange="applyFilters()"
+          >
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="flex flex-grow">
+          <input
+            type="text"
+            id="searchInput"
+            class="border border-gray-300 px-2 py-1 rounded shadow-sm flex-grow"
+            placeholder="Search..."
+            oninput="applyFilters()"
+          />
+        </div>
+        <button
+          class="bg-green-600 text-white px-4 py-2 rounded shadow"
+          onclick="exportToCSV()"
+        >
+          Export to CSV
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-300 table-auto">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="border px-1 py-1">Zone</th>
+              <th class="border px-1 py-1">Region</th>
+              <th class="border px-1 py-1">Engineer</th>
+              <th class="border px-1 py-1">Phase</th>
+              <th class="border px-1 py-1">RO Code</th>
+              <th class="border px-1 py-1">RO Name</th>
+              <th class="border px-1 py-1">Date</th>
+              <th class="border px-1 py-1">Completion Status</th>
+            </tr>
+          </thead>
+          <tbody id="bpclTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
