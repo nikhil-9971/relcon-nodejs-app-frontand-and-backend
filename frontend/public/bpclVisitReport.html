@@ -131,6 +131,17 @@
           </select>
         </div>
 
+        <div>
+          <label class="muted block text-xs">Region</label>
+          <select
+            id="regionFilter"
+            class="border px-2 py-1 rounded select small"
+            onchange="onFilterChange()"
+          >
+            <option value="">All Regions</option>
+          </select>
+        </div>
+
         <div style="margin-left: auto; display: flex; gap: 8px">
           <button
             onclick="exportExcel()"
@@ -155,6 +166,7 @@
             <tr>
               <th>S.No</th>
               <th>Engineer</th>
+              <th>Region</th>
               <th>RO Code</th>
               <th>RO Name</th>
               <th>Phase</th>
@@ -192,6 +204,7 @@
       const tableBody = document.getElementById("tableBody");
       const loading = document.getElementById("loadingOverlay");
       const engineerFilterEl = document.getElementById("engineerFilter");
+      const regionFilterEl = document.getElementById("regionFilter");
       const searchInputEl = document.getElementById("searchInput");
       const paginationEl = document.getElementById("pagination");
 
@@ -238,27 +251,35 @@
       }
 
       function buildBpclRows(plans) {
-        const filteredPlans = plans.filter((p) =>
-          (p.phase || "").toString().includes("BPCL/IOT")
-        );
+        const filteredPlans = plans
+          .filter((p) => (p.phase || "").toString().includes("BPCL/IOT"))
+          .map((p) => ({
+            engineer: p.engineer || "",
+            region: p.region || "",
+            roCode: p.roCode || "",
+            roName: p.roName || "",
+            phase: p.phase || "",
+            lastVisitDate: p.date || "",
+            completionStatus: p.completionStatus || "-",
+            _ts: p.date ? new Date(p.date).getTime() : 0,
+          }))
+          .sort((a, b) => b._ts - a._ts); // Sort by last visit date (descending)
 
-        return filteredPlans.map((p) => ({
-          engineer: p.engineer || "",
-          roCode: p.roCode || "",
-          roName: p.roName || "",
-          phase: p.phase || "",
-          lastVisitDate: p.date || "",
-          completionStatus: p.completionStatus || "-",
-        }));
+        return filteredPlans;
       }
 
-      function populateEngineerFilter(listOfRows, user) {
-        const set = new Set();
+      function populateFilters(listOfRows) {
+        const engineerSet = new Set();
+        const regionSet = new Set();
         listOfRows.forEach((r) => {
-          if (r.engineer) set.add(String(r.engineer).trim());
+          if (r.engineer) engineerSet.add(String(r.engineer).trim());
+          if (r.region) regionSet.add(String(r.region).trim());
         });
+
         engineerFilterEl.innerHTML = '<option value="">All Engineers</option>';
-        Array.from(set)
+        regionFilterEl.innerHTML = '<option value="">All Regions</option>';
+
+        Array.from(engineerSet)
           .sort((a, b) => a.localeCompare(b))
           .forEach((name) => {
             const opt = document.createElement("option");
@@ -266,13 +287,22 @@
             opt.textContent = name;
             engineerFilterEl.appendChild(opt);
           });
+
+        Array.from(regionSet)
+          .sort((a, b) => a.localeCompare(b))
+          .forEach((region) => {
+            const opt = document.createElement("option");
+            opt.value = region;
+            opt.textContent = region;
+            regionFilterEl.appendChild(opt);
+          });
       }
 
       function renderCurrentPage() {
         tableBody.innerHTML = "";
         if (!filteredRows || filteredRows.length === 0) {
           tableBody.innerHTML =
-            '<tr><td colspan="7" class="muted" style="text-align:center;padding:12px">No data</td></tr>';
+            '<tr><td colspan="8" class="muted" style="text-align:center;padding:12px">No data</td></tr>';
           renderPagination(0);
           return;
         }
@@ -290,10 +320,11 @@
           <tr>
             <td>${start + idx + 1}</td>
             <td>${r.engineer}</td>
+            <td>${r.region}</td>
             <td>${r.roCode}</td>
             <td>${r.roName}</td>
             <td>${r.phase}</td>
-            <td>${r.lastVisitDate}</td>
+            <td>${new Date(r.lastVisitDate).toLocaleDateString()}</td>
             <td>${r.completionStatus}</td>
           </tr>
         `
@@ -366,6 +397,7 @@
       function applyFilters() {
         const q = (searchInputEl.value || "").trim().toLowerCase();
         const selEngineer = (engineerFilterEl.value || "").trim();
+        const selRegion = (regionFilterEl.value || "").trim();
 
         let out = rows.slice();
 
@@ -373,9 +405,13 @@
           out = out.filter((r) => (r.engineer || "").trim() === selEngineer);
         }
 
+        if (selRegion) {
+          out = out.filter((r) => (r.region || "").trim() === selRegion);
+        }
+
         if (q) {
           out = out.filter((r) => {
-            return [r.engineer, r.roCode, r.roName, r.phase].some(
+            return [r.engineer, r.region, r.roCode, r.roName, r.phase].some(
               (v) => v && String(v).toLowerCase().includes(q)
             );
           });
@@ -391,7 +427,7 @@
         loggedInUser = user;
         fullData = await fetchDailyPlans();
         rows = buildBpclRows(fullData);
-        populateEngineerFilter(rows);
+        populateFilters(rows);
         applyFilters();
         hideLoading();
       }
@@ -399,6 +435,7 @@
       function refresh() {
         searchInputEl.value = "";
         engineerFilterEl.value = "";
+        regionFilterEl.value = "";
         loadData();
       }
 
@@ -408,6 +445,7 @@
           [
             "S.No",
             "Engineer",
+            "Region",
             "RO Code",
             "RO Name",
             "Phase",
@@ -418,10 +456,11 @@
         const dataRows = filteredRows.map((r, idx) => [
           idx + 1,
           r.engineer,
+          r.region,
           r.roCode,
           r.roName,
           r.phase,
-          r.lastVisitDate,
+          new Date(r.lastVisitDate).toLocaleDateString(),
           r.completionStatus,
         ]);
         const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
