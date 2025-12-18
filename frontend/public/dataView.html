@@ -174,6 +174,16 @@
         />
       </div>
 
+      <!-- <div class="flex justify-between items-center mb-4">
+        <button
+          onclick="exportStyledExcel()"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+        >
+          <i class="fa-solid fa-file-excel mr-2"></i>
+          Export to Excel
+        </button>
+      </div> -->
+
       <div class="relative inline-block text-left mb-4">
         <button
           onclick="toggleExportMenu()"
@@ -896,32 +906,6 @@
               ></textarea>
             </div>
 
-            <!-- Added field: Earthing Cable Required (optional in form) -->
-            <div>
-              <label class="text-sm font-semibold"
-                >Barrier Cable Required (m)</label
-              >
-              <input
-                type="text"
-                id="cableRequired"
-                placeholder="Enter length in meters (optional)"
-                class="w-full p-2 mt-1 border rounded"
-              />
-            </div>
-
-            <!-- Added field: Photo checked by for earthing -->
-            <div>
-              <label class="text-sm font-semibold"
-                >Earthing Photo Checked By</label
-              >
-              <input
-                type="text"
-                id="earthingCheckedByField"
-                placeholder="Name (will update last visit on save)"
-                class="w-full p-2 mt-1 border rounded"
-              />
-            </div>
-
             <!-- location finder -->
 
             <div>
@@ -1469,7 +1453,7 @@
           .trim();
 
         if (!query) {
-          populateTable(filteredData);
+          populateTable(filteredData); // 👈 Corrected function call
           return;
         }
 
@@ -1480,7 +1464,7 @@
           })
         );
 
-        populateTable(result);
+        populateTable(result); // 👈 Corrected function call
       }
 
       //Export Button Toggele
@@ -2038,16 +2022,6 @@
         document.getElementById("statusPlanId").value = planId;
         document.getElementById("statusModal").classList.remove("hidden");
 
-        // Fill earthingCheckedBy with current engineer name by default to help user
-        const engineerName =
-          loggedInUser?.engineerName || loggedInUser?.username || "";
-        const earthingCheckedEl = document.getElementById(
-          "earthingCheckedByField"
-        );
-        if (earthingCheckedEl && !earthingCheckedEl.value) {
-          earthingCheckedEl.value = engineerName;
-        }
-
         // 🔁 Apply logic to auto-fill & make fields readonly based on dropdown values
         function applyAutoFieldLogic() {
           const duOffline = document.getElementById("duOffline").value;
@@ -2202,13 +2176,6 @@
         // Clear fields if adding
         if (typeof isViewOnly === "undefined" || !isViewOnly) {
           document.getElementById("statusForm").reset();
-          // set default for earthingCheckedByField to current engineer
-          const earthingCheckedEl = document.getElementById(
-            "earthingCheckedByField"
-          );
-          const engineerName =
-            loggedInUser?.engineerName || loggedInUser?.username || "";
-          if (earthingCheckedEl) earthingCheckedEl.value = engineerName;
         }
 
         // 🛰️ Fetch and set current location
@@ -2239,62 +2206,6 @@
 
       function closeStatusModal() {
         document.getElementById("statusModal").classList.add("hidden");
-      }
-
-      /**
-       * Helper to update the DailyPlan document with earthing-related fields
-       * after a status (visit) is saved. This ensures the table shows the latest
-       * earthing details from the most recent visit.
-       *
-       * Mapping chosen:
-       * - plan.separateearthingStatus <= status.earthingStatus
-       * - plan.earthingCheckedby <= status.earthingCheckedBy (if provided) OR current engineer
-       * - plan.detailEarthingremark <= status.voltageReading
-       * - plan.cableRequirmentremark <= status.cableRequired (if provided)
-       */
-      async function updatePlanEarthing(planId, statusData) {
-        try {
-          const token = localStorage.getItem("token");
-          const payload = {
-            // only include fields we want to update
-            separateearthingStatus:
-              statusData.earthingStatus || statusData.earthing,
-            earthingCheckedby:
-              (
-                statusData.earthingCheckedBy ||
-                statusData.earthingCheckedby ||
-                ""
-              ).trim() ||
-              loggedInUser?.engineerName ||
-              loggedInUser?.username ||
-              "",
-            detailEarthingremark: statusData.voltageReading || "",
-            cableRequirmentremark: (
-              statusData.cableRequired ||
-              statusData.cable ||
-              ""
-            ).toString(),
-          };
-
-          const res = await fetch(`${baseUrl}/updateDailyPlan/${planId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(payload),
-            credentials: "include",
-          });
-
-          if (!res.ok) {
-            console.warn(
-              "Failed to update plan earthing fields",
-              await res.text()
-            );
-          }
-        } catch (err) {
-          console.error("Error updating plan earthing:", err);
-        }
       }
 
       async function saveStatus() {
@@ -2357,8 +2268,6 @@
             return;
           }
         }
-
-        // Build statusData from form, including the optional earthing photo and cable fields added to the modal
         const statusData = {
           planId: document.getElementById("statusPlanId").value,
           probeMake: document.getElementById("probeMake").value,
@@ -2396,13 +2305,10 @@
           bosIP: document.getElementById("bosIP").value,
           fccIP: document.getElementById("fccIP").value,
           locationField: document.getElementById("locationField").value,
-          // optional new fields we added in the modal
-          cableRequired: document.getElementById("cableRequired")?.value || "",
-          earthingCheckedBy:
-            document.getElementById("earthingCheckedByField")?.value || "",
         };
 
-        // Send status to server
+        //if (!workDone) return alert("Please enter work done");
+
         const res = await fetch(`${baseUrl}/saveStatus`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2413,29 +2319,6 @@
         if (res.ok) {
           alert("✅ Status saved");
           closeStatusModal();
-
-          // NEW: Update the original DailyPlan record with earthing details from this status.
-          // This ensures "Seperate Earthing Provide Barrier Card (Yes/No)",
-          // "Seperate Earthing for Barrier Photo Checked By",
-          // "Detail Earthing Status Remark",
-          // "Earthing Cable Required in Mtr."
-          // are updated on the plan (last-visit) immediately after status creation.
-          try {
-            const planId = statusData.planId;
-            await updatePlanEarthing(planId, {
-              earthingStatus: statusData.earthingStatus,
-              earthingCheckedBy:
-                statusData.earthingCheckedBy ||
-                statusData.earthingCheckedby ||
-                statusData.earthingCheckedBy,
-              voltageReading: statusData.voltageReading,
-              cableRequired: statusData.cableRequired,
-            });
-          } catch (e) {
-            console.warn("Updating plan earthing failed:", e);
-          }
-
-          // Reload to reflect status and updated earthing fields
           await fetchAndStoreData(); // Reload to reflect status
           applyFilter(document.getElementById("applyBtn"));
         } else {
