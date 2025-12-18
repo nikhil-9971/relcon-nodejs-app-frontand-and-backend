@@ -175,6 +175,7 @@
               <th>Last Visit Date</th>
               <th>Earthing (Separate?)</th>
               <th>Earthing Remark</th>
+              <th>Prev Visit Earthing Remark</th>
               <th>Cable (m)</th>
             </tr>
           </thead>
@@ -257,6 +258,7 @@
 
       // Build latest plan per RO where phase indicates HPCL (phase contains "HPCL")
       // EXCLUDE entries where phase explicitly contains "HPCL OFFICE"
+      // Also capture the previous visit's earthing remark (the latest visit before the latest one)
       function buildLatestHpclMap(plans) {
         const map = {};
         plans.forEach((p) => {
@@ -270,27 +272,88 @@
             if (!rc) return;
             const d = p.date ? new Date(p.date) : null;
             const ts = d && !isNaN(d.getTime()) ? d.getTime() : 0;
-            const existing = map[rc];
-            if (!existing || (existing._ts || 0) < ts) {
+
+            // get earthing remark from possible fields
+            const earthingRemark =
+              p.detailEarthingremark || p.detailEarthingRemark || "";
+
+            if (!map[rc]) {
               map[rc] = {
-                roCode: rc,
-                roName: p.roName || "",
-                phase: phase,
-                lastVisitDate: p.date || "",
-                separateEarthing:
-                  p.separateearthingStatus || p.separateearthingstatus || "",
-                earthingRemark:
-                  p.detailEarthingremark || p.detailEarthingRemark || "",
-                cableMeter: p.cableRequirmentremark || p.cableRequirment || "",
-                engineer: p.engineer || "",
-                _ts: ts,
+                latest: {
+                  roCode: rc,
+                  roName: p.roName || "",
+                  phase: phase,
+                  lastVisitDate: p.date || "",
+                  separateEarthing:
+                    p.separateearthingStatus || p.separateearthingstatus || "",
+                  earthingRemark: earthingRemark,
+                  cableMeter:
+                    p.cableRequirmentremark || p.cableRequirment || "",
+                  engineer: p.engineer || "",
+                  _ts: ts,
+                },
+                prev: null,
               };
+            } else {
+              const existingLatestTs =
+                (map[rc].latest && map[rc].latest._ts) || 0;
+              const existingPrevTs = (map[rc].prev && map[rc].prev._ts) || 0;
+              // if this record is newer than current latest -> shift latest to prev
+              if (ts > existingLatestTs) {
+                // move latest to prev if valid
+                if (map[rc].latest && map[rc].latest._ts) {
+                  map[rc].prev = Object.assign({}, map[rc].latest);
+                }
+                // set new latest
+                map[rc].latest = {
+                  roCode: rc,
+                  roName: p.roName || "",
+                  phase: phase,
+                  lastVisitDate: p.date || "",
+                  separateEarthing:
+                    p.separateearthingStatus || p.separateearthingstatus || "",
+                  earthingRemark: earthingRemark,
+                  cableMeter:
+                    p.cableRequirmentremark || p.cableRequirment || "",
+                  engineer: p.engineer || "",
+                  _ts: ts,
+                };
+              } else if (ts > existingPrevTs) {
+                // this is between latest and prev -> set as prev
+                map[rc].prev = {
+                  roCode: rc,
+                  roName: p.roName || "",
+                  phase: phase,
+                  lastVisitDate: p.date || "",
+                  separateEarthing:
+                    p.separateearthingStatus || p.separateearthingstatus || "",
+                  earthingRemark: earthingRemark,
+                  cableMeter:
+                    p.cableRequirmentremark || p.cableRequirment || "",
+                  engineer: p.engineer || "",
+                  _ts: ts,
+                };
+              }
             }
           } catch (e) {
             /* ignore per-row errors */
           }
         });
-        return Object.values(map);
+        // convert map to array of rows, include prevEarthingRemark as field (if any)
+        return Object.values(map).map((entry) => {
+          const latest = entry.latest || {};
+          return {
+            roCode: latest.roCode || "",
+            roName: latest.roName || "",
+            phase: latest.phase || "",
+            lastVisitDate: latest.lastVisitDate || "",
+            separateEarthing: latest.separateEarthing || "",
+            earthingRemark: latest.earthingRemark || "",
+            cableMeter: latest.cableMeter || "",
+            engineer: latest.engineer || "",
+            prevEarthingRemark: (entry.prev && entry.prev.earthingRemark) || "",
+          };
+        });
       }
 
       function populateEngineerFilter(listOfRows, user) {
@@ -324,7 +387,7 @@
       function renderCurrentPage() {
         tableBody.innerHTML = "";
         if (!filteredRows || filteredRows.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="9" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="10" class="muted" style="text-align:center;padding:12px">No data</td></tr>`;
           renderPagination(0);
           return;
         }
@@ -347,6 +410,7 @@
               <td>${escapeHtml(formatDate(r.lastVisitDate))}</td>
               <td>${escapeHtml(normalizeYesNo(r.separateEarthing))}</td>
               <td>${escapeHtml(r.earthingRemark)}</td>
+              <td>${escapeHtml(r.prevEarthingRemark)}</td>
               <td>${escapeHtml(r.cableMeter)}</td>
             </tr>
           `;
@@ -498,6 +562,7 @@
               r.lastVisitDate,
               r.separateEarthing,
               r.earthingRemark,
+              r.prevEarthingRemark,
               r.cableMeter,
             ].some((v) => v && String(v).toLowerCase().includes(q));
           });
@@ -550,6 +615,7 @@
             "Last Visit Date",
             "Earthing Separate (Yes/No)",
             "Earthing Remark",
+            "Prev Visit Earthing Remark",
             "Cable (m)",
           ],
         ];
@@ -562,6 +628,7 @@
           r.lastVisitDate,
           normalizeYesNo(r.separateEarthing),
           r.earthingRemark,
+          r.prevEarthingRemark,
           r.cableMeter,
         ]);
         const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
