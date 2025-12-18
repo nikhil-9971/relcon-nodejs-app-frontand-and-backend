@@ -2863,6 +2863,122 @@
           alert("❌ Network or server error");
         }
       }
+
+      function enrichFullDataWithPrevEarthing() {
+        if (!Array.isArray(fullData) || fullData.length === 0) return;
+
+        // safe copy reference to mutate fullData items (we want table to show them)
+        // Prepare items with parsed date for sorting
+        const items = fullData.map((p) => {
+          let ts = 0;
+          try {
+            if (p && p.date) {
+              const d = new Date(p.date);
+              if (!isNaN(d)) ts = d.getTime();
+            }
+          } catch (e) {
+            ts = 0;
+          }
+          return { ...p, __ts: ts || 0 };
+        });
+
+        // sort ascending (oldest first) so previous values flow forward
+        items.sort(
+          (a, b) => a.__ts - b.__ts || (a._id || "").localeCompare(b._id || "")
+        );
+
+        const lastByRo = {};
+
+        for (const item of items) {
+          const roCode = item.roCode ? String(item.roCode).trim() : "";
+          if (!roCode) continue;
+
+          // normalize values (treat empty strings as missing)
+          const hasSeparate =
+            item.separateearthingStatus &&
+            String(item.separateearthingStatus).trim() !== "";
+          const hasChecked =
+            item.earthingCheckedby &&
+            String(item.earthingCheckedby).trim() !== "";
+          const hasDetail =
+            item.detailEarthingremark &&
+            String(item.detailEarthingremark).trim() !== "";
+          const hasCable =
+            item.cableRequirmentremark &&
+            String(item.cableRequirmentremark).trim() !== "";
+
+          // if this item contains any earthing info, update lastByRo
+          if (hasSeparate || hasChecked || hasDetail || hasCable) {
+            lastByRo[roCode] = {
+              separateearthingStatus: hasSeparate
+                ? item.separateearthingStatus
+                : lastByRo[roCode]?.separateearthingStatus || "",
+              earthingCheckedby: hasChecked
+                ? item.earthingCheckedby
+                : lastByRo[roCode]?.earthingCheckedby || "",
+              detailEarthingremark: hasDetail
+                ? item.detailEarthingremark
+                : lastByRo[roCode]?.detailEarthingremark || "",
+              cableRequirmentremark: hasCable
+                ? item.cableRequirmentremark
+                : lastByRo[roCode]?.cableRequirmentremark || "",
+              __ts: item.__ts,
+            };
+            // continue — don't prefill the same document with itself
+            continue;
+          }
+
+          // If no earthing info in this item but we have previous values, fill them (if missing)
+          const prev = lastByRo[roCode];
+          if (prev) {
+            const orig = fullData.find((p) => p._id === item._id);
+            if (!orig) continue;
+
+            let filled = false;
+
+            if (
+              (!orig.separateearthingStatus ||
+                String(orig.separateearthingStatus).trim() === "") &&
+              prev.separateearthingStatus
+            ) {
+              orig.separateearthingStatus = prev.separateearthingStatus;
+              filled = true;
+            }
+            if (
+              (!orig.earthingCheckedby ||
+                String(orig.earthingCheckedby).trim() === "") &&
+              prev.earthingCheckedby
+            ) {
+              orig.earthingCheckedby = prev.earthingCheckedby;
+              filled = true;
+            }
+            if (
+              (!orig.detailEarthingremark ||
+                String(orig.detailEarthingremark).trim() === "") &&
+              prev.detailEarthingremark
+            ) {
+              orig.detailEarthingremark = prev.detailEarthingremark;
+              filled = true;
+            }
+            if (
+              (!orig.cableRequirmentremark ||
+                String(orig.cableRequirmentremark).trim() === "") &&
+              prev.cableRequirmentremark
+            ) {
+              orig.cableRequirmentremark = prev.cableRequirmentremark;
+              filled = true;
+            }
+
+            if (filled) {
+              // mark that this record was prefilled so you can show UI hint if wanted
+              orig._prefilledEarthing = true;
+            }
+          }
+        }
+
+        // cleanup temporary ts properties if any (we mutated only fullData items)
+        // (nothing to clean in fullData, because we didn't add __ts there)
+      }
     </script>
   </body>
 </html>
