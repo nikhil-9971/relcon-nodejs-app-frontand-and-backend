@@ -274,41 +274,6 @@
                 class="text-[10px] font-semibold text-red-600"
               ></span>
             </p>
-
-            <!-- Show last earthing fields (these will be copied automatically when submitting) -->
-            <div id="lastEarthingDetails" class="mt-2 text-[11px] hidden">
-              <p>
-                <strong>Separate Earthing (Yes/No):</strong>
-                <span
-                  id="lastSeparateEarthing"
-                  class="text-[10px] font-semibold text-gray-700"
-                ></span>
-              </p>
-              <p>
-                <strong>Checked By:</strong>
-                <span
-                  id="lastEarthingCheckedBy"
-                  class="text-[10px] font-semibold text-gray-700"
-                ></span>
-              </p>
-              <p>
-                <strong>Detail Remark:</strong>
-                <span
-                  id="lastEarthingRemark"
-                  class="text-[10px] font-semibold text-gray-700"
-                ></span>
-              </p>
-              <p>
-                <strong>Earthing Cable Required (mtr):</strong>
-                <span
-                  id="lastCableReq"
-                  class="text-[10px] font-semibold text-gray-700"
-                ></span>
-              </p>
-              <p class="text-[10px] text-gray-500">
-                (These values will be copied into new plan automatically)
-              </p>
-            </div>
           </div>
 
           <div class="flex items-center justify-between mt-4">
@@ -333,6 +298,7 @@
     </div>
 
     <!-- Toast Notification -->
+    <!-- Toast Notification -->
     <div
       id="toast"
       class="fixed top-5 right-5 z-50 hidden p-4 rounded-lg shadow-lg text-white text-sm font-semibold bg-green-600 transition-opacity duration-500 opacity-0"
@@ -346,9 +312,6 @@
       // HPCL Quarter Date Constants
       const HPCL_START_QTR_DATE = "2025-10-01"; // 01-10-2025
       const HPCL_END_QTR_DATE = "2025-12-31"; // 31-12-2025
-
-      // Hold last visit details fetched for current RO (used to auto-fill earthing fields)
-      let lastVisitDetails = null;
 
       async function handleSubmit(event) {
         event.preventDefault();
@@ -370,24 +333,6 @@
           incidentId: document.getElementById("incidentId").value.toUpperCase(),
           purpose: document.getElementById("purpose").value.toUpperCase(),
         };
-
-        // --- AUTO COPY last-earthing fields if available ---
-        // property names used in DB: separateearthingStatus, earthingCheckedby, detailEarthingremark, cableRequirmentremark
-        if (lastVisitDetails) {
-          data.separateearthingStatus =
-            lastVisitDetails.separateearthingStatus || "";
-          data.earthingCheckedby = lastVisitDetails.earthingCheckedby || "";
-          data.detailEarthingremark =
-            lastVisitDetails.detailEarthingremark || "";
-          data.cableRequirmentremark =
-            lastVisitDetails.cableRequirmentremark || "";
-        } else {
-          // default to empty string when no previous visit
-          data.separateearthingStatus = "";
-          data.earthingCheckedby = "";
-          data.detailEarthingremark = "";
-          data.cableRequirmentremark = "";
-        }
 
         // HPCL AMC Validation
         console.log("🚀 Starting HPCL validation...");
@@ -444,9 +389,6 @@
         if (response.ok) {
           showToast("✅ Plan submitted successfully!");
           document.getElementById("formId").reset();
-          // reset lastVisitDetails because new plan created (if user wants to create another RO, they'd re-search)
-          lastVisitDetails = null;
-          document.getElementById("lastVisitBox").classList.add("hidden");
         } else {
           showToast("❌ Error submitting plan.", "bg-red-600");
         }
@@ -527,45 +469,16 @@
           });
           if (lastRes.ok) {
             const lastData = await lastRes.json();
-            // store globally for submit
-            lastVisitDetails = lastData || null;
-
-            if (
-              lastData &&
-              (lastData.lastDate ||
-                lastData.lastPurpose ||
-                lastData.separateearthingStatus ||
-                lastData.detailEarthingremark ||
-                lastData.cableRequirmentremark ||
-                lastData.earthingCheckedby)
-            ) {
+            if (lastData.lastDate || lastData.lastPurpose) {
               document.getElementById("lastVisitDate").textContent =
                 lastData.lastDate || "N/A";
               document.getElementById("lastPurpose").textContent =
                 lastData.lastPurpose || "N/A";
-
-              // Show earthing info (if present)
-              const sep = lastData.separateearthingStatus || "";
-              const checkedBy = lastData.earthingCheckedby || "";
-              const remark = lastData.detailEarthingremark || "";
-              const cable = lastData.cableRequirmentremark || "";
-
-              document.getElementById("lastSeparateEarthing").textContent = sep;
-              document.getElementById("lastEarthingCheckedBy").textContent =
-                checkedBy;
-              document.getElementById("lastEarthingRemark").textContent =
-                remark;
-              document.getElementById("lastCableReq").textContent = cable;
-
-              document
-                .getElementById("lastEarthingDetails")
-                .classList.remove("hidden");
               document
                 .getElementById("lastVisitBox")
                 .classList.remove("hidden");
             } else {
               document.getElementById("lastVisitBox").classList.add("hidden");
-              lastVisitDetails = null;
             }
           }
         } catch (err) {
