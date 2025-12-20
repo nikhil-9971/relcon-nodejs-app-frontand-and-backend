@@ -51,67 +51,27 @@
           transform: translateY(-10px);
         }
       }
-
-      /* ===== TABLE / BORDER IMPROVEMENTS =====
-         - Use border-collapse so cell borders render as a single contiguous border
-         - Use width:100% so table aligns with container and horizontal scrollbar works in wrapper
-         - Use table-layout: fixed for stable column widths; remove nowrap so text can be ellipsed or wrapped
-         - Strong, consistent border color for header and rows
-      */
-      .table-wrapper {
-        border: 1px solid #cbd5e1; /* outer container border */
-        border-radius: 8px;
-        overflow: auto;
-        background: white;
-      }
-
       table {
-        font-size: 12px !important;
-        table-layout: fixed !important;
-        width: 100% !important;
-        border-collapse: collapse !important;
-        min-width: 1000px; /* prevent too narrow columns, keeps layout workable */
+        font-size: 10px !important; /* chhota font */
+        table-layout: auto !important; /* auto-width columns */
+        width: max-content !important; /* content ke according width */
       }
 
       table th,
       table td {
-        white-space: nowrap; /* keep single-line items where possible */
-        text-overflow: ellipsis;
-        overflow: hidden;
+        white-space: nowrap !important; /* wrap band */
+        text-align: center !important; /* ✅ center align */
         vertical-align: middle !important;
-        padding: 8px 10px !important;
-        font-size: 12px !important;
-        border: 1px solid #cbd5e1; /* consistent cell border */
-        background: #ffffff;
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+        border: 1px solid #e8eaed; /* proper cell borders */
       }
-
-      /* Header styling and sticky header fix */
       thead th {
-        background-color: #34bfa3; /* teal-ish header */
-        font-weight: 700;
+        border-bottom: 2px solid #e8eaed;
+        background-color: #5ac3c4;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: #062425;
-        position: sticky;
-        top: 0;
-        z-index: 30;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      }
-
-      /* Make header text centered but data left-aligned for readability */
-      thead th {
-        text-align: center;
-      }
-      tbody td {
-        text-align: left;
-      }
-
-      /* Alternate row shading and clearer row separation */
-      tbody tr:nth-child(even) {
-        background: #fafafa;
-      }
-      tbody tr:hover {
-        background: #f0f9f6;
+        letter-spacing: 0.05em;
       }
 
       #statusModal label {
@@ -129,18 +89,6 @@
       }
       tbody {
         will-change: transform;
-      }
-
-      /* Small screens: allow wrapping and make table easier to scroll */
-      @media (max-width: 900px) {
-        table {
-          min-width: 900px;
-        }
-        table th,
-        table td {
-          padding: 6px !important;
-          font-size: 11px !important;
-        }
       }
     </style>
   </head>
@@ -226,6 +174,16 @@
         />
       </div>
 
+      <!-- <div class="flex justify-between items-center mb-4">
+        <button
+          onclick="exportStyledExcel()"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+        >
+          <i class="fa-solid fa-file-excel mr-2"></i>
+          Export to Excel
+        </button>
+      </div> -->
+
       <div class="relative inline-block text-left mb-4">
         <button
           onclick="toggleExportMenu()"
@@ -254,51 +212,59 @@
       </div>
 
       <div
-        class="table-wrapper max-h-[500px] overflow-y-auto mb-6 will-change-transform"
+        class="overflow-x-auto max-h-[500px] overflow-y-auto border border-gray-300 rounded-lg shadow-sm will-change-transform"
       >
-        <table id="dataTable" class="min-w-full bg-white table-auto">
+        <table
+          id="dataTable"
+          class="min-w-full bg-white border border-gray-300 table-auto"
+        >
           <thead class="sticky top-0 z-10 shadow text-[11px]">
             <tr>
-              <th class="px-1 py-1">ZONE</th>
-              <th class="px-1 py-1">REGION</th>
+              <th class="px-1 py-1">Zone</th>
+              <th class="px-1 py-1">Region</th>
               <th
                 class="px-1 py-1 cursor-pointer"
                 data-key="engineer"
                 onclick="sortTable(this)"
               >
-                ENGINEER
+                Engineer
               </th>
-              <th class="px-1 py-1">PHASE</th>
-              <th class="px-1 py-1">RO CODE</th>
-              <th class="px-1 py-1">RO NAME</th>
-              <th class="px-1 py-1">EMPLOYEE CODE</th>
-              <th class="px-1 py-1">INCIDENT ID</th>
-              <th class="px-1 py-1">PURPOSE</th>
-              <th class="px-1 py-1">DATE</th>
-              <th class="px-1 py-1">ISSUE TYPE</th>
-              <th class="px-1 py-1">AMC QTR</th>
-              <th class="px-1 py-1">COMPLETION STATUS</th>
-              <th class="px-1 py-1">UPDATE STATUS</th>
-              <th class="px-1 py-1" id="atgHeader">UPDATE ATG STATUS</th>
-              <th class="px-1 py-1">ENGG. INTIME</th>
-              <th class="px-1 py-1">ENGG. OUTTIME</th>
-              <th class="px-1 py-1">SUPPORT TAKEN FROM</th>
-              <th class="px-1 py-1">INCIDENT STATUS</th>
-              <th class="px-1 py-1">REASON OF UNRESOLVED</th>
-              <th class="px-1 py-1">REASON OF REACH SITE AFTER 12:00 PM</th>
-              <th class="px-1 py-1">REASON OF LEFT SITE AFTER 06:00 PM</th>
-              <th class="px-1 py-1">SEPARATE EARTHING PROVIDED (Y/N)</th>
-              <th class="px-1 py-1">EARTHING PHOTO CHECKED BY</th>
+              <th class="px-1 py-1">Phase</th>
+              <th class="px-1 py-1">RO Code</th>
+              <th class="px-1 py-1">RO Name</th>
+              <th class="px-1 py-1">Employee Code</th>
+              <th class="px-1 py-1">Incident Id</th>
+              <th class="px-1 py-1">Purpose</th>
+              <th class="px-1 py-1">Date</th>
+              <th class="px-1 py-1">Issue Type</th>
+              <th class="px-1 py-1">AMC Qtr</th>
+              <th class="px-1 py-1">Completion Status</th>
+              <th class="px-1 py-1">Update Status</th>
+              <th class="px-1 py-1" id="atgHeader">Update ATG Status</th>
+              <th class="px-1 py-1">Engg. InTime</th>
+              <th class="px-1 py-1">Engg. OutTime</th>
+              <th class="px-1 py-1">Support Taken From</th>
+              <th class="px-1 py-1">Incident Status</th>
+              <th class="px-1 py-1">Reason of Unresolved</th>
+              <th class="px-1 py-1">Reason of Reach site after 12:00 PM</th>
+              <th class="px-1 py-1">Reason of Left site after 06:00 PM</th>
+              <th class="px-1 py-1">
+                Seperate Earthing Provide Barrier Card (Yes/No)
+              </th>
+              <th class="px-1 py-1">
+                Seperate Earthing for Barrier Photo Checked By
+              </th>
 
-              <th class="px-1 py-1">DETAIL EARTHING REMARK</th>
-              <th class="px-1 py-1">EARTHING CABLE REQ (MTR)</th>
-              <th class="px-1 py-1" id="actionHeader">ACTION</th>
+              <th class="px-1 py-1">Detail Earthing Status Remark</th>
+              <th class="px-1 py-1">Earthing Cable Required in Mtr.</th>
+              <th class="px-1 py-1" id="actionHeader">Action</th>
             </tr>
           </thead>
-          <tbody id="tableBody" class="text-[11px]"></tbody>
+          <tbody id="tableBody" class="text-[10px]"></tbody>
         </table>
 
-        <!-- Pignation add -->
+        <!-- Pignation add
+          -->
         <div
           id="pagination"
           class="flex justify-center mt-4 gap-1 text-sm text-gray-700"
@@ -1164,7 +1130,8 @@
       </div>
     </div>
 
-    <!-- JIO BP Modal -->
+    <!-- JIO BP Status Model -->
+    <!-- ✅ Jio BP Modal Updated with Grid Layout and Icon -->
     <div
       id="jioBPModal"
       class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
