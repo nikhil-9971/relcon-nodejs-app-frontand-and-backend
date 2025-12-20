@@ -840,48 +840,72 @@
 
           // Load AMC Visit Status data
           await loadAMCVisitStatus();
-          // Today Pending (HPCL + RBML) = Today's plans minus submitted statuses from their respective sources
+
+          // -----------------------
+          // KEY CHANGE: Calculate "Status Pending (HPCL + RBML)" for the last 7 days (including today)
+          // -----------------------
+          // helper key
           const key = (rc, d) =>
             `${String(rc || "")
               .trim()
               .toUpperCase()}-${String(d || "").slice(0, 10)}`;
-          const plansTodayHpcl = (plansToday || []).filter((p) =>
+
+          // build date range: last 7 days including today
+          const todayDateObj = new Date();
+          const endDateIso = todayDateObj.toISOString().slice(0, 10); // YYYY-MM-DD
+          const startDateObj = new Date(todayDateObj);
+          startDateObj.setDate(startDateObj.getDate() - 6); // includes today -> 7 days total
+          const startDateIso = startDateObj.toISOString().slice(0, 10);
+
+          // filter plans for last 7 days (exclude NO PLAN)
+          const plansLast7 = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const pd = String(p.date || "").slice(0, 10);
+            if (!pd) return false;
+            if (pd < startDateIso || pd > endDateIso) return false;
+            const purpose = String(p.purpose || "")
+              .trim()
+              .toUpperCase();
+            if (purpose === "NO PLAN" || purpose === "IN LEAVE") return false;
+            return true;
+          });
+
+          // separate HPCL and RBML plans in that 7-day window
+          const plansLast7Hpcl = (plansLast7 || []).filter((p) =>
             String(p.phase || "")
               .toUpperCase()
               .startsWith("HPCL")
           );
-          const plansTodayRbml = (plansToday || []).filter((p) =>
+          const plansLast7Rbml = (plansLast7 || []).filter((p) =>
             String(p.phase || "")
               .toUpperCase()
               .includes("RBML")
           );
 
-          const hpclStatusTodaySet = new Set(
+          // build sets of submitted status keys for hpcl and rbml within the date range
+          const hpclStatusLast7Set = new Set(
             (Array.isArray(hpcl) ? hpcl : [])
+              .filter((r) => {
+                const statusDate = String(r.date || r.uploadDate || "").slice(
+                  0,
+                  10
+                );
+                return statusDate >= startDateIso && statusDate <= endDateIso;
+              })
               .filter((r) =>
                 String(r.phase || "")
                   .toUpperCase()
                   .startsWith("HPCL")
               )
-              .filter(
-                (r) =>
-                  String(r.date || r.uploadDate || "").slice(0, 10) === today
-              )
               .map((r) => key(r.roCode, r.date || r.uploadDate))
           );
-          //  const rbmlStatusTodaySet = new Set(
-          //   (Array.isArray(jio) ? jio : [])
-          //     .filter((r) => String(r.date || "").slice(0, 10) === today)
-          //     .map((r) => key(r.roCode, r.date))
-          // );
 
-          const rbmlStatusTodaySet = new Set(
+          const rbmlStatusLast7Set = new Set(
             (Array.isArray(jio) ? jio : [])
               .filter((r) => {
                 const statusDate = String(
                   r.date || r.uploadDate || r.planId?.date || ""
                 ).slice(0, 10);
-                return statusDate === today;
+                return statusDate >= startDateIso && statusDate <= endDateIso;
               })
               .map((r) => {
                 const ro = (
@@ -900,19 +924,66 @@
               })
           );
 
-          const pendingTodayHpcl = plansTodayHpcl.filter(
-            (p) => !hpclStatusTodaySet.has(key(p.roCode, p.date))
+          const pendingLast7Hpcl = plansLast7Hpcl.filter(
+            (p) => !hpclStatusLast7Set.has(key(p.roCode, p.date))
           ).length;
 
-          const pendingTodayRbml = plansTodayRbml.filter(
-            (p) => !rbmlStatusTodaySet.has(key(p.roCode, p.date))
+          const pendingLast7Rbml = plansLast7Rbml.filter(
+            (p) => !rbmlStatusLast7Set.has(key(p.roCode, p.date))
           ).length;
+
+          const pendingLast7Total = pendingLast7Hpcl + pendingLast7Rbml;
+
+          // update the KPI card with the 7-day totals and a breakdown
           document.getElementById("kpiPendingToday").textContent =
-            pendingTodayHpcl + pendingTodayRbml;
+            pendingLast7Total;
           document.getElementById(
             "kpiPendingBreakdown"
-          ).textContent = `HPCL: ${pendingTodayHpcl} • RBML: ${pendingTodayRbml}`;
+          ).textContent = `HPCL: ${pendingLast7Hpcl} • RBML: ${pendingLast7Rbml} (Last 7 days ${startDateIso} → ${endDateIso})`;
 
+          // -----------------------
+          // Update exportPending to export the last-7-days pending list
+          // -----------------------
+          const pendingRows = [
+            ...plansLast7Hpcl
+              .filter(
+                (p) =>
+                  !hpclStatusLast7Set.has(
+                    `${String(p.roCode || "")
+                      .trim()
+                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`
+                  )
+              )
+              .map((p) => ({
+                customer: "HPCL",
+                date: String(p.date || "").slice(0, 10),
+                roCode: p.roCode || "",
+                roName: p.roName || "",
+                region: p.region || "",
+                engineer: p.engineer || "",
+              })),
+            ...plansLast7Rbml
+              .filter(
+                (p) =>
+                  !rbmlStatusLast7Set.has(
+                    `${String(p.roCode || "")
+                      .trim()
+                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`
+                  )
+              )
+              .map((p) => ({
+                customer: "RBML",
+                date: String(p.date || "").slice(0, 10),
+                roCode: p.roCode || "",
+                roName: p.roName || "",
+                region: p.region || "",
+                engineer: p.engineer || "",
+              })),
+          ];
+
+          // -----------------------
+          // continue with rest of KPIs unchanged
+          // -----------------------
           document.getElementById("kpiActiveUsers").textContent =
             activeUsernames.size;
           document.getElementById("kpiHold").textContent = holdToday.length;
@@ -1027,41 +1098,6 @@
             roName: p.roName || "",
             purpose: p.purpose || "",
           }));
-          const pendingRows = [
-            ...plansTodayHpcl
-              .filter(
-                (p) =>
-                  !hpclStatusTodaySet.has(
-                    `${String(p.roCode || "")
-                      .trim()
-                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`
-                  )
-              )
-              .map((p) => ({
-                customer: "HPCL",
-                date: String(p.date || "").slice(0, 10),
-                roCode: p.roCode || "",
-                roName: p.roName || "",
-                region: p.region || "",
-                engineer: p.engineer || "",
-              })),
-            ...plansTodayRbml
-              .filter(
-                (p) =>
-                  !rbmlStatusTodaySet.has(
-                    `${String(p.roCode || "")
-                      .trim()
-                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`
-                  )
-              )
-              .map((p) => ({
-                customer: "RBML",
-                date: String(p.date || "").slice(0, 10),
-                roCode: p.roCode || "",
-                roName: p.roName || "",
-                region: p.region || "",
-              })),
-          ];
 
           // Wire export buttons
           const byId = (id) => document.getElementById(id);
@@ -1118,11 +1154,13 @@
               "hold_engineers_today.csv"
             )
           );
+
+          // Export pending now uses last-7-days pendingRows computed above
           byId("exportPending")?.addEventListener("click", () =>
             exportCSV(
               pendingRows,
               ["customer", "date", "roCode", "roName", "region", "engineer"],
-              "status_pending.csv"
+              `status_pending_last7_${startDateIso}_to_${endDateIso}.csv`
             )
           );
 
@@ -1451,9 +1489,7 @@
         if (!body) return;
         const data = (plans || []).filter((p) => {
           if (ymKey(p.date) !== ym) return false;
-          const purposeUpper = String(p.issueType || p.purpose || "")
-            .trim()
-            .toUpperCase();
+          const purposeUpper = normalizeText(p.issueType || p.purpose);
           // Exclude NO PLAN only; keep IN LEAVE so it can be counted
           if (purposeUpper === "NO PLAN") return false;
           return true;
