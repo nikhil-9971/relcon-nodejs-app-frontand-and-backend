@@ -369,7 +369,7 @@ async function sendPendingStatusEmail({ forDateISO } = {}) {
 
 // Schedule: run daily at 14:30 server local time
 // Cron expression below: "30 14 * * *" -> At 14:30 every day (server local timezone)
-cron.schedule("35 14 * * *", () => {
+cron.schedule("40 14 * * *", () => {
   console.log(
     "🔔 Running scheduled pending-status mail job:",
     new Date().toLocaleString()
