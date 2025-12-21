@@ -2,7 +2,7 @@
  * mailer.js
  * - Only sends daily "Pending Status (HPCL + RBML)" CSV to configured recipient via Gmail SMTP.
  * - Uses app-login to backend to fetch plans/status and compute pending records for YESTERDAY (default).
- * - Uses node-cron to run daily at 08:00 server local time (adjust cron if needed).
+ * - Uses node-cron to run daily at 14:30 server local time (adjust cron if needed).
  *
  * Notes:
  * - This version uses nodemailer + Gmail SMTP (no SendGrid).
@@ -367,8 +367,9 @@ async function sendPendingStatusEmail({ forDateISO } = {}) {
   }
 }
 
-// Schedule: run daily at 08:00 server local time
-cron.schedule("0 8 * * *", () => {
+// Schedule: run daily at 14:30 server local time
+// Cron expression below: "30 14 * * *" -> At 14:30 every day (server local timezone)
+cron.schedule("30 14 * * *", () => {
   console.log(
     "🔔 Running scheduled pending-status mail job:",
     new Date().toLocaleString()
