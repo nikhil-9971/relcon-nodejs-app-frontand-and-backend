@@ -1,12 +1,11 @@
 /**
  * mailer.js
- * - Only sends daily "Pending Status (HPCL + RBML)" CSV to configured recipient via Gmail SMTP.
+ * - Only sends daily "Pending Status (HPCL + RBML)" CSV to configured recipient via SMTP.
  * - Uses app-login to backend to fetch plans/status and compute pending records for YESTERDAY (default).
- * - Uses node-cron to run daily at 14:30 server local time (adjust cron if needed).
+ * - Scheduled to run at 14:30 IST using timezone-aware scheduling (Asia/Kolkata).
  *
  * Notes:
- * - This version uses nodemailer + Gmail SMTP (no SendGrid).
- * - Ensure you set SMTP_USER to your Gmail address and SMTP_PASS to an App Password (Gmail 2FA).
+ * - Uses node-cron with timezone option so it runs at 14:30 IST regardless of server timezone (even if server is UTC).
  * - Do NOT commit real .env secrets to repo.
  */
 require("dotenv").config();
@@ -49,7 +48,7 @@ if (
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // true for 465, false for other ports (587)
+  secure: Number(SMTP_PORT) === 465,
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS,
@@ -367,17 +366,24 @@ async function sendPendingStatusEmail({ forDateISO } = {}) {
   }
 }
 
-// Schedule: run daily at 14:30 server local time
-// Cron expression below: "30 14 * * *" -> At 14:30 every day (server local timezone)
-cron.schedule("40 14 * * *", () => {
-  console.log(
-    "🔔 Running scheduled pending-status mail job:",
-    new Date().toLocaleString()
-  );
-  sendPendingStatusEmail().catch((e) =>
-    console.error("Scheduled job error:", e)
-  );
-});
+// --------------------------------------
+// TIMEZONE-AWARE SCHEDULING
+// Run daily at 14:30 IST (Asia/Kolkata). node-cron will convert this to server timezone internally.
+cron.schedule(
+  "50 14 * * *",
+  () => {
+    console.log(
+      "🔔 Running scheduled pending-status mail job (14:30 IST):",
+      new Date().toLocaleString()
+    );
+    sendPendingStatusEmail().catch((e) =>
+      console.error("Scheduled job error:", e)
+    );
+  },
+  {
+    timezone: "Asia/Kolkata",
+  }
+);
 
 // Manual run support
 if (require.main === module) {
