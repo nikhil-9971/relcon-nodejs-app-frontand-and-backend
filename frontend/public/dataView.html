@@ -1282,6 +1282,104 @@
       </div>
     </div>
 
+    <!-- ✅ BPCL Status Modal -->
+    <div
+      id="bpclModal"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white max-h-[90vh] overflow-y-auto rounded shadow-lg w-full max-w-2xl p-6 relative text-[11px]"
+      >
+        <!-- Logo -->
+        <div class="flex items-center justify-center mb-4">
+          <img src="./assets/BPCL.png" alt="BPCL Logo" class="h-10 w-auto" />
+        </div>
+
+        <h2 class="text-xl font-bold mb-4 text-center text-gray-800">
+          Add BPCL Visit Status
+        </h2>
+
+        <input type="hidden" id="bpclPlanId" />
+
+        <form id="bpclForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 🔹 CLASS 1 -->
+          <div>
+            <label class="font-semibold">
+              Total IOT Class-1 Device Installed (Count)
+            </label>
+            <input
+              type="number"
+              id="class1Count"
+              min="0"
+              class="w-full p-2 mt-1 border rounded"
+              onchange="renderClass1Devices()"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Class-1 Device Details</label>
+            <div id="class1DevicesContainer" class="space-y-1 mt-1"></div>
+          </div>
+
+          <!-- 🔹 CLASS 2 -->
+          <div>
+            <label class="font-semibold">
+              Total IOT Class-2 Device Installed (Count)
+            </label>
+            <input
+              type="number"
+              id="class2Count"
+              min="0"
+              class="w-full p-2 mt-1 border rounded"
+              onchange="renderClass2Devices()"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Class-2 Device Details</label>
+            <div id="class2DevicesContainer" class="space-y-1 mt-1"></div>
+          </div>
+
+          <!-- 🔹 SIM DETAILS -->
+          <div>
+            <label class="font-semibold">JIO SIM Number</label>
+            <input
+              type="text"
+              id="bpclJioSim"
+              class="w-full p-2 mt-1 border rounded"
+              placeholder="JIO SIM Number"
+            />
+          </div>
+
+          <div>
+            <label class="font-semibold">Airtel SIM Number</label>
+            <input
+              type="text"
+              id="bpclAirtelSim"
+              class="w-full p-2 mt-1 border rounded"
+              placeholder="Airtel SIM Number"
+            />
+          </div>
+        </form>
+
+        <!-- Buttons -->
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            onclick="closeBPCLModal()"
+            class="bg-gray-300 px-4 py-2 rounded shadow"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveBPCLStatus()"
+            class="bg-green-600 text-white px-4 py-2 rounded shadow"
+          >
+            💾 Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div
       id="toast"
@@ -2862,6 +2960,74 @@
           console.error("Save Error:", err);
           alert("❌ Network or server error");
         }
+      }
+
+      /* BPCL LOGIC */
+      function renderClass1Devices() {
+        const count = Number(document.getElementById("class1Count").value);
+        const container = document.getElementById("class1DevicesContainer");
+        container.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+          container.innerHTML += `
+        <input
+          type="text"
+          class="class1Device w-full p-2 border rounded"
+          placeholder="Class-1 Device ${i + 1}"
+        />
+      `;
+        }
+      }
+
+      function renderClass2Devices() {
+        const count = Number(document.getElementById("class2Count").value);
+        const container = document.getElementById("class2DevicesContainer");
+        container.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+          container.innerHTML += `
+        <input
+          type="text"
+          class="class2Device w-full p-2 border rounded"
+          placeholder="Class-2 Device ${i + 1}"
+        />
+      `;
+        }
+      }
+
+      function closeBPCLModal() {
+        document.getElementById("bpclModal").classList.add("hidden");
+      }
+
+      async function saveBPCLStatus() {
+        const payload = {
+          planId: document.getElementById("bpclPlanId").value,
+
+          class1DeviceCount: Number(class1Count.value),
+          class1Devices: [...document.querySelectorAll(".class1Device")].map(
+            (i) => i.value
+          ),
+
+          class2DeviceCount: Number(class2Count.value),
+          class2Devices: [...document.querySelectorAll(".class2Device")].map(
+            (i) => i.value
+          ),
+
+          jioSimNumber: bpclJioSim.value,
+          airtelSimNumber: bpclAirtelSim.value,
+        };
+
+        await fetch(`${baseUrl}/saveBPCLStatus`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        alert("✅ BPCL Status Saved");
+        closeBPCLModal();
       }
     </script>
   </body>
