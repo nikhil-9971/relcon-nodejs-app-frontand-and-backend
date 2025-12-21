@@ -1282,104 +1282,6 @@
       </div>
     </div>
 
-    <!-- ✅ BPCL Status Modal -->
-    <div
-      id="bpclModal"
-      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50"
-    >
-      <div
-        class="bg-white max-h-[90vh] overflow-y-auto rounded shadow-lg w-full max-w-2xl p-6 relative text-[11px]"
-      >
-        <!-- Logo -->
-        <div class="flex items-center justify-center mb-4">
-          <img src="./assets/BPCL.png" alt="BPCL Logo" class="h-10 w-auto" />
-        </div>
-
-        <h2 class="text-xl font-bold mb-4 text-center text-gray-800">
-          Add BPCL Visit Status
-        </h2>
-
-        <input type="hidden" id="bpclPlanId" />
-
-        <form id="bpclForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- 🔹 CLASS 1 -->
-          <div>
-            <label class="font-semibold">
-              Total IOT Class-1 Device Installed (Count)
-            </label>
-            <input
-              type="number"
-              id="class1Count"
-              min="0"
-              class="w-full p-2 mt-1 border rounded"
-              onchange="renderClass1Devices()"
-            />
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="font-semibold">Class-1 Device Details</label>
-            <div id="class1DevicesContainer" class="space-y-1 mt-1"></div>
-          </div>
-
-          <!-- 🔹 CLASS 2 -->
-          <div>
-            <label class="font-semibold">
-              Total IOT Class-2 Device Installed (Count)
-            </label>
-            <input
-              type="number"
-              id="class2Count"
-              min="0"
-              class="w-full p-2 mt-1 border rounded"
-              onchange="renderClass2Devices()"
-            />
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="font-semibold">Class-2 Device Details</label>
-            <div id="class2DevicesContainer" class="space-y-1 mt-1"></div>
-          </div>
-
-          <!-- 🔹 SIM DETAILS -->
-          <div>
-            <label class="font-semibold">JIO SIM Number</label>
-            <input
-              type="text"
-              id="bpclJioSim"
-              class="w-full p-2 mt-1 border rounded"
-              placeholder="JIO SIM Number"
-            />
-          </div>
-
-          <div>
-            <label class="font-semibold">Airtel SIM Number</label>
-            <input
-              type="text"
-              id="bpclAirtelSim"
-              class="w-full p-2 mt-1 border rounded"
-              placeholder="Airtel SIM Number"
-            />
-          </div>
-        </form>
-
-        <!-- Buttons -->
-        <div class="flex justify-end gap-3 mt-6">
-          <button
-            onclick="closeBPCLModal()"
-            class="bg-gray-300 px-4 py-2 rounded shadow"
-          >
-            Cancel
-          </button>
-          <button
-            onclick="saveBPCLStatus()"
-            class="bg-green-600 text-white px-4 py-2 rounded shadow"
-          >
-            💾 Save
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Toast Container -->
     <div
       id="toast"
@@ -1571,78 +1473,27 @@
         menu.classList.toggle("hidden");
       }
 
-      async function hasStatus(planId, type) {
-        let url = "";
-
-        if (type === "HPCL") url = `/getStatusByPlan/${planId}`;
-        if (type === "JIOBP") url = `/getJioBPStatusByPlan/${planId}`;
-        if (type === "BPCL") url = `/getBPCLStatusByPlan/${planId}`;
-
-        try {
-          const res = await fetch(baseUrl + url, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-          return res.status === 200;
-        } catch {
-          return false;
-        }
-      }
-
       const debouncedSearch = debounce(applySearch, 300);
 
-      async function populateTable(data) {
+      function populateTable(data) {
         const tbody = document.getElementById("tableBody");
         tbody.innerHTML = "";
 
-        for (const [index, plan] of data.entries()) {
+        data.forEach((plan, index) => {
           const row = document.createElement("tr");
           row.className = index % 2 === 0 ? "bg-white" : "bg-gray-50";
 
           let statusBtn = "";
 
-          // 🔹 HPCL
-          if (plan.phase && plan.phase.includes("HPCL/")) {
-            const exists = await hasStatus(plan._id, "HPCL");
-
-            statusBtn = exists
-              ? `<button onclick="downloadPDF('${plan._id}')"
-                  class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-circle-down"></i> Status
-                </button>`
-              : `<button onclick="openStatusModal('${plan._id}')"
-                  class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-plus"></i> HPCL
-                </button>`;
-
-            // 🔹 JIO BP
-          } else if (plan.phase && plan.phase.includes("RBML")) {
-            const exists = await hasStatus(plan._id, "JIOBP");
-
-            statusBtn = exists
-              ? `<button onclick="downloadPDF('${plan._id}')"
-                  class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-circle-down"></i> Status
-                </button>`
-              : `<button onclick="openJioBPModal('${plan._id}')"
-                  class="bg-green-600 hover:bg-green-500 text-yellow-400 px-2 py-1 rounded">
-                  <i class="fa-solid fa-plus"></i> JioBP
-                </button>`;
-
-            // 🔹 BPCL
-          } else if (plan.phase && plan.phase.includes("BPCL/")) {
-            const exists = await hasStatus(plan._id, "BPCL");
-
-            statusBtn = exists
-              ? `<button onclick="downloadPDF('${plan._id}')"
-                  class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-circle-down"></i> Status
-                </button>`
-              : `<button onclick="openBPCLModal('${plan._id}')"
-                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-plus"></i> BPCL
-                </button>`;
+          if (plan.statusSaved || plan.jioBPStatusSaved) {
+            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
+          } else if (plan.phase && plan.phase.includes("HPCL/")) {
+            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> HPCL</button>`;
+          } else if (
+            (plan.phase && plan.phase.includes("RBML")) ||
+            plan.jioBPStatusSaved
+          ) {
+            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-600 hover:bg-green-500 text-yellow-400 px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
           } else {
             statusBtn = `<span class="text-gray-400">Not required</span>`;
           }
@@ -1674,115 +1525,99 @@
 
             checkATGStatus(plan._id).then((exists) => {
               const btnHtml = `
-                                   <button onclick="handleATGButtonClick('${
-                                     plan._id
-                                   }', ${exists ? "true" : "false"})"
+                       <button onclick="handleATGButtonClick('${plan._id}', ${
+                exists ? "true" : "false"
+              })"
 
-                              class="text-white px-2 py-1 rounded text-[10px] ${
-                                exists
-                                  ? "bg-green-500 cursor-not-allowed"
-                                  : "bg-orange-500 hover:bg-orange-600"
-                              }"
-                              ${exists ? "disabled" : ""}>
-                              ${exists ? "✅ Added" : "➕ Add ATG Status"}
-                            </button>`;
+                  class="text-white px-2 py-1 rounded text-[10px] ${
+                    exists
+                      ? "bg-green-500 cursor-not-allowed"
+                      : "bg-orange-500 hover:bg-orange-600"
+                  }"
+                  ${exists ? "disabled" : ""}>
+                  ${exists ? "✅ Added" : "➕ Add ATG Status"}
+                </button>`;
 
               const cell = row.querySelector(".atg-status-cell");
               if (cell) cell.innerHTML = btnHtml;
             });
           }
           row.innerHTML = `
-                    <td class="border px-1 py-1">${plan.zone}</td>
-                    <td class="border px-1 py-1">${plan.region}</td>
-                    <td class="border px-1 py-1">${plan.engineer}</td>
-                    <td class="border px-1 py-1">${plan.phase}</td>
-                    <td class="border px-1 py-1">${plan.roCode}</td>
-                    <td class="border px-1 py-1">${plan.roName}</td>
-                    <td class="border px-1 py-1">${plan.empId}</td>
-                    <td class="border px-1 py-1">${plan.incidentId}</td>
-                    <td class="border px-1 py-1">${plan.purpose}</td>
-                    <td class="border px-1 py-1">${plan.date}</td>
-                    <td class="border px-1 py-1">${plan.issueType}</td>
-                    <td class="border px-1 py-1">${plan.amcQtr}</td>
-                    <td class="border px-1 py-1">
-                      ${
-                        loggedInUser.role === "admin"
-                          ? `<span class="text-blue-500 cursor-pointer" onclick="openCompletionModal('${
-                              plan._id
-                            }', \`${plan.completionStatus || ""}\`)">
-                               ${
-                                 plan.completionStatus
-                                   ? plan.completionStatus
-                                   : "➕ Click to Add"
-                               }
-                             </span>`
-                          : plan.completionStatus || "-"
-                      }
-                    </td>
+        <td class="border px-1 py-1">${plan.zone}</td>
+        <td class="border px-1 py-1">${plan.region}</td>
+        <td class="border px-1 py-1">${plan.engineer}</td>
+        <td class="border px-1 py-1">${plan.phase}</td>
+        <td class="border px-1 py-1">${plan.roCode}</td>
+        <td class="border px-1 py-1">${plan.roName}</td>
+        <td class="border px-1 py-1">${plan.empId}</td>
+        <td class="border px-1 py-1">${plan.incidentId}</td>
+        <td class="border px-1 py-1">${plan.purpose}</td>
+        <td class="border px-1 py-1">${plan.date}</td>
+        <td class="border px-1 py-1">${plan.issueType}</td>
+        <td class="border px-1 py-1">${plan.amcQtr}</td>
+        <td class="border px-1 py-1">
+          ${
+            loggedInUser.role === "admin"
+              ? `<span class="text-blue-500 cursor-pointer" onclick="openCompletionModal('${
+                  plan._id
+                }', \`${plan.completionStatus || ""}\`)">
+                   ${
+                     plan.completionStatus
+                       ? plan.completionStatus
+                       : "➕ Click to Add"
+                   }
+                 </span>`
+              : plan.completionStatus || "-"
+          }
+        </td>
 
-                    <!-- ✅ STATUS COLUMN is visible to all -->
-                    <td class="border px-1 py-1 text-center">${statusBtn}</td>
+        <!-- ✅ STATUS COLUMN is visible to all -->
+        <td class="border px-1 py-1 text-center">${statusBtn}</td>
 
-                    <!-- ❌ ATG COLUMN: admin only -->
-                    ${
-                      loggedInUser.role === "admin"
-                        ? `
-                      <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
-                    `
-                        : ""
-                    }
+        <!-- ❌ ATG COLUMN: admin only -->
+        ${
+          loggedInUser.role === "admin"
+            ? `
+          <td class="border px-1 py-1 text-center atg-status-cell">${atgStatusBtn}</td>
+        `
+            : ""
+        }
 
-                    <td class="border px-1 py-1">${plan.arrivalTime || "-"}</td>
-                    <td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
-                    <td class="border px-1 py-1">${
-                      plan.supportTakenFrom || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${
-                      plan.incidentStatus || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
-                    <td class="border px-1 py-1">${
-                      plan.reasonAfter12PM || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${
-                      plan.reasonAfter6PM || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${
-                      plan.separateearthingStatus || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${
-                      plan.earthingCheckedby || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${
-                      plan.detailEarthingremark || "-"
-                    }</td>
-                    <td class="border px-1 py-1">${
-                      plan.cableRequirmentremark || "-"
-                    }</td>
+        <td class="border px-1 py-1">${plan.arrivalTime || "-"}</td>
+        <td class="border px-1 py-1">${plan.leaveTime || "-"}</td>
+        <td class="border px-1 py-1">${plan.supportTakenFrom || "-"}</td>
+        <td class="border px-1 py-1">${plan.incidentStatus || "-"}</td>
+        <td class="border px-1 py-1">${plan.whatDone || "-"}</td>
+        <td class="border px-1 py-1">${plan.reasonAfter12PM || "-"}</td>
+        <td class="border px-1 py-1">${plan.reasonAfter6PM || "-"}</td>
+        <td class="border px-1 py-1">${plan.separateearthingStatus || "-"}</td>
+        <td class="border px-1 py-1">${plan.earthingCheckedby || "-"}</td>
+        <td class="border px-1 py-1">${plan.detailEarthingremark || "-"}</td>
+        <td class="border px-1 py-1">${plan.cableRequirmentremark || "-"}</td>
 
-                    <!-- ❌ ACTION COLUMN: admin only -->
-                    ${
-                      loggedInUser.role === "admin"
-                        ? `
-                      <td class="border px-2 py-1 text-center space-x-1">
-                        <button onclick='openEditModal(${JSON.stringify(plan)})'
-                                class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1"
-                                title="Edit">
-                          Edit
-                        </button>
-                        <button onclick='confirmDelete("${plan._id}")'
-                                class="px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2"
-                                title="Delete">
-                          Delete
-                        </button>
-                      </td>
-                    `
-                        : ""
-                    }
-                  `;
+        <!-- ❌ ACTION COLUMN: admin only -->
+        ${
+          loggedInUser.role === "admin"
+            ? `
+          <td class="border px-2 py-1 text-center space-x-1">
+            <button onclick='openEditModal(${JSON.stringify(plan)})'
+                    class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1"
+                    title="Edit">
+              Edit
+            </button>
+            <button onclick='confirmDelete("${plan._id}")'
+                    class="px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2"
+                    title="Delete">
+              Delete
+            </button>
+          </td>
+        `
+            : ""
+        }
+      `;
 
           tbody.appendChild(row);
-        }
+        });
       }
 
       //Editied option
@@ -2569,7 +2404,6 @@
 
           const token = localStorage.getItem("token");
 
-          // 🔹 Fetch Plan
           const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -2577,7 +2411,6 @@
 
           const plan = await resPlan.json();
 
-          // 🔹 Helper to load logo
           const loadLogo = async (url) => {
             const res = await fetch(url);
             const blob = await res.blob();
@@ -2589,38 +2422,24 @@
           };
 
           let status = null;
-          let reportType = "";
-          let logoPath = "";
-
-          // 🔹 Detect report type (NO FLAGS)
-          if (plan.phase && plan.phase.includes("RBML")) {
-            reportType = "JIOBP";
-            logoPath = "./assets/JioBP.png";
-          } else if (plan.phase && plan.phase.includes("BPCL/")) {
-            reportType = "BPCL";
-            logoPath = "./assets/BPCL.png";
-          } else {
-            reportType = "HPCL";
-            logoPath = "./assets/HPCL.png";
-          }
-
-          // 🔹 Add Logo
+          let isJioBP = !!plan.jioBPStatusSaved;
+          const logoPath = isJioBP ? "./assets/JioBP.png" : "./assets/HPCL.png";
           const logo = await loadLogo(logoPath);
           doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
 
-          // 🔹 Title
           doc.setFont("helvetica", "bold");
           doc.setFontSize(14);
           doc.text(
-            `${reportType === "JIOBP" ? "Jio BP" : reportType} Visit Report`,
+            isJioBP ? "Jio BP Visit Report" : "HPCL Visit Report",
             pageWidth / 2,
             35,
             { align: "center" }
           );
 
+          doc.setDrawColor(0);
+          doc.setLineWidth(0.5);
           doc.line(15, 43, pageWidth - 15, 43);
 
-          // 🔹 Common Visit Details
           const visitRows = [
             ["Engineer", cleanText(plan.engineer)],
             ["Zone", cleanText(plan.zone)],
@@ -2633,23 +2452,16 @@
             ["Purpose", cleanText(plan.purpose)],
           ];
 
-          // 🔹 Fetch Status as per type
-          let statusUrl = "";
-          if (reportType === "JIOBP")
-            statusUrl = `/jioBP/getJioBPStatusByPlan/${planId}`;
-          if (reportType === "BPCL")
-            statusUrl = `/getBPCLStatusByPlan/${planId}`;
-          if (reportType === "HPCL") statusUrl = `/getStatusByPlan/${planId}`;
+          if (isJioBP) {
+            const resStatus = await fetch(
+              `${baseUrl}/jioBP/getJioBPStatusByPlan/${planId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            if (!resStatus.ok) return alert("❌ Failed to fetch JioBP status");
+            status = await resStatus.json();
 
-          const resStatus = await fetch(baseUrl + statusUrl, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!resStatus.ok) return alert("❌ Failed to fetch status");
-
-          status = await resStatus.json();
-
-          // 🔹 Append status fields
-          if (reportType === "JIOBP") {
             visitRows.push(
               ["HPSM ID", cleanText(status.hpsdId)],
               ["Diagnosis", cleanText(status.diagnosis)],
@@ -2665,25 +2477,27 @@
               ],
               ["Spare Requirement", cleanText(status.spareRequired)],
               ["Observation (Hours)", cleanText(status.observationHours)],
-              ["Material Requirement", cleanText(status.materialRequirement)],
-              ["Relcon Support", cleanText(status.relconsupport)],
-              ["RBML Person Informed", cleanText(status.rbmlperson)],
+              [
+                "Material Requirement Name",
+                cleanText(status.materialRequirement),
+              ],
+              [
+                "Support Taken from Relcon Person",
+                cleanText(status.relconsupport),
+              ],
+              ["Inform to RBML Person", cleanText(status.rbmlperson)],
               ["Status", cleanText(status.status)]
             );
-          }
-
-          if (reportType === "BPCL") {
-            visitRows.push(
-              ["Class-1 Device Count", status.class1DeviceCount],
-              ["Class-1 Devices", (status.class1Devices || []).join(", ")],
-              ["Class-2 Device Count", status.class2DeviceCount],
-              ["Class-2 Devices", (status.class2Devices || []).join(", ")],
-              ["JIO SIM Number", cleanText(status.jioSimNumber)],
-              ["Airtel SIM Number", cleanText(status.airtelSimNumber)]
+          } else {
+            const resStatus = await fetch(
+              `${baseUrl}/getStatusByPlan/${planId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
             );
-          }
+            if (!resStatus.ok) return alert("❌ Failed to fetch HPCL status");
+            status = await resStatus.json();
 
-          if (reportType === "HPCL") {
             visitRows.push(
               ["Probe Make", cleanText(status.probeMake)],
               ["Product & Probe Size", cleanText(status.probeSize)],
@@ -2730,37 +2544,55 @@
             );
           }
 
-          // 🔹 Table
           doc.autoTable({
             startY: 48,
             head: [["Field", "Value"]],
             body: visitRows,
-            styles: { fontSize: 9, cellPadding: 3 },
+            styles: {
+              fontSize: 9,
+              cellPadding: 3,
+              cellWidth: "wrap",
+              overflow: "linebreak",
+              valign: "middle",
+              halign: "left",
+            },
             columnStyles: {
               0: { fontStyle: "bold", cellWidth: 60 },
               1: { cellWidth: 200 },
             },
-            headStyles: { fillColor: [22, 163, 74], textColor: 255 },
+            headStyles: {
+              fillColor: [22, 163, 74],
+              textColor: 255,
+              fontSize: 10,
+            },
+            alternateRowStyles: {
+              fillColor: [245, 245, 245],
+            },
             theme: "grid",
           });
 
-          // 🔹 Footer
+          // Footer
           const username = loggedInUser?.engineerName || "Unknown User";
           const now = new Date();
-          const footerText = `Generated by ${username} on ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-
+          const footerText = `Generated by: ${username} on ${now.toLocaleDateString()} at ${now.toLocaleTimeString(
+            [],
+            { hour: "2-digit", minute: "2-digit" }
+          )}`;
           const pageCount = doc.internal.getNumberOfPages();
           for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
             doc.setFontSize(8);
+            doc.setTextColor(150);
             doc.text(`Page ${i} of ${pageCount}`, pageWidth - 15, 200, {
               align: "right",
             });
             doc.text(footerText, 15, 200);
           }
 
-          // 🔹 Save
-          doc.save(`${reportType}_Report_${plan.roCode}_${plan.date}.pdf`);
+          const fileName = `${isJioBP ? "JioBP" : "HPCL"}_Report_${
+            plan.roCode
+          }_${plan.date}.pdf`;
+          doc.save(fileName);
         } catch (err) {
           console.error("❌ PDF Generation Error:", err);
           alert("❌ Error generating PDF");
@@ -3030,131 +2862,6 @@
           console.error("Save Error:", err);
           alert("❌ Network or server error");
         }
-      }
-
-      /* BPCL LOGIC */
-      function renderClass1Devices() {
-        const count = Number(document.getElementById("class1Count").value);
-        const container = document.getElementById("class1DevicesContainer");
-        container.innerHTML = "";
-
-        for (let i = 0; i < count; i++) {
-          container.innerHTML += `
-                    <input
-                      type="text"
-                      class="class1Device w-full p-2 border rounded"
-                      placeholder="Class-1 Device ${i + 1}"
-                    />
-                  `;
-        }
-      }
-
-      function renderClass2Devices() {
-        const count = Number(document.getElementById("class2Count").value);
-        const container = document.getElementById("class2DevicesContainer");
-        container.innerHTML = "";
-
-        for (let i = 0; i < count; i++) {
-          container.innerHTML += `
-                    <input
-                      type="text"
-                      class="class2Device w-full p-2 border rounded"
-                      placeholder="Class-2 Device ${i + 1}"
-                    />
-                  `;
-        }
-      }
-
-      function closeBPCLModal() {
-        document.getElementById("bpclModal").classList.add("hidden");
-      }
-
-      async function saveBPCLStatus() {
-        const payload = {
-          planId: document.getElementById("bpclPlanId").value,
-
-          class1DeviceCount: Number(class1Count.value),
-          class1Devices: [...document.querySelectorAll(".class1Device")].map(
-            (i) => i.value
-          ),
-
-          class2DeviceCount: Number(class2Count.value),
-          class2Devices: [...document.querySelectorAll(".class2Device")].map(
-            (i) => i.value
-          ),
-
-          jioSimNumber: bpclJioSim.value,
-          airtelSimNumber: bpclAirtelSim.value,
-        };
-
-        await fetch(`${baseUrl}/saveBPCLStatus`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        alert("✅ BPCL Status Saved");
-        closeBPCLModal();
-      }
-
-      async function openBPCLModal(planId) {
-        // 🔹 Set planId
-        document.getElementById("bpclPlanId").value = planId;
-
-        // 🔹 Reset form
-        document.getElementById("bpclForm").reset();
-        document.getElementById("class1DevicesContainer").innerHTML = "";
-        document.getElementById("class2DevicesContainer").innerHTML = "";
-
-        try {
-          // 🔍 Check if BPCL status already exists
-          const res = await fetch(`${baseUrl}/getBPCLStatusByPlan/${planId}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-
-          if (res.status === 200) {
-            const data = await res.json();
-
-            // 🔹 Fill counts
-            document.getElementById("class1Count").value =
-              data.class1DeviceCount || 0;
-            document.getElementById("class2Count").value =
-              data.class2DeviceCount || 0;
-
-            // 🔹 Render dynamic fields
-            renderClass1Devices();
-            renderClass2Devices();
-
-            // 🔹 Fill device details
-            if (Array.isArray(data.class1Devices)) {
-              document.querySelectorAll(".class1Device").forEach((el, i) => {
-                el.value = data.class1Devices[i] || "";
-              });
-            }
-
-            if (Array.isArray(data.class2Devices)) {
-              document.querySelectorAll(".class2Device").forEach((el, i) => {
-                el.value = data.class2Devices[i] || "";
-              });
-            }
-
-            // 🔹 SIM numbers
-            document.getElementById("bpclJioSim").value =
-              data.jioSimNumber || "";
-            document.getElementById("bpclAirtelSim").value =
-              data.airtelSimNumber || "";
-          }
-        } catch (err) {
-          console.warn("BPCL status not found, opening blank form");
-        }
-
-        // 🔹 Show modal
-        document.getElementById("bpclModal").classList.remove("hidden");
       }
     </script>
   </body>
