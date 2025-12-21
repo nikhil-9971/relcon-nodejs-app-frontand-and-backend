@@ -1583,7 +1583,11 @@
 
           let statusBtn = "";
 
-          if (plan.statusSaved || plan.jioBPStatusSaved) {
+          if (
+            plan.statusSaved ||
+            plan.jioBPStatusSaved ||
+            plan.saveBPCLStatus
+          ) {
             statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
           } else if (plan.phase && plan.phase.includes("HPCL/")) {
             statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> HPCL</button>`;
@@ -1592,6 +1596,11 @@
             plan.jioBPStatusSaved
           ) {
             statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-600 hover:bg-green-500 text-yellow-400 px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
+          } else if (
+            (plan.phase && plan.phase.includes("BPCL/")) ||
+            plan.saveBPCLStatus
+          ) {
+            statusBtn = `<button onclick="openBPCLModal('${plan._id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> BPCL</button>`;
           } else {
             statusBtn = `<span class="text-gray-400">Not required</span>`;
           }
@@ -3028,6 +3037,63 @@
 
         alert("✅ BPCL Status Saved");
         closeBPCLModal();
+      }
+
+      async function openBPCLModal(planId) {
+        // 🔹 Set planId
+        document.getElementById("bpclPlanId").value = planId;
+
+        // 🔹 Reset form
+        document.getElementById("bpclForm").reset();
+        document.getElementById("class1DevicesContainer").innerHTML = "";
+        document.getElementById("class2DevicesContainer").innerHTML = "";
+
+        try {
+          // 🔍 Check if BPCL status already exists
+          const res = await fetch(`${baseUrl}/getBPCLStatusByPlan/${planId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (res.status === 200) {
+            const data = await res.json();
+
+            // 🔹 Fill counts
+            document.getElementById("class1Count").value =
+              data.class1DeviceCount || 0;
+            document.getElementById("class2Count").value =
+              data.class2DeviceCount || 0;
+
+            // 🔹 Render dynamic fields
+            renderClass1Devices();
+            renderClass2Devices();
+
+            // 🔹 Fill device details
+            if (Array.isArray(data.class1Devices)) {
+              document.querySelectorAll(".class1Device").forEach((el, i) => {
+                el.value = data.class1Devices[i] || "";
+              });
+            }
+
+            if (Array.isArray(data.class2Devices)) {
+              document.querySelectorAll(".class2Device").forEach((el, i) => {
+                el.value = data.class2Devices[i] || "";
+              });
+            }
+
+            // 🔹 SIM numbers
+            document.getElementById("bpclJioSim").value =
+              data.jioSimNumber || "";
+            document.getElementById("bpclAirtelSim").value =
+              data.airtelSimNumber || "";
+          }
+        } catch (err) {
+          console.warn("BPCL status not found, opening blank form");
+        }
+
+        // 🔹 Show modal
+        document.getElementById("bpclModal").classList.remove("hidden");
       }
     </script>
   </body>
