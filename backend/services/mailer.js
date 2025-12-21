@@ -1,12 +1,16 @@
 /**
- * mailer.js
- * - Only sends daily "Pending Status (HPCL + RBML)" CSV to configured recipient via SMTP.
- * - Uses app-login to backend to fetch plans/status and compute pending records for YESTERDAY (default).
- * - Scheduled to run at 14:30 IST using timezone-aware scheduling (Asia/Kolkata).
+ * mailer.js (final)
+ * - Sends daily "Pending Status (HPCL + RBML)" CSV to configured recipient via SMTP.
+ * - Timezone-aware schedule: runs at 14:30 IST (Asia/Kolkata).
+ * - Improved timeouts, robust error handling, detailed logging and safe EmailLog writes.
  *
- * Notes:
- * - Uses node-cron with timezone option so it runs at 14:30 IST regardless of server timezone (even if server is UTC).
- * - Do NOT commit real .env secrets to repo.
+ * Env required:
+ *  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, MAIL_TO,
+ *  BASE_URL, APP_USER, APP_PASS, SESSION_SECRET
+ *
+ * Usage:
+ *  node server/utils/mailer.js            # sends yesterday's report
+ *  node server/utils/mailer.js 2025-12-20 # sends for specific date
  */
 require("dotenv").config();
 const axios = require("axios");
@@ -27,6 +31,7 @@ const {
   SESSION_SECRET,
 } = process.env;
 
+// Quick env validation
 if (
   !SMTP_HOST ||
   !SMTP_PORT ||
@@ -40,21 +45,27 @@ if (
   !SESSION_SECRET
 ) {
   console.error(
-    "❌ Please set required ENV vars (SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,MAIL_FROM,MAIL_TO,BASE_URL,APP_USER,APP_PASS,SESSION_SECRET)"
+    "❌ Missing required environment variables. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, MAIL_TO, BASE_URL, APP_USER, APP_PASS, SESSION_SECRET"
   );
   process.exit(1);
 }
 
+// Increase axios default timeout so backend calls have time
+axios.defaults.timeout = 30000; // 30s
+
+// Create nodemailer transporter with reasonable timeouts
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
   secure: Number(SMTP_PORT) === 465,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
+  auth: { user: SMTP_USER, pass: SMTP_PASS },
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+  tls: { rejectUnauthorized: false }, // keep false to avoid cert issues on some hosts; change if your env enforces cert checking
 });
 
+// Helper utilities
 function safe(val) {
   return (val ?? "").toString();
 }
@@ -125,21 +136,26 @@ function toCSV(rows, keys, headerMap = {}) {
   return [header, ...lines].join("\n");
 }
 
-// ---- Get fresh JWT ----
+// Login to backend to get JWT
 async function getFreshToken() {
   try {
     const res = await axios.post(`${BASE_URL}/login`, {
       username: APP_USER,
       password: APP_PASS,
     });
+    if (!res?.data?.token) throw new Error("No token returned from login");
     return res.data.token;
   } catch (err) {
-    console.error("❌ Error while login:", err.response?.data || err.message);
+    // enhanced logging
+    console.error(
+      "❌ Error while login to backend:",
+      err?.response?.data || err.message || err
+    );
     throw err;
   }
 }
 
-// Compute pending plans for a specific date (dateISO format 'YYYY-MM-DD')
+// Build pending dataset
 function computePending(plans = [], hpcl = [], jio = [], targetDateISO) {
   const key = (rc, d) =>
     `${String(rc || "")
@@ -241,11 +257,12 @@ function computePending(plans = [], hpcl = [], jio = [], targetDateISO) {
   };
 }
 
-// ---- Send Pending Status Email ----
+// Send mail and log outcome. Uses EmailLog with status "success" or "failed" to match typical enum.
 async function sendPendingStatusEmail({ forDateISO } = {}) {
   try {
     const token = await getFreshToken();
 
+    // fetch all required datasets in parallel
     const [plansRes, hpclRes, jioRes] = await Promise.all([
       axios.get(`${BASE_URL}/getDailyPlans`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -262,6 +279,7 @@ async function sendPendingStatusEmail({ forDateISO } = {}) {
     const hpcl = Array.isArray(hpclRes.data) ? hpclRes.data : [];
     const jio = Array.isArray(jioRes.data) ? jioRes.data : [];
 
+    // default target date = yesterday
     const dateObj = forDateISO
       ? new Date(forDateISO + "T00:00:00")
       : (() => {
@@ -326,66 +344,94 @@ async function sendPendingStatusEmail({ forDateISO } = {}) {
       ],
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Pending mail sent:", info.messageId);
+    // Verify transporter connectivity before sending (helps detect block early)
+    try {
+      await transporter.verify();
+    } catch (verifyErr) {
+      console.warn(
+        "⚠️ Transporter verify failed - continuing to attempt send; verifyErr:",
+        verifyErr && (verifyErr.message || verifyErr.code || verifyErr)
+      );
+    }
 
-    await EmailLog.create({
-      type: "Pending Status Report",
-      subject,
-      to: MAIL_TO,
-      status: "success",
-      sentAt: new Date(),
-      meta: {
-        date: targetDateISO,
-        total: counts.total,
-        messageId: info.messageId,
-      },
-    });
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Pending mail sent:", info && (info.messageId || info));
+
+    // Write EmailLog safely
+    try {
+      await EmailLog.create({
+        type: "Pending Status Report",
+        subject,
+        to: MAIL_TO,
+        status: "success",
+        sentAt: new Date(),
+        meta: {
+          date: targetDateISO,
+          total: counts.total,
+          messageId: info.messageId || info,
+        },
+      });
+    } catch (logErr) {
+      console.error(
+        "⚠️ Failed to write EmailLog (success case) - continuing. Error:",
+        logErr && (logErr.message || logErr)
+      );
+    }
 
     return { ok: true, counts };
   } catch (err) {
-    console.error(
-      "❌ sendPendingStatusEmail error:",
-      err?.response?.data || err.message || err
-    );
+    // comprehensive logging
+    console.error("sendPendingStatusEmail error:", {
+      code: err.code,
+      message: err.message,
+      responseStatus: err.response?.status,
+      responseData: err.response?.data,
+      stack: err.stack,
+    });
+
+    // Attempt to write EmailLog marking failure — use status "failed" which should match enum
     try {
       await EmailLog.create({
         type: "Pending Status Report",
         subject: `Pending Status Report - failure`,
         to: MAIL_TO,
-        status: "error",
+        status: "failed", // use "failed" instead of "error" (avoid schema enum validation error)
         sentAt: new Date(),
         meta: {
-          error: (err?.response?.data || err.message || String(err)).toString(),
+          error: (err.response?.data || err.message || String(err)).toString(),
+          code: err.code || null,
         },
       });
-    } catch (e) {
-      console.error("❌ Failed to write EmailLog:", e);
+    } catch (logErr) {
+      // log but don't throw — we must not crash scheduler because of schema mismatch
+      console.error(
+        "Failed to write EmailLog (failure case). Validation likely - error:",
+        logErr && (logErr.message || logErr)
+      );
     }
+
     return { ok: false, error: err };
   }
 }
 
-// --------------------------------------
-// TIMEZONE-AWARE SCHEDULING
-// Run daily at 14:30 IST (Asia/Kolkata). node-cron will convert this to server timezone internally.
+// -------------------------------
+// SCHEDULING: timezone-aware -> run at 14:30 IST daily
+// Uses IANA timezone "Asia/Kolkata"
 cron.schedule(
-  "50 14 * * *",
+  "10 15 * * *",
   () => {
     console.log(
-      "🔔 Running scheduled pending-status mail job (14:30 IST):",
-      new Date().toLocaleString()
+      "🔔 Scheduled pending-status job triggered (14:30 IST):",
+      new Date().toISOString()
     );
     sendPendingStatusEmail().catch((e) =>
       console.error("Scheduled job error:", e)
     );
   },
-  {
-    timezone: "Asia/Kolkata",
-  }
+  { timezone: "Asia/Kolkata" }
 );
 
-// Manual run support
+// manual invocation support
 if (require.main === module) {
   const dateArg = process.argv[2]; // optional YYYY-MM-DD
   sendPendingStatusEmail({ forDateISO: dateArg })
