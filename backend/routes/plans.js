@@ -4,6 +4,8 @@ const DailyPlan = require("../models/DailyPlan");
 const Status = require("../models/Status");
 const verifyToken = require("../middleware/authMiddleware");
 const JioBPStatus = require("../models/jioBPStatus");
+const BPCLStatus = require("../models/BPCLStatus");
+
 const User = require("../models/User");
 
 // ✅ Save Daily Plan
@@ -83,10 +85,12 @@ router.get("/getPlanById/:id", async (req, res) => {
     // ✅ Enrich with status flags
     const statusExists = await Status.exists({ planId: plan._id });
     const jioStatusExists = await JioBPStatus.exists({ planId: plan._id });
+    const bpclStatusExists = await BPCLStatus.exists({ planId: plan._id });
 
     const planObj = plan.toObject();
     planObj.statusSaved = !!statusExists;
     planObj.jioBPStatusSaved = !!jioStatusExists;
+    planObj.bpclStatusSaved = !!bpclStatusExists;
 
     res.json(planObj);
   } catch (err) {
