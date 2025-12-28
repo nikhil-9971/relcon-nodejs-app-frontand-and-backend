@@ -2620,7 +2620,7 @@
           if (reportType === "JIOBP")
             statusUrl = `/jioBP/getJioBPStatusByPlan/${planId}`;
           if (reportType === "BPCL")
-            statusUrl = `/bpclStatus/getBPCLStatusByPlan/${planId}`;
+            statusUrl = `/getBPCLStatusByPlan/${planId}`;
           if (reportType === "HPCL") statusUrl = `/getStatusByPlan/${planId}`;
 
           console.log("Fetching Status from:", baseUrl + statusUrl); // Debug Log 3
@@ -3106,14 +3106,11 @@
 
         try {
           // 🔍 Check if BPCL status already exists
-          const res = await fetch(
-            `${baseUrl}/bpclStatus/getBPCLStatusByPlan/${planId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
+          const res = await fetch(`${baseUrl}/getBPCLStatusByPlan/${planId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
 
           if (res.status === 200) {
             const data = await res.json();
