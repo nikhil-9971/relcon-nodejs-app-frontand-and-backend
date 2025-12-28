@@ -2561,6 +2561,7 @@
           }
 
           const plan = await resPlan.json();
+          console.log("Plan Data:", plan); //debug1
 
           /* ---------------- REPORT TYPE DETECTION ---------------- */
           let reportType = "HPCL";
@@ -2574,6 +2575,7 @@
             logoPath = "./assets/BPCL.png";
           }
 
+          console.log("Detected Report Type:", reportType); // Debug Log 2
           /* ---------------- LOAD LOGO ---------------- */
           const loadLogo = async (url) => {
             const res = await fetch(url);
@@ -2621,6 +2623,8 @@
             statusUrl = `/bpclStatus/getBPCLStatusByPlan/${planId}`;
           if (reportType === "HPCL") statusUrl = `/getStatusByPlan/${planId}`;
 
+          console.log("Fetching Status from:", baseUrl + statusUrl); // Debug Log 3
+
           const resStatus = await fetch(baseUrl + statusUrl, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -2631,6 +2635,7 @@
           }
 
           const status = await resStatus.json();
+          console.log("Status Data:", status); // Debug Log 4
 
           /* ---------------- STATUS FIELDS ---------------- */
           if (reportType === "JIOBP") {
