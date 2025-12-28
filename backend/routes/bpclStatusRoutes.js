@@ -33,12 +33,11 @@ router.post("/saveBPCLStatus", authMiddleware, async (req, res) => {
 
     const savedStatus = await status.save();
 
-    // Mark plan as BPCL status saved
-    await DailyPlan.findByIdAndUpdate(
-      planId,
-      { saveBPCLStatus: true },
-      { new: true }
-    );
+    // ✅ Mark plan as BPCL status saved (CONSISTENT FLAGS)
+    await DailyPlan.findByIdAndUpdate(planId, {
+      bpclStatusSaved: true,
+      statusSaved: true,
+    });
 
     res.status(200).json({
       success: true,
@@ -70,7 +69,7 @@ router.get("/getBPCLStatusByPlan/:planId", authMiddleware, async (req, res) => {
 
     const status = await BPCLStatus.findOne({ planId })
       .populate("planId")
-      .lean(); // 🔥 IMPORTANT for jsPDF
+      .lean(); // 🔥 jsPDF friendly
 
     if (!status) {
       return res.status(404).json({
@@ -205,14 +204,21 @@ router.put("/verifyBPCLStatus/:id", authMiddleware, async (req, res) => {
 ------------------------------------------------- */
 router.delete("/deleteBPCLStatus/:id", authMiddleware, async (req, res) => {
   try {
-    const deleted = await BPCLStatus.findByIdAndDelete(req.params.id);
-
-    if (!deleted) {
+    const status = await BPCLStatus.findById(req.params.id);
+    if (!status) {
       return res.status(404).json({
         success: false,
         message: "Record not found",
       });
     }
+
+    await BPCLStatus.findByIdAndDelete(req.params.id);
+
+    // 🔄 Reset plan flags
+    await DailyPlan.findByIdAndUpdate(status.planId, {
+      bpclStatusSaved: false,
+      statusSaved: false,
+    });
 
     res.status(200).json({
       success: true,
