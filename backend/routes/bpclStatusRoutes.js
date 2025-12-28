@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const router = express.Router();
 
 const BPCLStatus = require("../models/BPCLStatus");
+const DailyPlan = require("../models/DailyPlan");
 const authMiddleware = require("../middleware/authMiddleware");
 
 // ✅ CREATE or UPDATE BPCL STATUS (same logic as JIO)
@@ -30,6 +31,18 @@ router.post("/saveBPCLStatus", authMiddleware, async (req, res) => {
     }
 
     const savedStatus = await status.save();
+
+    // --- NEW: update DailyPlan to mark BPCL status saved ---
+    try {
+      await DailyPlan.findByIdAndUpdate(
+        planId,
+        { saveBPCLStatus: true },
+        { new: true }
+      );
+    } catch (errUpdate) {
+      console.warn("⚠️ Failed to update DailyPlan flag for BPCL:", errUpdate);
+      // do not fail whole request — BPCL status is already saved
+    }
 
     res.status(200).json({
       success: true,
