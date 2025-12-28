@@ -2545,16 +2545,36 @@
           const pageWidth = doc.internal.pageSize.getWidth();
 
           const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Session expired. Please login again.");
+            return;
+          }
 
-          // 🔹 Fetch Plan
+          /* ---------------- FETCH PLAN ---------------- */
           const resPlan = await fetch(`${baseUrl}/getPlanById/${planId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!resPlan.ok) return alert("❌ Failed to fetch visit plan");
+
+          if (!resPlan.ok) {
+            alert("❌ Failed to fetch visit plan");
+            return;
+          }
 
           const plan = await resPlan.json();
 
-          // 🔹 Helper to load logo
+          /* ---------------- REPORT TYPE DETECTION ---------------- */
+          let reportType = "HPCL";
+          let logoPath = "./assets/HPCL.png";
+
+          if (plan.phase?.toUpperCase().includes("RBML")) {
+            reportType = "JIOBP";
+            logoPath = "./assets/JioBP.png";
+          } else if (plan.phase?.toUpperCase().includes("BPCL")) {
+            reportType = "BPCL";
+            logoPath = "./assets/BPCL.png";
+          }
+
+          /* ---------------- LOAD LOGO ---------------- */
           const loadLogo = async (url) => {
             const res = await fetch(url);
             const blob = await res.blob();
@@ -2565,27 +2585,10 @@
             });
           };
 
-          let status = null;
-          let reportType = "";
-          let logoPath = "";
-
-          // 🔹 Detect report type (NO FLAGS)
-          if (plan.phase && plan.phase.includes("RBML")) {
-            reportType = "JIOBP";
-            logoPath = "./assets/JioBP.png";
-          } else if (plan.phase && plan.phase.includes("BPCL/")) {
-            reportType = "BPCL";
-            logoPath = "./assets/BPCL.png";
-          } else {
-            reportType = "HPCL";
-            logoPath = "./assets/HPCL.png";
-          }
-
-          // 🔹 Add Logo
           const logo = await loadLogo(logoPath);
           doc.addImage(logo, "PNG", pageWidth / 2 - 15, 10, 30, 20);
 
-          // 🔹 Title
+          /* ---------------- TITLE ---------------- */
           doc.setFont("helvetica", "bold");
           doc.setFontSize(14);
           doc.text(
@@ -2594,10 +2597,9 @@
             35,
             { align: "center" }
           );
-
           doc.line(15, 43, pageWidth - 15, 43);
 
-          // 🔹 Common Visit Details
+          /* ---------------- COMMON VISIT DETAILS ---------------- */
           const visitRows = [
             ["Engineer", cleanText(plan.engineer)],
             ["Zone", cleanText(plan.zone)],
@@ -2610,8 +2612,9 @@
             ["Purpose", cleanText(plan.purpose)],
           ];
 
-          // 🔹 Fetch Status as per type
+          /* ---------------- STATUS API ---------------- */
           let statusUrl = "";
+
           if (reportType === "JIOBP")
             statusUrl = `/jioBP/getJioBPStatusByPlan/${planId}`;
           if (reportType === "BPCL")
@@ -2621,11 +2624,15 @@
           const resStatus = await fetch(baseUrl + statusUrl, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!resStatus.ok) return alert("❌ Failed to fetch status");
 
-          status = await resStatus.json();
+          if (!resStatus.ok) {
+            alert("❌ Failed to fetch status");
+            return;
+          }
 
-          // 🔹 Append status fields
+          const status = await resStatus.json();
+
+          /* ---------------- STATUS FIELDS ---------------- */
           if (reportType === "JIOBP") {
             visitRows.push(
               ["HPSM ID", cleanText(status.hpsdId)],
@@ -2651,9 +2658,9 @@
 
           if (reportType === "BPCL") {
             visitRows.push(
-              ["Class-1 Device Count", status.class1DeviceCount],
+              ["Class-1 Device Count", status.class1DeviceCount || 0],
               ["Class-1 Devices", (status.class1Devices || []).join(", ")],
-              ["Class-2 Device Count", status.class2DeviceCount],
+              ["Class-2 Device Count", status.class2DeviceCount || 0],
               ["Class-2 Devices", (status.class2Devices || []).join(", ")],
               ["JIO SIM Number", cleanText(status.jioSimNumber)],
               ["Airtel SIM Number", cleanText(status.airtelSimNumber)]
@@ -2707,7 +2714,7 @@
             );
           }
 
-          // 🔹 Table
+          /* ---------------- TABLE ---------------- */
           doc.autoTable({
             startY: 48,
             head: [["Field", "Value"]],
@@ -2721,7 +2728,7 @@
             theme: "grid",
           });
 
-          // 🔹 Footer
+          /* ---------------- FOOTER ---------------- */
           const username = loggedInUser?.engineerName || "Unknown User";
           const now = new Date();
           const footerText = `Generated by ${username} on ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
@@ -2736,7 +2743,7 @@
             doc.text(footerText, 15, 200);
           }
 
-          // 🔹 Save
+          /* ---------------- SAVE ---------------- */
           doc.save(`${reportType}_Report_${plan.roCode}_${plan.date}.pdf`);
         } catch (err) {
           console.error("❌ PDF Generation Error:", err);
