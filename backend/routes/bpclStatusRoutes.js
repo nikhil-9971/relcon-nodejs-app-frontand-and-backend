@@ -6,24 +6,25 @@ const BPCLStatus = require("../models/BPCLStatus");
 const DailyPlan = require("../models/DailyPlan");
 const authMiddleware = require("../middleware/authMiddleware");
 
-// ✅ CREATE or UPDATE BPCL STATUS (same logic as JIO)
+/* -------------------------------------------------
+   CREATE / UPDATE BPCL STATUS
+------------------------------------------------- */
 router.post("/saveBPCLStatus", authMiddleware, async (req, res) => {
   try {
     const { planId } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(planId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Plan ID" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Plan ID",
+      });
     }
 
     let status = await BPCLStatus.findOne({ planId });
 
     if (status) {
-      // 🔄 UPDATE
       Object.assign(status, req.body);
     } else {
-      // 🆕 CREATE
       status = new BPCLStatus({
         ...req.body,
         createdBy: req.user?.username || "unknown",
@@ -32,17 +33,12 @@ router.post("/saveBPCLStatus", authMiddleware, async (req, res) => {
 
     const savedStatus = await status.save();
 
-    // --- NEW: update DailyPlan to mark BPCL status saved ---
-    try {
-      await DailyPlan.findByIdAndUpdate(
-        planId,
-        { saveBPCLStatus: true },
-        { new: true }
-      );
-    } catch (errUpdate) {
-      console.warn("⚠️ Failed to update DailyPlan flag for BPCL:", errUpdate);
-      // do not fail whole request — BPCL status is already saved
-    }
+    // Mark plan as BPCL status saved
+    await DailyPlan.findByIdAndUpdate(
+      planId,
+      { saveBPCLStatus: true },
+      { new: true }
+    );
 
     res.status(200).json({
       success: true,
@@ -54,68 +50,89 @@ router.post("/saveBPCLStatus", authMiddleware, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error",
-      error: err.message,
     });
   }
 });
 
-// ✅ GET BPCL STATUS BY PLAN ID
+/* -------------------------------------------------
+   GET BPCL STATUS BY PLAN ID (JSON ONLY)
+------------------------------------------------- */
 router.get("/getBPCLStatusByPlan/:planId", authMiddleware, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.planId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Plan ID" });
+    const { planId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(planId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Plan ID",
+      });
     }
 
-    const status = await BPCLStatus.findOne({
-      planId: req.params.planId,
-    });
+    const status = await BPCLStatus.findOne({ planId })
+      .populate("planId")
+      .lean(); // 🔥 IMPORTANT for jsPDF
 
     if (!status) {
-      return res
-        .status(404)
-        .json({ success: false, message: "BPCL Status not found" });
+      return res.status(404).json({
+        success: false,
+        message: "BPCL Status not found",
+      });
     }
 
-    res.status(200).json(status);
+    res.status(200).json(status); // ✅ JSON ONLY
   } catch (err) {
     console.error("❌ Error fetching BPCL status:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
-// ✅ GET ALL BPCL STATUS (Dashboard / Admin)
+/* -------------------------------------------------
+   GET ALL BPCL STATUS (ADMIN)
+------------------------------------------------- */
 router.get("/getAllBPCLStatus", authMiddleware, async (req, res) => {
   try {
-    const statuses = await BPCLStatus.find({}).populate("planId");
+    const statuses = await BPCLStatus.find({})
+      .populate("planId")
+      .sort({ createdAt: -1 })
+      .lean();
+
     res.status(200).json(statuses);
   } catch (err) {
     console.error("❌ Error fetching BPCL statuses:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
-// ✅ UPDATE BPCL STATUS BY ID (Edit case – same as JIO)
+/* -------------------------------------------------
+   UPDATE BPCL STATUS
+------------------------------------------------- */
 router.put("/updateBPCLStatus/:id", authMiddleware, async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid ObjectId" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ObjectId",
+      });
     }
 
     const oldData = await BPCLStatus.findById(id);
     if (!oldData) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Record not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Record not found",
+      });
     }
 
-    // 🔒 Lock verified record
-    if (oldData.isVerified && req.user?.username !== "nikhil.trivedi") {
+    // 🔒 Verified lock
+    if (oldData.isVerified && req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Verified records can only be updated by admin",
@@ -133,14 +150,19 @@ router.put("/updateBPCLStatus/:id", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error updating BPCL status:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
-// ✅ VERIFY BPCL STATUS
+/* -------------------------------------------------
+   VERIFY BPCL STATUS (ADMIN ONLY)
+------------------------------------------------- */
 router.put("/verifyBPCLStatus/:id", authMiddleware, async (req, res) => {
   try {
-    if (req.user?.username !== "nikhil.trivedi" || req.user?.role !== "admin") {
+    if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Access denied",
@@ -158,9 +180,10 @@ router.put("/verifyBPCLStatus/:id", authMiddleware, async (req, res) => {
     );
 
     if (!updated) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Record not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Record not found",
+      });
     }
 
     res.status(200).json({
@@ -170,19 +193,25 @@ router.put("/verifyBPCLStatus/:id", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error verifying BPCL status:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
-// ✅ DELETE BPCL STATUS
+/* -------------------------------------------------
+   DELETE BPCL STATUS
+------------------------------------------------- */
 router.delete("/deleteBPCLStatus/:id", authMiddleware, async (req, res) => {
   try {
     const deleted = await BPCLStatus.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Record not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Record not found",
+      });
     }
 
     res.status(200).json({
@@ -191,7 +220,10 @@ router.delete("/deleteBPCLStatus/:id", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error deleting BPCL status:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
