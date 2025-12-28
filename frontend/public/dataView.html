@@ -3049,32 +3049,38 @@
       async function saveBPCLStatus() {
         const payload = {
           planId: document.getElementById("bpclPlanId").value,
-
           class1DeviceCount: Number(class1Count.value),
           class1Devices: [...document.querySelectorAll(".class1Device")].map(
             (i) => i.value
           ),
-
           class2DeviceCount: Number(class2Count.value),
           class2Devices: [...document.querySelectorAll(".class2Device")].map(
             (i) => i.value
           ),
-
           jioSimNumber: bpclJioSim.value,
           airtelSimNumber: bpclAirtelSim.value,
         };
 
-        await fetch(`${baseUrl}/bpclStatus/saveBPCLStatus`, {
+        const res = await fetch(`${baseUrl}/bpclStatus/saveBPCLStatus`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify(payload),
+          credentials: "include",
         });
 
-        alert("✅ BPCL Status Saved");
-        closeBPCLModal();
+        if (res.ok) {
+          alert("✅ BPCL Status Saved");
+          closeBPCLModal();
+          // Refresh data so table shows Status button
+          await fetchAndStoreData();
+          applyFilter(document.getElementById("applyBtn"));
+        } else {
+          const errText = await res.text().catch(() => "Server error");
+          alert("❌ Failed to save BPCL Status: " + errText);
+        }
       }
 
       async function openBPCLModal(planId) {
