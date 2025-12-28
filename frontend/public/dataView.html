@@ -2615,7 +2615,7 @@
           if (reportType === "JIOBP")
             statusUrl = `/jioBP/getJioBPStatusByPlan/${planId}`;
           if (reportType === "BPCL")
-            statusUrl = `/getBPCLStatusByPlan/${planId}`;
+            statusUrl = `/bpclStatus/getBPCLStatusByPlan/${planId}`;
           if (reportType === "HPCL") statusUrl = `/getStatusByPlan/${planId}`;
 
           const resStatus = await fetch(baseUrl + statusUrl, {
