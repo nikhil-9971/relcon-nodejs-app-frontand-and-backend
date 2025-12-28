@@ -3064,7 +3064,7 @@
           airtelSimNumber: bpclAirtelSim.value,
         };
 
-        await fetch(`${baseUrl}/saveBPCLStatus`, {
+        await fetch(`${baseUrl}/bpclStatus/saveBPCLStatus`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -3088,11 +3088,14 @@
 
         try {
           // 🔍 Check if BPCL status already exists
-          const res = await fetch(`${baseUrl}/getBPCLStatusByPlan/${planId}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
+          const res = await fetch(
+            `${baseUrl}/bpclStatus/getBPCLStatusByPlan/${planId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
 
           if (res.status === 200) {
             const data = await res.json();
