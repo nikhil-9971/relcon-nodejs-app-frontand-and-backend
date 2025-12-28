@@ -1571,7 +1571,7 @@
         menu.classList.toggle("hidden");
       }
 
-      async function hasStatus(planId, type) {
+      /* async function hasStatus(planId, type) {
         let url = "";
 
         if (type === "HPCL") url = `/getStatusByPlan/${planId}`;
@@ -1588,7 +1588,7 @@
         } catch {
           return false;
         }
-      }
+      }*/
 
       const debouncedSearch = debounce(applySearch, 300);
 
