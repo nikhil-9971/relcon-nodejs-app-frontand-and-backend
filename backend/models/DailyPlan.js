@@ -25,6 +25,11 @@ const PlanSchema = new mongoose.Schema({
   earthingCheckedby: String,
   detailEarthingremark: String,
   cableRequirmentremark: String,
+
+  // ✅ ADD THESE FLAGS
+  statusSaved: { type: Boolean, default: false }, // HPCL
+  jioBPStatusSaved: { type: Boolean, default: false }, // JIO
+  bpclStatusSaved: { type: Boolean, default: false }, // ✅ BPCL
 });
 
 module.exports =
