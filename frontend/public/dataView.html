@@ -1602,47 +1602,24 @@
 
           let statusBtn = "";
 
-          // 🔹 HPCL
-          if (plan.phase && plan.phase.includes("HPCL/")) {
-            const exists = await hasStatus(plan._id, "HPCL");
-
-            statusBtn = exists
-              ? `<button onclick="downloadPDF('${plan._id}')"
-                  class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-circle-down"></i> Status
-                </button>`
-              : `<button onclick="openStatusModal('${plan._id}')"
-                  class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-plus"></i> HPCL
-                </button>`;
-
-            // 🔹 JIO BP
-          } else if (plan.phase && plan.phase.includes("RBML")) {
-            const exists = await hasStatus(plan._id, "JIOBP");
-
-            statusBtn = exists
-              ? `<button onclick="downloadPDF('${plan._id}')"
-                  class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-circle-down"></i> Status
-                </button>`
-              : `<button onclick="openJioBPModal('${plan._id}')"
-                  class="bg-green-600 hover:bg-green-500 text-yellow-400 px-2 py-1 rounded">
-                  <i class="fa-solid fa-plus"></i> JioBP
-                </button>`;
-
-            // 🔹 BPCL
-          } else if (plan.phase && plan.phase.includes("BPCL/")) {
-            const exists = await hasStatus(plan._id, "BPCL");
-
-            statusBtn = exists
-              ? `<button onclick="downloadPDF('${plan._id}')"
-                  class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-circle-down"></i> Status
-                </button>`
-              : `<button onclick="openBPCLModal('${plan._id}')"
-                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">
-                  <i class="fa-solid fa-plus"></i> BPCL
-                </button>`;
+          if (
+            plan.statusSaved ||
+            plan.jioBPStatusSaved ||
+            plan.saveBPCLStatus
+          ) {
+            statusBtn = `<button onclick="downloadPDF('${plan._id}')" class="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-circle-down"></i> Status</button>`;
+          } else if (plan.phase && plan.phase.includes("HPCL/")) {
+            statusBtn = `<button onclick="openStatusModal('${plan._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> HPCL</button>`;
+          } else if (
+            (plan.phase && plan.phase.includes("RBML")) ||
+            plan.jioBPStatusSaved
+          ) {
+            statusBtn = `<button onclick="openJioBPModal('${plan._id}')" class="bg-green-600 hover:bg-green-500 text-yellow-400 px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> JioBP</button>`;
+          } else if (
+            (plan.phase && plan.phase.includes("BPCL/")) ||
+            plan.saveBPCLStatus
+          ) {
+            statusBtn = `<button onclick="openBPCLModal('${plan._id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> BPCL</button>`;
           } else {
             statusBtn = `<span class="text-gray-400">Not required</span>`;
           }
