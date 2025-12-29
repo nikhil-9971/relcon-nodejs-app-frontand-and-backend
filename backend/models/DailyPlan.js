@@ -26,10 +26,10 @@ const PlanSchema = new mongoose.Schema({
   detailEarthingremark: String,
   cableRequirmentremark: String,
 
-  // ✅ ADD THESE FLAGS
-  statusSaved: { type: Boolean, default: false }, // HPCL
-  jioBPStatusSaved: { type: Boolean, default: false }, // JIO
-  bpclStatusSaved: { type: Boolean, default: false }, // ✅ BPCL
+  // // ✅ ADD THESE FLAGS
+  // statusSaved: { type: Boolean, default: false }, // HPCL
+  // jioBPStatusSaved: { type: Boolean, default: false }, // JIO
+  // bpclStatusSaved: { type: Boolean, default: false }, // ✅ BPCL
 });
 
 module.exports =
