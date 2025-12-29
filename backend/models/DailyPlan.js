@@ -29,7 +29,7 @@ const PlanSchema = new mongoose.Schema({
   // // ✅ ADD THESE FLAGS
   // statusSaved: { type: Boolean, default: false }, // HPCL
   // jioBPStatusSaved: { type: Boolean, default: false }, // JIO
-  // bpclStatusSaved: { type: Boolean, default: false }, // ✅ BPCL
+  bpclStatusSaved: { type: Boolean, default: false }, // ✅ BPCL
 });
 
 module.exports =
