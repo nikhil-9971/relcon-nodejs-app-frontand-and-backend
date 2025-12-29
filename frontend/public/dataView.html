@@ -1302,7 +1302,7 @@
         <input type="hidden" id="bpclPlanId" />
 
         <form id="bpclForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- 🔹 CLASS 1 -->
+          <!-- 🔹 CLASS 1  With Sim-->
           <div>
             <label class="font-semibold">
               Total IOT Class-1 Device Installed (Count)
@@ -1319,6 +1319,29 @@
           <div class="md:col-span-2">
             <label class="font-semibold">Class-1 Device Details</label>
             <div id="class1DevicesContainer" class="space-y-1 mt-1"></div>
+          </div>
+
+          <!-- 🔹 CLASS 1  Without Sim-->
+
+          <div>
+            <label class="font-semibold">
+              Total IOT Class-1 without SIM Device (Count)
+            </label>
+            <input
+              type="number"
+              id="class1Countwithoutsim"
+              min="0"
+              class="w-full p-2 mt-1 border rounded"
+              onchange="renderClass1WithoutSimDevices()"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="font-semibold">Class-1 Device Details</label>
+            <div
+              id="class1DevicesContainerwithoutsim"
+              class="space-y-1 mt-1"
+            ></div>
           </div>
 
           <!-- 🔹 CLASS 2 -->
@@ -2663,10 +2686,31 @@
 
           if (reportType === "BPCL") {
             visitRows.push(
-              ["Class-1 Device Count", status.class1DeviceCount || 0],
-              ["Class-1 Devices", (status.class1Devices || []).join(", ")],
+              // 🔹 Class-1 WITH SIM
+              [
+                "Class-1 (With SIM) Device Count",
+                status.class1DeviceCount || 0,
+              ],
+              [
+                "Class-1 (With SIM) Devices",
+                (status.class1Devices || []).join(", "),
+              ],
+
+              // 🔹 Class-1 WITHOUT SIM ✅ NEW
+              [
+                "Class-1 (Without SIM) Device Count",
+                status.class1WithoutSimCount || 0,
+              ],
+              [
+                "Class-1 (Without SIM) Devices",
+                (status.class1WithoutSimDevices || []).join(", "),
+              ],
+
+              // 🔹 Class-2
               ["Class-2 Device Count", status.class2DeviceCount || 0],
               ["Class-2 Devices", (status.class2Devices || []).join(", ")],
+
+              // 🔹 SIM DETAILS
               ["JIO SIM Number", cleanText(status.jioSimNumber)],
               ["Airtel SIM Number", cleanText(status.airtelSimNumber)]
             );
@@ -3021,7 +3065,9 @@
         }
       }
 
-      /* BPCL LOGIC */
+      /* ================= BPCL LOGIC ================= */
+
+      // 🔹 Class-1 WITH SIM
       function renderClass1Devices() {
         const count = Number(document.getElementById("class1Count").value);
         const container = document.getElementById("class1DevicesContainer");
@@ -3029,15 +3075,37 @@
 
         for (let i = 0; i < count; i++) {
           container.innerHTML += `
-                    <input
-                      type="text"
-                      class="class1Device w-full p-2 border rounded"
-                      placeholder="Class-1 Device ${i + 1}"
-                    />
-                  `;
+      <input
+        type="text"
+        class="class1Device w-full p-2 border rounded"
+        placeholder="Class-1 With SIM Device ${i + 1}"
+      />
+    `;
         }
       }
 
+      // 🔹 Class-1 WITHOUT SIM
+      function renderClass1WithoutSimDevices() {
+        const count = Number(
+          document.getElementById("class1Countwithoutsim").value
+        );
+        const container = document.getElementById(
+          "class1DevicesContainerwithoutsim"
+        );
+        container.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+          container.innerHTML += `
+      <input
+        type="text"
+        class="class1WithoutSimDevice w-full p-2 border rounded"
+        placeholder="Class-1 Without SIM Device ${i + 1}"
+      />
+    `;
+        }
+      }
+
+      // 🔹 Class-2
       function renderClass2Devices() {
         const count = Number(document.getElementById("class2Count").value);
         const container = document.getElementById("class2DevicesContainer");
@@ -3045,12 +3113,12 @@
 
         for (let i = 0; i < count; i++) {
           container.innerHTML += `
-                    <input
-                      type="text"
-                      class="class2Device w-full p-2 border rounded"
-                      placeholder="Class-2 Device ${i + 1}"
-                    />
-                  `;
+      <input
+        type="text"
+        class="class2Device w-full p-2 border rounded"
+        placeholder="Class-2 Device ${i + 1}"
+      />
+    `;
         }
       }
 
@@ -3058,17 +3126,31 @@
         document.getElementById("bpclModal").classList.add("hidden");
       }
 
+      /* ================= SAVE BPCL STATUS ================= */
+
       async function saveBPCLStatus() {
         const payload = {
           planId: document.getElementById("bpclPlanId").value,
+
+          // 🔹 Class-1 WITH SIM
           class1DeviceCount: Number(class1Count.value),
           class1Devices: [...document.querySelectorAll(".class1Device")].map(
             (i) => i.value
           ),
+
+          // 🔹 Class-1 WITHOUT SIM
+          class1WithoutSimCount: Number(class1Countwithoutsim.value),
+          class1WithoutSimDevices: [
+            ...document.querySelectorAll(".class1WithoutSimDevice"),
+          ].map((i) => i.value),
+
+          // 🔹 Class-2
           class2DeviceCount: Number(class2Count.value),
           class2Devices: [...document.querySelectorAll(".class2Device")].map(
             (i) => i.value
           ),
+
+          // 🔹 SIM
           jioSimNumber: bpclJioSim.value,
           airtelSimNumber: bpclAirtelSim.value,
         };
@@ -3086,7 +3168,6 @@
         if (res.ok) {
           alert("✅ BPCL Status Saved");
           closeBPCLModal();
-          // Refresh data so table shows Status button
           await fetchAndStoreData();
           applyFilter(document.getElementById("applyBtn"));
         } else {
@@ -3095,17 +3176,19 @@
         }
       }
 
+      /* ================= OPEN BPCL MODAL ================= */
+
       async function openBPCLModal(planId) {
-        // 🔹 Set planId
         document.getElementById("bpclPlanId").value = planId;
 
-        // 🔹 Reset form
+        // 🔹 Reset
         document.getElementById("bpclForm").reset();
         document.getElementById("class1DevicesContainer").innerHTML = "";
+        document.getElementById("class1DevicesContainerwithoutsim").innerHTML =
+          "";
         document.getElementById("class2DevicesContainer").innerHTML = "";
 
         try {
-          // 🔍 Check if BPCL status already exists
           const res = await fetch(
             `${baseUrl}/bpclStatus/getBPCLStatusByPlan/${planId}`,
             {
@@ -3118,40 +3201,36 @@
           if (res.status === 200) {
             const data = await res.json();
 
-            // 🔹 Fill counts
-            document.getElementById("class1Count").value =
-              data.class1DeviceCount || 0;
-            document.getElementById("class2Count").value =
-              data.class2DeviceCount || 0;
+            // 🔹 Counts
+            class1Count.value = data.class1DeviceCount || 0;
+            class1Countwithoutsim.value = data.class1WithoutSimCount || 0;
+            class2Count.value = data.class2DeviceCount || 0;
 
-            // 🔹 Render dynamic fields
+            // 🔹 Render
             renderClass1Devices();
+            renderClass1WithoutSimDevices();
             renderClass2Devices();
 
-            // 🔹 Fill device details
-            if (Array.isArray(data.class1Devices)) {
-              document.querySelectorAll(".class1Device").forEach((el, i) => {
-                el.value = data.class1Devices[i] || "";
-              });
-            }
+            // 🔹 Fill values
+            data.class1Devices?.forEach((v, i) => {
+              document.querySelectorAll(".class1Device")[i].value = v;
+            });
 
-            if (Array.isArray(data.class2Devices)) {
-              document.querySelectorAll(".class2Device").forEach((el, i) => {
-                el.value = data.class2Devices[i] || "";
-              });
-            }
+            data.class1WithoutSimDevices?.forEach((v, i) => {
+              document.querySelectorAll(".class1WithoutSimDevice")[i].value = v;
+            });
 
-            // 🔹 SIM numbers
-            document.getElementById("bpclJioSim").value =
-              data.jioSimNumber || "";
-            document.getElementById("bpclAirtelSim").value =
-              data.airtelSimNumber || "";
+            data.class2Devices?.forEach((v, i) => {
+              document.querySelectorAll(".class2Device")[i].value = v;
+            });
+
+            bpclJioSim.value = data.jioSimNumber || "";
+            bpclAirtelSim.value = data.airtelSimNumber || "";
           }
         } catch (err) {
           console.warn("BPCL status not found, opening blank form");
         }
 
-        // 🔹 Show modal
         document.getElementById("bpclModal").classList.remove("hidden");
       }
     </script>
