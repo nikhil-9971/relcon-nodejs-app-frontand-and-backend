@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const BPCLStatusSchema = new mongoose.Schema(
   {
-    // 🔗 One BPCL Status per Daily Plan (same as JIO)
+    // 🔗 One BPCL Status per Daily Plan
     planId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "DailyPlan",
@@ -10,10 +10,10 @@ const BPCLStatusSchema = new mongoose.Schema(
       unique: true,
     },
 
-    // 🔹 IOT CLASS 1
+    /* 🔹 IOT CLASS 1 (WITH SIM) */
     class1DeviceCount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     class1Devices: [
       {
@@ -23,10 +23,23 @@ const BPCLStatusSchema = new mongoose.Schema(
       },
     ],
 
-    // 🔹 IOT CLASS 2
+    /* 🔹 IOT CLASS 1 (WITHOUT SIM) ✅ NEW */
+    class1WithoutSimCount: {
+      type: Number,
+      default: 0,
+    },
+    class1WithoutSimDevices: [
+      {
+        type: String,
+        uppercase: true,
+        trim: true,
+      },
+    ],
+
+    /* 🔹 IOT CLASS 2 */
     class2DeviceCount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     class2Devices: [
       {
@@ -36,7 +49,7 @@ const BPCLStatusSchema = new mongoose.Schema(
       },
     ],
 
-    // 🔹 SIM DETAILS
+    /* 🔹 SIM DETAILS */
     jioSimNumber: {
       type: String,
       trim: true,
@@ -46,7 +59,7 @@ const BPCLStatusSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // 🔹 COMMON (same as JIO)
+    /* 🔹 COMMON */
     createdBy: {
       type: String,
       default: "",
