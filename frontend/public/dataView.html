@@ -2793,7 +2793,9 @@
           }
 
           /* ---------------- SAVE ---------------- */
-          doc.save(`${reportType}_Report_${plan.roCode}_${plan.date}.pdf`);
+          doc.save(
+            `${reportType}_Report_${plan.roCode}_${plan.roName}_${plan.date}.pdf`
+          );
         } catch (err) {
           console.error("❌ PDF Generation Error:", err);
           alert("❌ Error generating PDF");
