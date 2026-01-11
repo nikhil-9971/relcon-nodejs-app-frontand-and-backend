@@ -1363,6 +1363,37 @@
             <div id="class2DevicesContainer" class="space-y-1 mt-1"></div>
           </div>
 
+          <!-- 🔹 RELCON ATG PROVIDED -->
+          <div>
+            <label class="font-semibold">RELCON ATG Provided?</label>
+            <select
+              id="relconAtgProvided"
+              class="w-full p-2 mt-1 border rounded"
+              onchange="handleRelconATGChange()"
+            >
+              <option value="">-- Select --</option>
+              <option value="YES">Yes</option>
+              <option value="NO">No</option>
+            </select>
+          </div>
+
+          <!-- No of ATG -->
+          <div id="relconAtgCountDiv" class="hidden">
+            <label class="font-semibold">No. of ATG provided by RELCON</label>
+            <input
+              type="number"
+              min="0"
+              id="relconAtgCount"
+              class="w-full p-2 mt-1 border rounded"
+              onchange="renderRelconATGFields()"
+            />
+          </div>
+
+          <!-- ATG Details -->
+          <div id="relconAtgContainer" class="md:col-span-2 space-y-1 hidden">
+            <label class="font-semibold">RELCON ATG Details</label>
+          </div>
+
           <!-- 🔹 SIM DETAILS -->
           <div>
             <label class="font-semibold">JIO SIM Number</label>
@@ -2710,6 +2741,16 @@
               ["Class-2 Device Count", status.class2DeviceCount || 0],
               ["Class-2 Devices", (status.class2Devices || []).join(", ")],
 
+              // 🔹 RELCON ATG DETAILS ✅ NEW
+              ["RELCON ATG Provided", status.relconAtgProvided || "NO"],
+              ["No. of ATG Provided by RELCON", status.relconAtgCount || 0],
+              [
+                "RELCON ATG Details",
+                status.relconAtgProvided === "YES"
+                  ? (status.relconAtgDetails || []).join(", ")
+                  : "N/A",
+              ],
+
               // 🔹 SIM DETAILS
               ["JIO SIM Number", cleanText(status.jioSimNumber)],
               ["Airtel SIM Number", cleanText(status.airtelSimNumber)]
@@ -3124,6 +3165,44 @@
         }
       }
 
+      // 🔹 ATG Detail
+      function handleRelconATGChange() {
+        const value = document.getElementById("relconAtgProvided").value;
+
+        const countDiv = document.getElementById("relconAtgCountDiv");
+        const container = document.getElementById("relconAtgContainer");
+
+        if (value === "YES") {
+          countDiv.classList.remove("hidden");
+          container.classList.remove("hidden");
+        } else {
+          countDiv.classList.add("hidden");
+          container.classList.add("hidden");
+          document.getElementById("relconAtgCount").value = "";
+          container.innerHTML = "";
+        }
+      }
+
+      function renderRelconATGFields() {
+        const count = parseInt(
+          document.getElementById("relconAtgCount").value || 0
+        );
+
+        const container = document.getElementById("relconAtgContainer");
+        container.innerHTML =
+          "<label class='font-semibold'>RELCON ATG Details</label>";
+
+        for (let i = 1; i <= count; i++) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.placeholder = `ATG ${i} Serial / ID`;
+          input.className = "w-full p-2 border rounded mt-1";
+          input.id = `relconAtg_${i}`;
+
+          container.appendChild(input);
+        }
+      }
+
       function closeBPCLModal() {
         document.getElementById("bpclModal").classList.add("hidden");
       }
@@ -3131,6 +3210,23 @@
       /* ================= SAVE BPCL STATUS ================= */
 
       async function saveBPCLStatus() {
+        const relconAtgProvided =
+          document.getElementById("relconAtgProvided")?.value || "NO";
+
+        const relconAtgCount =
+          relconAtgProvided === "YES"
+            ? Number(document.getElementById("relconAtgCount")?.value || 0)
+            : 0;
+
+        let relconAtgDetails = [];
+
+        if (relconAtgProvided === "YES" && relconAtgCount > 0) {
+          for (let i = 1; i <= relconAtgCount; i++) {
+            const val = document.getElementById(`relconAtg_${i}`)?.value;
+            if (val) relconAtgDetails.push(val);
+          }
+        }
+
         const payload = {
           planId: document.getElementById("bpclPlanId").value,
 
@@ -3151,6 +3247,11 @@
           class2Devices: [...document.querySelectorAll(".class2Device")].map(
             (i) => i.value
           ),
+
+          // 🔹 RELCON ATG ✅ NEW
+          relconAtgProvided,
+          relconAtgCount,
+          relconAtgDetails,
 
           // 🔹 SIM
           jioSimNumber: bpclJioSim.value,
@@ -3190,6 +3291,13 @@
           "";
         document.getElementById("class2DevicesContainer").innerHTML = "";
 
+        // 🔹 ATG Reset
+        document.getElementById("relconAtgProvided").value = "";
+        document.getElementById("relconAtgCountDiv").classList.add("hidden");
+        document.getElementById("relconAtgContainer").classList.add("hidden");
+        document.getElementById("relconAtgContainer").innerHTML = "";
+        document.getElementById("relconAtgCount").value = "";
+
         try {
           const res = await fetch(
             `${baseUrl}/bpclStatus/getBPCLStatusByPlan/${planId}`,
@@ -3208,7 +3316,7 @@
             class1Countwithoutsim.value = data.class1WithoutSimCount || 0;
             class2Count.value = data.class2DeviceCount || 0;
 
-            // 🔹 Render
+            // 🔹 Render device fields
             renderClass1Devices();
             renderClass1WithoutSimDevices();
             renderClass2Devices();
@@ -3226,6 +3334,30 @@
               document.querySelectorAll(".class2Device")[i].value = v;
             });
 
+            // 🔹 ATG DETAILS ✅ NEW
+            if (data.relconAtgProvided === "YES") {
+              document.getElementById("relconAtgProvided").value = "YES";
+              document
+                .getElementById("relconAtgCountDiv")
+                .classList.remove("hidden");
+              document
+                .getElementById("relconAtgContainer")
+                .classList.remove("hidden");
+
+              document.getElementById("relconAtgCount").value =
+                data.relconAtgCount || 0;
+
+              renderRelconATGFields();
+
+              data.relconAtgDetails?.forEach((v, i) => {
+                const el = document.getElementById(`relconAtg_${i + 1}`);
+                if (el) el.value = v;
+              });
+            } else {
+              document.getElementById("relconAtgProvided").value = "NO";
+            }
+
+            // 🔹 SIM DETAILS
             bpclJioSim.value = data.jioSimNumber || "";
             bpclAirtelSim.value = data.airtelSimNumber || "";
           }
@@ -3233,6 +3365,7 @@
           console.warn("BPCL status not found, opening blank form");
         }
 
+        // 🔹 Open modal
         document.getElementById("bpclModal").classList.remove("hidden");
       }
     </script>
