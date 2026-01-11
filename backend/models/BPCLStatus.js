@@ -49,6 +49,26 @@ const BPCLStatusSchema = new mongoose.Schema(
       },
     ],
 
+    /* 🔹 RELCON ATG DETAILS ✅ NEW */
+    relconAtgProvided: {
+      type: String,
+      enum: ["YES", "NO"],
+      default: "NO",
+    },
+
+    relconAtgCount: {
+      type: Number,
+      default: 0,
+    },
+
+    relconAtgDetails: [
+      {
+        type: String,
+        uppercase: true,
+        trim: true,
+      },
+    ],
+
     /* 🔹 SIM DETAILS */
     jioSimNumber: {
       type: String,
