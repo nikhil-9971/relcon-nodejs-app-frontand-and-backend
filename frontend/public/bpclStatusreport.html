@@ -173,7 +173,6 @@
 
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
-      const token = localStorage.getItem("token");
 
       let bpclData = [];
       let currentUser = {};
@@ -219,8 +218,12 @@
           currentUser = { username, role };
 
           bpclData = (data || [])
-            .map((d) => ({ ...d, ...d.planId, bpclStatusId: d._id }))
-            // frontend-level filter: non-admin sees only their engineer entries
+            .map((d) => ({
+              ...d,
+              ...d.planId,
+              bpclStatusId: d._id,
+              planId: d.planId,
+            }))
             .filter((d) =>
               role === "admin"
                 ? true
@@ -245,9 +248,16 @@
             { key: "roName", label: "RO Name" },
             { key: "class1WithoutSimCount", label: "Class1 (No SIM) Count" },
             { key: "class1DeviceCount", label: "Class1 (With SIM) Count" },
+            {
+              key: "class1WithoutSimDevices",
+              label: "Class1 (No SIM) Devices",
+            },
+            { key: "class1Devices", label: "Class1 (With SIM) Devices" },
             { key: "class2DeviceCount", label: "Class2 Count" },
+            { key: "class2Devices", label: "Class2 Devices" },
             { key: "relconAtgProvided", label: "RELCON ATG Provided" },
             { key: "relconAtgCount", label: "RELCON ATG Count" },
+            { key: "relconAtgDetails", label: "RELCON ATG Details" },
             { key: "jioSimNumber", label: "Jio SIM Number" },
             { key: "airtelSimNumber", label: "Airtel SIM Number" },
             { key: "date", label: "Date" },
@@ -273,7 +283,6 @@
               const row = columns
                 .map((col) => {
                   if (col.key === "actions") {
-                    // Show actions based on role: admin can edit/delete/verify, owner can edit if not verified
                     if (currentUser.role === "admin") {
                       return `<td class="border text-center px-2 py-1">
                         <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
@@ -287,13 +296,11 @@
                         }
                       </td>`;
                     } else {
-                      // Non-admin (engineer) can edit only if record not verified and is their record
+                      const token = localStorage.getItem("token");
+                      const engName =
+                        getUserFromToken(token).engineerName || "";
                       const isOwner =
-                        (record.engineer || "").trim() ===
-                        (
-                          getUserFromToken(localStorage.getItem("token"))
-                            .engineerName || ""
-                        ).trim();
+                        (record.engineer || "").trim() === engName.trim();
                       if (isVerified) {
                         return `<td class="border text-center px-2 py-1 text-green-700 font-semibold">🟢 Verified</td>`;
                       } else if (isOwner) {
@@ -307,7 +314,12 @@
                     }
                   }
 
+                  // value handling: arrays -> join with comma, booleans/date special cases
                   let value = record[col.key];
+                  if (Array.isArray(value)) {
+                    value = value.join(", ");
+                  }
+
                   if (col.key === "isVerified") {
                     return `<td class='border text-center px-2 py-1'>${
                       isVerified ? "🟢 Yes" : "❌ No"
@@ -443,16 +455,14 @@
 
         for (const [key, value] of Object.entries(record)) {
           if (
-            [
-              "__v",
-              "createdAt",
-              "updatedAt",
-              "_id",
-              "bpclStatusId",
-              "planId",
-            ].includes(key)
+            ["__v", "createdAt", "updatedAt", "_id", "bpclStatusId"].includes(
+              key
+            )
           )
             continue;
+
+          // skip embedded plan object to avoid clutter (we show planId separately)
+          if (key === "planId" && typeof value === "object") continue;
 
           let safeValue = Array.isArray(value) ? value.join(", ") : value || "";
 
@@ -463,11 +473,18 @@
             </div>`;
         }
 
-        // also allow changing planId by showing plan's _id if available
-        if (record.planId && record.planId._id) {
+        // show planId if available
+        if (
+          record.planId &&
+          (typeof record.planId === "string" || record.planId._id)
+        ) {
+          const pid =
+            typeof record.planId === "string"
+              ? record.planId
+              : record.planId._id;
           form.innerHTML += `<div class="md:col-span-2">
             <label class="block text-gray-700 font-medium mb-1">planId (objectId)</label>
-            <input type="text" name="planId" value="${record.planId._id}" class="w-full border px-2 py-1 rounded" />
+            <input type="text" name="planId" value="${pid}" class="w-full border px-2 py-1 rounded" />
           </div>`;
         }
 
@@ -486,7 +503,7 @@
 
         formData.forEach((val, key) => {
           if (key === "_id") return;
-          // basic handling: comma-separated values -> arrays for known array fields
+          // convert comma-separated values to arrays for known array fields
           if (
             [
               "class1Devices",
@@ -495,7 +512,12 @@
               "relconAtgDetails",
             ].includes(key)
           ) {
-            updated[key] = val ? val.split(",").map((s) => s.trim()) : [];
+            updated[key] = val
+              ? val
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              : [];
           } else if (key === "isVerified") {
             updated.isVerified = val === "true" || val === true;
           } else {
@@ -504,8 +526,6 @@
         });
 
         const id = formData.get("_id");
-        const token = localStorage.getItem("token");
-
         try {
           const res = await fetch(
             `${baseUrl}/bpclStatus/updateBPCLStatus/${id}`,
@@ -513,7 +533,7 @@
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
               body: JSON.stringify(updated),
             }
