@@ -406,18 +406,49 @@
       function exportToExcel() {
         const table = document.getElementById("statusTable");
 
+        // Clone and clean the table
         const clone = table.cloneNode(true);
-        const rows = clone.querySelectorAll("tbody tr");
+        const rows = Array.from(clone.querySelectorAll("tbody tr"));
+
+        // find header indexes for SIM columns so we can prefix a backtick
+        const headerCells = Array.from(clone.querySelectorAll("thead th"));
+        let jioColIndex = -1;
+        let airtelColIndex = -1;
+        headerCells.forEach((th, i) => {
+          const txt = th.innerText.trim().toLowerCase();
+          if (txt.includes("jio sim")) jioColIndex = i;
+          if (txt.includes("airtel")) airtelColIndex = i;
+        });
 
         rows.forEach((row) => {
           if (row.style.display === "none") {
-            row.remove();
+            row.remove(); // remove hidden rows (date/search filtered)
             return;
           }
-          const cells = row.querySelectorAll("td");
-          cells.forEach((td) => (td.innerHTML = td.innerText));
+
+          const cells = Array.from(row.querySelectorAll("td"));
+
+          // Prefix backtick to SIM cells to preserve as text in Excel
+          if (jioColIndex > -1 && cells[jioColIndex]) {
+            const raw = cells[jioColIndex].innerText || "";
+            if (raw && !raw.startsWith("`")) {
+              cells[jioColIndex].innerText = "`" + raw;
+            }
+          }
+          if (airtelColIndex > -1 && cells[airtelColIndex]) {
+            const raw = cells[airtelColIndex].innerText || "";
+            if (raw && !raw.startsWith("`")) {
+              cells[airtelColIndex].innerText = "`" + raw;
+            }
+          }
+
+          // Optional: remove any other emojis or formatting from cells
+          cells.forEach((td) => {
+            td.innerHTML = td.innerText;
+          });
         });
 
+        // Build dynamic filename
         const today = new Date().toLocaleDateString("en-CA");
         const fromDate = document.getElementById("fromDate").value;
         const toDate = document.getElementById("toDate").value;
@@ -433,7 +464,38 @@
           filename += `_${today}`;
         }
 
+        // Create sheet
         const ws = XLSX.utils.table_to_sheet(clone);
+
+        // Apply Calibri font, size 11 to all cells (SheetJS style object)
+        // Note: styling support depends on SheetJS build; this uses cell `.s` property.
+        try {
+          if (ws && ws["!ref"]) {
+            const range = XLSX.utils.decode_range(ws["!ref"]);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+              for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                const cell = ws[cellAddress];
+                if (cell) {
+                  // ensure the cell has text value for Excel
+                  if (typeof cell.v === "string") {
+                    // keep as-is
+                  }
+                  // apply font style
+                  cell.s = cell.s || {};
+                  cell.s.font = Object.assign({}, cell.s.font, {
+                    name: "Calibri",
+                    sz: 11,
+                  });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // If styling fails (sheetjs version), continue silently — data will still export
+          console.warn("Excel styling not applied:", e);
+        }
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "BPCL Status");
 
