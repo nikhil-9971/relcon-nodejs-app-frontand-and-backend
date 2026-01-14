@@ -466,7 +466,7 @@
 
         <div>
           <!-- Toggle Button -->
-          <button
+          <!-- <button
             onclick="toggleRecordList()"
             class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
           >
@@ -478,6 +478,22 @@
             </div>
             <span id="toggleIcon" class="text-green-800 hover:text-white">
               <i class="fa-solid fa-caret-down"></i>
+            </span>
+          </button> -->
+
+          <!-- Report: open reports overview cards in main pane -->
+          <button
+            onclick="loadPage('reportsOverview.html', this)"
+            class="flex items-center justify-between w-full px-4 py-2 rounded hover:bg-green-800 hover:text-white transition-all font-medium"
+          >
+            <div class="flex items-center">
+              <i
+                class="fa-solid fa-folder-plus mr-2 text-[13px] opacity-90"
+              ></i>
+              <span>Report</span>
+            </div>
+            <span id="toggleIcon" class="text-green-800 hover:text-white">
+              <i class="fa-solid fa-th-large"></i>
             </span>
           </button>
 
