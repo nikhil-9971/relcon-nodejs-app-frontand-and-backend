@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>BPCL Status Records</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f1f5f9;
+        font-size: 12px;
+      }
+      th,
+      td {
+        white-space: nowrap;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f3f4f6;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body class="p-6 bg-gray-100 text-[9px]">
+    <div class="max-w-7xl mx-auto bg-white p-6 shadow rounded">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">📄 BPCL Status Report</h1>
+        <div class="flex items-center gap-2">
+          <img src="./assets/BPCL.png" alt="BPCL" class="h-14" />
+        </div>
+        <button
+          onclick="exportToExcel()"
+          class="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          📤 Export
+        </button>
+      </div>
+
+      <!-- Filter -->
+      <div class="flex flex-wrap items-center gap-4 mb-4">
+        <div>
+          <label
+            for="fromDate"
+            class="block text-[12px] font-medium text-gray-700"
+            >📅 From:</label
+          >
+          <input
+            type="date"
+            id="fromDate"
+            class="border border-gray-300 rounded px-2 py-1 text-[12px]"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div>
+          <label
+            for="toDate"
+            class="block text-[12px] font-medium text-gray-700"
+            >📅 To:</label
+          >
+          <input
+            type="date"
+            id="toDate"
+            class="border border-gray-300 rounded px-2 py-1 text-[12px]"
+            onchange="applyDateRangeFilter()"
+          />
+        </div>
+        <div class="self-end">
+          <button
+            onclick="clearDateRangeFilter()"
+            class="bg-yellow-500 text-white px-4 py-2 rounded"
+          >
+            ♻️ Clear Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="mb-4">
+        <input
+          type="text"
+          id="searchInput"
+          oninput="applySearch()"
+          placeholder="🔎 Search anything..."
+          class="w-full border px-3 py-2 rounded"
+        />
+      </div>
+
+      <div
+        class="overflow-x-auto max-h-[75vh] overflow-y-auto border border-gray-300 rounded"
+      >
+        <table id="statusTable" class="min-w-max table-auto w-full text-[10px]">
+          <thead class="bg-blue-400 sticky top-0 z-10">
+            <tr id="tableHeader"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-6 rounded shadow max-h-[80vh] overflow-y-auto w-[90%] max-w-4xl"
+      >
+        <h2 class="text-lg font-bold mb-4">Edit BPCL Record</h2>
+        <form id="editForm" class="grid grid-cols-2 gap-4 text-xs"></form>
+        <div class="mt-4 flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-gray-500 text-white px-4 py-1 rounded mr-2"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveEdit()"
+            class="bg-green-600 text-white px-4 py-1 rounded"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div
+      id="deleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 flex transition duration-200 ease-out"
+    >
+      <div class="bg-white p-6 rounded shadow max-w-sm text-sm">
+        <h3 class="text-lg font-bold text-red-600 mb-4">Confirm Delete</h3>
+        <p class="mb-4">Are you sure you want to delete this record?</p>
+        <div class="flex justify-end gap-2">
+          <button
+            onclick="cancelDelete()"
+            class="px-4 py-1 rounded bg-gray-400 text-white"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="confirmDelete()"
+            class="px-4 py-1 rounded bg-red-600 text-white"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="fixed top-5 right-5 hidden bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm"
+    ></div>
+
+    <!-- Loader -->
+    <div
+      id="loader"
+      class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="w-12 h-12 border-4 border-white border-t-blue-600 rounded-full animate-spin"
+      ></div>
+    </div>
+
+    <script>
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      const token = localStorage.getItem("token");
+
+      let bpclData = [];
+      let currentUser = {};
+      let deleteTargetId = null;
+
+      function getUserFromToken(token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          return {
+            username: (payload.username || payload.name || "")
+              .trim()
+              .toLowerCase(),
+            engineerName: (payload.engineerName || "").trim(),
+            role: (payload.role || "").trim().toLowerCase(),
+          };
+        } catch (e) {
+          console.error("Invalid token format", e);
+          return { username: "", engineerName: "", role: "" };
+        }
+      }
+
+      function showLoader() {
+        document.getElementById("loader").classList.remove("hidden");
+      }
+
+      function hideLoader() {
+        document.getElementById("loader").classList.add("hidden");
+      }
+
+      async function fetchData() {
+        showLoader();
+        try {
+          const res = await fetch(`${baseUrl}/bpclStatus/getAllBPCLStatus`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          const data = await res.json();
+
+          const { username, engineerName, role } = getUserFromToken(
+            localStorage.getItem("token")
+          );
+          currentUser = { username, role };
+
+          bpclData = (data || [])
+            .map((d) => ({ ...d, ...d.planId, bpclStatusId: d._id }))
+            // frontend-level filter: non-admin sees only their engineer entries
+            .filter((d) =>
+              role === "admin"
+                ? true
+                : (d.engineer || "").trim() === engineerName
+            );
+
+          renderTable(bpclData);
+        } catch (err) {
+          console.error("Error fetching BPCL data", err);
+        } finally {
+          hideLoader();
+        }
+      }
+
+      function renderTable(data) {
+        showLoader();
+        setTimeout(() => {
+          const columns = [
+            { key: "engineer", label: "Engineer" },
+            { key: "region", label: "Region" },
+            { key: "roCode", label: "RO Code" },
+            { key: "roName", label: "RO Name" },
+            { key: "class1WithoutSimCount", label: "Class1 (No SIM) Count" },
+            { key: "class1DeviceCount", label: "Class1 (With SIM) Count" },
+            { key: "class2DeviceCount", label: "Class2 Count" },
+            { key: "relconAtgProvided", label: "RELCON ATG Provided" },
+            { key: "relconAtgCount", label: "RELCON ATG Count" },
+            { key: "jioSimNumber", label: "Jio SIM Number" },
+            { key: "airtelSimNumber", label: "Airtel SIM Number" },
+            { key: "date", label: "Date" },
+            { key: "isVerified", label: "Verified" },
+            { key: "actions", label: "Actions" },
+          ];
+
+          document.getElementById("tableHeader").innerHTML = columns
+            .map(
+              (col) =>
+                `<th class='border px-3 py-2 bg-blue-400 text-center font-semibold text-white'>${col.label}</th>`
+            )
+            .join("");
+
+          document.getElementById("tableBody").innerHTML = data
+            .map((record) => {
+              const encoded = btoa(
+                unescape(encodeURIComponent(JSON.stringify(record)))
+              );
+              const isVerified =
+                record.isVerified === true || record.isVerified === "true";
+
+              const row = columns
+                .map((col) => {
+                  if (col.key === "actions") {
+                    // Show actions based on role: admin can edit/delete/verify, owner can edit if not verified
+                    if (currentUser.role === "admin") {
+                      return `<td class="border text-center px-2 py-1">
+                        <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
+                        <button class="px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2" onclick='deleteRecord("${
+                          record.bpclStatusId
+                        }")'>Delete</button>
+                        ${
+                          isVerified
+                            ? ""
+                            : `<button class="bg-green-600 text-white px-2 py-1 rounded ml-2" onclick='verifyRecord("${record.bpclStatusId}")'>✅ Verify</button>`
+                        }
+                      </td>`;
+                    } else {
+                      // Non-admin (engineer) can edit only if record not verified and is their record
+                      const isOwner =
+                        (record.engineer || "").trim() ===
+                        (
+                          getUserFromToken(localStorage.getItem("token"))
+                            .engineerName || ""
+                        ).trim();
+                      if (isVerified) {
+                        return `<td class="border text-center px-2 py-1 text-green-700 font-semibold">🟢 Verified</td>`;
+                      } else if (isOwner) {
+                        return `<td class="border text-center px-2 py-1">
+                          <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
+                          <span class="text-gray-500 italic text-[11px] ml-2">No delete</span>
+                        </td>`;
+                      } else {
+                        return `<td class="border text-center px-2 py-1 text-gray-400 italic">Not allowed</td>`;
+                      }
+                    }
+                  }
+
+                  let value = record[col.key];
+                  if (col.key === "isVerified") {
+                    return `<td class='border text-center px-2 py-1'>${
+                      isVerified ? "🟢 Yes" : "❌ No"
+                    }</td>`;
+                  }
+
+                  if (col.key === "date") {
+                    let parsedDate = new Date(value);
+                    const isValidDate = !isNaN(parsedDate);
+                    const iso = isValidDate
+                      ? parsedDate.toISOString().slice(0, 10)
+                      : "";
+                    return `<td class='border text-center px-2 py-1' data-date="${iso}">${
+                      value || ""
+                    }</td>`;
+                  }
+
+                  return `<td class='border text-center px-2 py-1'>${
+                    value === undefined || value === null ? "" : value
+                  }</td>`;
+                })
+                .join("");
+
+              return `<tr>${row}</tr>`;
+            })
+            .join("");
+
+          hideLoader();
+        }, 100);
+      }
+
+      function applySearch() {
+        showLoader();
+        setTimeout(() => {
+          const searchValue = document
+            .getElementById("searchInput")
+            .value.toLowerCase()
+            .trim();
+          const rows = document.querySelectorAll("#statusTable tbody tr");
+          rows.forEach((row) => {
+            const rowText = row.textContent.toLowerCase();
+            row.style.display = rowText.includes(searchValue) ? "" : "none";
+          });
+          hideLoader();
+        }, 100);
+      }
+
+      function applyDateRangeFilter() {
+        showLoader();
+        setTimeout(() => {
+          const fromDate = new Date(document.getElementById("fromDate").value);
+          const toDate = new Date(document.getElementById("toDate").value);
+          const rows = document.querySelectorAll("#statusTable tbody tr");
+
+          rows.forEach((row) => {
+            const dateCell = row.querySelector("td[data-date]");
+            if (!dateCell) return;
+
+            const rowDateStr = dateCell.getAttribute("data-date");
+            if (!rowDateStr) return;
+
+            const rowDate = new Date(rowDateStr);
+
+            const isInRange =
+              (!isNaN(fromDate) ? rowDate >= fromDate : true) &&
+              (!isNaN(toDate) ? rowDate <= toDate : true);
+
+            row.style.display = isInRange ? "" : "none";
+          });
+
+          hideLoader();
+        }, 100);
+      }
+
+      function clearDateRangeFilter() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        applyDateRangeFilter();
+      }
+
+      function exportToExcel() {
+        const table = document.getElementById("statusTable");
+
+        const clone = table.cloneNode(true);
+        const rows = clone.querySelectorAll("tbody tr");
+
+        rows.forEach((row) => {
+          if (row.style.display === "none") {
+            row.remove();
+            return;
+          }
+          const cells = row.querySelectorAll("td");
+          cells.forEach((td) => (td.innerHTML = td.innerText));
+        });
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+
+        let filename = "BPCL_Report";
+        if (fromDate && toDate) {
+          filename += `_${fromDate}_to_${toDate}`;
+        } else if (fromDate) {
+          filename += `_from_${fromDate}`;
+        } else if (toDate) {
+          filename += `_upto_${toDate}`;
+        } else {
+          filename += `_${today}`;
+        }
+
+        const ws = XLSX.utils.table_to_sheet(clone);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "BPCL Status");
+
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+      }
+
+      function handleEditClick(encoded) {
+        try {
+          const json = decodeURIComponent(escape(atob(encoded)));
+          const record = JSON.parse(json);
+          openEditModal(record);
+        } catch (err) {
+          alert("Error opening editor");
+        }
+      }
+
+      function openEditModal(record) {
+        const form = document.getElementById("editForm");
+        form.innerHTML = "";
+
+        form.innerHTML += `<input type="hidden" name="_id" value="${record.bpclStatusId}" />`;
+
+        for (const [key, value] of Object.entries(record)) {
+          if (
+            [
+              "__v",
+              "createdAt",
+              "updatedAt",
+              "_id",
+              "bpclStatusId",
+              "planId",
+            ].includes(key)
+          )
+            continue;
+
+          let safeValue = Array.isArray(value) ? value.join(", ") : value || "";
+
+          form.innerHTML += `
+            <div>
+              <label class="block text-gray-700 font-medium mb-1">${key}</label>
+              <input type="text" name="${key}" value="${safeValue}" class="w-full border px-2 py-1 rounded" />
+            </div>`;
+        }
+
+        // also allow changing planId by showing plan's _id if available
+        if (record.planId && record.planId._id) {
+          form.innerHTML += `<div class="md:col-span-2">
+            <label class="block text-gray-700 font-medium mb-1">planId (objectId)</label>
+            <input type="text" name="planId" value="${record.planId._id}" class="w-full border px-2 py-1 rounded" />
+          </div>`;
+        }
+
+        document.getElementById("editModal").classList.remove("hidden");
+        document.getElementById("editModal").classList.add("flex");
+      }
+
+      function closeModal() {
+        document.getElementById("editModal").classList.add("hidden");
+      }
+
+      async function saveEdit() {
+        const form = document.getElementById("editForm");
+        const formData = new FormData(form);
+        const updated = {};
+
+        formData.forEach((val, key) => {
+          if (key === "_id") return;
+          // basic handling: comma-separated values -> arrays for known array fields
+          if (
+            [
+              "class1Devices",
+              "class1WithoutSimDevices",
+              "class2Devices",
+              "relconAtgDetails",
+            ].includes(key)
+          ) {
+            updated[key] = val ? val.split(",").map((s) => s.trim()) : [];
+          } else if (key === "isVerified") {
+            updated.isVerified = val === "true" || val === true;
+          } else {
+            updated[key] = val;
+          }
+        });
+
+        const id = formData.get("_id");
+        const token = localStorage.getItem("token");
+
+        try {
+          const res = await fetch(
+            `${baseUrl}/bpclStatus/updateBPCLStatus/${id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(updated),
+            }
+          );
+
+          if (res.ok) {
+            closeModal();
+            fetchData();
+            showToast("✅ Record updated successfully");
+          } else {
+            const errText = await res.text().catch(() => "Server error");
+            console.error("❌ Update failed:", errText);
+            alert("❌ Failed to update record: " + errText);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("❌ Update failed");
+        }
+      }
+
+      function deleteRecord(id) {
+        deleteTargetId = id;
+        document.getElementById("deleteModal").classList.remove("hidden");
+      }
+
+      function cancelDelete() {
+        deleteTargetId = null;
+        document.getElementById("deleteModal").classList.add("hidden");
+      }
+
+      async function confirmDelete() {
+        if (!deleteTargetId) return;
+        try {
+          const res = await fetch(
+            `${baseUrl}/bpclStatus/deleteBPCLStatus/${deleteTargetId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          document.getElementById("deleteModal").classList.add("hidden");
+          if (res.ok) {
+            showToast("Record deleted successfully ✅");
+            fetchData();
+          } else {
+            const errText = await res.text().catch(() => "Server error");
+            alert("Failed to delete record: " + errText);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Failed to delete record");
+        } finally {
+          deleteTargetId = null;
+        }
+      }
+
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 3000);
+      }
+
+      async function verifyRecord(id) {
+        const confirmed = confirm(
+          "Are you sure you want to mark this record as VERIFIED?"
+        );
+        if (!confirmed) return;
+
+        try {
+          const res = await fetch(
+            `${baseUrl}/bpclStatus/verifyBPCLStatus/${id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({}),
+            }
+          );
+
+          if (res.ok) {
+            showToast("Record marked as Verified ✅");
+            fetchData();
+          } else {
+            const errText = await res.text().catch(() => "Server error");
+            alert("Verification failed: " + errText);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Verification failed");
+        }
+      }
+
+      fetchData();
+    </script>
+  </body>
+</html>
