@@ -236,6 +236,11 @@
         color: #e11d48;
       }
 
+      /* hidden state for restricted cards */
+      .card.hidden-by-role {
+        display: none !important;
+      }
+
       /* small responsive */
       @media (max-width: 640px) {
         .container {
@@ -315,10 +320,11 @@
       </div>
 
       <div id="cardsContainer" class="cards-grid" role="list">
-        <!-- Card: Visit -->
+        <!-- Card: Visit (visible to all) -->
         <div
           class="card"
           data-theme="green"
+          data-key="visit"
           onclick="openReport('dataView.html')"
           role="button"
           tabindex="0"
@@ -330,7 +336,6 @@
             <p>Visit history & visit-level exports</p>
           </div>
           <div class="control" aria-hidden>
-            <!-- visible square/check using currentColor -->
             <svg
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
@@ -359,10 +364,12 @@
           ></div>
         </div>
 
-        <!-- HPCL -->
+        <!-- HPCL (admin-only) -->
         <div
           class="card"
           data-theme="blue"
+          data-key="hpcl"
+          data-admin-only="true"
           onclick="openReport('statusRecords.html')"
           role="button"
           tabindex="0"
@@ -402,10 +409,11 @@
           ></div>
         </div>
 
-        <!-- BPCL Visit -->
+        <!-- BPCL Visit (visible to all) -->
         <div
           class="card"
           data-theme="purple"
+          data-key="bpcl-visit"
           onclick="openReport('bpclVisitReport.html')"
           role="button"
           tabindex="0"
@@ -445,10 +453,11 @@
           ></div>
         </div>
 
-        <!-- Jio BP -->
+        <!-- Jio BP (visible to all) -->
         <div
           class="card"
           data-theme="orange"
+          data-key="jio-bp"
           onclick="openReport('jioBPreport.html')"
           role="button"
           tabindex="0"
@@ -488,10 +497,11 @@
           ></div>
         </div>
 
-        <!-- BPCL Status -->
+        <!-- BPCL Status (visible to all) -->
         <div
           class="card"
           data-theme="teal"
+          data-key="bpcl-status"
           onclick="openReport('bpclStatusreport.html')"
           role="button"
           tabindex="0"
@@ -531,10 +541,12 @@
           ></div>
         </div>
 
-        <!-- ATG -->
+        <!-- ATG (admin-only) -->
         <div
           class="card"
           data-theme="slate"
+          data-key="atg"
+          data-admin-only="true"
           onclick="openReport('atgRecords.html')"
           role="button"
           tabindex="0"
@@ -574,10 +586,12 @@
           ></div>
         </div>
 
-        <!-- Task -->
+        <!-- Task (admin-only) -->
         <div
           class="card"
           data-theme="rose"
+          data-key="task"
+          data-admin-only="true"
           onclick="openReport('taskReport.html')"
           role="button"
           tabindex="0"
@@ -617,10 +631,11 @@
           ></div>
         </div>
 
-        <!-- Earthing -->
+        <!-- Earthing (visible to all) -->
         <div
           class="card"
           data-theme="slate"
+          data-key="earthing"
           onclick="openReport('earthingReport.html')"
           role="button"
           tabindex="0"
@@ -668,6 +683,33 @@
     </div>
 
     <script>
+      // Read token and return role in lowercase (admin/engineer/...)
+      function getRoleFromToken(token) {
+        try {
+          if (!token) return "";
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          return (payload.role || "").toString().toLowerCase();
+        } catch (e) {
+          return "";
+        }
+      }
+
+      // On load hide admin-only cards for non-admin users
+      function applyRoleVisibility() {
+        const token = localStorage.getItem("token");
+        const role = getRoleFromToken(token);
+        const adminOnlyCards = Array.from(
+          document.querySelectorAll("[data-admin-only='true']")
+        );
+        if (role !== "admin") {
+          // hide admin-only cards for non-admins (engineer)
+          adminOnlyCards.forEach((c) => c.classList.add("hidden-by-role"));
+        } else {
+          // ensure visible for admin
+          adminOnlyCards.forEach((c) => c.classList.remove("hidden-by-role"));
+        }
+      }
+
       function openReport(page) {
         try {
           if (window.parent && typeof window.parent.loadPage === "function") {
@@ -689,6 +731,11 @@
           document.querySelectorAll("#cardsContainer .card")
         );
         cards.forEach((c) => {
+          // if card hidden by role, keep it hidden regardless of search
+          if (c.classList.contains("hidden-by-role")) {
+            c.style.display = "none";
+            return;
+          }
           const txt = (c.innerText || "").toLowerCase();
           c.style.display = q === "" || txt.includes(q) ? "" : "none";
         });
@@ -703,6 +750,11 @@
             e.preventDefault();
           }
         }
+      });
+
+      // initialize on DOM ready
+      document.addEventListener("DOMContentLoaded", () => {
+        applyRoleVisibility();
       });
     </script>
   </body>
