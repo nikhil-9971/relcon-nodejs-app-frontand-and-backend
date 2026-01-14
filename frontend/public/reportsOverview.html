@@ -6,117 +6,471 @@
     <title>Reports Overview</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      :root {
+        --bg: #f3f4f6;
+        --card-radius: 12px;
+        --card-gap: 18px;
+      }
       body {
         font-family: "Poppins", sans-serif;
-        background: #f3f4f6;
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
-      .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
       }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .title h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .search {
+        width: 280px;
+      }
+
+      /* Grid */
       .cards-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: var(--card-gap);
+      }
+
+      /* Card base */
+      .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 18px;
+        border-radius: var(--card-radius);
+        background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        cursor: pointer;
+        transform-style: preserve-3d;
+        transition: transform 300ms cubic-bezier(0.2, 0.9, 0.3, 1),
+          box-shadow 300ms ease, filter 220ms ease;
+        will-change: transform;
+        min-height: 86px;
+        overflow: hidden;
+      }
+
+      /* 3D effect (hover) */
+      .card::before {
+        /* colored accent bar on left */
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 8px;
+        border-top-left-radius: var(--card-radius);
+        border-bottom-left-radius: var(--card-radius);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.15),
+          rgba(0, 0, 0, 0.03)
+        );
+        z-index: 0;
+      }
+
+      .card .content {
+        position: relative;
+        z-index: 2;
+      }
+
+      .card .icon {
+        position: absolute;
+        right: 14px;
+        top: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 10px rgba(2, 6, 23, 0.06);
+        backdrop-filter: blur(4px);
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: #06142b;
+      }
+      .card p {
+        margin: 0;
+        color: #475569;
+        font-size: 13px;
+      }
+
+      /* Hover/Active */
+      .card:hover {
+        transform: translateY(-12px) perspective(800px) rotateX(3deg)
+          scale(1.01);
+        box-shadow: 0 28px 50px rgba(2, 6, 23, 0.12),
+          0 10px 18px rgba(2, 6, 23, 0.06);
+        filter: brightness(1.01);
+      }
+      .card:active {
+        transform: translateY(-6px) perspective(800px) rotateX(1.5deg);
+      }
+
+      /* Color themes via data-theme attribute */
+      .card[data-theme="green"]::before {
+        background: linear-gradient(180deg, #10b981, #059669);
+      }
+      .card[data-theme="blue"]::before {
+        background: linear-gradient(180deg, #3b82f6, #2563eb);
+      }
+      .card[data-theme="purple"]::before {
+        background: linear-gradient(180deg, #8b5cf6, #7c3aed);
+      }
+      .card[data-theme="orange"]::before {
+        background: linear-gradient(180deg, #f59e0b, #d97706);
+      }
+      .card[data-theme="teal"]::before {
+        background: linear-gradient(180deg, #14b8a6, #0d9488);
+      }
+      .card[data-theme="slate"]::before {
+        background: linear-gradient(180deg, #64748b, #475569);
+      }
+      .card[data-theme="rose"]::before {
+        background: linear-gradient(180deg, #f43f5e, #e11d48);
+      }
+
+      /* subtle header strip to show gradient on top right */
+      .card .accent {
+        position: absolute;
+        right: -40px;
+        top: -24px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        opacity: 0.08;
+        z-index: 1;
+        pointer-events: none;
+      }
+      .card[data-theme="green"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #10b981,
+          transparent 40%
+        );
+      }
+      .card[data-theme="blue"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #3b82f6,
+          transparent 40%
+        );
+      }
+      .card[data-theme="purple"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #8b5cf6,
+          transparent 40%
+        );
+      }
+      .card[data-theme="orange"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #f59e0b,
+          transparent 40%
+        );
+      }
+      .card[data-theme="teal"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #14b8a6,
+          transparent 40%
+        );
+      }
+      .card[data-theme="slate"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #64748b,
+          transparent 40%
+        );
+      }
+      .card[data-theme="rose"] .accent {
+        background: radial-gradient(
+          circle at 30% 30%,
+          #f43f5e,
+          transparent 40%
+        );
+      }
+
+      /* small responsive tweaks */
+      @media (max-width: 640px) {
+        .search {
+          width: 100%;
+        }
+        .title h1 {
+          font-size: 18px;
+        }
       }
     </style>
   </head>
   <body class="p-6">
-    <div class="max-w-6xl mx-auto">
-      <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-semibold">📂 Reports</h1>
+    <div class="container">
+      <div class="topbar">
+        <div class="title">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            <rect
+              x="2"
+              y="3"
+              width="7"
+              height="7"
+              rx="1.5"
+              fill="#10B981"
+            ></rect>
+            <rect
+              x="15"
+              y="3"
+              width="7"
+              height="7"
+              rx="1.5"
+              fill="#3B82F6"
+            ></rect>
+            <rect
+              x="2"
+              y="14"
+              width="7"
+              height="7"
+              rx="1.5"
+              fill="#8B5CF6"
+            ></rect>
+            <rect
+              x="15"
+              y="14"
+              width="7"
+              height="7"
+              rx="1.5"
+              fill="#F59E0B"
+            ></rect>
+          </svg>
+          <h1>Reports</h1>
+        </div>
+
         <div>
           <input
             id="reportsSearch"
             type="search"
             placeholder="🔎 Search reports..."
-            class="border rounded px-3 py-2 w-64"
+            class="search border rounded px-3 py-2"
             oninput="filterCards()"
+            aria-label="Search reports"
           />
         </div>
       </div>
 
       <div id="cardsContainer" class="cards-grid">
-        <!-- Cards: keep order same as sidebar, id used to map to pages -->
+        <!-- Each card has data-theme to get different color + accent -->
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="visit"
+          class="card"
+          data-theme="green"
           onclick="openReport('dataView.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">Visit Report</div>
-          <div class="text-sm text-gray-500 mt-2">
-            Visit history & visit-level exports
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <!-- visit SVG -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1H3V7z"
+                fill="#0f172a"
+                opacity="0.06"
+              />
+              <path
+                d="M7 21h10a2 2 0 0 0 2-2V8H5v11a2 2 0 0 0 2 2z"
+                fill="#ffffff"
+                stroke="#0f172a"
+                stroke-opacity="0.06"
+              />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>Visit Report</h3>
+            <p>Visit history & visit-level exports</p>
           </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="hpcl"
+          class="card"
+          data-theme="blue"
           onclick="openReport('statusRecords.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">HPCL Status Report</div>
-          <div class="text-sm text-gray-500 mt-2">
-            Status records for HPCL sites
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 13h18v2H3z" fill="#fff" opacity="0.06" />
+              <path
+                d="M7 5h10v6H7z"
+                fill="#ffffff"
+                stroke="#0f172a"
+                stroke-opacity="0.06"
+              />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>HPCL Status Report</h3>
+            <p>Status records for HPCL sites</p>
           </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="bpcl-visit"
+          class="card"
+          data-theme="purple"
           onclick="openReport('bpclVisitReport.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">BPCL Visit Report</div>
-          <div class="text-sm text-gray-500 mt-2">BPCL visit details</div>
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8" fill="#fff" opacity="0.06" />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>BPCL Visit Report</h3>
+            <p>BPCL visit details</p>
+          </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="jio-bp"
+          class="card"
+          data-theme="orange"
           onclick="openReport('jioBPreport.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">Jio BP Status Report</div>
-          <div class="text-sm text-gray-500 mt-2">
-            Jio BP records, export & verify
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect
+                x="4"
+                y="4"
+                width="16"
+                height="16"
+                rx="3"
+                fill="#fff"
+                opacity="0.06"
+              />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>Jio BP Status Report</h3>
+            <p>Jio BP records, export & verify</p>
           </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="bpcl-status"
+          class="card"
+          data-theme="teal"
           onclick="openReport('bpclStatusreport.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">BPCL Status Report</div>
-          <div class="text-sm text-gray-500 mt-2">
-            BPCL Status (IOT classes, SIM, ATG)
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12h18" stroke="#0f172a" opacity="0.06" />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>BPCL Status Report</h3>
+            <p>BPCL Status (IOT classes, SIM, ATG)</p>
           </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="atg"
+          class="card"
+          data-theme="slate"
           onclick="openReport('atgRecords.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">ATG Report</div>
-          <div class="text-sm text-gray-500 mt-2">ATG record exports</div>
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 7h16M4 12h16M4 17h16"
+                stroke="#0f172a"
+                opacity="0.06"
+              />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>ATG Report</h3>
+            <p>ATG record exports</p>
+          </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="task"
+          class="card"
+          data-theme="rose"
           onclick="openReport('taskReport.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">Task Report</div>
-          <div class="text-sm text-gray-500 mt-2">Task-based reports</div>
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12l4 4L19 6" stroke="#0f172a" opacity="0.06" />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>Task Report</h3>
+            <p>Task-based reports</p>
+          </div>
         </div>
 
         <div
-          class="card bg-white rounded border p-4 cursor-pointer"
-          data-key="earthing"
+          class="card"
+          data-theme="slate"
           onclick="openReport('earthingReport.html')"
+          role="button"
+          tabindex="0"
         >
-          <div class="text-lg font-semibold">Earthing Status Report</div>
-          <div class="text-sm text-gray-500 mt-2">
-            Earthing & related checks
+          <div class="accent"></div>
+          <div class="icon" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v18" stroke="#0f172a" opacity="0.06" />
+            </svg>
+          </div>
+          <div class="content">
+            <h3>Earthing Status Report</h3>
+            <p>Earthing & related checks</p>
           </div>
         </div>
       </div>
@@ -129,12 +483,11 @@
 
     <script>
       function openReport(page) {
-        // parent.loadPage exists in dashboard; call it to change iframe src
         try {
           if (window.parent && typeof window.parent.loadPage === "function") {
+            // If dashboard.loadPage accepts second param as active element, try to pass null
             window.parent.loadPage(page);
           } else {
-            // fallback: replace top location
             window.top.location.href = page;
           }
         } catch (e) {
@@ -155,6 +508,17 @@
           c.style.display = q === "" || txt.includes(q) ? "" : "none";
         });
       }
+
+      // keyboard accessibility: Enter/Space on focused card
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          const active = document.activeElement;
+          if (active && active.classList && active.classList.contains("card")) {
+            active.click();
+            e.preventDefault();
+          }
+        }
+      });
     </script>
   </body>
 </html>
