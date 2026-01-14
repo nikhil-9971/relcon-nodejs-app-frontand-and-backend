@@ -130,6 +130,7 @@
         font-size: 13px;
       }
 
+      /* control (icon box) */
       .card .control {
         width: 44px;
         height: 44px;
@@ -139,12 +140,31 @@
         justify-content: center;
         background: linear-gradient(
           180deg,
-          rgba(255, 255, 255, 0.7),
-          rgba(255, 255, 255, 0.5)
+          rgba(255, 255, 255, 0.85),
+          rgba(255, 255, 255, 0.7)
         );
         box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
         border: 1px solid rgba(15, 23, 42, 0.03);
         flex-shrink: 0;
+        color: inherit; /* will be set per theme */
+      }
+
+      /* make SVG use currentColor and visible */
+      .card .control svg {
+        width: 18px;
+        height: 18px;
+      }
+      .card .control svg .stroke {
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        stroke-opacity: 0.95;
+      }
+      .card .control svg .fill {
+        fill: currentColor;
+        fill-opacity: 0.95;
       }
 
       /* subtle decorative circle on top-right (soft glass) */
@@ -191,6 +211,29 @@
       }
       .card[data-theme="rose"] .left-accent {
         background: linear-gradient(180deg, #fb7185, #f43f5e);
+      }
+
+      /* set control color per theme so SVG visible */
+      .card[data-theme="green"] .control {
+        color: #059669;
+      }
+      .card[data-theme="blue"] .control {
+        color: #2563eb;
+      }
+      .card[data-theme="purple"] .control {
+        color: #7c3aed;
+      }
+      .card[data-theme="orange"] .control {
+        color: #d97706;
+      }
+      .card[data-theme="teal"] .control {
+        color: #0d9488;
+      }
+      .card[data-theme="slate"] .control {
+        color: #475569;
+      }
+      .card[data-theme="rose"] .control {
+        color: #e11d48;
       }
 
       /* small responsive */
@@ -287,16 +330,20 @@
             <p>Visit history & visit-level exports</p>
           </div>
           <div class="control" aria-hidden>
-            <!-- subtle check icon -->
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M5 12l4 4L19 7"
-                stroke="#0b1220"
-                stroke-opacity="0.12"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+            <!-- visible square/check using currentColor -->
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <rect
+                class="stroke"
+                x="4"
+                y="4"
+                width="16"
+                height="16"
+                rx="4"
+              ></rect>
             </svg>
           </div>
           <div
@@ -327,16 +374,19 @@
             <p>Status records for HPCL sites</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
               <rect
-                x="4"
-                y="6"
-                width="16"
-                height="12"
-                rx="2"
-                fill="#ffffff"
-                opacity="0.04"
-              />
+                class="stroke"
+                x="5.5"
+                y="5.5"
+                width="13"
+                height="13"
+                rx="3"
+              ></rect>
             </svg>
           </div>
           <div
@@ -367,8 +417,19 @@
             <p>BPCL visit details</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="7" fill="#ffffff" opacity="0.04" />
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <rect
+                class="stroke"
+                x="6"
+                y="6"
+                width="12"
+                height="12"
+                rx="3"
+              ></rect>
             </svg>
           </div>
           <div
@@ -399,16 +460,19 @@
             <p>Jio BP records, export & verify</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
               <rect
+                class="stroke"
                 x="5"
                 y="5"
                 width="14"
                 height="14"
                 rx="3"
-                fill="#fff"
-                opacity="0.03"
-              />
+              ></rect>
             </svg>
           </div>
           <div
@@ -439,13 +503,19 @@
             <p>BPCL Status (IOT classes, SIM, ATG)</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 12h16"
-                stroke="#0b1220"
-                stroke-opacity="0.06"
-                stroke-width="2"
-              />
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <rect
+                class="stroke"
+                x="5.5"
+                y="5.5"
+                width="13"
+                height="13"
+                rx="3"
+              ></rect>
             </svg>
           </div>
           <div
@@ -476,12 +546,19 @@
             <p>ATG record exports</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 7h16M4 12h16M4 17h16"
-                stroke="#0b1220"
-                stroke-opacity="0.06"
-              />
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <rect
+                class="stroke"
+                x="6"
+                y="6"
+                width="12"
+                height="12"
+                rx="3"
+              ></rect>
             </svg>
           </div>
           <div
@@ -512,15 +589,19 @@
             <p>Task-based reports</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M5 12l4 4L19 6"
-                stroke="#0b1220"
-                stroke-opacity="0.06"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <rect
+                class="stroke"
+                x="6.5"
+                y="6.5"
+                width="11"
+                height="11"
+                rx="2.5"
+              ></rect>
             </svg>
           </div>
           <div
@@ -551,13 +632,19 @@
             <p>Earthing & related checks</p>
           </div>
           <div class="control" aria-hidden>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 3v18"
-                stroke="#0b1220"
-                stroke-opacity="0.06"
-                stroke-width="2"
-              />
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <rect
+                class="stroke"
+                x="6"
+                y="6"
+                width="12"
+                height="12"
+                rx="3"
+              ></rect>
             </svg>
           </div>
           <div
