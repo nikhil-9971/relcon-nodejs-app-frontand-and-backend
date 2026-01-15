@@ -35,7 +35,7 @@
           <img src="./assets/BPCL.png" alt="BPCL" class="h-14" />
         </div>
         <button
-          onclick="exportToExcel()"
+          id="exportBtn"
           class="bg-green-600 text-white px-4 py-2 rounded"
         >
           📤 Export
@@ -54,7 +54,6 @@
             type="date"
             id="fromDate"
             class="border border-gray-300 rounded px-2 py-1 text-[12px]"
-            onchange="applyAllFilters()"
           />
         </div>
         <div>
@@ -67,7 +66,6 @@
             type="date"
             id="toDate"
             class="border border-gray-300 rounded px-2 py-1 text-[12px]"
-            onchange="applyAllFilters()"
           />
         </div>
 
@@ -80,7 +78,6 @@
           >
           <select
             id="engineerFilter"
-            onchange="applyAllFilters()"
             class="border border-gray-300 rounded px-2 py-1 text-[12px] bg-white"
           >
             <option value="ALL">All Engineers</option>
@@ -89,7 +86,7 @@
 
         <div class="self-end">
           <button
-            onclick="clearFilters()"
+            id="clearFiltersBtn"
             class="bg-yellow-500 text-white px-4 py-2 rounded"
           >
             ♻️ Clear Filter
@@ -102,7 +99,6 @@
         <input
           type="text"
           id="searchInput"
-          oninput="applyAllFilters()"
           placeholder="🔎 Search anything..."
           class="w-full border px-3 py-2 rounded"
         />
@@ -132,13 +128,13 @@
         <form id="editForm" class="grid grid-cols-2 gap-4 text-xs"></form>
         <div class="mt-4 flex justify-end">
           <button
-            onclick="closeModal()"
+            id="modalCancelBtn"
             class="bg-gray-500 text-white px-4 py-1 rounded mr-2"
           >
             Cancel
           </button>
           <button
-            onclick="saveEdit()"
+            id="modalSaveBtn"
             class="bg-green-600 text-white px-4 py-1 rounded"
           >
             Save
@@ -157,13 +153,13 @@
         <p class="mb-4">Are you sure you want to delete this record?</p>
         <div class="flex justify-end gap-2">
           <button
-            onclick="cancelDelete()"
+            id="deleteCancelBtn"
             class="px-4 py-1 rounded bg-gray-400 text-white"
           >
             Cancel
           </button>
           <button
-            onclick="confirmDelete()"
+            id="deleteConfirmBtn"
             class="px-4 py-1 rounded bg-red-600 text-white"
           >
             Delete
@@ -189,12 +185,15 @@
     </div>
 
     <script>
+      // ---------- Config ----------
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
 
+      // State
       let bpclData = [];
       let currentUser = {};
       let deleteTargetId = null;
 
+      // ---------- Utilities ----------
       function getUserFromToken(token) {
         try {
           const payload = JSON.parse(atob(token.split(".")[1]));
@@ -206,7 +205,6 @@
             role: (payload.role || "").trim().toLowerCase(),
           };
         } catch (e) {
-          console.error("Invalid token format", e);
           return { username: "", engineerName: "", role: "" };
         }
       }
@@ -214,11 +212,17 @@
       function showLoader() {
         document.getElementById("loader").classList.remove("hidden");
       }
-
       function hideLoader() {
         document.getElementById("loader").classList.add("hidden");
       }
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 3000);
+      }
 
+      // ---------- Fetch & Render ----------
       async function fetchData() {
         showLoader();
         try {
@@ -249,39 +253,12 @@
 
           renderTable(bpclData);
           populateEngineerFilter(bpclData);
-          applyAllFilters();
+          applyAllFilters(); // apply initial filters
         } catch (err) {
           console.error("Error fetching BPCL data", err);
+          alert("Error fetching BPCL data");
         } finally {
           hideLoader();
-        }
-      }
-
-      function populateEngineerFilter(data) {
-        const sel = document.getElementById("engineerFilter");
-        const current = sel.value || "ALL";
-        // collect unique engineers
-        const engineers = Array.from(
-          new Set(
-            (data || [])
-              .map((d) => (d.engineer || "").trim())
-              .filter((s) => s && s.length)
-          )
-        ).sort((a, b) => a.localeCompare(b));
-        // clear and add default
-        sel.innerHTML = '<option value="ALL">All Engineers</option>';
-        engineers.forEach((eng) => {
-          const opt = document.createElement("option");
-          opt.value = eng;
-          opt.textContent = eng;
-          sel.appendChild(opt);
-        });
-        // restore selection if possible
-        if (
-          current &&
-          Array.from(sel.options).some((o) => o.value === current)
-        ) {
-          sel.value = current;
         }
       }
 
@@ -295,14 +272,12 @@
             { key: "roName", label: "RO Name" },
             { key: "date", label: "Date" },
             { key: "class1DeviceCount", label: "Class1 (With SIM) Count" },
-
             { key: "class1Devices", label: "Class1 (With SIM) Devices" },
             { key: "class1WithoutSimCount", label: "Class1 (No SIM) Count" },
             {
               key: "class1WithoutSimDevices",
               label: "Class1 (No SIM) Devices",
             },
-
             { key: "class2DeviceCount", label: "Class2 Count" },
             { key: "class2Devices", label: "Class2 Devices" },
             { key: "relconAtgProvided", label: "RELCON ATG Provided" },
@@ -310,7 +285,6 @@
             { key: "relconAtgDetails", label: "RELCON ATG Details" },
             { key: "jioSimNumber", label: "Jio SIM Number" },
             { key: "airtelSimNumber", label: "Airtel SIM Number" },
-
             { key: "isVerified", label: "Verified" },
             { key: "actions", label: "Actions" },
           ];
@@ -335,16 +309,16 @@
                   if (col.key === "actions") {
                     if (currentUser.role === "admin") {
                       return `<td class="border text-center px-2 py-1">
-                        <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
-                        <button class="px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2" onclick='deleteRecord("${
-                          record.bpclStatusId
-                        }")'>Delete</button>
-                        ${
-                          isVerified
-                            ? ""
-                            : `<button class="bg-green-600 text-white px-2 py-1 rounded ml-2" onclick='verifyRecord("${record.bpclStatusId}")'>✅ Verify</button>`
-                        }
-                      </td>`;
+                    <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
+                    <button class="px-2 py-1 text-[11px] rounded bg-red-50 text-red-700 hover:bg-red-100 ml-2" onclick='deleteRecord("${
+                      record.bpclStatusId
+                    }")'>Delete</button>
+                    ${
+                      isVerified
+                        ? ""
+                        : `<button class="bg-green-600 text-white px-2 py-1 rounded ml-2" onclick='verifyRecord("${record.bpclStatusId}")'>✅ Verify</button>`
+                    }
+                  </td>`;
                     } else {
                       const token = localStorage.getItem("token");
                       const engName =
@@ -355,9 +329,9 @@
                         return `<td class="border text-center px-2 py-1 text-green-700 font-semibold">🟢 Verified</td>`;
                       } else if (isOwner) {
                         return `<td class="border text-center px-2 py-1">
-                          <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
-                          <span class="text-gray-500 italic text-[11px] ml-2">No delete</span>
-                        </td>`;
+                      <button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 mr-1" onclick='handleEditClick("${encoded}")'>Edit</button>
+                      <span class="text-gray-500 italic text-[11px] ml-2">No delete</span>
+                    </td>`;
                       } else {
                         return `<td class="border text-center px-2 py-1 text-gray-400 italic">Not allowed</td>`;
                       }
@@ -366,9 +340,7 @@
 
                   // value handling: arrays -> join with comma, booleans/date special cases
                   let value = record[col.key];
-                  if (Array.isArray(value)) {
-                    value = value.join(", ");
-                  }
+                  if (Array.isArray(value)) value = value.join(", ");
 
                   if (col.key === "isVerified") {
                     return `<td class='border text-center px-2 py-1'>${
@@ -401,7 +373,171 @@
         }, 100);
       }
 
-      // ==================== MODAL: improved openEditModal + saveEdit ====================
+      function populateEngineerFilter(data) {
+        const sel = document.getElementById("engineerFilter");
+        const current = sel.value || "ALL";
+        const engineers = Array.from(
+          new Set(
+            (data || []).map((d) => (d.engineer || "").trim()).filter(Boolean)
+          )
+        ).sort();
+        sel.innerHTML = '<option value="ALL">All Engineers</option>';
+        engineers.forEach((eng) => {
+          const opt = document.createElement("option");
+          opt.value = eng;
+          opt.textContent = eng;
+          sel.appendChild(opt);
+        });
+        if (current && Array.from(sel.options).some((o) => o.value === current))
+          sel.value = current;
+      }
+
+      // ---------- Filtering ----------
+      function applyAllFilters() {
+        showLoader();
+        setTimeout(() => {
+          const searchValue = (
+            document.getElementById("searchInput").value || ""
+          )
+            .toLowerCase()
+            .trim();
+          const fromDate = new Date(document.getElementById("fromDate").value);
+          const toDate = new Date(document.getElementById("toDate").value);
+          const engineerFilter =
+            document.getElementById("engineerFilter").value || "ALL";
+
+          const headerCells = Array.from(
+            document.querySelectorAll("#statusTable thead th")
+          );
+          let dateColIndex = -1;
+          let engineerColIndex = -1;
+          headerCells.forEach((th, i) => {
+            const txt = th.innerText.trim().toLowerCase();
+            if (txt === "date") dateColIndex = i;
+            if (txt === "engineer") engineerColIndex = i;
+          });
+
+          const rows = Array.from(
+            document.querySelectorAll("#statusTable tbody tr")
+          );
+          rows.forEach((row) => {
+            const cells = Array.from(row.querySelectorAll("td"));
+            const rowText = row.textContent.toLowerCase();
+
+            const matchesSearch = !searchValue || rowText.includes(searchValue);
+            const engCell =
+              engineerColIndex > -1
+                ? cells[engineerColIndex] &&
+                  cells[engineerColIndex].innerText.trim()
+                : "";
+            const matchesEngineer =
+              engineerFilter === "ALL" ||
+              (engCell || "").toLowerCase() === engineerFilter.toLowerCase();
+
+            let matchesDate = true;
+            if (dateColIndex > -1) {
+              const dateCell = cells[dateColIndex];
+              const rowDateStr = dateCell
+                ? dateCell.getAttribute("data-date")
+                : "";
+              if (!rowDateStr) matchesDate = true;
+              else {
+                const rowDate = new Date(rowDateStr);
+                matchesDate =
+                  (!isNaN(fromDate) ? rowDate >= fromDate : true) &&
+                  (!isNaN(toDate) ? rowDate <= toDate : true);
+              }
+            }
+
+            row.style.display =
+              matchesSearch && matchesEngineer && matchesDate ? "" : "none";
+          });
+
+          hideLoader();
+        }, 50);
+      }
+
+      function clearFilters() {
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        document.getElementById("searchInput").value = "";
+        document.getElementById("engineerFilter").value = "ALL";
+        applyAllFilters();
+      }
+
+      // ---------- Export ----------
+      function exportToExcel() {
+        const table = document.getElementById("statusTable");
+        const clone = table.cloneNode(true);
+        const rows = Array.from(clone.querySelectorAll("tbody tr"));
+
+        const headerCells = Array.from(clone.querySelectorAll("thead th"));
+        let jioColIndex = -1;
+        let airtelColIndex = -1;
+        headerCells.forEach((th, i) => {
+          const txt = th.innerText.trim().toLowerCase();
+          if (txt.includes("jio sim")) jioColIndex = i;
+          if (txt.includes("airtel")) airtelColIndex = i;
+        });
+
+        rows.forEach((row) => {
+          if (row.style.display === "none") {
+            row.remove();
+            return;
+          }
+          const cells = Array.from(row.querySelectorAll("td"));
+          if (jioColIndex > -1 && cells[jioColIndex]) {
+            const raw = cells[jioColIndex].innerText || "";
+            if (raw && !raw.startsWith("`"))
+              cells[jioColIndex].innerText = "`" + raw;
+          }
+          if (airtelColIndex > -1 && cells[airtelColIndex]) {
+            const raw = cells[airtelColIndex].innerText || "";
+            if (raw && !raw.startsWith("`"))
+              cells[airtelColIndex].innerText = "`" + raw;
+          }
+          cells.forEach((td) => (td.innerHTML = td.innerText));
+        });
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+
+        let filename = "BPCL_Report";
+        if (fromDate && toDate) filename += `_${fromDate}_to_${toDate}`;
+        else if (fromDate) filename += `_from_${fromDate}`;
+        else if (toDate) filename += `_upto_${toDate}`;
+        else filename += `_${today}`;
+
+        const ws = XLSX.utils.table_to_sheet(clone);
+
+        try {
+          if (ws && ws["!ref"]) {
+            const range = XLSX.utils.decode_range(ws["!ref"]);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+              for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                const cell = ws[cellAddress];
+                if (cell) {
+                  cell.s = cell.s || {};
+                  cell.s.font = Object.assign({}, cell.s.font, {
+                    name: "Calibri",
+                    sz: 11,
+                  });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Excel styling not applied:", e);
+        }
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "BPCL Status");
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+      }
+
+      // ---------- Edit / Save ----------
       function handleEditClick(encoded) {
         try {
           const json = decodeURIComponent(escape(atob(encoded)));
@@ -419,23 +555,16 @@
         // Hidden id
         form.innerHTML += `<input type="hidden" name="_id" value="${record.bpclStatusId}" />`;
 
-        // Build mergedRecord so we can surface ATG fields even if nested inside planId
+        // Merge planId fields if present, and ensure ATG fields exist
         const merged = Object.assign({}, record);
-        // If planId is populated object, copy missing keys from it (safe)
         if (record.planId && typeof record.planId === "object") {
-          const keysToLift = [
-            "relconAtgProvided",
-            "relconAtgCount",
-            "relconAtgDetails",
-          ];
-          keysToLift.forEach((k) => {
-            if (merged[k] === undefined && record.planId[k] !== undefined) {
-              merged[k] = record.planId[k];
+          ["relconAtgProvided", "relconAtgCount", "relconAtgDetails"].forEach(
+            (k) => {
+              if (merged[k] === undefined && record.planId[k] !== undefined)
+                merged[k] = record.planId[k];
             }
-          });
+          );
         }
-
-        // Ensure ATG keys exist so inputs always show (even if empty)
         if (merged.relconAtgProvided === undefined)
           merged.relconAtgProvided = "";
         if (merged.relconAtgCount === undefined) merged.relconAtgCount = "";
@@ -448,8 +577,6 @@
           "_id",
           "bpclStatusId",
         ];
-
-        // Order keys: show commonly edited fields first (optional)
         const preferredOrder = [
           "planId",
           "engineer",
@@ -472,8 +599,6 @@
           "isVerified",
           "createdBy",
         ];
-
-        // Build final keys array: preferredOrder + other keys
         const keysSet = new Set(Object.keys(merged));
         const finalKeys = [];
         preferredOrder.forEach((k) => {
@@ -482,37 +607,32 @@
             keysSet.delete(k);
           }
         });
-        // add remaining keys
         Array.from(keysSet).forEach((k) => finalKeys.push(k));
 
-        // Render inputs
         finalKeys.forEach((key) => {
           if (skipKeys.includes(key)) return;
-          // skip large nested plan object (we show planId separately)
           if (key === "planId" && typeof merged[key] === "object") return;
 
           let value = merged[key];
           let safeValue = Array.isArray(value) ? value.join(", ") : value || "";
 
-          // special handling for relconAtgProvided: show select
           if (key === "relconAtgProvided") {
             form.innerHTML += `
-            <div>
-              <label class="block text-gray-700 font-medium mb-1">${key}</label>
-              <select name="${key}" class="w-full border px-2 py-1 rounded">
-                <option value="">-- Select --</option>
-                <option value="YES" ${
-                  safeValue === "YES" ? "selected" : ""
-                }>YES</option>
-                <option value="NO" ${
-                  safeValue === "NO" ? "selected" : ""
-                }>NO</option>
-              </select>
-            </div>`;
+              <div>
+                <label class="block text-gray-700 font-medium mb-1">${key}</label>
+                <select name="${key}" class="w-full border px-2 py-1 rounded">
+                  <option value="">-- Select --</option>
+                  <option value="YES" ${
+                    safeValue === "YES" ? "selected" : ""
+                  }>YES</option>
+                  <option value="NO" ${
+                    safeValue === "NO" ? "selected" : ""
+                  }>NO</option>
+                </select>
+              </div>`;
             return;
           }
 
-          // normal input
           form.innerHTML += `
             <div>
               <label class="block text-gray-700 font-medium mb-1">${key}</label>
@@ -522,7 +642,7 @@
             </div>`;
         });
 
-        // provide planId input (objectId) if available
+        // show planId if available
         if (
           record.planId &&
           (typeof record.planId === "string" || record.planId._id)
@@ -541,16 +661,10 @@
         document.getElementById("editModal").classList.add("flex");
       }
 
-      function closeModal() {
-        document.getElementById("editModal").classList.add("hidden");
-      }
-
       async function saveEdit() {
         const form = document.getElementById("editForm");
         const formData = new FormData(form);
         const updated = {};
-
-        // known array fields
         const arrayFields = [
           "class1Devices",
           "class1WithoutSimDevices",
@@ -568,7 +682,6 @@
                   .filter(Boolean)
               : [];
           } else if (key === "relconAtgCount") {
-            // try to convert count to number if possible
             const n = Number(val);
             updated[key] = isNaN(n) ? val : n;
           } else if (key === "isVerified") {
@@ -594,7 +707,7 @@
 
           if (res.ok) {
             closeModal();
-            fetchData();
+            await fetchData();
             showToast("✅ Record updated successfully");
           } else {
             const errText = await res.text().catch(() => "Server error");
@@ -607,18 +720,15 @@
         }
       }
 
-      // ==================== rest unchanged ====================
-
+      // ---------- Delete ----------
       function deleteRecord(id) {
         deleteTargetId = id;
         document.getElementById("deleteModal").classList.remove("hidden");
       }
-
       function cancelDelete() {
         deleteTargetId = null;
         document.getElementById("deleteModal").classList.add("hidden");
       }
-
       async function confirmDelete() {
         if (!deleteTargetId) return;
         try {
@@ -647,19 +757,12 @@
         }
       }
 
-      function showToast(msg) {
-        const toast = document.getElementById("toast");
-        toast.textContent = msg;
-        toast.classList.remove("hidden");
-        setTimeout(() => toast.classList.add("hidden"), 3000);
-      }
-
+      // ---------- Verify ----------
       async function verifyRecord(id) {
         const confirmed = confirm(
           "Are you sure you want to mark this record as VERIFIED?"
         );
         if (!confirmed) return;
-
         try {
           const res = await fetch(
             `${baseUrl}/bpclStatus/verifyBPCLStatus/${id}`,
@@ -672,7 +775,6 @@
               body: JSON.stringify({}),
             }
           );
-
           if (res.ok) {
             showToast("Record marked as Verified ✅");
             fetchData();
@@ -686,7 +788,61 @@
         }
       }
 
-      fetchData();
+      // ---------- Initialization & Event wiring ----------
+      document.addEventListener("DOMContentLoaded", () => {
+        // wire filter controls
+        const from = document.getElementById("fromDate");
+        const to = document.getElementById("toDate");
+        const eng = document.getElementById("engineerFilter");
+        const search = document.getElementById("searchInput");
+        const clearBtn = document.getElementById("clearFiltersBtn");
+        const exportBtn = document.getElementById("exportBtn");
+
+        if (from) from.addEventListener("change", applyAllFilters);
+        if (to) to.addEventListener("change", applyAllFilters);
+        if (eng) eng.addEventListener("change", applyAllFilters);
+        if (search) search.addEventListener("input", applyAllFilters);
+        if (clearBtn) clearBtn.addEventListener("click", clearFilters);
+        if (exportBtn) exportBtn.addEventListener("click", exportToExcel);
+
+        // Modal buttons
+        document
+          .getElementById("modalCancelBtn")
+          .addEventListener("click", (e) => {
+            e.preventDefault();
+            closeModal();
+          });
+        document
+          .getElementById("modalSaveBtn")
+          .addEventListener("click", (e) => {
+            e.preventDefault();
+            saveEdit();
+          });
+
+        document
+          .getElementById("deleteCancelBtn")
+          .addEventListener("click", (e) => {
+            e.preventDefault();
+            cancelDelete();
+          });
+        document
+          .getElementById("deleteConfirmBtn")
+          .addEventListener("click", (e) => {
+            e.preventDefault();
+            confirmDelete();
+          });
+
+        // Expose handlers to global scope (for inline onclick generated in table)
+        window.handleEditClick = handleEditClick;
+        window.deleteRecord = deleteRecord;
+        window.verifyRecord = verifyRecord;
+        window.applyAllFilters = applyAllFilters;
+        window.clearFilters = clearFilters;
+        window.exportToExcel = exportToExcel;
+
+        // initial fetch
+        fetchData();
+      });
     </script>
   </body>
 </html>
