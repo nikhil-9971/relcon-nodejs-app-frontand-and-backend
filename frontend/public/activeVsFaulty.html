@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Active vs Faulty - Report</title>
+    <title>Active vs Faulty — Report</title>
 
     <!-- Poppins -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
@@ -14,185 +14,366 @@
 
     <style>
       :root {
+        --bg: #f5f7fa;
         --muted: #6b7280;
-      }
-      body {
-        font-family: "Poppins", sans-serif;
-        background: #f5f7fa;
-        margin: 0;
-        padding: 20px;
-      }
-      .card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 8px 18px rgba(2, 6, 23, 0.06);
-        border: 1px solid rgba(2, 6, 23, 0.04);
-      }
-      .small {
-        font-size: 13px;
-        color: var(--muted);
-      }
-      table th,
-      table td {
-        white-space: nowrap;
+        --card-radius: 12px;
+        --accent: #06b6a4;
+        --accent-700: #059669;
       }
 
-      /* small UI tweaks */
-      .controls {
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg);
+        color: #0b1220;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 18px auto;
+        padding: 12px;
+      }
+
+      /* Sticky header/filter area */
+      .topbar {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(6px);
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 6px 18px rgba(3, 10, 24, 0.06);
+        position: sticky;
+        top: 12px;
+        z-index: 60;
         display: flex;
         gap: 12px;
         align-items: center;
         flex-wrap: wrap;
       }
-      .chip {
-        padding: 6px 10px;
+
+      .title {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .title h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .filters {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex: 1;
+        flex-wrap: wrap;
+      }
+
+      .control {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      label.small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      input[type="date"],
+      select,
+      input[type="text"] {
+        height: 40px;
+        padding: 8px 10px;
         border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: #fff;
+        font-size: 13px;
+        min-width: 160px;
+      }
+
+      input[type="text"].search {
+        min-width: 300px;
+        max-width: 520px;
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
         background: #f3f4f6;
         border: 1px solid rgba(15, 23, 42, 0.04);
         cursor: pointer;
+        font-size: 13px;
       }
       .chip.active {
-        background: linear-gradient(90deg, #06b6a4, #059669);
-        color: #fff;
-        border-color: rgba(5, 150, 105, 0.8);
+        background: linear-gradient(90deg, var(--accent), var(--accent-700));
+        color: white;
+        border-color: rgba(5, 150, 105, 0.85);
+        box-shadow: 0 6px 16px rgba(6, 182, 164, 0.12);
       }
-      .toolbar {
-        display: flex;
-        gap: 12px;
-        align-items: center;
+
+      /* Combined card/table */
+      .card {
+        margin-top: 14px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
+        border: 1px solid rgba(2, 6, 23, 0.04);
       }
+
+      .card h2 {
+        font-size: 15px;
+        margin: 0 0 4px 0;
+        font-weight: 600;
+      }
+      .card .muted {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .table-wrapper {
+        max-height: 64vh;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.04);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px; /* smaller font */
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        background: #ffffff;
+        color: #111827;
+        font-weight: 700;
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+        z-index: 40;
+      }
+
+      tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.03);
+        color: #111827;
+      }
+
       .count-badge {
-        font-size: 13px;
         color: #374151;
         font-weight: 700;
+        font-size: 13px;
       }
-      .table-wrapper {
-        max-height: 62vh;
-        overflow: auto;
+
+      /* small export button */
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      /* scrollbar tweak */
+      .table-wrapper::-webkit-scrollbar {
+        height: 12px;
+        width: 12px;
+      }
+      .table-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(2, 6, 23, 0.08);
+        border-radius: 8px;
+      }
+
+      /* responsive */
+      @media (max-width: 880px) {
+        .filters {
+          gap: 8px;
+        }
+        input[type="text"].search {
+          min-width: 160px;
+        }
+        thead th,
+        tbody td {
+          font-size: 12px;
+          padding: 8px 10px;
+        }
+        .title h1 {
+          font-size: 16px;
+        }
       }
     </style>
   </head>
 
   <body>
-    <div class="max-w-7xl mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold">🔁 Active vs Faulty — Report</h1>
-        <div class="flex gap-2 items-center">
-          <button
-            id="exportDisplayed"
-            class="bg-green-600 text-white px-3 py-2 rounded"
+    <div class="page">
+      <div class="topbar" role="region" aria-label="Filters">
+        <div class="title" aria-hidden>
+          <svg
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden
           >
-            📤 Export Displayed
-          </button>
+            <rect x="3" y="4" width="7" height="7" rx="2" fill="#06b6a4"></rect>
+            <rect
+              x="14"
+              y="4"
+              width="7"
+              height="7"
+              rx="2"
+              fill="#60a5fa"
+            ></rect>
+            <rect
+              x="3"
+              y="13"
+              width="7"
+              height="7"
+              rx="2"
+              fill="#a78bfa"
+            ></rect>
+            <rect
+              x="14"
+              y="13"
+              width="7"
+              height="7"
+              rx="2"
+              fill="#f59e0b"
+            ></rect>
+          </svg>
+          <h1>Active vs Faulty — Report</h1>
         </div>
-      </div>
 
-      <!-- Filters -->
-      <div class="flex gap-4 mb-4 flex-wrap">
-        <div>
-          <label class="small block mb-1">From</label>
-          <input id="fromDate" type="date" class="border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label class="small block mb-1">To</label>
-          <input id="toDate" type="date" class="border rounded px-3 py-2" />
-        </div>
+        <div class="filters" role="form" aria-label="Filter controls">
+          <div class="control">
+            <label class="small">From</label>
+            <input id="fromDate" type="date" />
+          </div>
 
-        <div>
-          <label class="small block mb-1">Source</label>
-          <div class="controls" role="tablist" aria-label="Select source">
-            <div class="chip active" data-source="both" tabindex="0">Both</div>
-            <div class="chip" data-source="hpcl" tabindex="0">HPCL</div>
-            <div class="chip" data-source="jio" tabindex="0">Jio BP</div>
+          <div class="control">
+            <label class="small">To</label>
+            <input id="toDate" type="date" />
+          </div>
+
+          <div class="control">
+            <label class="small">Source</label>
+            <div class="chips" role="tablist" aria-label="Source selector">
+              <div class="chip active" data-source="both" tabindex="0">
+                Both
+              </div>
+              <div class="chip" data-source="hpcl" tabindex="0">HPCL</div>
+              <div class="chip" data-source="jio" tabindex="0">Jio BP</div>
+            </div>
+          </div>
+
+          <div class="control">
+            <label class="small">Engineer</label>
+            <select id="engineerFilter">
+              <option value="ALL">All Engineers</option>
+            </select>
+          </div>
+
+          <div class="control" style="flex: 1; min-width: 220px">
+            <label class="small">Search</label>
+            <input
+              id="globalSearch"
+              class="search"
+              type="text"
+              placeholder="Search RO, engineer, codes..."
+            />
           </div>
         </div>
 
-        <div>
-          <label class="small block mb-1">Engineer</label>
-          <select id="engineerFilter" class="border rounded px-3 py-2">
-            <option value="ALL">All Engineers</option>
-          </select>
-        </div>
-        <div class="flex-1">
-          <label class="small block mb-1">Search</label>
-          <input
-            id="globalSearch"
-            placeholder="Search RO, engineer, codes..."
-            class="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div class="self-end">
-          <button
-            id="clearFilters"
-            class="bg-yellow-500 text-white px-4 py-2 rounded"
-          >
+        <div class="actions" style="margin-left: auto">
+          <button id="clearFilters" class="chip" title="Clear filters">
             ♻️ Clear
+          </button>
+          <button
+            id="exportCombined"
+            class="chip"
+            style="
+              background: linear-gradient(
+                90deg,
+                var(--accent),
+                var(--accent-700)
+              );
+              color: #fff;
+            "
+          >
+            📤 Export Shown
           </button>
         </div>
       </div>
 
-      <!-- unified table -->
-      <div class="card mb-4">
-        <div class="flex items-center justify-between mb-3">
+      <!-- combined card -->
+      <div class="card" aria-live="polite">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+          "
+        >
           <div>
-            <h2 class="font-semibold">Active vs Faulty — Combined View</h2>
-            <div class="small">
+            <h2>Active vs Faulty — Combined View</h2>
+            <div class="muted">
               Shows HPCL or Jio BP entries (condition:
               SpareUsed/ActiveMaterialUsed = Yes & Verified)
             </div>
           </div>
-          <div class="toolbar">
-            <div class="count-badge" id="combinedCount">0 rows</div>
-          </div>
+          <div class="count-badge" id="combinedCount">0 rows</div>
         </div>
 
-        <div class="table-wrapper overflow-x-auto border rounded">
-          <table id="combinedTable" class="min-w-full table-auto text-[13px]">
-            <thead class="bg-gray-50">
+        <div class="table-wrapper" role="region" aria-label="Results table">
+          <table id="combinedTable" class="min-w-full">
+            <thead>
               <tr>
-                <th class="px-3 py-2 text-left">Source</th>
-                <th class="px-3 py-2 text-left">Engineer</th>
-                <th class="px-3 py-2 text-left">RO Code</th>
-                <th class="px-3 py-2 text-left">RO Name</th>
-                <th class="px-3 py-2 text-left">Active</th>
-                <th class="px-3 py-2 text-left">Used / Details</th>
-                <th class="px-3 py-2 text-left">Faulty</th>
-                <th class="px-3 py-2 text-left">Verified</th>
-                <th class="px-3 py-2 text-left">Date</th>
+                <th>Source</th>
+                <th>Engineer</th>
+                <th>RO Code</th>
+                <th>RO Name</th>
+                <th>Active</th>
+                <th>Used / Details</th>
+                <th>Faulty</th>
+                <th>Verified</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody id="combinedBody"></tbody>
           </table>
         </div>
-
-        <div class="mt-3 flex justify-end gap-2">
-          <button
-            id="exportCombined"
-            class="bg-blue-600 text-white px-3 py-2 rounded"
-          >
-            Export Shown
-          </button>
-        </div>
       </div>
     </div>
 
     <script>
-      // Active vs Faulty unified view
+      // Unified Active vs Faulty (polished)
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
-      let hpclData = []; // merged status records (HPCL)
+      let hpclData = [];
       let jioData = [];
-      let combinedDisplayed = []; // rows currently shown
+      let combinedDisplayed = [];
 
-      // UI refs
+      // UI elements
+      const combinedBody = document.getElementById("combinedBody");
+      const combinedCountEl = document.getElementById("combinedCount");
       const chips = Array.from(document.querySelectorAll(".chip"));
 
       // Helpers
-      function text(id, v) {
-        const e = document.getElementById(id);
-        if (e) e.textContent = v;
-      }
       function escapeHTML(s) {
         if (s === null || s === undefined) return "";
         return String(s)
@@ -202,12 +383,16 @@
       }
       function formatDate(d) {
         if (!d) return "";
-        const dd = new Date(d);
-        if (isNaN(dd)) return d;
-        return dd.toISOString().slice(0, 10);
+        const dt = new Date(d);
+        if (isNaN(dt)) return d;
+        return dt.toISOString().slice(0, 10);
+      }
+      function text(id, v) {
+        const e = document.getElementById(id);
+        if (e) e.textContent = v;
       }
 
-      // fetch HPCL merged (same endpoint)
+      // Fetch HPCL (merged status) and JIO
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -220,18 +405,17 @@
             roCode: d.roCode || "",
             roName: d.roName || "",
             date: d.date || "",
-            active: (d.spareUsed || "").toString(), // spareUsed field
+            active: (d.spareUsed || "").toString(),
             usedDetails: d.activeSpare || "",
             faulty: d.faultySpare || "",
             isVerified: !!d.isVerified,
             raw: d,
           }));
-        } catch (err) {
-          console.error("HPCL fetch error:", err);
+        } catch (e) {
+          console.error("HPCL fetch error", e);
         }
       }
 
-      // fetch JIO BP statuses
       async function fetchJIO() {
         try {
           const res = await fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
@@ -250,8 +434,8 @@
             isVerified: !!d.isVerified,
             raw: d,
           }));
-        } catch (err) {
-          console.error("JIO fetch error:", err);
+        } catch (e) {
+          console.error("JIO fetch error", e);
         }
       }
 
@@ -263,118 +447,80 @@
           ...jioData.map((d) => d.engineer),
         ];
         const uniq = Array.from(new Set(combined.filter(Boolean))).sort();
-        const current = sel.value || "ALL";
+        const cur = sel.value || "ALL";
         sel.innerHTML = '<option value="ALL">All Engineers</option>';
         uniq.forEach((v) => {
-          const opt = document.createElement("option");
-          opt.value = v;
-          opt.textContent = v;
-          sel.appendChild(opt);
+          const o = document.createElement("option");
+          o.value = v;
+          o.textContent = v;
+          sel.appendChild(o);
         });
-        if (uniq.includes(current)) sel.value = current;
+        if (uniq.includes(cur)) sel.value = cur;
       }
 
-      // Build combined rows according to selected source and filter conditions:
-      // Condition: Verified must be true AND (for HPCL spareUsed === "yes") OR (for JIO activeMaterialUsed === "yes")
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
-
-        // normalize date range
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
+        const addRow = (r) => {
+          // Verified required
+          if (!r.isVerified) return;
+          // Active must be "yes"
+          if ((r.active || "").toString().toLowerCase() !== "yes") return;
+          if (eng && eng !== "ALL" && r.engineer !== eng) return;
+          if (f || t) {
+            const d = r.date ? new Date(r.date) : null;
+            if (d && f && d < f) return;
+            if (d && t && d > t) return;
+          }
+          if (q) {
+            const hay =
+              `${r.source} ${r.engineer} ${r.roCode} ${r.roName} ${r.active} ${r.usedDetails} ${r.faulty}`.toLowerCase();
+            if (!hay.includes(q)) return;
+          }
+          rows.push({
+            source: r.source,
+            engineer: r.engineer,
+            roCode: r.roCode,
+            roName: r.roName,
+            active: r.active,
+            usedDetails: r.usedDetails,
+            faulty: r.faulty,
+            isVerified: r.isVerified,
+            date: r.date,
+          });
+        };
 
         if (sourceFilter === "both" || sourceFilter === "hpcl") {
-          hpclData.forEach((r) => {
-            // Verified + spareUsed === "yes"
-            if (!r.isVerified) return;
-            const activeYes =
-              (r.active || "").toString().toLowerCase() === "yes";
-            if (!activeYes) return;
-            if (eng && eng !== "ALL" && r.engineer !== eng) return;
-            if (f || t) {
-              const d = r.date ? new Date(r.date) : null;
-              if (d && f && d < f) return;
-              if (d && t && d > t) return;
-            }
-            if (q) {
-              const hay =
-                `${r.source} ${r.engineer} ${r.roCode} ${r.roName} ${r.active} ${r.usedDetails} ${r.faulty}`.toLowerCase();
-              if (!hay.includes(q)) return;
-            }
-            rows.push({
-              source: r.source,
-              engineer: r.engineer,
-              roCode: r.roCode,
-              roName: r.roName,
-              active: r.active,
-              usedDetails: r.usedDetails,
-              faulty: r.faulty,
-              isVerified: r.isVerified,
-              date: r.date,
-            });
-          });
+          hpclData.forEach(addRow);
         }
-
         if (sourceFilter === "both" || sourceFilter === "jio") {
-          jioData.forEach((r) => {
-            if (!r.isVerified) return;
-            const activeYes =
-              (r.active || "").toString().toLowerCase() === "yes";
-            if (!activeYes) return;
-            if (eng && eng !== "ALL" && r.engineer !== eng) return;
-            if (f || t) {
-              const d = r.date ? new Date(r.date) : null;
-              if (d && f && d < f) return;
-              if (d && t && d > t) return;
-            }
-            if (q) {
-              const hay =
-                `${r.source} ${r.engineer} ${r.roCode} ${r.roName} ${r.active} ${r.usedDetails} ${r.faulty}`.toLowerCase();
-              if (!hay.includes(q)) return;
-            }
-            rows.push({
-              source: r.source,
-              engineer: r.engineer,
-              roCode: r.roCode,
-              roName: r.roName,
-              active: r.active,
-              usedDetails: r.usedDetails,
-              faulty: r.faulty,
-              isVerified: r.isVerified,
-              date: r.date,
-            });
-          });
+          jioData.forEach(addRow);
         }
 
         return rows;
       }
 
       function renderCombined(rows) {
-        const tbody = document.getElementById("combinedBody");
-        tbody.innerHTML = rows
+        combinedBody.innerHTML = rows
           .map(
             (r) => `<tr>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.source)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.engineer)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.roCode)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.roName)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.active)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.usedDetails)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.faulty)}</td>
-            <td class="px-3 py-2 text-left">${
-              r.isVerified ? "✅ Verified" : "❌"
-            }</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(
-              formatDate(r.date)
-            )}</td>
-          </tr>`
+          <td>${escapeHTML(r.source)}</td>
+          <td>${escapeHTML(r.engineer)}</td>
+          <td>${escapeHTML(r.roCode)}</td>
+          <td>${escapeHTML(r.roName)}</td>
+          <td>${escapeHTML(r.active)}</td>
+          <td>${escapeHTML(r.usedDetails)}</td>
+          <td>${escapeHTML(r.faulty)}</td>
+          <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
+          <td>${escapeHTML(formatDate(r.date))}</td>
+        </tr>`
           )
           .join("");
         text("combinedCount", `${rows.length} rows`);
         combinedDisplayed = rows;
       }
 
-      // read UI and re-render
       function applyFiltersAndRender() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
@@ -384,15 +530,13 @@
         const q = (document.getElementById("globalSearch").value || "")
           .toLowerCase()
           .trim();
-
         const rows = buildCombinedRows(source, from, to, eng, q);
         renderCombined(rows);
       }
 
-      // quick export of currently displayed rows
       function exportDisplayed() {
         if (!combinedDisplayed || combinedDisplayed.length === 0)
-          return alert("No records to export");
+          return alert("No rows to export");
         const rows = combinedDisplayed.map((r) => ({
           Source: r.source,
           Engineer: r.engineer,
@@ -413,7 +557,7 @@
         );
       }
 
-      // wire up chips (source selectors)
+      // wire chips
       chips.forEach((c) => {
         c.addEventListener("click", () => {
           chips.forEach((ch) => ch.classList.remove("active"));
@@ -428,37 +572,32 @@
         });
       });
 
-      // wire other controls
+      // wire controls
       document
         .getElementById("globalSearch")
-        .addEventListener("input", () => applyFiltersAndRender());
+        .addEventListener("input", applyFiltersAndRender);
       document
         .getElementById("engineerFilter")
-        .addEventListener("change", () => applyFiltersAndRender());
+        .addEventListener("change", applyFiltersAndRender);
       document
         .getElementById("fromDate")
-        .addEventListener("change", () => applyFiltersAndRender());
+        .addEventListener("change", applyFiltersAndRender);
       document
         .getElementById("toDate")
-        .addEventListener("change", () => applyFiltersAndRender());
+        .addEventListener("change", applyFiltersAndRender);
       document.getElementById("clearFilters").addEventListener("click", () => {
         document.getElementById("fromDate").value = "";
         document.getElementById("toDate").value = "";
         document.getElementById("engineerFilter").value = "ALL";
         document.getElementById("globalSearch").value = "";
-        // reset to Both
         chips.forEach((ch) => ch.classList.remove("active"));
         document
           .querySelector(".chip[data-source='both']")
           .classList.add("active");
         applyFiltersAndRender();
       });
-
       document
         .getElementById("exportCombined")
-        .addEventListener("click", exportDisplayed);
-      document
-        .getElementById("exportDisplayed")
         .addEventListener("click", exportDisplayed);
 
       // init
