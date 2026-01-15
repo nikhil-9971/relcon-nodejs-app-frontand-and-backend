@@ -60,6 +60,13 @@ const JioBPStatusSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    // NEW: OMS 03 picklist
+    oms03: {
+      type: String,
+      enum: ["Yes", "No", "PO Basis"],
+      default: "No",
+    },
+
     isVerified: {
       type: Boolean,
       default: false,

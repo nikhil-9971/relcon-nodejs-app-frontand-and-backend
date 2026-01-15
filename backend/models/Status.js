@@ -37,6 +37,12 @@ const StatusSchema = new mongoose.Schema({
   bosIP: String,
   fccIP: String,
   locationField: String,
+  // NEW: OMS 03 picklist (Yes / No / PO Basis)
+  oms03: {
+    type: String,
+    enum: ["Yes", "No", "PO Basis"],
+    default: "No",
+  },
   isVerified: {
     type: Boolean,
     default: false,
