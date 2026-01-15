@@ -37,6 +37,40 @@
       table td {
         white-space: nowrap;
       }
+
+      /* small UI tweaks */
+      .controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .chip {
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: #f3f4f6;
+        border: 1px solid rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+      }
+      .chip.active {
+        background: linear-gradient(90deg, #06b6a4, #059669);
+        color: #fff;
+        border-color: rgba(5, 150, 105, 0.8);
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .count-badge {
+        font-size: 13px;
+        color: #374151;
+        font-weight: 700;
+      }
+      .table-wrapper {
+        max-height: 62vh;
+        overflow: auto;
+      }
     </style>
   </head>
 
@@ -46,10 +80,10 @@
         <h1 class="text-2xl font-semibold">🔁 Active vs Faulty — Report</h1>
         <div class="flex gap-2 items-center">
           <button
-            id="exportAll"
+            id="exportDisplayed"
             class="bg-green-600 text-white px-3 py-2 rounded"
           >
-            📤 Export Both
+            📤 Export Displayed
           </button>
         </div>
       </div>
@@ -64,6 +98,16 @@
           <label class="small block mb-1">To</label>
           <input id="toDate" type="date" class="border rounded px-3 py-2" />
         </div>
+
+        <div>
+          <label class="small block mb-1">Source</label>
+          <div class="controls" role="tablist" aria-label="Select source">
+            <div class="chip active" data-source="both" tabindex="0">Both</div>
+            <div class="chip" data-source="hpcl" tabindex="0">HPCL</div>
+            <div class="chip" data-source="jio" tabindex="0">Jio BP</div>
+          </div>
+        </div>
+
         <div>
           <label class="small block mb-1">Engineer</label>
           <select id="engineerFilter" class="border rounded px-3 py-2">
@@ -88,190 +132,124 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- HPCL -->
-        <section class="card">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h2 class="font-semibold">HPCL — Spare (Active vs Faulty)</h2>
-              <div class="small">
-                Fields: spareUsed, activeSpare, faultySpare
-              </div>
-            </div>
-            <div class="text-right">
-              <div id="hpclCount" class="text-sm font-medium"></div>
-              <div class="small text-gray-500">Showing filtered</div>
+      <!-- unified table -->
+      <div class="card mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="font-semibold">Active vs Faulty — Combined View</h2>
+            <div class="small">
+              Shows HPCL or Jio BP entries (condition:
+              SpareUsed/ActiveMaterialUsed = Yes & Verified)
             </div>
           </div>
-
-          <div class="overflow-x-auto border rounded">
-            <table id="hpclTable" class="min-w-full table-auto text-[13px]">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-3 py-2 text-left">Engineer</th>
-                  <th class="px-3 py-2 text-left">RO Code</th>
-                  <th class="px-3 py-2 text-left">RO Name</th>
-                  <th class="px-3 py-2 text-left">Spare Used</th>
-                  <th class="px-3 py-2 text-left">Active Spare</th>
-                  <th class="px-3 py-2 text-left">Faulty Spare</th>
-                  <th class="px-3 py-2 text-left">Verified</th>
-                  <th class="px-3 py-2 text-left">Date</th>
-                </tr>
-              </thead>
-              <tbody id="hpclBody"></tbody>
-            </table>
+          <div class="toolbar">
+            <div class="count-badge" id="combinedCount">0 rows</div>
           </div>
+        </div>
 
-          <div class="mt-3 flex justify-end gap-2">
-            <button
-              id="exportHPCL"
-              class="bg-blue-600 text-white px-3 py-2 rounded"
-            >
-              Export HPCL
-            </button>
-          </div>
-        </section>
+        <div class="table-wrapper overflow-x-auto border rounded">
+          <table id="combinedTable" class="min-w-full table-auto text-[13px]">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left">Source</th>
+                <th class="px-3 py-2 text-left">Engineer</th>
+                <th class="px-3 py-2 text-left">RO Code</th>
+                <th class="px-3 py-2 text-left">RO Name</th>
+                <th class="px-3 py-2 text-left">Active</th>
+                <th class="px-3 py-2 text-left">Used / Details</th>
+                <th class="px-3 py-2 text-left">Faulty</th>
+                <th class="px-3 py-2 text-left">Verified</th>
+                <th class="px-3 py-2 text-left">Date</th>
+              </tr>
+            </thead>
+            <tbody id="combinedBody"></tbody>
+          </table>
+        </div>
 
-        <!-- JIO -->
-        <section class="card">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h2 class="font-semibold">
-                Jio BP — Material (Active vs Faulty)
-              </h2>
-              <div class="small">
-                Fields: activeMaterialUsed, usedMaterialDetails,
-                faultyMaterialDetails
-              </div>
-            </div>
-            <div class="text-right">
-              <div id="jioCount" class="text-sm font-medium"></div>
-              <div class="small text-gray-500">Showing filtered</div>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto border rounded">
-            <table id="jioTable" class="min-w-full table-auto text-[13px]">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-3 py-2 text-left">Engineer</th>
-                  <th class="px-3 py-2 text-left">RO Code</th>
-                  <th class="px-3 py-2 text-left">RO Name</th>
-                  <th class="px-3 py-2 text-left">Active Material Used</th>
-                  <th class="px-3 py-2 text-left">Used Material Details</th>
-                  <th class="px-3 py-2 text-left">Faulty Material Details</th>
-                  <th class="px-3 py-2 text-left">Verified</th>
-                  <th class="px-3 py-2 text-left">Date</th>
-                </tr>
-              </thead>
-              <tbody id="jioBody"></tbody>
-            </table>
-          </div>
-
-          <div class="mt-3 flex justify-end gap-2">
-            <button
-              id="exportJio"
-              class="bg-blue-600 text-white px-3 py-2 rounded"
-            >
-              Export JIO
-            </button>
-          </div>
-        </section>
+        <div class="mt-3 flex justify-end gap-2">
+          <button
+            id="exportCombined"
+            class="bg-blue-600 text-white px-3 py-2 rounded"
+          >
+            Export Shown
+          </button>
+        </div>
       </div>
     </div>
 
     <script>
-      // Active vs Faulty UI
+      // Active vs Faulty unified view
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
       let hpclData = []; // merged status records (HPCL)
       let jioData = [];
-      let filteredHPCL = [];
-      let filteredJIO = [];
+      let combinedDisplayed = []; // rows currently shown
+
+      // UI refs
+      const chips = Array.from(document.querySelectorAll(".chip"));
 
       // Helpers
-      function show(el) {
-        if (el) el.classList.remove("hidden");
-      }
-      function hide(el) {
-        if (el) el.classList.add("hidden");
-      }
       function text(id, v) {
         const e = document.getElementById(id);
         if (e) e.textContent = v;
       }
+      function escapeHTML(s) {
+        if (s === null || s === undefined) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+      function formatDate(d) {
+        if (!d) return "";
+        const dd = new Date(d);
+        if (isNaN(dd)) return d;
+        return dd.toISOString().slice(0, 10);
+      }
 
-      // Fetch HPCL merged (uses same endpoint used in statusRecords)
+      // fetch HPCL merged (same endpoint)
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
-          // HPCL fields: spareUsed, activeSpare, faultySpare - these come from status model (spareUsed etc.)
           hpclData = (data || []).map((d) => ({
-            engineer: d.engineer,
-            roCode: d.roCode,
-            roName: d.roName,
-            date: d.date,
-            spareUsed: d.spareUsed || d.spareUsed === "" ? d.spareUsed : "",
-            activeSpare: d.activeSpare || "",
-            faultySpare: d.faultySpare || "",
+            source: "HPCL",
+            engineer: d.engineer || "",
+            roCode: d.roCode || "",
+            roName: d.roName || "",
+            date: d.date || "",
+            active: (d.spareUsed || "").toString(), // spareUsed field
+            usedDetails: d.activeSpare || "",
+            faulty: d.faultySpare || "",
             isVerified: !!d.isVerified,
             raw: d,
           }));
-          // default initial filter: show spareUsed === "Yes" OR activeSpare/faultySpare present
-          filteredHPCL = hpclData.filter((r) => {
-            const spareYes =
-              typeof r.spareUsed === "string" &&
-              r.spareUsed.toLowerCase() === "yes";
-            const hasActive =
-              r.activeSpare && String(r.activeSpare).trim().length > 0;
-            const hasFaulty =
-              r.faultySpare && String(r.faultySpare).trim().length > 0;
-            return spareYes || hasActive || hasFaulty;
-          });
-          populateEngineerSelect();
-          applyFiltersAndRender();
         } catch (err) {
           console.error("HPCL fetch error:", err);
         }
       }
 
-      // Fetch JIO BP statuses
+      // fetch JIO BP statuses
       async function fetchJIO() {
         try {
           const res = await fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
-          // map similar fields
           jioData = (data || []).map((d) => ({
+            source: "JIO",
             engineer: d.engineer || (d.planId && d.planId.engineer) || "",
             roCode: d.roCode || (d.planId && d.planId.roCode) || "",
             roName: d.roName || (d.planId && d.planId.roName) || "",
             date: d.date || (d.planId && d.planId.date) || "",
-            activeMaterialUsed: d.activeMaterialUsed || "",
-            usedMaterialDetails: d.usedMaterialDetails || "",
-            faultyMaterialDetails: d.faultyMaterialDetails || "",
+            active: (d.activeMaterialUsed || "").toString(),
+            usedDetails: d.usedMaterialDetails || "",
+            faulty: d.faultyMaterialDetails || "",
             isVerified: !!d.isVerified,
             raw: d,
           }));
-          // default filter: activeMaterialUsed === "Yes" OR used/faulty details present
-          filteredJIO = jioData.filter((r) => {
-            const yes =
-              typeof r.activeMaterialUsed === "string" &&
-              r.activeMaterialUsed.toLowerCase() === "yes";
-            const used =
-              r.usedMaterialDetails &&
-              String(r.usedMaterialDetails).trim().length > 0;
-            const faulty =
-              r.faultyMaterialDetails &&
-              String(r.faultyMaterialDetails).trim().length > 0;
-            return yes || used || faulty;
-          });
-          populateEngineerSelect();
-          applyFiltersAndRender();
         } catch (err) {
           console.error("JIO fetch error:", err);
         }
@@ -285,7 +263,6 @@
           ...jioData.map((d) => d.engineer),
         ];
         const uniq = Array.from(new Set(combined.filter(Boolean))).sort();
-        // preserve selection
         const current = sel.value || "ALL";
         sel.innerHTML = '<option value="ALL">All Engineers</option>';
         uniq.forEach((v) => {
@@ -297,228 +274,164 @@
         if (uniq.includes(current)) sel.value = current;
       }
 
-      function renderHPCL(list) {
-        const tbody = document.getElementById("hpclBody");
-        tbody.innerHTML = list
-          .map((r) => {
-            return `<tr>
+      // Build combined rows according to selected source and filter conditions:
+      // Condition: Verified must be true AND (for HPCL spareUsed === "yes") OR (for JIO activeMaterialUsed === "yes")
+      function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
+        const rows = [];
+
+        // normalize date range
+        const f = fromDate ? new Date(fromDate) : null;
+        const t = toDate ? new Date(toDate) : null;
+
+        if (sourceFilter === "both" || sourceFilter === "hpcl") {
+          hpclData.forEach((r) => {
+            // Verified + spareUsed === "yes"
+            if (!r.isVerified) return;
+            const activeYes =
+              (r.active || "").toString().toLowerCase() === "yes";
+            if (!activeYes) return;
+            if (eng && eng !== "ALL" && r.engineer !== eng) return;
+            if (f || t) {
+              const d = r.date ? new Date(r.date) : null;
+              if (d && f && d < f) return;
+              if (d && t && d > t) return;
+            }
+            if (q) {
+              const hay =
+                `${r.source} ${r.engineer} ${r.roCode} ${r.roName} ${r.active} ${r.usedDetails} ${r.faulty}`.toLowerCase();
+              if (!hay.includes(q)) return;
+            }
+            rows.push({
+              source: r.source,
+              engineer: r.engineer,
+              roCode: r.roCode,
+              roName: r.roName,
+              active: r.active,
+              usedDetails: r.usedDetails,
+              faulty: r.faulty,
+              isVerified: r.isVerified,
+              date: r.date,
+            });
+          });
+        }
+
+        if (sourceFilter === "both" || sourceFilter === "jio") {
+          jioData.forEach((r) => {
+            if (!r.isVerified) return;
+            const activeYes =
+              (r.active || "").toString().toLowerCase() === "yes";
+            if (!activeYes) return;
+            if (eng && eng !== "ALL" && r.engineer !== eng) return;
+            if (f || t) {
+              const d = r.date ? new Date(r.date) : null;
+              if (d && f && d < f) return;
+              if (d && t && d > t) return;
+            }
+            if (q) {
+              const hay =
+                `${r.source} ${r.engineer} ${r.roCode} ${r.roName} ${r.active} ${r.usedDetails} ${r.faulty}`.toLowerCase();
+              if (!hay.includes(q)) return;
+            }
+            rows.push({
+              source: r.source,
+              engineer: r.engineer,
+              roCode: r.roCode,
+              roName: r.roName,
+              active: r.active,
+              usedDetails: r.usedDetails,
+              faulty: r.faulty,
+              isVerified: r.isVerified,
+              date: r.date,
+            });
+          });
+        }
+
+        return rows;
+      }
+
+      function renderCombined(rows) {
+        const tbody = document.getElementById("combinedBody");
+        tbody.innerHTML = rows
+          .map(
+            (r) => `<tr>
+            <td class="px-3 py-2 text-left">${escapeHTML(r.source)}</td>
             <td class="px-3 py-2 text-left">${escapeHTML(r.engineer)}</td>
             <td class="px-3 py-2 text-left">${escapeHTML(r.roCode)}</td>
             <td class="px-3 py-2 text-left">${escapeHTML(r.roName)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.spareUsed)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.activeSpare)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.faultySpare)}</td>
+            <td class="px-3 py-2 text-left">${escapeHTML(r.active)}</td>
+            <td class="px-3 py-2 text-left">${escapeHTML(r.usedDetails)}</td>
+            <td class="px-3 py-2 text-left">${escapeHTML(r.faulty)}</td>
             <td class="px-3 py-2 text-left">${
               r.isVerified ? "✅ Verified" : "❌"
             }</td>
             <td class="px-3 py-2 text-left">${escapeHTML(
               formatDate(r.date)
             )}</td>
-          </tr>`;
-          })
+          </tr>`
+          )
           .join("");
-        text("hpclCount", `${list.length} rows`);
+        text("combinedCount", `${rows.length} rows`);
+        combinedDisplayed = rows;
       }
 
-      function renderJIO(list) {
-        const tbody = document.getElementById("jioBody");
-        tbody.innerHTML = list
-          .map((r) => {
-            return `<tr>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.engineer)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.roCode)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(r.roName)}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(
-              r.activeMaterialUsed
-            )}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(
-              r.usedMaterialDetails
-            )}</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(
-              r.faultyMaterialDetails
-            )}</td>
-            <td class="px-3 py-2 text-left">${
-              r.isVerified ? "✅ Verified" : "❌"
-            }</td>
-            <td class="px-3 py-2 text-left">${escapeHTML(
-              formatDate(r.date)
-            )}</td>
-          </tr>`;
-          })
-          .join("");
-        text("jioCount", `${list.length} rows`);
-      }
-
-      function escapeHTML(s) {
-        if (s === null || s === undefined) return "";
-        return String(s)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;");
-      }
-
-      function formatDate(d) {
-        if (!d) return "";
-        const dd = new Date(d);
-        if (isNaN(dd)) return d;
-        return dd.toISOString().slice(0, 10);
-      }
-
-      // Combined filter logic
+      // read UI and re-render
       function applyFiltersAndRender() {
-        const fromVal = document.getElementById("fromDate").value;
-        const toVal = document.getElementById("toDate").value;
+        const activeChip = document.querySelector(".chip.active");
+        const source = activeChip ? activeChip.dataset.source : "both";
+        const from = document.getElementById("fromDate").value || null;
+        const to = document.getElementById("toDate").value || null;
         const eng = document.getElementById("engineerFilter").value || "ALL";
         const q = (document.getElementById("globalSearch").value || "")
           .toLowerCase()
           .trim();
 
-        const fromDate = fromVal ? new Date(fromVal) : null;
-        const toDate = toVal ? new Date(toVal) : null;
-
-        filteredHPCL = hpclData.filter((r) => {
-          if (eng !== "ALL" && r.engineer !== eng) return false;
-          if (fromDate || toDate) {
-            const d = r.date ? new Date(r.date) : null;
-            if (d && fromDate && d < fromDate) return false;
-            if (d && toDate && d > toDate) return false;
-          }
-          // ensure we only show HPCL relevant fields (as requested): show rows where spareUsed=yes or active/faulty present
-          const spareYes =
-            typeof r.spareUsed === "string" &&
-            r.spareUsed.toLowerCase() === "yes";
-          const hasActive =
-            r.activeSpare && String(r.activeSpare).trim().length > 0;
-          const hasFaulty =
-            r.faultySpare && String(r.faultySpare).trim().length > 0;
-          if (!(spareYes || hasActive || hasFaulty)) return false;
-          // search
-          if (q) {
-            const hay =
-              `${r.engineer} ${r.roCode} ${r.roName} ${r.spareUsed} ${r.activeSpare} ${r.faultySpare}`.toLowerCase();
-            return hay.includes(q);
-          }
-          return true;
-        });
-
-        filteredJIO = jioData.filter((r) => {
-          if (eng !== "ALL" && r.engineer !== eng) return false;
-          if (fromDate || toDate) {
-            const d = r.date ? new Date(r.date) : null;
-            if (d && fromDate && d < fromDate) return false;
-            if (d && toDate && d > toDate) return false;
-          }
-          const yes =
-            typeof r.activeMaterialUsed === "string" &&
-            r.activeMaterialUsed.toLowerCase() === "yes";
-          const used =
-            r.usedMaterialDetails &&
-            String(r.usedMaterialDetails).trim().length > 0;
-          const faulty =
-            r.faultyMaterialDetails &&
-            String(r.faultyMaterialDetails).trim().length > 0;
-          if (!(yes || used || faulty)) return false;
-          if (q) {
-            const hay =
-              `${r.engineer} ${r.roCode} ${r.roName} ${r.activeMaterialUsed} ${r.usedMaterialDetails} ${r.faultyMaterialDetails}`.toLowerCase();
-            return hay.includes(q);
-          }
-          return true;
-        });
-
-        renderHPCL(filteredHPCL);
-        renderJIO(filteredJIO);
+        const rows = buildCombinedRows(source, from, to, eng, q);
+        renderCombined(rows);
       }
 
-      // Export helpers
-      function exportSheet(name, rows) {
-        if (!rows || rows.length === 0) {
-          alert("No rows to export");
-          return;
-        }
+      // quick export of currently displayed rows
+      function exportDisplayed() {
+        if (!combinedDisplayed || combinedDisplayed.length === 0)
+          return alert("No records to export");
+        const rows = combinedDisplayed.map((r) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+        }));
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, name);
-        XLSX.writeFile(
-          wb,
-          `${name}_${new Date().toLocaleDateString("en-CA")}.xlsx`
-        );
-      }
-
-      document.getElementById("exportHPCL").addEventListener("click", () => {
-        // Convert filteredHPCL to export rows
-        const rows = filteredHPCL.map((r) => ({
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          SpareUsed: r.spareUsed,
-          ActiveSpare: r.activeSpare,
-          FaultySpare: r.faultySpare,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-        }));
-        exportSheet("HPCL_ActiveVsFaulty", rows);
-      });
-
-      document.getElementById("exportJio").addEventListener("click", () => {
-        const rows = filteredJIO.map((r) => ({
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          ActiveMaterialUsed: r.activeMaterialUsed,
-          UsedMaterialDetails: r.usedMaterialDetails,
-          FaultyMaterialDetails: r.faultyMaterialDetails,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-        }));
-        exportSheet("JIO_ActiveVsFaulty", rows);
-      });
-
-      document.getElementById("exportAll").addEventListener("click", () => {
-        // Download two sheets in same workbook
-        const wb = XLSX.utils.book_new();
-
-        const hpclRows = filteredHPCL.map((r) => ({
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          SpareUsed: r.spareUsed,
-          ActiveSpare: r.activeSpare,
-          FaultySpare: r.faultySpare,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-        }));
-        const jioRows = filteredJIO.map((r) => ({
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          ActiveMaterialUsed: r.activeMaterialUsed,
-          UsedMaterialDetails: r.usedMaterialDetails,
-          FaultyMaterialDetails: r.faultyMaterialDetails,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-        }));
-
-        XLSX.utils.book_append_sheet(
-          wb,
-          XLSX.utils.json_to_sheet(hpclRows),
-          "HPCL_ActiveVsFaulty"
-        );
-        XLSX.utils.book_append_sheet(
-          wb,
-          XLSX.utils.json_to_sheet(jioRows),
-          "JIO_ActiveVsFaulty"
-        );
+        XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty");
         XLSX.writeFile(
           wb,
           `ActiveVsFaulty_${new Date().toLocaleDateString("en-CA")}.xlsx`
         );
+      }
+
+      // wire up chips (source selectors)
+      chips.forEach((c) => {
+        c.addEventListener("click", () => {
+          chips.forEach((ch) => ch.classList.remove("active"));
+          c.classList.add("active");
+          applyFiltersAndRender();
+        });
+        c.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            c.click();
+          }
+        });
       });
 
-      // Wire form controls
-      document.getElementById("globalSearch").addEventListener("input", () => {
-        applyFiltersAndRender();
-      });
+      // wire other controls
+      document
+        .getElementById("globalSearch")
+        .addEventListener("input", () => applyFiltersAndRender());
       document
         .getElementById("engineerFilter")
         .addEventListener("change", () => applyFiltersAndRender());
@@ -533,13 +446,25 @@
         document.getElementById("toDate").value = "";
         document.getElementById("engineerFilter").value = "ALL";
         document.getElementById("globalSearch").value = "";
+        // reset to Both
+        chips.forEach((ch) => ch.classList.remove("active"));
+        document
+          .querySelector(".chip[data-source='both']")
+          .classList.add("active");
         applyFiltersAndRender();
       });
 
-      // Init - fetch both sources and then render
+      document
+        .getElementById("exportCombined")
+        .addEventListener("click", exportDisplayed);
+      document
+        .getElementById("exportDisplayed")
+        .addEventListener("click", exportDisplayed);
+
+      // init
       (async function init() {
         await Promise.all([fetchHPCL(), fetchJIO()]);
-        // ensure initial render even if one fetch returns later
+        populateEngineerSelect();
         applyFiltersAndRender();
       })();
     </script>
