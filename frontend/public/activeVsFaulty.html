@@ -219,6 +219,14 @@
         border-color: #2563eb;
       }
 
+      /* small oms select styling */
+      .oms-select {
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        background: white;
+      }
+
       /* scrollbar tweak */
       .table-wrapper::-webkit-scrollbar {
         height: 12px;
@@ -252,6 +260,19 @@
         text-align: center;
         color: var(--muted);
         padding: 18px;
+      }
+
+      /* toast */
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 22px;
+        background: rgba(17, 24, 39, 0.95);
+        color: white;
+        padding: 10px 14px;
+        border-radius: 8px;
+        z-index: 9999;
+        display: none;
       }
     </style>
   </head>
@@ -351,7 +372,6 @@
               );
               color: #fff;
             "
-            title="Export all filtered rows (not only page)"
           >
             📤 Export Shown
           </button>
@@ -395,11 +415,12 @@
                 <th>Faulty</th>
                 <th>Verified</th>
                 <th>Date</th>
+                <th>Faulty Code added in OMS</th>
               </tr>
             </thead>
             <tbody id="combinedBody">
               <tr>
-                <td colspan="9" class="empty-row">Loading...</td>
+                <td colspan="10" class="empty-row">Loading...</td>
               </tr>
             </tbody>
           </table>
@@ -413,8 +434,10 @@
       </div>
     </div>
 
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
     <script>
-      // Unified Active vs Faulty (polished) with pagination & export fixes
+      // Unified Active vs Faulty (polished) with OMS picklist and persistence
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
       let hpclData = [];
@@ -437,7 +460,8 @@
         searchInput,
         fromDateEl,
         toDateEl,
-        clearBtn;
+        clearBtn,
+        toastEl;
 
       // Helpers
       function escapeHTML(s) {
@@ -457,6 +481,30 @@
         const e = document.getElementById(id);
         if (e) e.textContent = v;
       }
+      function showToast(msg, timeout = 2500) {
+        toastEl.textContent = msg;
+        toastEl.style.display = "block";
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(
+          () => (toastEl.style.display = "none"),
+          timeout
+        );
+      }
+
+      // parse token payload for role/username
+      function getUserFromToken(tkn) {
+        try {
+          if (!tkn) return {};
+          const payload = JSON.parse(atob(tkn.split(".")[1]));
+          return {
+            username: (payload.username || payload.name || "").toString(),
+            role: (payload.role || "").toString().toLowerCase(),
+          };
+        } catch {
+          return {};
+        }
+      }
+      const currentUser = getUserFromToken(token);
 
       // fetch data functions
       async function fetchHPCL() {
@@ -467,6 +515,7 @@
           if (!res.ok) throw new Error("HPCL fetch failed");
           const data = await res.json();
           hpclData = (data || []).map((d) => ({
+            id: d._id || d.planId || "", // status _id is in _id
             source: "HPCL",
             engineer: d.engineer || "",
             roCode: d.roCode || "",
@@ -476,6 +525,7 @@
             usedDetails: d.activeSpare || "",
             faulty: d.faultySpare || "",
             isVerified: !!d.isVerified,
+            oms03: d.oms03 || "No", // new field
             raw: d,
           }));
         } catch (e) {
@@ -492,6 +542,7 @@
           if (!res.ok) throw new Error("JIO fetch failed");
           const data = await res.json();
           jioData = (data || []).map((d) => ({
+            id: d._id || "",
             source: "JIO",
             engineer: d.engineer || (d.planId && d.planId.engineer) || "",
             roCode: d.roCode || (d.planId && d.planId.roCode) || "",
@@ -501,6 +552,7 @@
             usedDetails: d.usedMaterialDetails || "",
             faulty: d.faultyMaterialDetails || "",
             isVerified: !!d.isVerified,
+            oms03: d.oms03 || "No",
             raw: d,
           }));
         } catch (e) {
@@ -549,6 +601,7 @@
             if (!hay.includes(q)) return;
           }
           rows.push({
+            id: r.id,
             source: r.source,
             engineer: r.engineer,
             roCode: r.roCode,
@@ -558,6 +611,7 @@
             faulty: r.faulty,
             isVerified: r.isVerified,
             date: r.date,
+            oms03: r.oms03 || "No",
           });
         };
 
@@ -570,7 +624,7 @@
         return rows;
       }
 
-      // pagination helpers
+      // Render helpers + hooking OMS selects
       function renderPage(rows) {
         // compute current page slice
         const total = rows.length;
@@ -582,27 +636,101 @@
 
         if (pageData.length === 0) {
           combinedBody.innerHTML =
-            '<tr><td colspan="9" class="empty-row">No records found</td></tr>';
+            '<tr><td colspan="10" class="empty-row">No records found</td></tr>';
         } else {
           combinedBody.innerHTML = pageData
-            .map(
-              (r) => `<tr>
-            <td>${escapeHTML(r.source)}</td>
-            <td>${escapeHTML(r.engineer)}</td>
-            <td>${escapeHTML(r.roCode)}</td>
-            <td>${escapeHTML(r.roName)}</td>
-            <td>${escapeHTML(r.active)}</td>
-            <td>${escapeHTML(r.usedDetails)}</td>
-            <td>${escapeHTML(r.faulty)}</td>
-            <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
-            <td>${escapeHTML(formatDate(r.date))}</td>
-          </tr>`
-            )
+            .map((r) => {
+              // render select - enabled ONLY for admin
+              const disabledAttr =
+                currentUser.role === "admin" ? "" : "disabled";
+              const options = ["Yes", "No", "PO Basis"]
+                .map(
+                  (opt) =>
+                    `<option value="${opt}" ${
+                      (r.oms03 || "No") === opt ? "selected" : ""
+                    }>${opt}</option>`
+                )
+                .join("");
+              return `<tr data-id="${r.id}" data-source="${r.source}">
+                <td>${escapeHTML(r.source)}</td>
+                <td>${escapeHTML(r.engineer)}</td>
+                <td>${escapeHTML(r.roCode)}</td>
+                <td>${escapeHTML(r.roName)}</td>
+                <td>${escapeHTML(r.active)}</td>
+                <td>${escapeHTML(r.usedDetails)}</td>
+                <td>${escapeHTML(r.faulty)}</td>
+                <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
+                <td>${escapeHTML(formatDate(r.date))}</td>
+                <td>
+                  <select class="oms-select" data-id="${r.id}" data-source="${
+                r.source
+              }" ${disabledAttr}>
+                    ${options}
+                  </select>
+                </td>
+              </tr>`;
+            })
             .join("");
         }
 
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
+
+        // attach change listeners to OMS selects (delegation would also work)
+        document.querySelectorAll(".oms-select").forEach((sel) => {
+          sel.removeEventListener("change", onOmsChange);
+          sel.addEventListener("change", onOmsChange);
+        });
+      }
+
+      async function onOmsChange(e) {
+        const sel = e.target;
+        const id = sel.dataset.id;
+        const source = sel.dataset.source;
+        const value = sel.value;
+        // optimistic UI: disable select while saving
+        const prev = sel.disabled;
+        sel.disabled = true;
+        try {
+          let url,
+            method = "PUT";
+          let body = {};
+          if (!id) throw new Error("Missing id");
+          body.oms03 = value;
+
+          if (source === "HPCL") {
+            url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
+          } else {
+            url = `${baseUrl}/updateJioBPStatus/${encodeURIComponent(id)}`;
+          }
+
+          const res = await fetch(url, {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(text || "Save failed");
+          }
+
+          showToast("Saved");
+          // update local in-memory entry so subsequent filters/exports use new value
+          // find and update in hpclData/jioData
+          const list = source === "HPCL" ? hpclData : jioData;
+          const found = list.find((x) => (x.id || "") === id);
+          if (found) found.oms03 = value;
+        } catch (err) {
+          console.error("OMS save error", err);
+          showToast("Save failed", 2500);
+          // revert to previous value if desired - here we keep select as is but re-enable
+        } finally {
+          sel.disabled = prev;
+        }
       }
 
       function renderPaginator(totalRows, totalPages) {
@@ -632,15 +760,17 @@
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === currentPage) btn.classList.add("active");
-          btn.onclick = ((page) => () => {
-            currentPage = page;
-            renderPage(combinedFiltered);
-            document.querySelector(".table-wrapper").scrollTop = 0;
-          })(i);
+          btn.onclick = (() => {
+            const page = i;
+            return () => {
+              currentPage = page;
+              renderPage(combinedFiltered);
+              document.querySelector(".table-wrapper").scrollTop = 0;
+            };
+          })();
           paginatorEl.appendChild(btn);
         }
 
-        // Next
         const next = document.createElement("button");
         next.textContent = "Next ➡";
         next.disabled = currentPage === totalPages;
@@ -653,18 +783,17 @@
         };
         paginatorEl.appendChild(next);
 
-        // summary
         const summary = document.createElement("div");
         summary.style.marginLeft = "12px";
         summary.style.color = "#374151";
-        summary.style.fontSize = "13px";
+        summary.style.fontSize = "12px";
         const from = totalRows === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
         const to = Math.min(totalRows, currentPage * rowsPerPage);
         summary.textContent = `Showing ${from} - ${to} of ${totalRows}`;
         paginatorEl.appendChild(summary);
       }
 
-      // Apply filters then build & render
+      // apply filters + build combinedFiltered + render first page
       function applyFiltersAndRender() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
@@ -672,89 +801,46 @@
         const to = toDateEl.value || null;
         const eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
-
-        combinedFiltered = buildCombinedRows(source, from, to, eng, q);
-        // reset page if needed
+        const rows = buildCombinedRows(source, from, to, eng, q);
+        combinedFiltered = rows;
         currentPage = 1;
         renderPage(combinedFiltered);
       }
 
-      // Export helpers
-      function exportRowsToExcel(filename, rows) {
-        if (!rows || rows.length === 0) {
+      function exportDisplayedRows(
+        rowsToExport,
+        filenamePrefix = "ActiveVsFaulty"
+      ) {
+        if (!rowsToExport || rowsToExport.length === 0) {
           alert("No rows to export");
           return;
         }
-        try {
-          const wsRows = rows.map((r) => ({
-            Source: r.source,
-            Engineer: r.engineer,
-            RO_Code: r.roCode,
-            RO_Name: r.roName,
-            Active: r.active,
-            UsedDetails: r.usedDetails,
-            Faulty: r.faulty,
-            Verified: r.isVerified ? "Yes" : "No",
-            Date: formatDate(r.date),
-          }));
-          const ws = XLSX.utils.json_to_sheet(wsRows);
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty");
-          XLSX.writeFile(wb, `${filename}.xlsx`);
-        } catch (e) {
-          console.error("Export error", e);
-          alert("Export failed. Check console for details.");
-        }
-      }
-
-      // Export all filtered rows (not only page)
-      function exportFiltered() {
-        if (!combinedFiltered || combinedFiltered.length === 0) {
-          alert("No rows to export");
-          return;
-        }
-        exportRowsToExcel(
-          `ActiveVsFaulty_Shown_${new Date().toLocaleDateString("en-CA")}`,
-          combinedFiltered
+        const rows = rowsToExport.map((r) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+          OMS_03: r.oms03 || "No",
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty");
+        XLSX.writeFile(
+          wb,
+          `${filenamePrefix}_${new Date().toLocaleDateString("en-CA")}.xlsx`
         );
       }
 
-      // Export current page rows
-      function exportCurrentPage() {
-        if (!combinedDisplayed || combinedDisplayed.length === 0) {
-          alert("No rows to export");
-          return;
-        }
-        exportRowsToExcel(
-          `ActiveVsFaulty_Page${currentPage}_${new Date().toLocaleDateString(
-            "en-CA"
-          )}`,
-          combinedDisplayed
-        );
-      }
-
-      // wire chips and controls after DOM ready
-      document.addEventListener("DOMContentLoaded", async () => {
-        combinedBody = document.getElementById("combinedBody");
-        combinedCountEl = document.getElementById("combinedCount");
-        chips = Array.from(document.querySelectorAll(".chip")).filter((c) =>
-          c.dataset?.source ? true : false
-        );
-        paginatorEl = document.getElementById("paginator");
-        exportCombinedBtn = document.getElementById("exportCombined");
-        exportDisplayedBtn = document.getElementById("exportDisplayed");
-        engineerSelect = document.getElementById("engineerFilter");
-        searchInput = document.getElementById("globalSearch");
-        fromDateEl = document.getElementById("fromDate");
-        toDateEl = document.getElementById("toDate");
-        clearBtn = document.getElementById("clearFilters");
-
-        // chips for source selection
-        const allChips = Array.from(document.querySelectorAll(".chip"));
-        allChips.forEach((c) => {
-          if (!c.dataset.source) return;
+      // wire chips
+      function wireChips() {
+        chips.forEach((c) => {
           c.addEventListener("click", () => {
-            allChips.forEach((ch) => ch.classList.remove("active"));
+            chips.forEach((ch) => ch.classList.remove("active"));
             c.classList.add("active");
             applyFiltersAndRender();
           });
@@ -765,36 +851,57 @@
             }
           });
         });
+      }
 
-        // other controls
+      // init on DOM ready
+      document.addEventListener("DOMContentLoaded", async () => {
+        combinedBody = document.getElementById("combinedBody");
+        combinedCountEl = document.getElementById("combinedCount");
+        chips = Array.from(document.querySelectorAll(".chip"));
+        paginatorEl = document.getElementById("paginator");
+        exportCombinedBtn = document.getElementById("exportCombined");
+        exportDisplayedBtn = document.getElementById("exportDisplayed");
+        engineerSelect = document.getElementById("engineerFilter");
+        searchInput = document.getElementById("globalSearch");
+        fromDateEl = document.getElementById("fromDate");
+        toDateEl = document.getElementById("toDate");
+        clearBtn = document.getElementById("clearFilters");
+        toastEl = document.getElementById("toast");
+
+        wireChips();
+
+        exportCombinedBtn.addEventListener("click", () => {
+          exportDisplayedRows(combinedFiltered, "ActiveVsFaulty_Full");
+        });
+        exportDisplayedBtn.addEventListener("click", () => {
+          exportDisplayedRows(combinedDisplayed, "ActiveVsFaulty_Page");
+        });
+
         searchInput.addEventListener("input", () => {
-          // debounce small interval
-          clearTimeout(window._activeFaultySearch);
-          window._activeFaultySearch = setTimeout(() => {
-            applyFiltersAndRender();
-          }, 180);
+          clearTimeout(window._searchTimer);
+          window._searchTimer = setTimeout(applyFiltersAndRender, 200);
         });
         engineerSelect.addEventListener("change", applyFiltersAndRender);
         fromDateEl.addEventListener("change", applyFiltersAndRender);
         toDateEl.addEventListener("change", applyFiltersAndRender);
-
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
           toDateEl.value = "";
           engineerSelect.value = "ALL";
           searchInput.value = "";
-          // reset chips to both
-          allChips.forEach((ch) => ch.classList.remove("active"));
-          const both = document.querySelector(".chip[data-source='both']");
-          if (both) both.classList.add("active");
-          currentPage = 1;
+          document
+            .querySelector(".chip[data-source='both']")
+            .classList.add("active");
+          document
+            .querySelectorAll(".chip")
+            .forEach((ch) => ch.classList.remove("active"));
+          document
+            .querySelector(".chip[data-source='both']")
+            .classList.add("active");
           applyFiltersAndRender();
         });
 
-        exportCombinedBtn.addEventListener("click", exportFiltered);
-        exportDisplayedBtn.addEventListener("click", exportCurrentPage);
-
-        // initial data fetch
+        // load data
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         applyFiltersAndRender();
