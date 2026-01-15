@@ -661,6 +661,15 @@
         document.getElementById("editModal").classList.add("flex");
       }
 
+      // ADD missing closeModal helper (fixes the error)
+      function closeModal() {
+        const modal = document.getElementById("editModal");
+        if (modal) {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }
+      }
+
       async function saveEdit() {
         const form = document.getElementById("editForm");
         const formData = new FormData(form);
@@ -839,6 +848,8 @@
         window.applyAllFilters = applyAllFilters;
         window.clearFilters = clearFilters;
         window.exportToExcel = exportToExcel;
+        window.closeModal = closeModal;
+        window.saveEdit = saveEdit;
 
         // initial fetch
         fetchData();
