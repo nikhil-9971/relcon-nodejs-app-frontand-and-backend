@@ -401,177 +401,7 @@
         }, 100);
       }
 
-      // Apply search + date + engineer filters together
-      function applyAllFilters() {
-        showLoader();
-        setTimeout(() => {
-          const searchValue = (
-            document.getElementById("searchInput").value || ""
-          )
-            .toLowerCase()
-            .trim();
-          const fromDate = new Date(document.getElementById("fromDate").value);
-          const toDate = new Date(document.getElementById("toDate").value);
-          const engineerFilter =
-            document.getElementById("engineerFilter").value || "ALL";
-
-          const headerCells = Array.from(
-            document.querySelectorAll("#statusTable thead th")
-          );
-          // find indexes
-          let dateColIndex = -1;
-          let engineerColIndex = -1;
-          headerCells.forEach((th, i) => {
-            const txt = th.innerText.trim().toLowerCase();
-            if (txt === "date") dateColIndex = i;
-            if (txt === "engineer") engineerColIndex = i;
-          });
-
-          const rows = Array.from(
-            document.querySelectorAll("#statusTable tbody tr")
-          );
-          rows.forEach((row) => {
-            const cells = Array.from(row.querySelectorAll("td"));
-            const rowText = row.textContent.toLowerCase();
-            // search match
-            const matchesSearch = !searchValue || rowText.includes(searchValue);
-
-            // engineer match
-            const engCell =
-              engineerColIndex > -1
-                ? cells[engineerColIndex] &&
-                  cells[engineerColIndex].innerText.trim()
-                : "";
-            const matchesEngineer =
-              engineerFilter === "ALL" ||
-              (engCell || "").toLowerCase() === engineerFilter.toLowerCase();
-
-            // date match
-            let matchesDate = true;
-            if (dateColIndex > -1) {
-              const dateCell = cells[dateColIndex];
-              const rowDateStr = dateCell
-                ? dateCell.getAttribute("data-date")
-                : "";
-              if (!rowDateStr) {
-                matchesDate = true;
-              } else {
-                const rowDate = new Date(rowDateStr);
-                matchesDate =
-                  (!isNaN(fromDate) ? rowDate >= fromDate : true) &&
-                  (!isNaN(toDate) ? rowDate <= toDate : true);
-              }
-            }
-
-            row.style.display =
-              matchesSearch && matchesEngineer && matchesDate ? "" : "none";
-          });
-
-          hideLoader();
-        }, 50);
-      }
-
-      function clearFilters() {
-        document.getElementById("fromDate").value = "";
-        document.getElementById("toDate").value = "";
-        document.getElementById("searchInput").value = "";
-        document.getElementById("engineerFilter").value = "ALL";
-        applyAllFilters();
-      }
-
-      function exportToExcel() {
-        const table = document.getElementById("statusTable");
-
-        // Clone and clean the table
-        const clone = table.cloneNode(true);
-        const rows = Array.from(clone.querySelectorAll("tbody tr"));
-
-        // find header indexes for SIM columns so we can prefix a backtick
-        const headerCells = Array.from(clone.querySelectorAll("thead th"));
-        let jioColIndex = -1;
-        let airtelColIndex = -1;
-        headerCells.forEach((th, i) => {
-          const txt = th.innerText.trim().toLowerCase();
-          if (txt.includes("jio sim")) jioColIndex = i;
-          if (txt.includes("airtel")) airtelColIndex = i;
-        });
-
-        rows.forEach((row) => {
-          if (row.style.display === "none") {
-            row.remove(); // remove hidden rows (date/search/engineer filtered)
-            return;
-          }
-
-          const cells = Array.from(row.querySelectorAll("td"));
-
-          // Prefix backtick to SIM cells to preserve as text in Excel
-          if (jioColIndex > -1 && cells[jioColIndex]) {
-            const raw = cells[jioColIndex].innerText || "";
-            if (raw && !raw.startsWith("`")) {
-              cells[jioColIndex].innerText = "`" + raw;
-            }
-          }
-          if (airtelColIndex > -1 && cells[airtelColIndex]) {
-            const raw = cells[airtelColIndex].innerText || "";
-            if (raw && !raw.startsWith("`")) {
-              cells[airtelColIndex].innerText = "`" + raw;
-            }
-          }
-
-          // Optional: remove any other emojis or formatting from cells
-          cells.forEach((td) => {
-            td.innerHTML = td.innerText;
-          });
-        });
-
-        // Build dynamic filename
-        const today = new Date().toLocaleDateString("en-CA");
-        const fromDate = document.getElementById("fromDate").value;
-        const toDate = document.getElementById("toDate").value;
-
-        let filename = "BPCL_Report";
-        if (fromDate && toDate) {
-          filename += `_${fromDate}_to_${toDate}`;
-        } else if (fromDate) {
-          filename += `_from_${fromDate}`;
-        } else if (toDate) {
-          filename += `_upto_${toDate}`;
-        } else {
-          filename += `_${today}`;
-        }
-
-        // Create sheet
-        const ws = XLSX.utils.table_to_sheet(clone);
-
-        // Apply Calibri font, size 11 to all cells (SheetJS style object)
-        // Note: styling support depends on SheetJS build; this uses cell `.s` property.
-        try {
-          if (ws && ws["!ref"]) {
-            const range = XLSX.utils.decode_range(ws["!ref"]);
-            for (let R = range.s.r; R <= range.e.r; ++R) {
-              for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                const cell = ws[cellAddress];
-                if (cell) {
-                  cell.s = cell.s || {};
-                  cell.s.font = Object.assign({}, cell.s.font, {
-                    name: "Calibri",
-                    sz: 11,
-                  });
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.warn("Excel styling not applied:", e);
-        }
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "BPCL Status");
-
-        XLSX.writeFile(wb, `${filename}.xlsx`);
-      }
-
+      // ==================== MODAL: improved openEditModal + saveEdit ====================
       function handleEditClick(encoded) {
         try {
           const json = decodeURIComponent(escape(atob(encoded)));
@@ -586,29 +416,113 @@
         const form = document.getElementById("editForm");
         form.innerHTML = "";
 
+        // Hidden id
         form.innerHTML += `<input type="hidden" name="_id" value="${record.bpclStatusId}" />`;
 
-        for (const [key, value] of Object.entries(record)) {
-          if (
-            ["__v", "createdAt", "updatedAt", "_id", "bpclStatusId"].includes(
-              key
-            )
-          )
-            continue;
+        // Build mergedRecord so we can surface ATG fields even if nested inside planId
+        const merged = Object.assign({}, record);
+        // If planId is populated object, copy missing keys from it (safe)
+        if (record.planId && typeof record.planId === "object") {
+          const keysToLift = [
+            "relconAtgProvided",
+            "relconAtgCount",
+            "relconAtgDetails",
+          ];
+          keysToLift.forEach((k) => {
+            if (merged[k] === undefined && record.planId[k] !== undefined) {
+              merged[k] = record.planId[k];
+            }
+          });
+        }
 
-          // skip embedded plan object to avoid clutter (we show planId separately)
-          if (key === "planId" && typeof value === "object") continue;
+        // Ensure ATG keys exist so inputs always show (even if empty)
+        if (merged.relconAtgProvided === undefined)
+          merged.relconAtgProvided = "";
+        if (merged.relconAtgCount === undefined) merged.relconAtgCount = "";
+        if (merged.relconAtgDetails === undefined) merged.relconAtgDetails = [];
 
+        const skipKeys = [
+          "__v",
+          "createdAt",
+          "updatedAt",
+          "_id",
+          "bpclStatusId",
+        ];
+
+        // Order keys: show commonly edited fields first (optional)
+        const preferredOrder = [
+          "planId",
+          "engineer",
+          "region",
+          "roCode",
+          "roName",
+          "date",
+          "class1DeviceCount",
+          "class1Devices",
+          "class1WithoutSimCount",
+          "class1WithoutSimDevices",
+          "class2DeviceCount",
+          "class2Devices",
+          "relconAtgProvided",
+          "relconAtgCount",
+          "relconAtgDetails",
+          "jioSimNumber",
+          "airtelSimNumber",
+          "status",
+          "isVerified",
+          "createdBy",
+        ];
+
+        // Build final keys array: preferredOrder + other keys
+        const keysSet = new Set(Object.keys(merged));
+        const finalKeys = [];
+        preferredOrder.forEach((k) => {
+          if (keysSet.has(k)) {
+            finalKeys.push(k);
+            keysSet.delete(k);
+          }
+        });
+        // add remaining keys
+        Array.from(keysSet).forEach((k) => finalKeys.push(k));
+
+        // Render inputs
+        finalKeys.forEach((key) => {
+          if (skipKeys.includes(key)) return;
+          // skip large nested plan object (we show planId separately)
+          if (key === "planId" && typeof merged[key] === "object") return;
+
+          let value = merged[key];
           let safeValue = Array.isArray(value) ? value.join(", ") : value || "";
 
+          // special handling for relconAtgProvided: show select
+          if (key === "relconAtgProvided") {
+            form.innerHTML += `
+            <div>
+              <label class="block text-gray-700 font-medium mb-1">${key}</label>
+              <select name="${key}" class="w-full border px-2 py-1 rounded">
+                <option value="">-- Select --</option>
+                <option value="YES" ${
+                  safeValue === "YES" ? "selected" : ""
+                }>YES</option>
+                <option value="NO" ${
+                  safeValue === "NO" ? "selected" : ""
+                }>NO</option>
+              </select>
+            </div>`;
+            return;
+          }
+
+          // normal input
           form.innerHTML += `
             <div>
               <label class="block text-gray-700 font-medium mb-1">${key}</label>
-              <input type="text" name="${key}" value="${safeValue}" class="w-full border px-2 py-1 rounded" />
+              <input type="text" name="${key}" value="${String(
+            safeValue
+          ).replace(/"/g, "&quot;")}" class="w-full border px-2 py-1 rounded" />
             </div>`;
-        }
+        });
 
-        // show planId if available
+        // provide planId input (objectId) if available
         if (
           record.planId &&
           (typeof record.planId === "string" || record.planId._id)
@@ -636,25 +550,29 @@
         const formData = new FormData(form);
         const updated = {};
 
+        // known array fields
+        const arrayFields = [
+          "class1Devices",
+          "class1WithoutSimDevices",
+          "class2Devices",
+          "relconAtgDetails",
+        ];
+
         formData.forEach((val, key) => {
           if (key === "_id") return;
-          // convert comma-separated values to arrays for known array fields
-          if (
-            [
-              "class1Devices",
-              "class1WithoutSimDevices",
-              "class2Devices",
-              "relconAtgDetails",
-            ].includes(key)
-          ) {
+          if (arrayFields.includes(key)) {
             updated[key] = val
               ? val
                   .split(",")
                   .map((s) => s.trim())
                   .filter(Boolean)
               : [];
+          } else if (key === "relconAtgCount") {
+            // try to convert count to number if possible
+            const n = Number(val);
+            updated[key] = isNaN(n) ? val : n;
           } else if (key === "isVerified") {
-            updated.isVerified = val === "true" || val === true;
+            updated.isVerified = val === "true" || val === true || val === "on";
           } else {
             updated[key] = val;
           }
@@ -688,6 +606,8 @@
           alert("❌ Update failed");
         }
       }
+
+      // ==================== rest unchanged ====================
 
       function deleteRecord(id) {
         deleteTargetId = id;
