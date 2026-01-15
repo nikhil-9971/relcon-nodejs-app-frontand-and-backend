@@ -128,6 +128,7 @@ router.put("/updateJioBPStatus/:id", authMiddleware, async (req, res) => {
       "planId",
       "createdBy",
       "isVerified",
+      "oms03",
     ];
 
     const updateData = {};

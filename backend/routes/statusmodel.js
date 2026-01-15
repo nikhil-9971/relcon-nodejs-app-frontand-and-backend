@@ -310,6 +310,7 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
       "locationField",
       "isVerified",
       "taskGenerated",
+      "oms03",
     ];
 
     const updates = {};
