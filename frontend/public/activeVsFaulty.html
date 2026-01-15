@@ -373,7 +373,7 @@
               color: #fff;
             "
           >
-            📤 Export Shown
+            ���� Export Shown
           </button>
         </div>
       </div>
@@ -525,7 +525,7 @@
             usedDetails: d.activeSpare || "",
             faulty: d.faultySpare || "",
             isVerified: !!d.isVerified,
-            oms03: d.oms03 || "No", // new field
+            oms03: d.oms03 || "No", // new field (if backend supports)
             raw: d,
           }));
         } catch (e) {
@@ -671,66 +671,14 @@
               </tr>`;
             })
             .join("");
+          // attach change listeners for OMS selects (delegation)
+          Array.from(combinedBody.querySelectorAll(".oms-select")).forEach(
+            (sel) => sel.addEventListener("change", onOmsChange)
+          );
         }
 
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
-
-        // attach change listeners to OMS selects (delegation would also work)
-        document.querySelectorAll(".oms-select").forEach((sel) => {
-          sel.removeEventListener("change", onOmsChange);
-          sel.addEventListener("change", onOmsChange);
-        });
-      }
-
-      async function onOmsChange(e) {
-        const sel = e.target;
-        const id = sel.dataset.id;
-        const source = sel.dataset.source;
-        const value = sel.value;
-        // optimistic UI: disable select while saving
-        const prev = sel.disabled;
-        sel.disabled = true;
-        try {
-          let url,
-            method = "PUT";
-          let body = {};
-          if (!id) throw new Error("Missing id");
-          body.oms03 = value;
-
-          if (source === "HPCL") {
-            url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
-          } else {
-            url = `${baseUrl}/updateJioBPStatus/${encodeURIComponent(id)}`;
-          }
-
-          const res = await fetch(url, {
-            method,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(body),
-          });
-
-          if (!res.ok) {
-            const text = await res.text().catch(() => "");
-            throw new Error(text || "Save failed");
-          }
-
-          showToast("Saved");
-          // update local in-memory entry so subsequent filters/exports use new value
-          // find and update in hpclData/jioData
-          const list = source === "HPCL" ? hpclData : jioData;
-          const found = list.find((x) => (x.id || "") === id);
-          if (found) found.oms03 = value;
-        } catch (err) {
-          console.error("OMS save error", err);
-          showToast("Save failed", 2500);
-          // revert to previous value if desired - here we keep select as is but re-enable
-        } finally {
-          sel.disabled = prev;
-        }
       }
 
       function renderPaginator(totalRows, totalPages) {
@@ -760,17 +708,15 @@
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === currentPage) btn.classList.add("active");
-          btn.onclick = (() => {
-            const page = i;
-            return () => {
-              currentPage = page;
-              renderPage(combinedFiltered);
-              document.querySelector(".table-wrapper").scrollTop = 0;
-            };
-          })();
+          btn.onclick = ((page) => () => {
+            currentPage = page;
+            renderPage(combinedFiltered);
+            document.querySelector(".table-wrapper").scrollTop = 0;
+          })(i);
           paginatorEl.appendChild(btn);
         }
 
+        // Next
         const next = document.createElement("button");
         next.textContent = "Next ➡";
         next.disabled = currentPage === totalPages;
@@ -783,39 +729,98 @@
         };
         paginatorEl.appendChild(next);
 
+        // summary
         const summary = document.createElement("div");
         summary.style.marginLeft = "12px";
         summary.style.color = "#374151";
-        summary.style.fontSize = "12px";
+        summary.style.fontSize = "13px";
         const from = totalRows === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
         const to = Math.min(totalRows, currentPage * rowsPerPage);
         summary.textContent = `Showing ${from} - ${to} of ${totalRows}`;
         paginatorEl.appendChild(summary);
       }
 
-      // apply filters + build combinedFiltered + render first page
+      // OMS change handler - send update to backend
+      async function onOmsChange(e) {
+        const sel = e.currentTarget;
+        const newVal = sel.value;
+        const id = sel.dataset.id;
+        const source = sel.dataset.source; // HPCL or JIO
+
+        // If not admin, ignore
+        if (currentUser.role !== "admin") {
+          showToast("Only admin can update OMS value");
+          return;
+        }
+
+        // Update local combinedFiltered so UI stays consistent
+        combinedFiltered = combinedFiltered.map((r) =>
+          r.id === id ? { ...r, oms03: newVal } : r
+        );
+
+        // persist to backend:
+        // For HPCL we update status (Status model) at route PUT /updateStatus/:id
+        // For JIO update route exists at /jioBP/updateJioBPStatus/:id
+
+        try {
+          let url = "";
+          let body = {};
+          if (source === "HPCL") {
+            url = `${baseUrl}/updateStatus/${id}`;
+            body = { oms03: newVal };
+          } else {
+            url = `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
+            body = { oms03: newVal };
+          }
+
+          const res = await fetch(url, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || "Update failed");
+          }
+          showToast("Saved");
+        } catch (err) {
+          console.error("OMS update error:", err);
+          showToast("Save failed");
+        }
+      }
+
+      // filter & apply
       function applyFiltersAndRender() {
+        currentPage = 1;
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
         const to = toDateEl.value || null;
         const eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
-        const rows = buildCombinedRows(source, from, to, eng, q);
-        combinedFiltered = rows;
-        currentPage = 1;
+
+        combinedFiltered = buildCombinedRows(source, from, to, eng, q);
         renderPage(combinedFiltered);
       }
 
-      function exportDisplayedRows(
-        rowsToExport,
-        filenamePrefix = "ActiveVsFaulty"
-      ) {
-        if (!rowsToExport || rowsToExport.length === 0) {
+      // EXPORT helpers
+      function exportToXlsx(filename, sheetName, rows) {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, sheetName || "Sheet1");
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+      }
+
+      function exportCurrentPage() {
+        if (!combinedDisplayed || combinedDisplayed.length === 0) {
           alert("No rows to export");
           return;
         }
-        const rows = rowsToExport.map((r) => ({
+        const rows = combinedDisplayed.map((r, idx) => ({
           Source: r.source,
           Engineer: r.engineer,
           RO_Code: r.roCode,
@@ -827,17 +832,41 @@
           Date: formatDate(r.date),
           OMS_03: r.oms03 || "No",
         }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty");
-        XLSX.writeFile(
-          wb,
-          `${filenamePrefix}_${new Date().toLocaleDateString("en-CA")}.xlsx`
+        exportToXlsx(
+          `ActiveVsFaulty_Page_${currentPage}_${new Date().toLocaleDateString(
+            "en-CA"
+          )}`,
+          "ActiveVsFaulty",
+          rows
         );
       }
 
-      // wire chips
-      function wireChips() {
+      function exportAllFiltered() {
+        if (!combinedFiltered || combinedFiltered.length === 0) {
+          alert("No rows to export");
+          return;
+        }
+        const rows = combinedFiltered.map((r) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+          OMS_03: r.oms03 || "No",
+        }));
+        exportToXlsx(
+          `ActiveVsFaulty_All_${new Date().toLocaleDateString("en-CA")}`,
+          "ActiveVsFaulty",
+          rows
+        );
+      }
+
+      // wire chips and controls
+      function wireUi() {
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
@@ -851,9 +880,42 @@
             }
           });
         });
+
+        searchInput.addEventListener("input", () => {
+          currentPage = 1;
+          // small debounce:
+          clearTimeout(window._searchTimer);
+          window._searchTimer = setTimeout(applyFiltersAndRender, 200);
+        });
+        engineerSelect.addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
+        fromDateEl.addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
+        toDateEl.addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
+        clearBtn.addEventListener("click", () => {
+          fromDateEl.value = "";
+          toDateEl.value = "";
+          engineerSelect.value = "ALL";
+          searchInput.value = "";
+          chips.forEach((ch) => ch.classList.remove("active"));
+          document
+            .querySelector(".chip[data-source='both']")
+            .classList.add("active");
+          applyFiltersAndRender();
+        });
+
+        exportDisplayedBtn.addEventListener("click", exportCurrentPage);
+        exportCombinedBtn.addEventListener("click", exportAllFiltered);
       }
 
-      // init on DOM ready
+      // init
       document.addEventListener("DOMContentLoaded", async () => {
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
@@ -868,40 +930,9 @@
         clearBtn = document.getElementById("clearFilters");
         toastEl = document.getElementById("toast");
 
-        wireChips();
+        wireUi();
 
-        exportCombinedBtn.addEventListener("click", () => {
-          exportDisplayedRows(combinedFiltered, "ActiveVsFaulty_Full");
-        });
-        exportDisplayedBtn.addEventListener("click", () => {
-          exportDisplayedRows(combinedDisplayed, "ActiveVsFaulty_Page");
-        });
-
-        searchInput.addEventListener("input", () => {
-          clearTimeout(window._searchTimer);
-          window._searchTimer = setTimeout(applyFiltersAndRender, 200);
-        });
-        engineerSelect.addEventListener("change", applyFiltersAndRender);
-        fromDateEl.addEventListener("change", applyFiltersAndRender);
-        toDateEl.addEventListener("change", applyFiltersAndRender);
-        clearBtn.addEventListener("click", () => {
-          fromDateEl.value = "";
-          toDateEl.value = "";
-          engineerSelect.value = "ALL";
-          searchInput.value = "";
-          document
-            .querySelector(".chip[data-source='both']")
-            .classList.add("active");
-          document
-            .querySelectorAll(".chip")
-            .forEach((ch) => ch.classList.remove("active"));
-          document
-            .querySelector(".chip[data-source='both']")
-            .classList.add("active");
-          applyFiltersAndRender();
-        });
-
-        // load data
+        // fetch both sources in parallel
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         applyFiltersAndRender();
