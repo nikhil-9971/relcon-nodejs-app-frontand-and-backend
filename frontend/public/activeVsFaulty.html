@@ -148,13 +148,14 @@
         max-height: 64vh;
         overflow: auto;
         border-radius: 8px;
-        border: 1px solid rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(15, 23, 42, 0.06);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px; /* smaller font */
+        border: 1px solid rgba(15, 23, 42, 0.06);
       }
 
       thead th {
@@ -175,17 +176,46 @@
         color: #111827;
       }
 
+      /* add explicit cell borders for "bordering" look */
+      thead th,
+      tbody td {
+        border-right: 1px solid rgba(15, 23, 42, 0.03);
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
       .count-badge {
         color: #374151;
         font-weight: 700;
         font-size: 13px;
       }
 
-      /* small export button */
       .actions {
         display: flex;
         gap: 8px;
         align-items: center;
+      }
+
+      /* paginator */
+      .paginator {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        padding-top: 10px;
+      }
+      .paginator button {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        background: #f3f4f6;
+        cursor: pointer;
+      }
+      .paginator button.active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
       }
 
       /* scrollbar tweak */
@@ -340,7 +370,11 @@
         </div>
 
         <div class="table-wrapper" role="region" aria-label="Results table">
-          <table id="combinedTable" class="min-w-full">
+          <table
+            id="combinedTable"
+            class="min-w-full"
+            aria-describedby="combinedCount"
+          >
             <thead>
               <tr>
                 <th>Source</th>
@@ -357,21 +391,30 @@
             <tbody id="combinedBody"></tbody>
           </table>
         </div>
+
+        <div class="paginator" id="paginator"></div>
+
+        <div class="mt-3 flex justify-end gap-2">
+          <button id="exportDisplayed" class="chip">Export Current Page</button>
+        </div>
       </div>
     </div>
 
     <script>
-      // Unified Active vs Faulty (polished)
+      // Unified Active vs Faulty (polished) with pagination & export fixes
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
       let hpclData = [];
       let jioData = [];
-      let combinedDisplayed = [];
+      let combinedFiltered = []; // all filtered rows (before pagination)
+      let combinedDisplayed = []; // current page rows
 
-      // UI elements
-      const combinedBody = document.getElementById("combinedBody");
-      const combinedCountEl = document.getElementById("combinedCount");
-      const chips = Array.from(document.querySelectorAll(".chip"));
+      // pagination state
+      let currentPage = 1;
+      const rowsPerPage = 50;
+
+      // UI elements will be grabbed on DOMContentLoaded
+      let combinedBody, combinedCountEl, chips, paginatorEl;
 
       // Helpers
       function escapeHTML(s) {
@@ -392,7 +435,7 @@
         if (e) e.textContent = v;
       }
 
-      // Fetch HPCL (merged status) and JIO
+      // fetch data functions
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -458,14 +501,14 @@
         if (uniq.includes(cur)) sel.value = cur;
       }
 
+      // Build combined rows applying the "Verified & Active='yes'" rule and UI filters
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
+
         const addRow = (r) => {
-          // Verified required
           if (!r.isVerified) return;
-          // Active must be "yes"
           if ((r.active || "").toString().toLowerCase() !== "yes") return;
           if (eng && eng !== "ALL" && r.engineer !== eng) return;
           if (f || t) {
@@ -497,30 +540,97 @@
         if (sourceFilter === "both" || sourceFilter === "jio") {
           jioData.forEach(addRow);
         }
-
         return rows;
       }
 
-      function renderCombined(rows) {
-        combinedBody.innerHTML = rows
+      // pagination helpers
+      function renderPage(rows) {
+        // compute current page slice
+        const total = rows.length;
+        const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const pageData = rows.slice(start, start + rowsPerPage);
+        combinedDisplayed = pageData;
+
+        combinedBody.innerHTML = pageData
           .map(
             (r) => `<tr>
-          <td>${escapeHTML(r.source)}</td>
-          <td>${escapeHTML(r.engineer)}</td>
-          <td>${escapeHTML(r.roCode)}</td>
-          <td>${escapeHTML(r.roName)}</td>
-          <td>${escapeHTML(r.active)}</td>
-          <td>${escapeHTML(r.usedDetails)}</td>
-          <td>${escapeHTML(r.faulty)}</td>
-          <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
-          <td>${escapeHTML(formatDate(r.date))}</td>
-        </tr>`
+            <td>${escapeHTML(r.source)}</td>
+            <td>${escapeHTML(r.engineer)}</td>
+            <td>${escapeHTML(r.roCode)}</td>
+            <td>${escapeHTML(r.roName)}</td>
+            <td>${escapeHTML(r.active)}</td>
+            <td>${escapeHTML(r.usedDetails)}</td>
+            <td>${escapeHTML(r.faulty)}</td>
+            <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
+            <td>${escapeHTML(formatDate(r.date))}</td>
+          </tr>`
           )
           .join("");
-        text("combinedCount", `${rows.length} rows`);
-        combinedDisplayed = rows;
+        combinedCountEl.textContent = `${total} rows`;
+        renderPaginator(total, currentPage);
       }
 
+      function renderPaginator(totalRows, current) {
+        paginatorEl.innerHTML = "";
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+        const prev = document.createElement("button");
+        prev.textContent = "⬅ Prev";
+        prev.disabled = current === 1;
+        prev.onclick = () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderPage(combinedFiltered);
+          }
+        };
+        paginatorEl.appendChild(prev);
+
+        // show window of pages (max 7)
+        const maxButtons = 7;
+        let startPage = Math.max(1, current - Math.floor(maxButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if (endPage - startPage < maxButtons - 1) {
+          startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+        for (let i = startPage; i <= endPage; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === current) btn.classList.add("active");
+          btn.onclick = (() => {
+            const page = i;
+            return () => {
+              currentPage = page;
+              renderPage(combinedFiltered);
+            };
+          })();
+          paginatorEl.appendChild(btn);
+        }
+
+        const next = document.createElement("button");
+        next.textContent = "Next ➡";
+        next.disabled = current === totalPages;
+        next.onclick = () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderPage(combinedFiltered);
+          }
+        };
+        paginatorEl.appendChild(next);
+
+        // summary
+        const summary = document.createElement("div");
+        summary.style.marginLeft = "12px";
+        summary.style.color = "#374151";
+        summary.style.fontSize = "13px";
+        const from = totalRows === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+        const to = Math.min(totalRows, currentPage * rowsPerPage);
+        summary.textContent = `Showing ${from} - ${to} of ${totalRows}`;
+        paginatorEl.appendChild(summary);
+      }
+
+      // filter & apply
       function applyFiltersAndRender() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
@@ -530,14 +640,21 @@
         const q = (document.getElementById("globalSearch").value || "")
           .toLowerCase()
           .trim();
-        const rows = buildCombinedRows(source, from, to, eng, q);
-        renderCombined(rows);
+
+        // rebuild filtered rows
+        combinedFiltered = buildCombinedRows(source, from, to, eng, q);
+        // reset to page 1 when filter changes
+        currentPage = 1;
+        renderPage(combinedFiltered);
       }
 
-      function exportDisplayed() {
-        if (!combinedDisplayed || combinedDisplayed.length === 0)
-          return alert("No rows to export");
-        const rows = combinedDisplayed.map((r) => ({
+      // export: export ALL filtered rows (not only page) so user gets full dataset
+      function exportFiltered() {
+        if (!combinedFiltered || combinedFiltered.length === 0) {
+          alert("No rows to export");
+          return;
+        }
+        const rows = combinedFiltered.map((r) => ({
           Source: r.source,
           Engineer: r.engineer,
           RO_Code: r.roCode,
@@ -557,55 +674,101 @@
         );
       }
 
-      // wire chips
-      chips.forEach((c) => {
-        c.addEventListener("click", () => {
-          chips.forEach((ch) => ch.classList.remove("active"));
-          c.classList.add("active");
+      function exportCurrentPage() {
+        if (!combinedDisplayed || combinedDisplayed.length === 0) {
+          alert("No rows to export on current page");
+          return;
+        }
+        const rows = combinedDisplayed.map((r) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty_Page");
+        XLSX.writeFile(
+          wb,
+          `ActiveVsFaulty_Page_${new Date().toLocaleDateString("en-CA")}.xlsx`
+        );
+      }
+
+      // wire UI after DOM ready
+      document.addEventListener("DOMContentLoaded", async () => {
+        combinedBody = document.getElementById("combinedBody");
+        combinedCountEl = document.getElementById("combinedCount");
+        paginatorEl = document.getElementById("paginator");
+        chips = Array.from(document.querySelectorAll(".chip"));
+
+        // wire chips
+        chips.forEach((c) => {
+          c.addEventListener("click", () => {
+            chips.forEach((ch) => ch.classList.remove("active"));
+            c.classList.add("active");
+            applyFiltersAndRender();
+          });
+          c.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              c.click();
+            }
+          });
+        });
+
+        // wire controls
+        document
+          .getElementById("globalSearch")
+          .addEventListener("input", () => {
+            currentPage = 1;
+            applyFiltersAndRender();
+          });
+        document
+          .getElementById("engineerFilter")
+          .addEventListener("change", () => {
+            currentPage = 1;
+            applyFiltersAndRender();
+          });
+        document.getElementById("fromDate").addEventListener("change", () => {
+          currentPage = 1;
           applyFiltersAndRender();
         });
-        c.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            c.click();
-          }
+        document.getElementById("toDate").addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
         });
-      });
-
-      // wire controls
-      document
-        .getElementById("globalSearch")
-        .addEventListener("input", applyFiltersAndRender);
-      document
-        .getElementById("engineerFilter")
-        .addEventListener("change", applyFiltersAndRender);
-      document
-        .getElementById("fromDate")
-        .addEventListener("change", applyFiltersAndRender);
-      document
-        .getElementById("toDate")
-        .addEventListener("change", applyFiltersAndRender);
-      document.getElementById("clearFilters").addEventListener("click", () => {
-        document.getElementById("fromDate").value = "";
-        document.getElementById("toDate").value = "";
-        document.getElementById("engineerFilter").value = "ALL";
-        document.getElementById("globalSearch").value = "";
-        chips.forEach((ch) => ch.classList.remove("active"));
         document
-          .querySelector(".chip[data-source='both']")
-          .classList.add("active");
-        applyFiltersAndRender();
-      });
-      document
-        .getElementById("exportCombined")
-        .addEventListener("click", exportDisplayed);
+          .getElementById("clearFilters")
+          .addEventListener("click", () => {
+            document.getElementById("fromDate").value = "";
+            document.getElementById("toDate").value = "";
+            document.getElementById("engineerFilter").value = "ALL";
+            document.getElementById("globalSearch").value = "";
+            chips.forEach((ch) => ch.classList.remove("active"));
+            document
+              .querySelector(".chip[data-source='both']")
+              .classList.add("active");
+            currentPage = 1;
+            applyFiltersAndRender();
+          });
 
-      // init
-      (async function init() {
+        document
+          .getElementById("exportCombined")
+          .addEventListener("click", exportFiltered);
+        document
+          .getElementById("exportDisplayed")
+          .addEventListener("click", exportCurrentPage);
+
+        // initial fetch and render
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         applyFiltersAndRender();
-      })();
+      });
     </script>
   </body>
 </html>
