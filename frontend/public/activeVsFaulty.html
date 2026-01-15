@@ -246,6 +246,13 @@
           font-size: 16px;
         }
       }
+
+      /* small helper for empty table state */
+      .empty-row {
+        text-align: center;
+        color: var(--muted);
+        padding: 18px;
+      }
     </style>
   </head>
 
@@ -344,6 +351,7 @@
               );
               color: #fff;
             "
+            title="Export all filtered rows (not only page)"
           >
             📤 Export Shown
           </button>
@@ -389,7 +397,11 @@
                 <th>Date</th>
               </tr>
             </thead>
-            <tbody id="combinedBody"></tbody>
+            <tbody id="combinedBody">
+              <tr>
+                <td colspan="9" class="empty-row">Loading...</td>
+              </tr>
+            </tbody>
           </table>
         </div>
 
@@ -420,7 +432,12 @@
         chips,
         paginatorEl,
         exportCombinedBtn,
-        exportDisplayedBtn;
+        exportDisplayedBtn,
+        engineerSelect,
+        searchInput,
+        fromDateEl,
+        toDateEl,
+        clearBtn;
 
       // Helpers
       function escapeHTML(s) {
@@ -447,6 +464,7 @@
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
             headers: { Authorization: `Bearer ${token}` },
           });
+          if (!res.ok) throw new Error("HPCL fetch failed");
           const data = await res.json();
           hpclData = (data || []).map((d) => ({
             source: "HPCL",
@@ -462,6 +480,7 @@
           }));
         } catch (e) {
           console.error("HPCL fetch error", e);
+          hpclData = [];
         }
       }
 
@@ -470,6 +489,7 @@
           const res = await fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
             headers: { Authorization: `Bearer ${token}` },
           });
+          if (!res.ok) throw new Error("JIO fetch failed");
           const data = await res.json();
           jioData = (data || []).map((d) => ({
             source: "JIO",
@@ -485,11 +505,12 @@
           }));
         } catch (e) {
           console.error("JIO fetch error", e);
+          jioData = [];
         }
       }
 
       function populateEngineerSelect() {
-        const sel = document.getElementById("engineerFilter");
+        const sel = engineerSelect;
         if (!sel) return;
         const combined = [
           ...hpclData.map((d) => d.engineer),
@@ -559,9 +580,13 @@
         const pageData = rows.slice(start, start + rowsPerPage);
         combinedDisplayed = pageData;
 
-        combinedBody.innerHTML = pageData
-          .map(
-            (r) => `<tr>
+        if (pageData.length === 0) {
+          combinedBody.innerHTML =
+            '<tr><td colspan="9" class="empty-row">No records found</td></tr>';
+        } else {
+          combinedBody.innerHTML = pageData
+            .map(
+              (r) => `<tr>
             <td>${escapeHTML(r.source)}</td>
             <td>${escapeHTML(r.engineer)}</td>
             <td>${escapeHTML(r.roCode)}</td>
@@ -572,8 +597,10 @@
             <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
             <td>${escapeHTML(formatDate(r.date))}</td>
           </tr>`
-          )
-          .join("");
+            )
+            .join("");
+        }
+
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
       }
@@ -588,7 +615,6 @@
           if (currentPage > 1) {
             currentPage--;
             renderPage(combinedFiltered);
-            // scroll top of table wrapper a bit for UX
             document.querySelector(".table-wrapper").scrollTop = 0;
           }
         };
@@ -606,14 +632,11 @@
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === currentPage) btn.classList.add("active");
-          btn.onclick = (() => {
-            const page = i;
-            return () => {
-              currentPage = page;
-              renderPage(combinedFiltered);
-              document.querySelector(".table-wrapper").scrollTop = 0;
-            };
-          })();
+          btn.onclick = ((page) => () => {
+            currentPage = page;
+            renderPage(combinedFiltered);
+            document.querySelector(".table-wrapper").scrollTop = 0;
+          })(i);
           paginatorEl.appendChild(btn);
         }
 
@@ -630,7 +653,7 @@
         };
         paginatorEl.appendChild(next);
 
-        // summary (aligned center via CSS on .paginator)
+        // summary
         const summary = document.createElement("div");
         summary.style.marginLeft = "12px";
         summary.style.color = "#374151";
@@ -641,87 +664,97 @@
         paginatorEl.appendChild(summary);
       }
 
-      // read UI and re-render (applies filters, builds combinedFiltered and renders page 1)
+      // Apply filters then build & render
       function applyFiltersAndRender() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
-        const from = document.getElementById("fromDate").value || null;
-        const to = document.getElementById("toDate").value || null;
-        const eng = document.getElementById("engineerFilter").value || "ALL";
-        const q = (document.getElementById("globalSearch").value || "")
-          .toLowerCase()
-          .trim();
+        const from = fromDateEl.value || null;
+        const to = toDateEl.value || null;
+        const eng = engineerSelect.value || "ALL";
+        const q = (searchInput.value || "").toLowerCase().trim();
 
         combinedFiltered = buildCombinedRows(source, from, to, eng, q);
+        // reset page if needed
         currentPage = 1;
         renderPage(combinedFiltered);
       }
 
-      // export currently displayed page rows
-      function exportDisplayed() {
-        if (!combinedDisplayed || combinedDisplayed.length === 0) {
-          alert("No rows to export on current page");
+      // Export helpers
+      function exportRowsToExcel(filename, rows) {
+        if (!rows || rows.length === 0) {
+          alert("No rows to export");
           return;
         }
-        const rows = combinedDisplayed.map((r) => ({
-          Source: r.source,
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          Active: r.active,
-          UsedDetails: r.usedDetails,
-          Faulty: r.faulty,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-        }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty_Page");
-        XLSX.writeFile(
-          wb,
-          `ActiveVsFaulty_Page_${new Date().toLocaleDateString("en-CA")}.xlsx`
-        );
+        try {
+          const wsRows = rows.map((r) => ({
+            Source: r.source,
+            Engineer: r.engineer,
+            RO_Code: r.roCode,
+            RO_Name: r.roName,
+            Active: r.active,
+            UsedDetails: r.usedDetails,
+            Faulty: r.faulty,
+            Verified: r.isVerified ? "Yes" : "No",
+            Date: formatDate(r.date),
+          }));
+          const ws = XLSX.utils.json_to_sheet(wsRows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty");
+          XLSX.writeFile(wb, `${filename}.xlsx`);
+        } catch (e) {
+          console.error("Export error", e);
+          alert("Export failed. Check console for details.");
+        }
       }
 
-      // export entire filtered dataset (all pages)
-      function exportFilteredAll() {
+      // Export all filtered rows (not only page)
+      function exportFiltered() {
         if (!combinedFiltered || combinedFiltered.length === 0) {
           alert("No rows to export");
           return;
         }
-        const rows = combinedFiltered.map((r) => ({
-          Source: r.source,
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          Active: r.active,
-          UsedDetails: r.usedDetails,
-          Faulty: r.faulty,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-        }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty_All");
-        XLSX.writeFile(
-          wb,
-          `ActiveVsFaulty_All_${new Date().toLocaleDateString("en-CA")}.xlsx`
+        exportRowsToExcel(
+          `ActiveVsFaulty_Shown_${new Date().toLocaleDateString("en-CA")}`,
+          combinedFiltered
         );
       }
 
-      // wire events after DOM ready
+      // Export current page rows
+      function exportCurrentPage() {
+        if (!combinedDisplayed || combinedDisplayed.length === 0) {
+          alert("No rows to export");
+          return;
+        }
+        exportRowsToExcel(
+          `ActiveVsFaulty_Page${currentPage}_${new Date().toLocaleDateString(
+            "en-CA"
+          )}`,
+          combinedDisplayed
+        );
+      }
+
+      // wire chips and controls after DOM ready
       document.addEventListener("DOMContentLoaded", async () => {
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
-        chips = Array.from(document.querySelectorAll(".chip"));
+        chips = Array.from(document.querySelectorAll(".chip")).filter((c) =>
+          c.dataset?.source ? true : false
+        );
         paginatorEl = document.getElementById("paginator");
         exportCombinedBtn = document.getElementById("exportCombined");
         exportDisplayedBtn = document.getElementById("exportDisplayed");
+        engineerSelect = document.getElementById("engineerFilter");
+        searchInput = document.getElementById("globalSearch");
+        fromDateEl = document.getElementById("fromDate");
+        toDateEl = document.getElementById("toDate");
+        clearBtn = document.getElementById("clearFilters");
 
-        // chip behavior
-        chips.forEach((c) => {
+        // chips for source selection
+        const allChips = Array.from(document.querySelectorAll(".chip"));
+        allChips.forEach((c) => {
+          if (!c.dataset.source) return;
           c.addEventListener("click", () => {
-            chips.forEach((ch) => ch.classList.remove("active"));
+            allChips.forEach((ch) => ch.classList.remove("active"));
             c.classList.add("active");
             applyFiltersAndRender();
           });
@@ -734,40 +767,34 @@
         });
 
         // other controls
-        document
-          .getElementById("globalSearch")
-          .addEventListener("input", () => {
-            // throttle user typing
-            clearTimeout(window.__avf_search_t);
-            window.__avf_search_t = setTimeout(applyFiltersAndRender, 160);
-          });
-        document
-          .getElementById("engineerFilter")
-          .addEventListener("change", applyFiltersAndRender);
-        document
-          .getElementById("fromDate")
-          .addEventListener("change", applyFiltersAndRender);
-        document
-          .getElementById("toDate")
-          .addEventListener("change", applyFiltersAndRender);
-        document
-          .getElementById("clearFilters")
-          .addEventListener("click", () => {
-            document.getElementById("fromDate").value = "";
-            document.getElementById("toDate").value = "";
-            document.getElementById("engineerFilter").value = "ALL";
-            document.getElementById("globalSearch").value = "";
-            chips.forEach((ch) => ch.classList.remove("active"));
-            document
-              .querySelector(".chip[data-source='both']")
-              .classList.add("active");
+        searchInput.addEventListener("input", () => {
+          // debounce small interval
+          clearTimeout(window._activeFaultySearch);
+          window._activeFaultySearch = setTimeout(() => {
             applyFiltersAndRender();
-          });
+          }, 180);
+        });
+        engineerSelect.addEventListener("change", applyFiltersAndRender);
+        fromDateEl.addEventListener("change", applyFiltersAndRender);
+        toDateEl.addEventListener("change", applyFiltersAndRender);
 
-        exportDisplayedBtn.addEventListener("click", exportDisplayed);
-        exportCombinedBtn.addEventListener("click", exportFilteredAll);
+        clearBtn.addEventListener("click", () => {
+          fromDateEl.value = "";
+          toDateEl.value = "";
+          engineerSelect.value = "ALL";
+          searchInput.value = "";
+          // reset chips to both
+          allChips.forEach((ch) => ch.classList.remove("active"));
+          const both = document.querySelector(".chip[data-source='both']");
+          if (both) both.classList.add("active");
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
 
-        // initial data load
+        exportCombinedBtn.addEventListener("click", exportFiltered);
+        exportDisplayedBtn.addEventListener("click", exportCurrentPage);
+
+        // initial data fetch
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         applyFiltersAndRender();
