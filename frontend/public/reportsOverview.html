@@ -212,6 +212,9 @@
       .card[data-theme="rose"] .left-accent {
         background: linear-gradient(180deg, #fb7185, #f43f5e);
       }
+      .card[data-theme="cyan"] .left-accent {
+        background: linear-gradient(180deg, #06b6d4, #0596b6);
+      }
 
       /* set control color per theme so SVG visible */
       .card[data-theme="green"] .control {
@@ -234,6 +237,9 @@
       }
       .card[data-theme="rose"] .control {
         color: #e11d48;
+      }
+      .card[data-theme="cyan"] .control {
+        color: #0596b6;
       }
 
       /* hidden state for restricted cards */
@@ -491,6 +497,52 @@
               background: radial-gradient(
                 circle at 30% 30%,
                 #f6ad55,
+                transparent 40%
+              );
+            "
+          ></div>
+        </div>
+
+        <!-- NEW: Active vs Faulty (visible to all) -->
+        <div
+          class="card"
+          data-theme="cyan"
+          data-key="active-vs-faulty"
+          onclick="openReport('activeVsFaulty.html')"
+          role="button"
+          tabindex="0"
+          aria-label="Active vs Faulty Report"
+        >
+          <div class="left-accent" aria-hidden></div>
+          <div class="meta">
+            <h3>Active vs Faulty</h3>
+            <p>
+              HPCL (spareUsed/activeSpare/faultySpare) & JIO BP
+              (activeMaterialUsed/...)
+            </p>
+          </div>
+          <div class="control" aria-hidden>
+            <!-- double arrows icon -->
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <path
+                class="stroke"
+                d="M5 12h6l-2-2m0 4l2-2M13 12h6l-2-2m0 4l2-2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </div>
+          <div
+            class="glow"
+            aria-hidden
+            style="
+              background: radial-gradient(
+                circle at 30% 30%,
+                #06b6d4,
                 transparent 40%
               );
             "
