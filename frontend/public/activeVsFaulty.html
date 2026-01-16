@@ -331,7 +331,7 @@
               );
               color: #fff;
             "
-            title="Export all filtered rows (not only page)"
+            title="Export all filtered rows (CSV)"
           >
             📤 Export Shown
           </button>
@@ -396,13 +396,11 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      // Final export behavior: use same logic as bpclVisitReport.js
-      // Export uses filtered data (export all) or current page slice (page export).
-      // This file assumes endpoints:
-      // - GET /getMergedStatusRecords (HPCL merged)
-      // - GET /jioBP/getAllJioBPStatus (Jio)
-      // - PUT /updateStatus/:id (HPCL status update)
-      // - PUT /jioBP/updateJioBPStatus/:id (Jio update)
+      // Export behavior aligned to bpclVisitReport export logic (CSV fallback).
+      // Key fixes:
+      // - Always build fresh filtered rows at export time (prevents stale/empty arrays).
+      // - Use XLSX to make a sheet then convert to CSV and download (CSV is reliable).
+      // - Alert & console logs for debugging counts.
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
       let hpclData = [];
@@ -439,7 +437,8 @@
         if (isNaN(dt)) return d;
         return dt.toISOString().slice(0, 10);
       }
-      function showToast(msg, timeout = 2500) {
+      function showToast(msg, timeout = 2000) {
+        if (!toastEl) return;
         toastEl.textContent = msg;
         toastEl.style.display = "block";
         clearTimeout(window._toastTimer);
@@ -449,7 +448,7 @@
         );
       }
 
-      // Fetchers
+      // Fetchers (parallel)
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -471,8 +470,8 @@
             oms03: d.oms03 || "No",
             raw: d,
           }));
-        } catch (err) {
-          console.error("HPCL fetch error", err);
+        } catch (e) {
+          console.error("HPCL fetch error", e);
           hpclData = [];
         }
       }
@@ -498,8 +497,8 @@
             oms03: d.oms03 || "No",
             raw: d,
           }));
-        } catch (err) {
-          console.error("JIO fetch error", err);
+        } catch (e) {
+          console.error("JIO fetch error", e);
           jioData = [];
         }
       }
@@ -523,6 +522,7 @@
         if (uniq.includes(cur)) sel.value = cur;
       }
 
+      // Build combined rows with Verified & Active === "yes"
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
@@ -557,18 +557,17 @@
           });
         };
 
-        if (sourceFilter === "both" || sourceFilter === "hpcl") {
+        if (sourceFilter === "both" || sourceFilter === "hpcl")
           hpclData.forEach(addRow);
-        }
-        if (sourceFilter === "both" || sourceFilter === "jio") {
+        if (sourceFilter === "both" || sourceFilter === "jio")
           jioData.forEach(addRow);
-        }
+
         return rows;
       }
 
-      // Rendering & pagination
-      function renderPage(allRows) {
-        combinedFiltered = allRows || [];
+      // Render / pagination
+      function renderPage(rows) {
+        combinedFiltered = rows || [];
         const total = combinedFiltered.length;
         const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
         if (currentPage > totalPages) currentPage = totalPages;
@@ -582,21 +581,18 @@
         } else {
           combinedBody.innerHTML = pageData
             .map((r) => {
-              const omsOptions = ["No", "Yes", "PO Basis"];
-              const isAdmin = true; // assume admin for edit controls (or parse token if needed)
+              const isAdmin = true; // assume admin in this UI (existing behaviour in app); adjust if needed
               const omsCell = isAdmin
                 ? `<select class="oms-select" data-id="${r.id}" data-source="${
                     r.source
-                  }">
-                    ${omsOptions
-                      .map(
-                        (opt) =>
-                          `<option value="${opt}" ${
-                            (r.oms03 || "No") === opt ? "selected" : ""
-                          }>${opt}</option>`
-                      )
-                      .join("")}
-                   </select>`
+                  }">${["No", "Yes", "PO Basis"]
+                    .map(
+                      (opt) =>
+                        `<option value="${opt}" ${
+                          (r.oms03 || "No") === opt ? "selected" : ""
+                        }>${opt}</option>`
+                    )
+                    .join("")}</select>`
                 : `<div>${escapeHTML(r.oms03 || "No")}</div>`;
 
               return `<tr>
@@ -616,7 +612,13 @@
         }
 
         combinedCountEl.textContent = `${total} rows`;
-        renderPaginator(total, totalPages);
+        renderPaginator(total, Math.max(1, Math.ceil(total / rowsPerPage)));
+
+        // attach OMS change handlers (delegation handled below as well)
+        document.querySelectorAll(".oms-select").forEach((sel) => {
+          sel.removeEventListener("change", onOmsChange);
+          sel.addEventListener("change", onOmsChange);
+        });
       }
 
       function renderPaginator(totalRows, totalPages) {
@@ -636,9 +638,8 @@
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-        if (endPage - startPage < maxButtons - 1) {
+        if (endPage - startPage < maxButtons - 1)
           startPage = Math.max(1, endPage - maxButtons + 1);
-        }
 
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
@@ -677,15 +678,13 @@
         paginatorEl.appendChild(summary);
       }
 
-      // OMS change handler
+      // OMS change -> save to correct endpoint
       async function onOmsChange(e) {
         const sel = e.target;
-        if (!sel || !sel.classList.contains("oms-select")) return;
         const val = sel.value;
         const id = sel.dataset.id;
         const source = sel.dataset.source;
-
-        // Update local arrays
+        // update local copies
         [hpclData, jioData].forEach((arr) => {
           const it = arr.find((x) => x.id === id);
           if (it) it.oms03 = val;
@@ -699,14 +698,10 @@
         try {
           if (!id) throw new Error("Missing id");
           let url = "";
-          let body = {};
-          if (source === "HPCL") {
-            url = `${baseUrl}/updateStatus/${id}`;
-            body = { oms03: val };
-          } else {
-            url = `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
-            body = { oms03: val };
-          }
+          let body = { oms03: val };
+          if (source === "HPCL") url = `${baseUrl}/updateStatus/${id}`;
+          else url = `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
+
           const res = await fetch(url, {
             method: "PUT",
             headers: {
@@ -717,8 +712,8 @@
           });
           if (!res.ok) {
             const txt = await res.text().catch(() => "");
-            showToast("Failed to save OMS value");
             console.error("OMS save failed", res.status, txt);
+            showToast("Failed to save OMS value");
           } else {
             showToast("Saved");
           }
@@ -728,77 +723,49 @@
         }
       }
 
-      // EXPORTS: use same approach as bpclVisitReport (aoa + writeFile)
-      function exportRowsToExcel(rows, sheetName, fileName) {
+      // EXPORTS: use same approach as BPCL Visit (build rows then export)
+      function exportRowsToCSV(rows, filename) {
         if (!rows || rows.length === 0) {
           alert("No rows to export");
           return;
         }
-        const header = [
-          [
-            "Source",
-            "Engineer",
-            "RO Code",
-            "RO Name",
-            "Active",
-            "Used / Details",
-            "Faulty",
-            "Verified",
-            "Date",
-            "OMS_03",
-          ],
-        ];
-        const dataRows = rows.map((r, idx) => [
-          r.source,
-          r.engineer,
-          r.roCode,
-          r.roName,
-          r.active,
-          r.usedDetails,
-          r.faulty,
-          r.isVerified ? "Yes" : "No",
-          formatDate(r.date),
-          r.oms03 || "No",
-        ]);
+
+        // Build sheet
+        const out = rows.map((r, idx) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+          OMS_03: r.oms03 || "No",
+        }));
+
         try {
-          const wb = XLSX.utils.book_new();
-          const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
-          XLSX.utils.book_append_sheet(wb, ws, sheetName || "ActiveVsFaulty");
-          XLSX.writeFile(wb, fileName || `${sheetName || "export"}.xlsx`);
+          const ws = XLSX.utils.json_to_sheet(out);
+          // Convert to CSV
+          const csv = XLSX.utils.sheet_to_csv(ws);
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download =
+            filename ||
+            `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
         } catch (err) {
           console.error("Export error", err);
           alert("Export failed: " + (err.message || err));
         }
       }
 
-      function exportAllFiltered() {
-        if (!combinedFiltered || combinedFiltered.length === 0) {
-          alert("No rows to export");
-          return;
-        }
-        exportRowsToExcel(
-          combinedFiltered,
-          "ActiveVsFaulty_Filtered",
-          `ActiveVsFaulty_${new Date().toLocaleDateString("en-CA")}.xlsx`
-        );
-      }
-
-      function exportCurrentPage() {
-        if (!combinedDisplayed || combinedDisplayed.length === 0) {
-          alert("No rows to export");
-          return;
-        }
-        exportRowsToExcel(
-          combinedDisplayed,
-          "ActiveVsFaulty_Page",
-          `ActiveVsFaulty_Page_${currentPage}_${new Date()
-            .toLocaleDateString("en-CA")
-            .replace(/\//g, "-")}.xlsx`
-        );
-      }
-
-      // Filter application
-      function readFiltersAndRender() {
+      function readFiltersAndBuildRows() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
@@ -806,16 +773,42 @@
         const eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
         const rows = buildCombinedRows(source, from, to, eng, q);
-        currentPage = 1;
-        renderPage(rows);
+        return rows;
       }
 
+      function exportAllFiltered() {
+        const rows = readFiltersAndBuildRows();
+        if (!rows || rows.length === 0) return alert("No rows to export");
+        exportRowsToCSV(
+          rows,
+          `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`
+        );
+      }
+
+      function exportCurrentPage() {
+        // ensure we have fresh combinedDisplayed
+        const rows = readFiltersAndBuildRows();
+        const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const pageData = rows.slice(start, start + rowsPerPage);
+        if (!pageData || pageData.length === 0)
+          return alert("No rows to export");
+        exportRowsToCSV(
+          pageData,
+          `ActiveVsFaulty_Page_${currentPage}_${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`
+        );
+      }
+
+      // UI wiring & controls
       function wireControls() {
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
             c.classList.add("active");
-            readFiltersAndRender();
+            applyFiltersAndRender();
           });
           c.addEventListener("keydown", (e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -827,15 +820,11 @@
 
         searchInput.addEventListener(
           "input",
-          debounce(() => {
-            readFiltersAndRender();
-          }, 200)
+          debounce(() => applyFiltersAndRender(), 200)
         );
-        engineerSelect.addEventListener("change", () => {
-          readFiltersAndRender();
-        });
-        fromDateEl.addEventListener("change", () => readFiltersAndRender());
-        toDateEl.addEventListener("change", () => readFiltersAndRender());
+        engineerSelect.addEventListener("change", applyFiltersAndRender);
+        fromDateEl.addEventListener("change", applyFiltersAndRender);
+        toDateEl.addEventListener("change", applyFiltersAndRender);
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
           toDateEl.value = "";
@@ -846,19 +835,26 @@
             .querySelector(".chip[data-source='both']")
             .classList.add("active");
           currentPage = 1;
-          readFiltersAndRender();
+          applyFiltersAndRender();
         });
 
+        // export buttons
         exportCombinedBtn.addEventListener("click", exportAllFiltered);
         exportDisplayedBtn.addEventListener("click", exportCurrentPage);
 
-        // delegate OMS change events from table wrapper
-        document
-          .querySelector(".table-wrapper")
-          .addEventListener("change", onOmsChange);
+        // delegation for OMS select changes (handles newly rendered selects)
+        document.addEventListener("change", function (e) {
+          if (
+            e.target &&
+            e.target.classList &&
+            e.target.classList.contains("oms-select")
+          ) {
+            onOmsChange(e);
+          }
+        });
       }
 
-      // simple debounce
+      // debounce util
       function debounce(fn, t = 150) {
         let timer;
         return (...args) => {
@@ -867,8 +863,15 @@
         };
       }
 
+      function applyFiltersAndRender() {
+        const rows = readFiltersAndBuildRows();
+        currentPage = 1;
+        renderPage(rows);
+      }
+
       // init
       (async function init() {
+        // grab refs
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
         chips = Array.from(document.querySelectorAll(".chip"));
@@ -882,11 +885,11 @@
         clearBtn = document.getElementById("clearFilters");
         toastEl = document.getElementById("toast");
 
-        // fetch data in parallel
+        // fetch data in parallel, populate UI
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         wireControls();
-        readFiltersAndRender();
+        applyFiltersAndRender();
       })();
     </script>
   </body>
