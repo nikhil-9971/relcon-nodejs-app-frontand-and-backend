@@ -225,6 +225,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
           locationField: status.locationField || "",
           isVerified: status.isVerified || false,
           taskGenerated: !!taskExists, // ✅ new field
+          oms03: status.oms03 || "No",
         };
       })
     );
