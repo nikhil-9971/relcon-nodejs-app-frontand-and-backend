@@ -1,3 +1,4 @@
+<!-- url=https://github.com/nikhil-9971/relcon-nodejs-app-frontand-and-backend/blob/main/public/reports/activeVsFaulty.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -13,6 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+      /* (styles unchanged from your latest version) */
       :root {
         --bg: #f5f7fa;
         --muted: #6b7280;
@@ -20,7 +22,6 @@
         --accent: #06b6a4;
         --accent-700: #059669;
       }
-
       html,
       body {
         height: 100%;
@@ -32,14 +33,11 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
-
       .page {
         max-width: 1200px;
         margin: 18px auto;
         padding: 12px;
       }
-
-      /* Sticky header/filter area */
       .topbar {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(6px);
@@ -54,19 +52,16 @@
         align-items: center;
         flex-wrap: wrap;
       }
-
       .title {
         display: flex;
         gap: 10px;
         align-items: center;
       }
-
       .title h1 {
         margin: 0;
         font-size: 18px;
         font-weight: 600;
       }
-
       .filters {
         display: flex;
         gap: 10px;
@@ -74,18 +69,15 @@
         flex: 1;
         flex-wrap: wrap;
       }
-
       .control {
         display: inline-flex;
         flex-direction: column;
         gap: 6px;
       }
-
       label.small {
         font-size: 12px;
         color: var(--muted);
       }
-
       input[type="date"],
       select,
       input[type="text"] {
@@ -97,12 +89,10 @@
         font-size: 13px;
         min-width: 160px;
       }
-
       input[type="text"].search {
         min-width: 300px;
         max-width: 520px;
       }
-
       .chips {
         display: flex;
         gap: 8px;
@@ -122,8 +112,6 @@
         border-color: rgba(5, 150, 105, 0.85);
         box-shadow: 0 6px 16px rgba(6, 182, 164, 0.12);
       }
-
-      /* Combined card/table */
       .card {
         margin-top: 14px;
         background: #fff;
@@ -132,7 +120,6 @@
         box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
         border: 1px solid rgba(2, 6, 23, 0.04);
       }
-
       .card h2 {
         font-size: 15px;
         margin: 0 0 4px 0;
@@ -143,7 +130,6 @@
         font-size: 12px;
         margin-bottom: 8px;
       }
-
       .table-wrapper {
         max-height: 64vh;
         overflow: auto;
@@ -151,14 +137,12 @@
         border: 1px solid rgba(15, 23, 42, 0.06);
         background: white;
       }
-
       table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 13px; /* smaller font */
+        font-size: 13px;
         border: 1px solid rgba(15, 23, 42, 0.06);
       }
-
       thead th {
         position: sticky;
         top: 0;
@@ -170,14 +154,11 @@
         border-bottom: 1px solid rgba(15, 23, 42, 0.06);
         z-index: 40;
       }
-
       tbody td {
         padding: 10px 12px;
         border-bottom: 1px solid rgba(15, 23, 42, 0.03);
         color: #111827;
       }
-
-      /* add explicit cell borders for "bordering" look */
       thead th,
       tbody td {
         border-right: 1px solid rgba(15, 23, 42, 0.03);
@@ -185,25 +166,21 @@
       tbody tr:last-child td {
         border-bottom: none;
       }
-
       .count-badge {
         color: #374151;
         font-weight: 700;
         font-size: 13px;
       }
-
       .actions {
         display: flex;
         gap: 8px;
         align-items: center;
       }
-
-      /* paginator */
       .paginator {
         display: flex;
         gap: 8px;
         align-items: center;
-        justify-content: center; /* center paginator line */
+        justify-content: center;
         padding-top: 10px;
       }
       .paginator button {
@@ -218,51 +195,17 @@
         color: white;
         border-color: #2563eb;
       }
-
-      /* small oms select styling */
       .oms-select {
         padding: 6px 8px;
         border-radius: 6px;
         border: 1px solid rgba(15, 23, 42, 0.06);
         background: white;
       }
-
-      /* scrollbar tweak */
-      .table-wrapper::-webkit-scrollbar {
-        height: 12px;
-        width: 12px;
-      }
-      .table-wrapper::-webkit-scrollbar-thumb {
-        background: rgba(2, 6, 23, 0.08);
-        border-radius: 8px;
-      }
-
-      /* responsive */
-      @media (max-width: 880px) {
-        .filters {
-          gap: 8px;
-        }
-        input[type="text"].search {
-          min-width: 160px;
-        }
-        thead th,
-        tbody td {
-          font-size: 12px;
-          padding: 8px 10px;
-        }
-        .title h1 {
-          font-size: 16px;
-        }
-      }
-
-      /* small helper for empty table state */
       .empty-row {
         text-align: center;
         color: var(--muted);
         padding: 18px;
       }
-
-      /* toast */
       .toast {
         position: fixed;
         right: 18px;
@@ -319,13 +262,10 @@
 
         <div class="filters" role="form" aria-label="Filter controls">
           <div class="control">
-            <label class="small">From</label>
-            <input id="fromDate" type="date" />
+            <label class="small">From</label><input id="fromDate" type="date" />
           </div>
-
           <div class="control">
-            <label class="small">To</label>
-            <input id="toDate" type="date" />
+            <label class="small">To</label><input id="toDate" type="date" />
           </div>
 
           <div class="control">
@@ -340,15 +280,15 @@
           </div>
 
           <div class="control">
-            <label class="small">Engineer</label>
-            <select id="engineerFilter">
+            <label class="small">Engineer</label
+            ><select id="engineerFilter">
               <option value="ALL">All Engineers</option>
             </select>
           </div>
 
           <div class="control" style="flex: 1; min-width: 220px">
-            <label class="small">Search</label>
-            <input
+            <label class="small">Search</label
+            ><input
               id="globalSearch"
               class="search"
               type="text"
@@ -372,14 +312,12 @@
               );
               color: #fff;
             "
-            title="Export all filtered rows (not only page)"
           >
             📤 Export Shown
           </button>
         </div>
       </div>
 
-      <!-- combined card -->
       <div class="card" aria-live="polite">
         <div
           style="
@@ -438,7 +376,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      // Unified Active vs Faulty (polished) with OMS picklist and persistence
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
       let hpclData = [];
@@ -446,11 +383,10 @@
       let combinedFiltered = []; // all filtered rows (before pagination)
       let combinedDisplayed = []; // current page rows
 
-      // pagination state
       let currentPage = 1;
       const rowsPerPage = 50;
 
-      // UI elements will be grabbed on DOMContentLoaded
+      // UI refs
       let combinedBody,
         combinedCountEl,
         chips,
@@ -464,7 +400,6 @@
         clearBtn,
         toastEl;
 
-      // Helpers
       function escapeHTML(s) {
         if (s === null || s === undefined) return "";
         return String(s)
@@ -478,11 +413,8 @@
         if (isNaN(dt)) return d;
         return dt.toISOString().slice(0, 10);
       }
-      function text(id, v) {
-        const e = document.getElementById(id);
-        if (e) e.textContent = v;
-      }
-      function showToast(msg, timeout = 2500) {
+      function showToast(msg, timeout = 2000) {
+        if (!toastEl) return;
         toastEl.textContent = msg;
         toastEl.style.display = "block";
         clearTimeout(window._toastTimer);
@@ -492,22 +424,7 @@
         );
       }
 
-      // parse token payload for role/username
-      function getUserFromToken(tkn) {
-        try {
-          if (!tkn) return {};
-          const payload = JSON.parse(atob(tkn.split(".")[1]));
-          return {
-            username: (payload.username || payload.name || "").toString(),
-            role: (payload.role || "").toString().toLowerCase(),
-          };
-        } catch {
-          return {};
-        }
-      }
-      const currentUser = getUserFromToken(token);
-
-      // fetch data functions
+      // fetch HPCL (merged) and JIO
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -516,7 +433,7 @@
           if (!res.ok) throw new Error("HPCL fetch failed");
           const data = await res.json();
           hpclData = (data || []).map((d) => ({
-            id: d._id || d.planId || "",
+            id: d._id || d.planId || "", // expect status _id here
             source: "HPCL",
             engineer: d.engineer || "",
             roCode: d.roCode || "",
@@ -526,7 +443,7 @@
             usedDetails: d.activeSpare || "",
             faulty: d.faultySpare || "",
             isVerified: !!d.isVerified,
-            oms03: d.oms03 || "No",
+            oms03: d.oms03 || (d.oms03 === "" ? "No" : "No"),
             raw: d,
           }));
         } catch (e) {
@@ -553,7 +470,7 @@
             usedDetails: d.usedMaterialDetails || "",
             faulty: d.faultyMaterialDetails || "",
             isVerified: !!d.isVerified,
-            oms03: d.oms03 || "No",
+            oms03: d.oms03 || (d.oms03 === "" ? "No" : "No"),
             raw: d,
           }));
         } catch (e) {
@@ -581,12 +498,10 @@
         if (uniq.includes(cur)) sel.value = cur;
       }
 
-      // Build combined rows applying the "Verified & Active='yes'" rule and UI filters
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
-
         const addRow = (r) => {
           if (!r.isVerified) return;
           if ((r.active || "").toString().toLowerCase() !== "yes") return;
@@ -615,17 +530,14 @@
             oms03: r.oms03 || "No",
           });
         };
-
-        if (sourceFilter === "both" || sourceFilter === "hpcl") {
+        if (sourceFilter === "both" || sourceFilter === "hpcl")
           hpclData.forEach(addRow);
-        }
-        if (sourceFilter === "both" || sourceFilter === "jio") {
+        if (sourceFilter === "both" || sourceFilter === "jio")
           jioData.forEach(addRow);
-        }
         return rows;
       }
 
-      // --- rendering + pagination ---
+      // render & pagination
       function renderPage(allRows) {
         combinedFiltered = allRows || [];
         const total = combinedFiltered.length;
@@ -642,34 +554,31 @@
           combinedBody.innerHTML = pageData
             .map((r) => {
               const omsOptions = ["No", "Yes", "PO Basis"];
-              const isAdmin = currentUser.role === "admin";
+              const isAdmin = getUserFromToken(token).role === "admin";
               const omsCell = isAdmin
                 ? `<select class="oms-select" data-id="${r.id}" data-source="${
                     r.source
-                  }">
-                    ${omsOptions
-                      .map(
-                        (opt) =>
-                          `<option value="${opt}" ${
-                            (r.oms03 || "No") === opt ? "selected" : ""
-                          }>${opt}</option>`
-                      )
-                      .join("")}
-                   </select>`
+                  }">${omsOptions
+                    .map(
+                      (opt) =>
+                        `<option value="${opt}" ${
+                          (r.oms03 || "No") === opt ? "selected" : ""
+                        }>${opt}</option>`
+                    )
+                    .join("")}</select>`
                 : `<div>${escapeHTML(r.oms03 || "No")}</div>`;
-
               return `<tr>
-                <td>${escapeHTML(r.source)}</td>
-                <td>${escapeHTML(r.engineer)}</td>
-                <td>${escapeHTML(r.roCode)}</td>
-                <td>${escapeHTML(r.roName)}</td>
-                <td>${escapeHTML(r.active)}</td>
-                <td>${escapeHTML(r.usedDetails)}</td>
-                <td>${escapeHTML(r.faulty)}</td>
-                <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
-                <td>${escapeHTML(formatDate(r.date))}</td>
-                <td>${omsCell}</td>
-              </tr>`;
+              <td>${escapeHTML(r.source)}</td>
+              <td>${escapeHTML(r.engineer)}</td>
+              <td>${escapeHTML(r.roCode)}</td>
+              <td>${escapeHTML(r.roName)}</td>
+              <td>${escapeHTML(r.active)}</td>
+              <td>${escapeHTML(r.usedDetails)}</td>
+              <td>${escapeHTML(r.faulty)}</td>
+              <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
+              <td>${escapeHTML(formatDate(r.date))}</td>
+              <td>${omsCell}</td>
+            </tr>`;
             })
             .join("");
         }
@@ -677,7 +586,7 @@
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
 
-        // attach change handlers for OMS selects
+        // wire change listeners for OMS selects
         document.querySelectorAll(".oms-select").forEach((sel) => {
           sel.removeEventListener("change", onOmsChange);
           sel.addEventListener("change", onOmsChange);
@@ -686,7 +595,6 @@
 
       function renderPaginator(totalRows, totalPages) {
         paginatorEl.innerHTML = "";
-        // Prev
         const prev = document.createElement("button");
         prev.textContent = "⬅ Prev";
         prev.disabled = currentPage === 1;
@@ -698,31 +606,22 @@
           }
         };
         paginatorEl.appendChild(prev);
-
-        // page window
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-        if (endPage - startPage < maxButtons - 1) {
+        if (endPage - startPage < maxButtons - 1)
           startPage = Math.max(1, endPage - maxButtons + 1);
-        }
-
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === currentPage) btn.classList.add("active");
-          btn.onclick = (() => {
-            const page = i;
-            return () => {
-              currentPage = page;
-              renderPage(combinedFiltered);
-              document.querySelector(".table-wrapper").scrollTop = 0;
-            };
-          })();
+          btn.onclick = ((page) => () => {
+            currentPage = page;
+            renderPage(combinedFiltered);
+            document.querySelector(".table-wrapper").scrollTop = 0;
+          })(i);
           paginatorEl.appendChild(btn);
         }
-
-        // Next
         const next = document.createElement("button");
         next.textContent = "Next ➡";
         next.disabled = currentPage === totalPages;
@@ -734,8 +633,6 @@
           }
         };
         paginatorEl.appendChild(next);
-
-        // summary
         const summary = document.createElement("div");
         summary.style.marginLeft = "12px";
         summary.style.color = "#374151";
@@ -746,34 +643,35 @@
         paginatorEl.appendChild(summary);
       }
 
-      // OMS change handler (save immediately)
+      // OMS change => save immediately
       async function onOmsChange(e) {
         const sel = e.target;
         const val = sel.value;
         const id = sel.dataset.id;
-        const source = sel.dataset.source; // "HPCL" or "JIO"
-        // Optimistic UI update:
-        for (const arr of [hpclData, jioData]) {
-          const item = arr.find((it) => it.id === id);
-          if (item) {
-            item.oms03 = val;
-          }
+        const source = sel.dataset.source;
+        if (!id) {
+          showToast("Missing id - cannot save");
+          return;
         }
+
+        // optimistic update
+        [hpclData, jioData].forEach((arr) => {
+          const it = arr.find((x) => x.id === id);
+          if (it) it.oms03 = val;
+        });
         combinedFiltered.forEach((r) => {
           if (r.id === id) r.oms03 = val;
         });
         renderPage(combinedFiltered);
 
-        // Send to backend:
+        // send to backend
         try {
-          if (!id) throw new Error("Missing id");
           let url = "";
           let body = {};
           if (source === "HPCL") {
             url = `${baseUrl}/updateStatus/${id}`;
             body = { oms03: val };
           } else {
-            // JIO
             url = `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
             body = { oms03: val };
           }
@@ -787,8 +685,8 @@
           });
           if (!res.ok) {
             const txt = await res.text().catch(() => "");
-            showToast("Failed to save OMS value");
             console.error("OMS save failed", res.status, txt);
+            showToast("Failed to save OMS value");
           } else {
             showToast("Saved");
           }
@@ -798,26 +696,60 @@
         }
       }
 
-      // EXPORTS
+      // EXPORT helpers (robust)
       function exportRowsToExcel(rows, sheetName, fileName) {
+        // fallback: if rows empty try building from table DOM
+        if (!rows || rows.length === 0) {
+          // try DOM fallback
+          const table = document.getElementById("combinedTable");
+          const trs = Array.from(table.querySelectorAll("tbody tr")).filter(
+            (tr) => !tr.querySelector(".empty-row")
+          );
+          if (trs.length === 0) {
+            alert("No rows to export");
+            return;
+          }
+          rows = trs.map((tr) => {
+            const tds = tr.querySelectorAll("td");
+            return {
+              Source: tds[0]?.innerText?.trim() || "",
+              Engineer: tds[1]?.innerText?.trim() || "",
+              RO_Code: tds[2]?.innerText?.trim() || "",
+              RO_Name: tds[3]?.innerText?.trim() || "",
+              Active: tds[4]?.innerText?.trim() || "",
+              UsedDetails: tds[5]?.innerText?.trim() || "",
+              Faulty: tds[6]?.innerText?.trim() || "",
+              Verified: tds[7]?.innerText?.trim() || "",
+              Date: tds[8]?.innerText?.trim() || "",
+              OMS_03: tds[9]?.querySelector("select")
+                ? tds[9].querySelector("select").value
+                : tds[9]?.innerText?.trim() || "",
+            };
+          });
+        }
+
         if (!rows || rows.length === 0) {
           alert("No rows to export");
           return;
         }
-        // convert to simple objects (no raw circular)
-        const out = rows.map((r) => ({
-          Source: r.source,
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          Active: r.active,
-          UsedDetails: r.usedDetails,
-          Faulty: r.faulty,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-          OMS_03: r.oms03 || "No",
-        }));
+
         try {
+          const out = rows.map((r) => {
+            // already plain objects from fallback OR combined rows
+            if (r.Source !== undefined) return r;
+            return {
+              Source: r.source,
+              Engineer: r.engineer,
+              RO_Code: r.roCode,
+              RO_Name: r.roName,
+              Active: r.active,
+              UsedDetails: r.usedDetails,
+              Faulty: r.faulty,
+              Verified: r.isVerified ? "Yes" : "No",
+              Date: formatDate(r.date),
+              OMS_03: r.oms03 || "No",
+            };
+          });
           const wb = XLSX.utils.book_new();
           const ws = XLSX.utils.json_to_sheet(out);
           XLSX.utils.book_append_sheet(wb, ws, sheetName || "Sheet1");
@@ -829,8 +761,6 @@
       }
 
       function exportAllFiltered() {
-        // re-evaluate filters before exporting (makes export consistent)
-        readFiltersAndRender(); // this will rebuild combinedFiltered
         if (!combinedFiltered || combinedFiltered.length === 0) {
           alert("No rows to export");
           return;
@@ -841,9 +771,7 @@
           `ActiveVsFaulty_${new Date().toLocaleDateString("en-CA")}.xlsx`
         );
       }
-
       function exportCurrentPage() {
-        // ensure combinedDisplayed up-to-date
         if (!combinedDisplayed || combinedDisplayed.length === 0) {
           alert("No rows to export");
           return;
@@ -857,7 +785,6 @@
         );
       }
 
-      // --- UI wiring & apply filters ---
       function readFiltersAndRender() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
@@ -884,16 +811,11 @@
             }
           });
         });
-
         searchInput.addEventListener(
           "input",
-          debounce(() => {
-            readFiltersAndRender();
-          }, 200)
+          debounce(() => readFiltersAndRender(), 200)
         );
-        engineerSelect.addEventListener("change", () => {
-          readFiltersAndRender();
-        });
+        engineerSelect.addEventListener("change", () => readFiltersAndRender());
         fromDateEl.addEventListener("change", () => readFiltersAndRender());
         toDateEl.addEventListener("change", () => readFiltersAndRender());
         clearBtn.addEventListener("click", () => {
@@ -908,8 +830,6 @@
           currentPage = 1;
           readFiltersAndRender();
         });
-
-        // wire export buttons (make sure they use up-to-date arrays)
         exportCombinedBtn.addEventListener("click", exportAllFiltered);
         exportDisplayedBtn.addEventListener("click", exportCurrentPage);
       }
@@ -922,9 +842,20 @@
         };
       }
 
-      // init
+      function getUserFromToken(tkn) {
+        try {
+          if (!tkn) return {};
+          const payload = JSON.parse(atob(tkn.split(".")[1]));
+          return {
+            username: (payload.username || payload.name || "").toString(),
+            role: (payload.role || "").toString().toLowerCase(),
+          };
+        } catch {
+          return {};
+        }
+      }
+
       (async function init() {
-        // grab UI refs
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
         chips = Array.from(document.querySelectorAll(".chip"));
@@ -938,7 +869,6 @@
         clearBtn = document.getElementById("clearFilters");
         toastEl = document.getElementById("toast");
 
-        // fetch both sources in parallel
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         wireControls();
