@@ -507,7 +507,7 @@
       }
       const currentUser = getUserFromToken(token);
 
-      // --- fetchers ---
+      // fetch data functions
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -641,7 +641,6 @@
         } else {
           combinedBody.innerHTML = pageData
             .map((r) => {
-              // OMS select: only admin can change. Non-admin sees text.
               const omsOptions = ["No", "Yes", "PO Basis"];
               const isAdmin = currentUser.role === "admin";
               const omsCell = isAdmin
@@ -678,7 +677,7 @@
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
 
-        // attach change handlers for OMS selects (delegation)
+        // attach change handlers for OMS selects
         document.querySelectorAll(".oms-select").forEach((sel) => {
           sel.removeEventListener("change", onOmsChange);
           sel.addEventListener("change", onOmsChange);
@@ -747,24 +746,22 @@
         paginatorEl.appendChild(summary);
       }
 
-      // --- OMS change handler (save immediately) ---
+      // OMS change handler (save immediately)
       async function onOmsChange(e) {
         const sel = e.target;
         const val = sel.value;
         const id = sel.dataset.id;
         const source = sel.dataset.source; // "HPCL" or "JIO"
-        // Optimistic UI update: update combinedFiltered and displayed rows
+        // Optimistic UI update:
         for (const arr of [hpclData, jioData]) {
           const item = arr.find((it) => it.id === id);
           if (item) {
             item.oms03 = val;
           }
         }
-        // Update combinedFiltered entries
         combinedFiltered.forEach((r) => {
           if (r.id === id) r.oms03 = val;
         });
-        // Re-render page so select stays consistent
         renderPage(combinedFiltered);
 
         // Send to backend:
@@ -801,13 +798,13 @@
         }
       }
 
-      // --- EXPORTS ---
+      // EXPORTS
       function exportRowsToExcel(rows, sheetName, fileName) {
         if (!rows || rows.length === 0) {
           alert("No rows to export");
           return;
         }
-        // convert to simple objects
+        // convert to simple objects (no raw circular)
         const out = rows.map((r) => ({
           Source: r.source,
           Engineer: r.engineer,
@@ -832,6 +829,8 @@
       }
 
       function exportAllFiltered() {
+        // re-evaluate filters before exporting (makes export consistent)
+        readFiltersAndRender(); // this will rebuild combinedFiltered
         if (!combinedFiltered || combinedFiltered.length === 0) {
           alert("No rows to export");
           return;
@@ -844,6 +843,7 @@
       }
 
       function exportCurrentPage() {
+        // ensure combinedDisplayed up-to-date
         if (!combinedDisplayed || combinedDisplayed.length === 0) {
           alert("No rows to export");
           return;
@@ -871,7 +871,6 @@
       }
 
       function wireControls() {
-        // chips
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
@@ -910,11 +909,11 @@
           readFiltersAndRender();
         });
 
+        // wire export buttons (make sure they use up-to-date arrays)
         exportCombinedBtn.addEventListener("click", exportAllFiltered);
         exportDisplayedBtn.addEventListener("click", exportCurrentPage);
       }
 
-      // simple debounce
       function debounce(fn, t = 150) {
         let timer;
         return (...args) => {
