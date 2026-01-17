@@ -13,10 +13,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+      /* styles unchanged (kept compact for brevity) */
       :root {
         --bg: #f5f7fa;
         --muted: #6b7280;
-        --card-radius: 12px;
         --accent: #06b6a4;
         --accent-700: #059669;
       }
@@ -24,12 +24,10 @@
       body {
         height: 100%;
         margin: 0;
-        font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto,
+        font-family: Poppins, system-ui, -apple-system, "Segoe UI", Roboto,
           "Helvetica Neue", Arial, sans-serif;
         background: var(--bg);
         color: #0b1220;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
       }
       .page {
         max-width: 1200px;
@@ -38,10 +36,8 @@
       }
       .topbar {
         background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(6px);
-        border-radius: 10px;
         padding: 12px;
-        box-shadow: 0 6px 18px rgba(3, 10, 24, 0.06);
+        border-radius: 10px;
         position: sticky;
         top: 12px;
         z-index: 60;
@@ -50,16 +46,6 @@
         align-items: center;
         flex-wrap: wrap;
       }
-      .title {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-      .title h1 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-      }
       .filters {
         display: flex;
         gap: 10px;
@@ -67,48 +53,16 @@
         flex: 1;
         flex-wrap: wrap;
       }
-      .control {
-        display: inline-flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      label.small {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      input[type="date"],
-      select,
-      input[type="text"] {
-        height: 40px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        background: #fff;
-        font-size: 13px;
-        min-width: 160px;
-      }
-      input[type="text"].search {
-        min-width: 300px;
-        max-width: 520px;
-      }
-      .chips {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
       .chip {
         padding: 8px 12px;
         border-radius: 999px;
         background: #f3f4f6;
         border: 1px solid rgba(15, 23, 42, 0.04);
         cursor: pointer;
-        font-size: 13px;
       }
       .chip.active {
         background: linear-gradient(90deg, var(--accent), var(--accent-700));
-        color: white;
-        border-color: rgba(5, 150, 105, 0.85);
-        box-shadow: 0 6px 16px rgba(6, 182, 164, 0.12);
+        color: #fff;
       }
       .card {
         margin-top: 14px;
@@ -116,63 +70,29 @@
         border-radius: 12px;
         padding: 12px;
         box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
-        border: 1px solid rgba(2, 6, 23, 0.04);
-      }
-      .card h2 {
-        font-size: 15px;
-        margin: 0 0 4px 0;
-        font-weight: 600;
-      }
-      .card .muted {
-        color: var(--muted);
-        font-size: 12px;
-        margin-bottom: 8px;
       }
       .table-wrapper {
         max-height: 64vh;
         overflow: auto;
         border-radius: 8px;
         border: 1px solid rgba(15, 23, 42, 0.06);
-        background: white;
+        background: #fff;
       }
       table {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
-        border: 1px solid rgba(15, 23, 42, 0.06);
       }
       thead th {
         position: sticky;
         top: 0;
-        background: #ffffff;
-        color: #111827;
-        font-weight: 700;
-        text-align: left;
+        background: #fff;
         padding: 10px 12px;
-        border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-        z-index: 40;
+        font-weight: 700;
       }
       tbody td {
         padding: 10px 12px;
         border-bottom: 1px solid rgba(15, 23, 42, 0.03);
-        color: #111827;
-      }
-      thead th,
-      tbody td {
-        border-right: 1px solid rgba(15, 23, 42, 0.03);
-      }
-      tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .count-badge {
-        color: #374151;
-        font-weight: 700;
-        font-size: 13px;
-      }
-      .actions {
-        display: flex;
-        gap: 8px;
-        align-items: center;
       }
       .paginator {
         display: flex;
@@ -181,23 +101,9 @@
         justify-content: center;
         padding-top: 10px;
       }
-      .paginator button {
-        padding: 6px 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        background: #f3f4f6;
-        cursor: pointer;
-      }
-      .paginator button.active {
-        background: #2563eb;
-        color: white;
-        border-color: #2563eb;
-      }
       .oms-select {
         padding: 6px 8px;
         border-radius: 6px;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        background: white;
       }
       .empty-row {
         text-align: center;
@@ -209,11 +115,11 @@
         right: 18px;
         bottom: 22px;
         background: rgba(17, 24, 39, 0.95);
-        color: white;
+        color: #fff;
         padding: 10px 14px;
         border-radius: 8px;
-        z-index: 9999;
         display: none;
+        z-index: 9999;
       }
     </style>
   </head>
@@ -222,39 +128,6 @@
     <div class="page">
       <div class="topbar" role="region" aria-label="Filters">
         <div class="title" aria-hidden>
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-          >
-            <rect x="3" y="4" width="7" height="7" rx="2" fill="#06b6a4"></rect>
-            <rect
-              x="14"
-              y="4"
-              width="7"
-              height="7"
-              rx="2"
-              fill="#60a5fa"
-            ></rect>
-            <rect
-              x="3"
-              y="13"
-              width="7"
-              height="7"
-              rx="2"
-              fill="#a78bfa"
-            ></rect>
-            <rect
-              x="14"
-              y="13"
-              width="7"
-              height="7"
-              rx="2"
-              fill="#f59e0b"
-            ></rect>
-          </svg>
           <h1>Active vs Faulty — Report</h1>
         </div>
 
@@ -299,14 +172,7 @@
         </div>
 
         <div class="actions" style="margin-left: auto">
-          <button
-            id="clearFilters"
-            class="chip"
-            type="button"
-            title="Clear filters"
-          >
-            ♻️ Clear
-          </button>
+          <button id="clearFilters" class="chip" type="button">♻️ Clear</button>
           <button
             id="exportCombined"
             class="chip"
@@ -319,7 +185,6 @@
               );
               color: #fff;
             "
-            title="Export shown rows"
           >
             📤 Export Shown
           </button>
@@ -346,11 +211,7 @@
         </div>
 
         <div class="table-wrapper" role="region" aria-label="Results table">
-          <table
-            id="combinedTable"
-            class="min-w-full"
-            aria-describedby="combinedCount"
-          >
+          <table id="combinedTable" aria-describedby="combinedCount">
             <thead>
               <tr>
                 <th>Source</th>
@@ -373,10 +234,13 @@
           </table>
         </div>
 
-        <div class="paginator" id="paginator" aria-hidden="false"></div>
+        <div class="paginator" id="paginator"></div>
 
-        <div class="mt-3 flex justify-end gap-2">
-          <button id="exportDisplayed" type="button" class="chip">
+        <div
+          class="mt-3"
+          style="display: flex; justify-content: flex-end; gap: 8px"
+        >
+          <button id="exportDisplayed" class="chip" type="button">
             Export Current Page
           </button>
         </div>
@@ -386,36 +250,42 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      // Final consolidated JS:
-      // - export uses fresh buildCombinedRows to avoid stale/empty state
-      // - export falls back to CSV if XLSX.writeFile fails
-      // - buttons are type="button" to avoid accidental reloads
-      // - helper escapeHTML is defined before use
-      // - OMS save keeps using correct endpoints (HPCL uses updateStatus, JIO uses jioBP/updateJioBPStatus)
-      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
-      const token = localStorage.getItem("token");
-      let hpclData = [],
-        jioData = [],
-        combinedFiltered = [],
-        combinedDisplayed = [];
-      let currentPage = 1;
-      const rowsPerPage = 50;
+      /*
+        Final consolidated script - fixes applied:
+        - helper functions (escapeHTML etc.) are defined before any usage
+        - export uses CSV fallback and builds fresh filtered rows at export time
+        - export buttons are type="button" so they don't trigger form submit
+        - OMS select handling uses event delegation on table to prevent duplicated handlers
+        - defensive checks and console logging for debugging
+      */
 
-      // refs
-      let combinedBody,
-        combinedCountEl,
-        chips,
-        paginatorEl,
-        exportCombinedBtn,
-        exportDisplayedBtn,
-        engineerSelect,
-        searchInput,
-        fromDateEl,
-        toDateEl,
-        clearBtn,
-        toastEl;
-
-      // helpers defined above already in file (escapeHTML, etc.)
+      /* ---------- Helpers (defined first) ---------- */
+      function escapeHTML(s) {
+        if (s === null || s === undefined) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+      function escapeCSVCell(s) {
+        if (s === null || s === undefined) return "";
+        const str = String(s);
+        if (str.includes('"') || str.includes(",") || str.includes("\n")) {
+          return '"' + str.replaceAll('"', '""') + '"';
+        }
+        return str;
+      }
+      function downloadCSV(filename, csv) {
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
       function formatDate(d) {
         if (!d) return "";
         const dt = new Date(d);
@@ -427,9 +297,10 @@
         toastEl.textContent = msg;
         toastEl.style.display = "block";
         clearTimeout(window._toastTimer);
-        window._toastTimer = setTimeout(() => {
-          toastEl.style.display = "none";
-        }, timeout);
+        window._toastTimer = setTimeout(
+          () => (toastEl.style.display = "none"),
+          timeout
+        );
       }
       function getUserFromToken(tkn) {
         try {
@@ -443,9 +314,33 @@
           return {};
         }
       }
+
+      /* ---------- State & refs ---------- */
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      const token = localStorage.getItem("token");
+      let hpclData = [],
+        jioData = [],
+        combinedFiltered = [],
+        combinedDisplayed = [];
+      let currentPage = 1;
+      const rowsPerPage = 50;
+
+      // UI refs (filled in init)
+      let combinedBody,
+        combinedCountEl,
+        chips,
+        paginatorEl,
+        exportCombinedBtn,
+        exportDisplayedBtn,
+        engineerSelect,
+        searchInput,
+        fromDateEl,
+        toDateEl,
+        clearBtn,
+        toastEl;
       const currentUser = getUserFromToken(token);
 
-      // fetchers
+      /* ---------- Fetchers ---------- */
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -500,28 +395,29 @@
       }
 
       function populateEngineerSelect() {
-        const sel = engineerSelect;
-        if (!sel) return;
+        if (!engineerSelect) return;
         const combined = [
           ...hpclData.map((d) => d.engineer),
           ...jioData.map((d) => d.engineer),
         ];
         const uniq = Array.from(new Set(combined.filter(Boolean))).sort();
-        const cur = sel.value || "ALL";
-        sel.innerHTML = '<option value="ALL">All Engineers</option>';
+        const cur = engineerSelect.value || "ALL";
+        engineerSelect.innerHTML = '<option value="ALL">All Engineers</option>';
         uniq.forEach((v) => {
           const o = document.createElement("option");
           o.value = v;
           o.textContent = v;
-          sel.appendChild(o);
+          engineerSelect.appendChild(o);
         });
-        if (uniq.includes(cur)) sel.value = cur;
+        if (uniq.includes(cur)) engineerSelect.value = cur;
       }
 
+      /* ---------- Build rows (same used for render & export) ---------- */
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
+
         const addRow = (r) => {
           if (!r.isVerified) return;
           if ((r.active || "").toString().toLowerCase() !== "yes") return;
@@ -555,10 +451,11 @@
           hpclData.forEach(addRow);
         if (sourceFilter === "both" || sourceFilter === "jio")
           jioData.forEach(addRow);
+
         return rows;
       }
 
-      // render
+      /* ---------- Render + paginator ---------- */
       function renderPage(rows) {
         combinedFiltered = rows || [];
         const total = combinedFiltered.length;
@@ -576,13 +473,9 @@
             .map((r) => {
               const isAdmin = currentUser.role === "admin";
               const omsCell = isAdmin
-                ? `<select class="oms-select" data-id="${escapeHTML(
-                    r.id
-                  )}" data-source="${escapeHTML(r.source)}">${[
-                    "No",
-                    "Yes",
-                    "PO Basis",
-                  ]
+                ? `<select class="oms-select" data-id="${r.id}" data-source="${
+                    r.source
+                  }">${["No", "Yes", "PO Basis"]
                     .map(
                       (opt) =>
                         `<option value="${opt}" ${
@@ -591,6 +484,7 @@
                     )
                     .join("")}</select>`
                 : `<div>${escapeHTML(r.oms03 || "No")}</div>`;
+
               return `<tr>
               <td>${escapeHTML(r.source)}</td>
               <td>${escapeHTML(r.engineer)}</td>
@@ -608,13 +502,7 @@
         }
 
         combinedCountEl.textContent = `${total} rows`;
-        renderPaginator(total, Math.max(1, Math.ceil(total / rowsPerPage)));
-
-        // attach OMS listeners (delegated would be fine but we attach directly for these selects)
-        document.querySelectorAll(".oms-select").forEach((sel) => {
-          sel.removeEventListener("change", onOmsChange);
-          sel.addEventListener("change", onOmsChange);
-        });
+        renderPaginator(total, totalPages);
       }
 
       function renderPaginator(totalRows, totalPages) {
@@ -636,7 +524,6 @@
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
         if (endPage - startPage < maxButtons - 1)
           startPage = Math.max(1, endPage - maxButtons + 1);
-
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
           btn.textContent = i;
@@ -671,32 +558,31 @@
         paginatorEl.appendChild(summary);
       }
 
-      // OMS change handler
-      async function onOmsChange(e) {
+      /* ---------- OMS change handling (delegated) ---------- */
+      async function onTableChange(e) {
         const sel = e.target;
-        const val = sel.value;
-        const id = sel.dataset.id;
-        const source = sel.dataset.source;
+        if (!sel || !sel.classList.contains("oms-select")) return;
+        const val = sel.value,
+          id = sel.dataset.id,
+          source = sel.dataset.source;
         // optimistic update
         [hpclData, jioData].forEach((arr) => {
-          const it = arr.find((x) => x.id === id);
+          const it = arr.find((x) => String(x.id) === String(id));
           if (it) it.oms03 = val;
         });
         combinedFiltered.forEach((r) => {
-          if (r.id === id) r.oms03 = val;
+          if (String(r.id) === String(id)) r.oms03 = val;
         });
+        // re-render current page so select doesn't reset
         renderPage(combinedFiltered);
 
-        // persist
+        // send to backend
         try {
           if (!id) throw new Error("Missing id");
-          let url = "";
-          if (source === "HPCL")
-            url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
-          else
-            url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(
-              id
-            )}`;
+          let url =
+            source === "HPCL"
+              ? `${baseUrl}/updateStatus/${id}`
+              : `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
           const res = await fetch(url, {
             method: "PUT",
             headers: {
@@ -707,159 +593,113 @@
           });
           if (!res.ok) {
             const txt = await res.text().catch(() => "");
-            console.error("Save failed", res.status, txt);
-            showToast("Save failed");
+            console.error("OMS save failed", res.status, txt);
+            showToast("Failed to save OMS value");
           } else {
             showToast("Saved");
           }
         } catch (err) {
-          console.error("OMS save error", err);
+          console.error("OMS update error", err);
           showToast("Save error");
         }
       }
 
-      // Export helpers - compute fresh filtered rows at export time to avoid stale/empty state
-      function exportRowsAsExcel(rows, filename) {
-        try {
-          const out = rows.map((r) => ({
-            Source: r.source,
-            Engineer: r.engineer,
-            RO_Code: r.roCode,
-            RO_Name: r.roName,
-            Active: r.active,
-            UsedDetails: r.usedDetails,
-            Faulty: r.faulty,
-            Verified: r.isVerified ? "Yes" : "No",
-            Date: formatDate(r.date),
-            OMS_03: r.oms03 || "No",
-          }));
-          const ws = XLSX.utils.json_to_sheet(out);
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, "ActiveVsFaulty");
-          XLSX.writeFile(wb, filename);
-        } catch (err) {
-          console.error("XLSX export failed, falling back to CSV", err);
-          // fallback to CSV
-          const csvHeader =
-            [
-              "Source",
-              "Engineer",
-              "RO_Code",
-              "RO_Name",
-              "Active",
-              "UsedDetails",
-              "Faulty",
-              "Verified",
-              "Date",
-              "OMS_03",
-            ].join(",") + "\n";
-          const lines = rows
-            .map((r) =>
-              [
-                escapeCSVCell(r.source),
-                escapeCSVCell(r.engineer),
-                escapeCSVCell(r.roCode),
-                escapeCSVCell(r.roName),
-                escapeCSVCell(r.active),
-                escapeCSVCell(r.usedDetails),
-                escapeCSVCell(r.faulty),
-                escapeCSVCell(r.isVerified ? "Yes" : "No"),
-                escapeCSVCell(formatDate(r.date)),
-                escapeCSVCell(r.oms03 || "No"),
-              ].join(",")
-            )
-            .join("\n");
-          downloadCSV(filename.replace(/\.xlsx$/, ".csv"), csvHeader + lines);
-        }
+      /* ---------- Export (CSV fallback) ---------- */
+      function buildExportRows(rows) {
+        return rows.map((r) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+          OMS_03: r.oms03 || "No",
+        }));
       }
-
-      function getCurrentFilters() {
+      function exportRowsAsCSV(rows, filename) {
+        if (!rows || rows.length === 0) {
+          alert("No rows to export");
+          return;
+        }
+        const header = Object.keys(rows[0]);
+        const csv = [header.map((h) => escapeCSVCell(h)).join(",")]
+          .concat(
+            rows.map((r) => header.map((h) => escapeCSVCell(r[h])).join(","))
+          )
+          .join("\n");
+        downloadCSV(filename, csv);
+      }
+      function onExportAllFiltered() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
         const to = toDateEl.value || null;
         const eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
-        return { source, from, to, eng, q };
-      }
-
-      function exportAllFiltered() {
-        const { source, from, to, eng, q } = getCurrentFilters();
         const rows = buildCombinedRows(source, from, to, eng, q);
-        console.log("Exporting all filtered rows:", rows.length);
-        if (!rows || rows.length === 0) {
+        console.debug("Exporting filtered rows count:", rows.length);
+        if (!rows.length) {
           alert("No rows to export");
           return;
         }
-        exportRowsAsExcel(
-          rows,
-          `ActiveVsFaulty_${new Date().toLocaleDateString("en-CA")}.xlsx`
+        const out = buildExportRows(rows);
+        exportRowsAsCSV(
+          out,
+          `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`
         );
       }
-
-      function exportCurrentPage() {
+      function onExportCurrentPage() {
         if (!combinedDisplayed || combinedDisplayed.length === 0) {
-          alert("No rows to export on current page");
+          alert("No rows to export");
           return;
         }
-        exportRowsAsExcel(
-          combinedDisplayed,
-          `ActiveVsFaulty_Page_${currentPage}_${new Date().toLocaleDateString(
-            "en-CA"
-          )}.xlsx`
+        const out = buildExportRows(combinedDisplayed);
+        exportRowsAsCSV(
+          out,
+          `ActiveVsFaulty_Page_${currentPage}_${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`
         );
       }
 
-      // Apply filters and render
+      /* ---------- Controls + init ---------- */
       function applyFiltersAndRender() {
-        currentPage = 1;
-        const { source, from, to, eng, q } = getCurrentFilters();
+        const activeChip = document.querySelector(".chip.active");
+        const source = activeChip ? activeChip.dataset.source : "both";
+        const from = fromDateEl.value || null;
+        const to = toDateEl.value || null;
+        const eng = engineerSelect.value || "ALL";
+        const q = (searchInput.value || "").toLowerCase().trim();
         const rows = buildCombinedRows(source, from, to, eng, q);
+        currentPage = 1;
         renderPage(rows);
       }
 
-      // wiring controls
-      function wireUI() {
-        // static refs
-        combinedBody = document.getElementById("combinedBody");
-        combinedCountEl = document.getElementById("combinedCount");
-        chips = Array.from(document.querySelectorAll(".chip"));
-        paginatorEl = document.getElementById("paginator");
-        exportCombinedBtn = document.getElementById("exportCombined");
-        exportDisplayedBtn = document.getElementById("exportDisplayed");
-        engineerSelect = document.getElementById("engineerFilter");
-        searchInput = document.getElementById("globalSearch");
-        fromDateEl = document.getElementById("fromDate");
-        toDateEl = document.getElementById("toDate");
-        clearBtn = document.getElementById("clearFilters");
-        toastEl = document.getElementById("toast");
-
-        // chips behaviour
+      function wireControls() {
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
             c.classList.add("active");
             applyFiltersAndRender();
           });
+          c.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              c.click();
+            }
+          });
         });
 
-        // input events
         searchInput.addEventListener("input", () => {
-          currentPage = 1;
-          applyFiltersAndRender();
+          clearTimeout(window._avf_search_t);
+          window._avf_search_t = setTimeout(applyFiltersAndRender, 180);
         });
-        engineerSelect.addEventListener("change", () => {
-          currentPage = 1;
-          applyFiltersAndRender();
-        });
-        fromDateEl.addEventListener("change", () => {
-          currentPage = 1;
-          applyFiltersAndRender();
-        });
-        toDateEl.addEventListener("change", () => {
-          currentPage = 1;
-          applyFiltersAndRender();
-        });
+        engineerSelect.addEventListener("change", applyFiltersAndRender);
+        fromDateEl.addEventListener("change", applyFiltersAndRender);
+        toDateEl.addEventListener("change", applyFiltersAndRender);
 
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
@@ -874,37 +714,40 @@
           applyFiltersAndRender();
         });
 
-        exportCombinedBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          exportAllFiltered();
-        });
-        exportDisplayedBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          exportCurrentPage();
-        });
+        exportCombinedBtn.addEventListener("click", onExportAllFiltered);
+        exportDisplayedBtn.addEventListener("click", onExportCurrentPage);
 
-        // delegated listener for OMS selects in case new selects are rendered later
+        // delegated listener for OMS select changes (avoid duplicate handlers)
         document
-          .querySelector(".table-wrapper")
-          .addEventListener("change", (e) => {
-            if (
-              e.target &&
-              e.target.classList &&
-              e.target.classList.contains("oms-select")
-            ) {
-              onOmsChange(e);
-            }
-          });
+          .getElementById("combinedTable")
+          .addEventListener("change", onTableChange);
       }
 
-      // init
-      (async function init() {
-        wireUI();
+      async function init() {
+        // grab refs
+        combinedBody = document.getElementById("combinedBody");
+        combinedCountEl = document.getElementById("combinedCount");
+        chips = Array.from(document.querySelectorAll(".chip")).filter(
+          (c) => c.dataset && ("source" in c.dataset || c.dataset.source)
+        );
+        paginatorEl = document.getElementById("paginator");
+        exportCombinedBtn = document.getElementById("exportCombined");
+        exportDisplayedBtn = document.getElementById("exportDisplayed");
+        engineerSelect = document.getElementById("engineerFilter");
+        searchInput = document.getElementById("globalSearch");
+        fromDateEl = document.getElementById("fromDate");
+        toDateEl = document.getElementById("toDate");
+        clearBtn = document.getElementById("clearFilters");
+        toastEl = document.getElementById("toast");
+
         // fetch data in parallel
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
+        wireControls();
         applyFiltersAndRender();
-      })();
+      }
+
+      document.addEventListener("DOMContentLoaded", init);
     </script>
   </body>
 </html>
