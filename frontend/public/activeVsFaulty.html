@@ -425,11 +425,12 @@
                 <th>Verified</th>
                 <th>Date</th>
                 <th>Faulty Code added in OMS</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="combinedBody">
               <tr>
-                <td colspan="10" class="empty-row">Loading...</td>
+                <td colspan="11" class="empty-row">Loading...</td>
               </tr>
             </tbody>
           </table>
@@ -455,7 +456,7 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      // Improved UI version — functionality preserved (export + OMS)
+      // Improved UI version — functionality preserved (export + OMS + admin edit)
       // Endpoints used by this script:
       // GET  /getMergedStatusRecords         -> HPCL merged status records
       // GET  /jioBP/getAllJioBPStatus       -> Jio records
@@ -609,6 +610,24 @@
         ];
         const uniq = Array.from(new Set(combined.filter(Boolean))).sort();
         const cur = sel.value || "ALL";
+
+        // If logged user is engineer, show only their name and disable select
+        if (
+          currentUser &&
+          currentUser.role === "engineer" &&
+          currentUser.username
+        ) {
+          sel.innerHTML = "";
+          const o = document.createElement("option");
+          o.value = currentUser.username;
+          o.textContent = currentUser.username;
+          sel.appendChild(o);
+          sel.value = currentUser.username;
+          sel.disabled = true;
+          return;
+        }
+
+        sel.disabled = false;
         sel.innerHTML = '<option value="ALL">All Engineers</option>';
         uniq.forEach((v) => {
           const o = document.createElement("option");
@@ -624,6 +643,16 @@
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
+
+        // If logged in as engineer, force engineer filter to current user
+        if (
+          currentUser &&
+          currentUser.role === "engineer" &&
+          currentUser.username
+        ) {
+          eng = currentUser.username;
+        }
+
         const addRow = (r) => {
           if (!r.isVerified) return;
           if ((r.active || "").toString().toLowerCase() !== "yes") return;
@@ -671,7 +700,7 @@
 
         if (!pageData || pageData.length === 0) {
           combinedBody.innerHTML =
-            '<tr><td colspan="10" class="empty-row">No records found</td></tr>';
+            '<tr><td colspan="11" class="empty-row">No records found</td></tr>';
         } else {
           const isAdmin = currentUser.role === "admin";
           combinedBody.innerHTML = pageData
@@ -688,6 +717,11 @@
                     )
                     .join("")}</select>`
                 : escapeHTML(r.oms03 || "No");
+
+              const actionsCell = isAdmin
+                ? `<button class="btn ghost edit-btn" data-id="${r.id}" data-source="${r.source}" type="button">✏️ Edit</button>`
+                : "";
+
               return `<tr>
               <td>${escapeHTML(r.source)}</td>
               <td>${escapeHTML(r.engineer)}</td>
@@ -699,6 +733,7 @@
               <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
               <td>${escapeHTML(formatDate(r.date))}</td>
               <td>${omsCell}</td>
+              <td>${actionsCell}</td>
             </tr>`;
             })
             .join("");
@@ -818,6 +853,78 @@
         }
       }
 
+      // Admin edit record (usedDetails & faulty) - delegated click handler
+      async function onEditRecord(id, source) {
+        if (!id) return;
+        // find record
+        const arr = source === "HPCL" ? hpclData : jioData;
+        const it = arr.find((x) => String(x.id) === String(id));
+        if (!it) {
+          showToast("Record not found");
+          return;
+        }
+
+        // prompt for new values (simple inline edit)
+        const newUsed = prompt("Edit Used / Details:", it.usedDetails || "");
+        if (newUsed === null) return; // cancelled
+        const newFaulty = prompt("Edit Faulty details:", it.faulty || "");
+        if (newFaulty === null) return; // cancelled
+
+        // optimistic update
+        it.usedDetails = newUsed;
+        it.faulty = newFaulty;
+        combinedFiltered.forEach((r) => {
+          if (String(r.id) === String(id)) {
+            r.usedDetails = newUsed;
+            r.faulty = newFaulty;
+          }
+        });
+        renderPage(combinedFiltered);
+
+        try {
+          let url = "";
+          let body = {};
+          if (source === "HPCL") {
+            url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
+            // backend expects activeSpare/faultySpare for HPCL
+            body = {
+              activeSpare: newUsed,
+              faultySpare: newFaulty,
+            };
+          } else {
+            url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(
+              id
+            )}`;
+            body = {
+              usedMaterialDetails: newUsed,
+              faultyMaterialDetails: newFaulty,
+            };
+          }
+
+          const res = await fetch(url, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!res.ok) {
+            const txt = await res.text().catch(() => "");
+            console.error("Edit save failed", res.status, txt);
+            showToast("Failed to save changes");
+            await reloadSources();
+          } else {
+            showToast("Saved");
+          }
+        } catch (err) {
+          console.error("Edit update error", err);
+          showToast("Save error");
+          await reloadSources();
+        }
+      }
+
       // reload both sources (used if saving fails to re-sync)
       async function reloadSources() {
         await Promise.all([fetchHPCL(), fetchJIO()]);
@@ -862,8 +969,17 @@
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
         const to = toDateEl.value || null;
-        const eng = engineerSelect.value || "ALL";
+        let eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
+
+        // if engineer role, force engineer to current user
+        if (
+          currentUser &&
+          currentUser.role === "engineer" &&
+          currentUser.username
+        )
+          eng = currentUser.username;
+
         const rows = buildCombinedRows(source, from, to, eng, q);
         if (!rows || rows.length === 0) {
           alert("No rows to export");
@@ -894,7 +1010,22 @@
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
         const to = toDateEl.value || null;
-        const eng = engineerSelect.value || "ALL";
+
+        // If engineer user, force eng to current username
+        let eng = engineerSelect.value || "ALL";
+        if (
+          currentUser &&
+          currentUser.role === "engineer" &&
+          currentUser.username
+        ) {
+          eng = currentUser.username;
+          // ensure select shows that
+          if (engineerSelect) {
+            engineerSelect.value = eng;
+            engineerSelect.disabled = true;
+          }
+        }
+
         const q = (searchInput.value || "").toLowerCase().trim();
         const rows = buildCombinedRows(source, from, to, eng, q);
         currentPage = 1;
@@ -928,13 +1059,24 @@
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
           toDateEl.value = "";
-          engineerSelect.value = "ALL";
           searchInput.value = "";
           chips.forEach((ch) => ch.classList.remove("active"));
           document
             .querySelector(".chip[data-source='both']")
             .classList.add("active");
           currentPage = 1;
+          // if engineer, keep engineer select limited to their name
+          if (
+            currentUser &&
+            currentUser.role === "engineer" &&
+            currentUser.username
+          ) {
+            engineerSelect.value = currentUser.username;
+            engineerSelect.disabled = true;
+          } else {
+            engineerSelect.value = "ALL";
+            engineerSelect.disabled = false;
+          }
           applyFiltersAndRender();
         });
 
@@ -947,10 +1089,22 @@
           onExportCurrentPage();
         });
 
-        // delegate OMS changes
+        // delegate OMS changes and edit button clicks
         document
           .querySelector(".table-wrapper")
           .addEventListener("change", onOmsChange);
+
+        document
+          .querySelector(".table-wrapper")
+          .addEventListener("click", (e) => {
+            const btn = e.target;
+            if (!btn) return;
+            if (btn.classList && btn.classList.contains("edit-btn")) {
+              const id = btn.dataset.id;
+              const source = btn.dataset.source;
+              onEditRecord(id, source);
+            }
+          });
       }
 
       // init
