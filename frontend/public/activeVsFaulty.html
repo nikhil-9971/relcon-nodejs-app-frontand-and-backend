@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -28,8 +28,15 @@
       body {
         height: 100%;
         margin: 0;
-        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial, sans-serif;
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
         background: var(--bg);
         color: #0b1220;
         -webkit-font-smoothing: antialiased;
@@ -302,6 +309,26 @@
           width: 95%;
         }
       }
+
+      /* toast styling */
+      #toast {
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        background: #16a34a;
+        color: white;
+        padding: 10px 14px;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(2, 6, 23, 0.16);
+        z-index: 80;
+        display: none;
+      }
+      #toast.err {
+        background: #dc2626;
+      }
+      #toast.info {
+        background: #0ea5e9;
+      }
     </style>
   </head>
 
@@ -568,7 +595,7 @@
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <!-- Loader -->
     <div
@@ -671,15 +698,20 @@
         if (isNaN(dt)) return d;
         return dt.toISOString().slice(0, 10);
       }
-      function showToast(msg, timeout = 2500) {
-        if (!toastEl) return;
-        toastEl.textContent = msg;
-        toastEl.classList.remove("hidden");
+
+      // toast helper with severity option
+      function showToast(msg, timeout = 2500, severity = "ok") {
+        const t = document.getElementById("toast");
+        if (!t) return;
+        t.textContent = msg;
+        t.classList.remove("err", "info");
+        if (severity === "err") t.classList.add("err");
+        else if (severity === "info") t.classList.add("info");
+        t.style.display = "block";
         clearTimeout(window._toastTimer);
-        window._toastTimer = setTimeout(
-          () => toastEl.classList.add("hidden"),
-          timeout
-        );
+        window._toastTimer = setTimeout(() => {
+          t.style.display = "none";
+        }, timeout);
       }
 
       function getUserFromToken(tkn) {
@@ -857,14 +889,16 @@
           combinedBody.innerHTML = pageData
             .map((r) => {
               const omsCell = isAdmin
-                ? `<select class="oms-select" data-id="${r.id}" data-source="${
-                    r.source
-                  }">${["No", "Yes", "PO Basis"]
+                ? `<select class="oms-select" data-id="${r.id}" data-source="${r.source}">${[
+                    "No",
+                    "Yes",
+                    "PO Basis",
+                  ]
                     .map(
                       (opt) =>
                         `<option value="${opt}" ${
                           (r.oms03 || "No") === opt ? "selected" : ""
-                        }>${opt}</option>`
+                        }>${opt}</option>`,
                     )
                     .join("")}</select>`
                 : escapeHTML(r.oms03 || "No");
@@ -960,7 +994,7 @@
         const id = sel.dataset.id;
         const source = sel.dataset.source;
         if (!id) {
-          showToast("Missing id - cannot save");
+          showToast("Missing id - cannot save", 2500, "err");
           return;
         }
 
@@ -974,6 +1008,9 @@
         });
         renderPage(combinedFiltered);
 
+        // immediate toast confirmation to user that value changed locally
+        showToast("OMS value changed — saving...", 2000, "info");
+
         try {
           let url = "",
             body = { oms03: val };
@@ -981,7 +1018,7 @@
             url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
           else
             url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(
-              id
+              id,
             )}`;
           const res = await fetch(url, {
             method: "PUT",
@@ -994,12 +1031,15 @@
           if (!res.ok) {
             const txt = await res.text().catch(() => "");
             console.error("OMS save failed", res.status, txt);
-            showToast("Failed to save OMS");
+            showToast("Failed to save OMS", 3000, "err");
             await reloadSources();
-          } else showToast("Saved");
+          } else {
+            // final confirmation after backend save
+            showToast("OMS saved", 2200, "ok");
+          }
         } catch (err) {
           console.error("OMS update error", err);
-          showToast("Save error");
+          showToast("Save error", 3000, "err");
           await reloadSources();
         }
       }
@@ -1010,7 +1050,7 @@
         const arr = source === "HPCL" ? hpclData : jioData;
         const it = arr.find((x) => String(x.id) === String(id));
         if (!it) {
-          showToast("Record not found");
+          showToast("Record not found", 2500, "err");
           return;
         }
 
@@ -1023,7 +1063,7 @@
         document.getElementById("edit_usedDetails").value =
           it.usedDetails || "";
         document.getElementById("edit_faulty").value = it.faulty || "";
-        // IMPORTANT: show Active (Yes/No) here instead of OMS
+        // show Active (Yes/No)
         document.getElementById("edit_active").value = it.active || "Yes";
 
         // show modal
@@ -1040,7 +1080,7 @@
         const id = document.getElementById("edit_id").value;
         const source = document.getElementById("edit_source").value;
         if (!id || !source) {
-          showToast("Missing id/source");
+          showToast("Missing id/source", 2500, "err");
           return;
         }
 
@@ -1067,6 +1107,9 @@
         });
         renderPage(combinedFiltered);
         closeEditModal();
+
+        // show saving toast immediately
+        showToast("Saving record...", 2500, "info");
         modalLoader.classList.remove("hidden");
 
         try {
@@ -1081,9 +1124,7 @@
               faultySpare: newFaulty,
             };
           } else {
-            url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(
-              id
-            )}`;
+            url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(id)}`;
             // For JIO: activeMaterialUsed -> active, usedMaterialDetails -> usedDetails, faultyMaterialDetails -> faulty
             body = {
               activeMaterialUsed: newActive,
@@ -1104,14 +1145,15 @@
           if (!res.ok) {
             const txt = await res.text().catch(() => "");
             console.error("Edit save failed", res.status, txt);
-            showToast("Failed to save changes");
+            showToast("Failed to save changes", 3000, "err");
             await reloadSources();
           } else {
-            showToast("Saved");
+            // final confirmation after backend save
+            showToast("Record saved successfully", 2200, "ok");
           }
         } catch (err) {
           console.error("Edit update error", err);
-          showToast("Save error");
+          showToast("Save error", 3000, "err");
           await reloadSources();
         } finally {
           modalLoader.classList.add("hidden");
@@ -1150,8 +1192,8 @@
         const csv = [header.map((h) => escapeCSVCell(h)).join(",")]
           .concat(
             rows.map((r) =>
-              header.map((h) => escapeCSVCell(r[h] || "")).join(",")
-            )
+              header.map((h) => escapeCSVCell(r[h] || "")).join(","),
+            ),
           )
           .join("\n");
         downloadCSV(filename, csv);
@@ -1180,7 +1222,7 @@
         }
         exportRowsAsCSV(
           buildExportRows(rows),
-          `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`
+          `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`,
         );
       }
 
@@ -1193,7 +1235,7 @@
           buildExportRows(combinedDisplayed),
           `ActiveVsFaulty_Page_${currentPage}_${new Date()
             .toISOString()
-            .slice(0, 10)}.csv`
+            .slice(0, 10)}.csv`,
         );
       }
 
