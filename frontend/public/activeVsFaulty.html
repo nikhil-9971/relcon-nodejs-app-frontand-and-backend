@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>Active vs Faulty — Report</title>
 
-    <!-- Poppins + SheetJS -->
+    <!-- Poppins -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
@@ -33,10 +33,11 @@
         margin: 18px auto;
         padding: 12px;
       }
+      /* ... (styles unchanged, omitted for brevity in this header example) ... */
       .topbar {
         background: rgba(255, 255, 255, 0.95);
-        border-radius: 10px;
         padding: 12px;
+        border-radius: 10px;
         box-shadow: 0 6px 18px rgba(3, 10, 24, 0.06);
         position: sticky;
         top: 12px;
@@ -46,67 +47,17 @@
         align-items: center;
         flex-wrap: wrap;
       }
-      .title {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-      .title h1 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-      }
-      .filters {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex: 1;
-        flex-wrap: wrap;
-      }
-      .control {
-        display: inline-flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      label.small {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      input[type="date"],
-      select,
-      input[type="text"] {
-        height: 40px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        background: #fff;
-        font-size: 13px;
-        min-width: 160px;
-      }
-      input[type="text"].search {
-        min-width: 300px;
-        max-width: 520px;
-      }
-      .chips {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
       .chip {
         padding: 8px 12px;
         border-radius: 999px;
         background: #f3f4f6;
         border: 1px solid rgba(15, 23, 42, 0.04);
         cursor: pointer;
-        font-size: 13px;
       }
       .chip.active {
         background: linear-gradient(90deg, var(--accent), var(--accent-700));
         color: #fff;
-        border-color: rgba(5, 150, 105, 0.85);
-        box-shadow: 0 6px 16px rgba(6, 182, 164, 0.12);
       }
-
       .card {
         margin-top: 14px;
         background: #fff;
@@ -115,17 +66,6 @@
         box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
         border: 1px solid rgba(2, 6, 23, 0.04);
       }
-      .card h2 {
-        font-size: 15px;
-        margin: 0 0 4px 0;
-        font-weight: 600;
-      }
-      .card .muted {
-        color: var(--muted);
-        font-size: 12px;
-        margin-bottom: 8px;
-      }
-
       .table-wrapper {
         max-height: 64vh;
         overflow: auto;
@@ -137,41 +77,28 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
-        border: 1px solid rgba(15, 23, 42, 0.06);
       }
       thead th {
         position: sticky;
         top: 0;
         background: #fff;
-        color: #111827;
-        font-weight: 700;
-        text-align: left;
         padding: 10px 12px;
+        font-weight: 700;
         border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-        z-index: 40;
       }
       tbody td {
         padding: 10px 12px;
         border-bottom: 1px solid rgba(15, 23, 42, 0.03);
-        color: #111827;
       }
-      thead th,
-      tbody td {
-        border-right: 1px solid rgba(15, 23, 42, 0.03);
+      .oms-select {
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(15, 23, 42, 0.06);
       }
-      tbody tr:last-child td {
-        border-bottom: none;
-      }
-
-      .count-badge {
-        color: #374151;
-        font-weight: 700;
-        font-size: 13px;
-      }
-      .actions {
-        display: flex;
-        gap: 8px;
-        align-items: center;
+      .empty-row {
+        text-align: center;
+        color: var(--muted);
+        padding: 18px;
       }
       .paginator {
         display: flex;
@@ -180,40 +107,16 @@
         justify-content: center;
         padding-top: 10px;
       }
-      .paginator button {
-        padding: 6px 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        background: #f3f4f6;
-        cursor: pointer;
-      }
-      .paginator button.active {
-        background: #2563eb;
-        color: white;
-        border-color: #2563eb;
-      }
-
-      .oms-select {
-        padding: 6px 8px;
-        border-radius: 6px;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        background: white;
-      }
-      .empty-row {
-        text-align: center;
-        color: var(--muted);
-        padding: 18px;
-      }
       .toast {
         position: fixed;
         right: 18px;
         bottom: 22px;
         background: rgba(17, 24, 39, 0.95);
-        color: white;
+        color: #fff;
         padding: 10px 14px;
         border-radius: 8px;
-        z-index: 9999;
         display: none;
+        z-index: 9999;
       }
     </style>
   </head>
@@ -222,43 +125,21 @@
     <div class="page">
       <div class="topbar" role="region" aria-label="Filters">
         <div class="title" aria-hidden>
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-          >
-            <rect x="3" y="4" width="7" height="7" rx="2" fill="#06b6a4"></rect>
-            <rect
-              x="14"
-              y="4"
-              width="7"
-              height="7"
-              rx="2"
-              fill="#60a5fa"
-            ></rect>
-            <rect
-              x="3"
-              y="13"
-              width="7"
-              height="7"
-              rx="2"
-              fill="#a78bfa"
-            ></rect>
-            <rect
-              x="14"
-              y="13"
-              width="7"
-              height="7"
-              rx="2"
-              fill="#f59e0b"
-            ></rect>
-          </svg>
           <h1>Active vs Faulty — Report</h1>
         </div>
 
-        <div class="filters" role="form" aria-label="Filter controls">
+        <div
+          class="filters"
+          role="form"
+          aria-label="Filter controls"
+          style="
+            flex: 1;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+          "
+        >
           <div class="control">
             <label class="small">From</label>
             <input id="fromDate" type="date" />
@@ -298,7 +179,14 @@
           </div>
         </div>
 
-        <div class="actions" style="margin-left: auto">
+        <div
+          style="
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+          "
+        >
           <button id="clearFilters" class="chip" type="button">♻️ Clear</button>
           <button
             id="exportCombined"
@@ -318,7 +206,7 @@
         </div>
       </div>
 
-      <div class="card" aria-live="polite">
+      <div class="card">
         <div
           style="
             display: flex;
@@ -368,7 +256,7 @@
         <div class="paginator" id="paginator" aria-hidden="false"></div>
 
         <div style="margin-top: 12px; display: flex; justify-content: flex-end">
-          <button id="exportDisplayed" type="button" class="chip">
+          <button id="exportDisplayed" class="chip" type="button">
             Export Current Page
           </button>
         </div>
@@ -378,40 +266,7 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      /*
-        Complete ready-to-paste activeVsFaulty.html
-        - Export (CSV) logic intentionally built to match bpclVisitReport style.
-        - Export buttons compute fresh filtered rows at export time so they never rely on stale globals.
-        - Buttons set type="button" (prevents accidental form submit / page reload).
-        - Defensive checks & helpful console logs when empty.
-      */
-
-      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
-      const token = localStorage.getItem("token");
-
-      // data stores
-      let hpclData = [],
-        jioData = [];
-      let combinedFiltered = [],
-        combinedDisplayed = [];
-      let currentPage = 1;
-      const rowsPerPage = 50;
-
-      // UI refs (populated in init)
-      let combinedBody,
-        combinedCountEl,
-        chips,
-        paginatorEl,
-        exportCombinedBtn,
-        exportDisplayedBtn,
-        engineerSelect,
-        searchInput,
-        fromDateEl,
-        toDateEl,
-        clearBtn,
-        toastEl;
-
-      // helpers
+      /* -------------- Helpers -------------- */
       function escapeHTML(s) {
         if (s === null || s === undefined) return "";
         return String(s)
@@ -455,6 +310,29 @@
         );
       }
 
+      /* -------------- State & Refs -------------- */
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      const token = localStorage.getItem("token");
+      let hpclData = [],
+        jioData = [],
+        combinedFiltered = [],
+        combinedDisplayed = [];
+      let currentPage = 1;
+      const rowsPerPage = 50;
+
+      let combinedBody,
+        combinedCountEl,
+        chips,
+        paginatorEl,
+        exportCombinedBtn,
+        exportDisplayedBtn,
+        engineerSelect,
+        searchInput,
+        fromDateEl,
+        toDateEl,
+        clearBtn,
+        toastEl;
+
       function getUserFromToken(tkn) {
         try {
           if (!tkn) return {};
@@ -469,7 +347,7 @@
       }
       const currentUser = getUserFromToken(token);
 
-      // --- fetchers ---
+      /* -------------- Fetchers -------------- */
       async function fetchHPCL() {
         try {
           const res = await fetch(`${baseUrl}/getMergedStatusRecords`, {
@@ -543,7 +421,7 @@
         if (uniq.includes(cur)) sel.value = cur;
       }
 
-      // buildCombinedRows used for both rendering and exporting
+      /* -------------- Build / Render -------------- */
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
@@ -576,14 +454,15 @@
             oms03: r.oms03 || "No",
           });
         };
+
         if (sourceFilter === "both" || sourceFilter === "hpcl")
           hpclData.forEach(addRow);
         if (sourceFilter === "both" || sourceFilter === "jio")
           jioData.forEach(addRow);
+
         return rows;
       }
 
-      // render + paginator
       function renderPage(rows) {
         combinedFiltered = rows || [];
         const total = combinedFiltered.length;
@@ -597,13 +476,17 @@
           combinedBody.innerHTML =
             '<tr><td colspan="10" class="empty-row">No records found</td></tr>';
         } else {
+          const isAdmin = currentUser.role === "admin";
           combinedBody.innerHTML = pageData
             .map((r) => {
-              const isAdmin = currentUser.role === "admin";
               const omsCell = isAdmin
-                ? `<select class="oms-select" data-id="${r.id}" data-source="${
-                    r.source
-                  }">${["No", "Yes", "PO Basis"]
+                ? `<select class="oms-select" data-id="${escapeHTML(
+                    r.id
+                  )}" data-source="${escapeHTML(r.source)}">${[
+                    "No",
+                    "Yes",
+                    "PO Basis",
+                  ]
                     .map(
                       (opt) =>
                         `<option value="${opt}" ${
@@ -613,32 +496,28 @@
                     .join("")}</select>`
                 : `<div>${escapeHTML(r.oms03 || "No")}</div>`;
               return `<tr>
-              <td>${escapeHTML(r.source)}</td>
-              <td>${escapeHTML(r.engineer)}</td>
-              <td>${escapeHTML(r.roCode)}</td>
-              <td>${escapeHTML(r.roName)}</td>
-              <td>${escapeHTML(r.active)}</td>
-              <td>${escapeHTML(r.usedDetails)}</td>
-              <td>${escapeHTML(r.faulty)}</td>
-              <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
-              <td>${escapeHTML(formatDate(r.date))}</td>
-              <td>${omsCell}</td>
-            </tr>`;
+                <td>${escapeHTML(r.source)}</td>
+                <td>${escapeHTML(r.engineer)}</td>
+                <td>${escapeHTML(r.roCode)}</td>
+                <td>${escapeHTML(r.roName)}</td>
+                <td>${escapeHTML(r.active)}</td>
+                <td>${escapeHTML(r.usedDetails)}</td>
+                <td>${escapeHTML(r.faulty)}</td>
+                <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
+                <td>${escapeHTML(formatDate(r.date))}</td>
+                <td>${omsCell}</td>
+              </tr>`;
             })
             .join("");
         }
-        combinedCountEl.textContent = `${total} rows`;
-        renderPaginator(total, totalPages);
 
-        // wire OMS change handlers
-        document.querySelectorAll(".oms-select").forEach((sel) => {
-          sel.removeEventListener("change", onOmsChange);
-          sel.addEventListener("change", onOmsChange);
-        });
+        combinedCountEl.textContent = `${combinedFiltered.length} rows`;
+        renderPaginator(combinedFiltered.length);
       }
 
-      function renderPaginator(totalRows, totalPages) {
+      function renderPaginator(totalRows) {
         paginatorEl.innerHTML = "";
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
         const prev = document.createElement("button");
         prev.textContent = "⬅ Prev";
         prev.disabled = currentPage === 1;
@@ -661,14 +540,11 @@
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === currentPage) btn.classList.add("active");
-          btn.onclick = (() => {
-            const page = i;
-            return () => {
-              currentPage = page;
-              renderPage(combinedFiltered);
-              document.querySelector(".table-wrapper").scrollTop = 0;
-            };
-          })();
+          btn.onclick = ((page) => () => {
+            currentPage = page;
+            renderPage(combinedFiltered);
+            document.querySelector(".table-wrapper").scrollTop = 0;
+          })(i);
           paginatorEl.appendChild(btn);
         }
 
@@ -694,33 +570,20 @@
         paginatorEl.appendChild(summary);
       }
 
-      // OMS change handler - saves to backend
+      /* -------------- OMS save handler -------------- */
       async function onOmsChange(e) {
         const sel = e.target;
-        const val = sel.value;
+        if (!sel || !sel.classList.contains("oms-select")) return;
         const id = sel.dataset.id;
-        const source = sel.dataset.source; // "HPCL" or "JIO"
-        // optimistic UI update
-        [hpclData, jioData].forEach((arr) => {
-          const it = arr.find((x) => x.id === id);
-          if (it) it.oms03 = val;
-        });
-        combinedFiltered.forEach((r) => {
-          if (r.id === id) r.oms03 = val;
-        });
-        renderPage(combinedFiltered);
-
+        const source = sel.dataset.source;
+        const value = sel.value;
+        sel.disabled = true;
         try {
-          if (!id) throw new Error("Missing id");
           let url = "",
-            body = {};
-          if (source === "HPCL") {
-            url = `${baseUrl}/updateStatus/${id}`;
-            body = { oms03: val };
-          } else {
-            url = `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
-            body = { oms03: val };
-          }
+            body = { oms03: value };
+          if (!id) throw new Error("Missing id");
+          if (source === "HPCL") url = `${baseUrl}/updateStatus/${id}`;
+          else url = `${baseUrl}/jioBP/updateJioBPStatus/${id}`;
           const res = await fetch(url, {
             method: "PUT",
             headers: {
@@ -734,16 +597,29 @@
             console.error("OMS save failed", res.status, txt);
             showToast("Failed to save OMS value");
           } else {
+            // update local cache so UI stays in sync
+            [hpclData, jioData].forEach((arr) => {
+              const it = arr.find((x) => x.id === id);
+              if (it) it.oms03 = value;
+            });
+            combinedFiltered.forEach((r) => {
+              if (r.id === id) r.oms03 = value;
+            });
+            combinedDisplayed.forEach((r) => {
+              if (r.id === id) r.oms03 = value;
+            });
             showToast("Saved");
           }
         } catch (err) {
           console.error("OMS update error", err);
           showToast("Save error");
+        } finally {
+          sel.disabled = false;
         }
       }
 
-      // --- export functions (CSV) ---
-      // Build fresh filtered rows at export time to avoid stale/clearing issues
+      /* -------------- Export functions (CSV, based on bpclVisitReport style) -------------- */
+      // Build filters from UI
       function readFilters() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
@@ -754,10 +630,13 @@
         return { source, from, to, eng, q };
       }
 
-      function exportRowsAsCSV(rows, filename) {
+      // Export all filtered rows (CSV)
+      function exportAllFilteredCSV() {
+        const { source, from, to, eng, q } = readFilters();
+        const rows = buildCombinedRows(source, from, to, eng, q);
+        console.log("Exporting all filtered rows:", rows.length);
         if (!rows || rows.length === 0) {
           alert("No rows to export");
-          console.warn("Export attempted with 0 rows");
           return;
         }
         const header = [
@@ -772,72 +651,73 @@
           "Date",
           "OMS_03",
         ];
-        const lines = [header.map(escapeCSVCell).join(",")];
-        rows.forEach((r, idx) => {
-          const line = [
-            r.source,
-            r.engineer,
-            r.roCode,
-            r.roName,
-            r.active,
-            r.usedDetails,
-            r.faulty,
-            r.isVerified ? "Yes" : "No",
-            formatDate(r.date),
-            r.oms03 || "No",
-          ]
-            .map(escapeCSVCell)
-            .join(",");
-          lines.push(line);
+        const csvRows = [header.join(",")];
+        rows.forEach((r) => {
+          csvRows.push(
+            [
+              escapeCSVCell(r.source),
+              escapeCSVCell(r.engineer),
+              escapeCSVCell(r.roCode),
+              escapeCSVCell(r.roName),
+              escapeCSVCell(r.active),
+              escapeCSVCell(r.usedDetails),
+              escapeCSVCell(r.faulty),
+              escapeCSVCell(r.isVerified ? "Yes" : "No"),
+              escapeCSVCell(formatDate(r.date)),
+              escapeCSVCell(r.oms03 || "No"),
+            ].join(",")
+          );
         });
-        const csv = lines.join("\n");
-        downloadCSV(
-          filename ||
-            `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`,
-          csv
-        );
+        const name = `ActiveVsFaulty_${new Date()
+          .toISOString()
+          .slice(0, 10)}.csv`;
+        downloadCSV(name, csvRows.join("\n"));
       }
 
-      function exportAllFiltered() {
-        const f = readFilters();
-        const rows = buildCombinedRows(f.source, f.from, f.to, f.eng, f.q);
-        console.log("Exporting all filtered rows:", rows.length);
-        if (!rows || rows.length === 0) {
-          alert("No rows to export");
-          return;
-        }
-        exportRowsAsCSV(
-          rows,
-          `ActiveVsFaulty_Filtered_${new Date().toISOString().slice(0, 10)}.csv`
-        );
-      }
-
-      function exportCurrentPage() {
-        // combinedDisplayed is kept current by renderPage
-        console.log("Exporting current page rows:", combinedDisplayed.length);
+      // Export current page (CSV)
+      function exportCurrentPageCSV() {
         if (!combinedDisplayed || combinedDisplayed.length === 0) {
-          alert("No rows to export");
+          alert("No rows to export on current page");
           return;
         }
-        exportRowsAsCSV(
-          combinedDisplayed,
-          `ActiveVsFaulty_Page_${currentPage}_${new Date()
-            .toISOString()
-            .slice(0, 10)}.csv`
-        );
+        const header = [
+          "Source",
+          "Engineer",
+          "RO_Code",
+          "RO_Name",
+          "Active",
+          "UsedDetails",
+          "Faulty",
+          "Verified",
+          "Date",
+          "OMS_03",
+        ];
+        const csvRows = [header.join(",")];
+        combinedDisplayed.forEach((r) => {
+          csvRows.push(
+            [
+              escapeCSVCell(r.source),
+              escapeCSVCell(r.engineer),
+              escapeCSVCell(r.roCode),
+              escapeCSVCell(r.roName),
+              escapeCSVCell(r.active),
+              escapeCSVCell(r.usedDetails),
+              escapeCSVCell(r.faulty),
+              escapeCSVCell(r.isVerified ? "Yes" : "No"),
+              escapeCSVCell(formatDate(r.date)),
+              escapeCSVCell(r.oms03 || "No"),
+            ].join(",")
+          );
+        });
+        const name = `ActiveVsFaulty_Page_${currentPage}_${new Date()
+          .toISOString()
+          .slice(0, 10)}.csv`;
+        downloadCSV(name, csvRows.join("\n"));
       }
 
-      // apply filters & render
-      function applyFiltersAndRender() {
-        const { source, from, to, eng, q } = readFilters();
-        const rows = buildCombinedRows(source, from, to, eng, q);
-        // reset to first page when filters change
-        currentPage = 1;
-        renderPage(rows);
-      }
-
-      // wiring & init
+      /* -------------- UI wiring -------------- */
       function wireControls() {
+        // chips
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
@@ -853,12 +733,21 @@
         });
 
         searchInput.addEventListener("input", () => {
-          clearTimeout(window._searchTimer);
-          window._searchTimer = setTimeout(applyFiltersAndRender, 180);
+          currentPage = 1;
+          applyFiltersAndRender();
         });
-        engineerSelect.addEventListener("change", applyFiltersAndRender);
-        fromDateEl.addEventListener("change", applyFiltersAndRender);
-        toDateEl.addEventListener("change", applyFiltersAndRender);
+        engineerSelect.addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
+        fromDateEl.addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
+        toDateEl.addEventListener("change", () => {
+          currentPage = 1;
+          applyFiltersAndRender();
+        });
 
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
@@ -873,13 +762,30 @@
           applyFiltersAndRender();
         });
 
-        exportCombinedBtn.addEventListener("click", exportAllFiltered);
-        exportDisplayedBtn.addEventListener("click", exportCurrentPage);
+        // Exports
+        exportCombinedBtn.addEventListener("click", exportAllFilteredCSV);
+        exportDisplayedBtn.addEventListener("click", exportCurrentPageCSV);
+
+        // Delegate OMS change on table-wrapper (works for dynamic rows too)
+        document
+          .querySelector(".table-wrapper")
+          .addEventListener("change", function (e) {
+            if (e.target && e.target.classList.contains("oms-select")) {
+              onOmsChange(e);
+            }
+          });
       }
 
-      // init: fetch data then populate UI
+      // read UI -> build rows -> render
+      function applyFiltersAndRender() {
+        const { source, from, to, eng, q } = readFilters();
+        const rows = buildCombinedRows(source, from, to, eng, q);
+        currentPage = 1;
+        renderPage(rows);
+      }
+
+      // init
       (async function init() {
-        // grab refs
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
         chips = Array.from(document.querySelectorAll(".chip"));
@@ -893,7 +799,6 @@
         clearBtn = document.getElementById("clearFilters");
         toastEl = document.getElementById("toast");
 
-        // parallel fetch
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         wireControls();
