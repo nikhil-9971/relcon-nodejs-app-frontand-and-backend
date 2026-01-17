@@ -92,7 +92,8 @@
 
       input[type="date"],
       select,
-      input[type="text"] {
+      input[type="text"],
+      textarea {
         height: 40px;
         padding: 8px 12px;
         border-radius: 8px;
@@ -100,6 +101,12 @@
         background: #fff;
         font-size: 13px;
         outline: none;
+      }
+
+      textarea {
+        height: auto;
+        min-height: 80px;
+        resize: vertical;
       }
 
       input[type="text"].search {
@@ -247,11 +254,37 @@
         background: white;
       }
 
+      /* modal helpers */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 60;
+      }
+      .modal {
+        background: white;
+        border-radius: 8px;
+        padding: 16px;
+        width: 720px;
+        max-width: calc(100% - 40px);
+        box-shadow: 0 12px 40px rgba(2, 6, 23, 0.4);
+      }
+      .modal h3 {
+        margin: 0 0 8px 0;
+      }
+
       /* small helpers */
       .right {
         display: flex;
         gap: 10px;
         align-items: center;
+      }
+
+      .hidden {
+        display: none !important;
       }
 
       @media (max-width: 980px) {
@@ -263,6 +296,10 @@
         }
         .title {
           font-size: 16px;
+        }
+
+        .modal {
+          width: 95%;
         }
       }
     </style>
@@ -453,11 +490,120 @@
       </div>
     </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <!-- Edit Modal (consistent UI with bpclStatusreport.html) -->
+    <div id="editModalBackdrop" class="modal-backdrop" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="editModalTitle"
+      >
+        <h3 id="editModalTitle">Edit Record</h3>
+        <form
+          id="editForm"
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+          "
+        >
+          <input type="hidden" name="id" id="edit_id" />
+          <input type="hidden" name="source" id="edit_source" />
+
+          <div style="grid-column: 1 / 3">
+            <label class="small">Engineer</label>
+            <input type="text" id="edit_engineer" disabled />
+          </div>
+
+          <div>
+            <label class="small">RO Code</label>
+            <input type="text" id="edit_roCode" disabled />
+          </div>
+
+          <div>
+            <label class="small">RO Name</label>
+            <input type="text" id="edit_roName" disabled />
+          </div>
+
+          <div>
+            <label class="small">Used / Details</label>
+            <textarea
+              name="usedDetails"
+              id="edit_usedDetails"
+              placeholder="Used material details"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="small">Faulty</label>
+            <textarea
+              name="faulty"
+              id="edit_faulty"
+              placeholder="Faulty material details"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="small">Faulty Code added in OMS</label>
+            <select name="oms03" id="edit_oms03" class="oms-select">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="PO Basis">PO Basis</option>
+            </select>
+          </div>
+        </form>
+
+        <div
+          style="
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+          "
+        >
+          <button id="editCancelBtn" class="btn ghost">Cancel</button>
+          <button id="editSaveBtn" class="btn primary">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- Loader -->
+    <div
+      id="modalLoader"
+      class="hidden"
+      style="
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 70;
+      "
+    >
+      <div
+        style="
+          width: 48px;
+          height: 48px;
+          border: 6px solid rgba(0, 0, 0, 0.08);
+          border-top-color: var(--primary);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        "
+      ></div>
+    </div>
+    <style>
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
 
     <script>
-      // Improved UI version — functionality preserved (export + OMS + admin edit)
-      // Now Edit button also lets admin edit the "OMS (03)" column (No / Yes / PO Basis)
       // Endpoints used by this script:
       // GET  /getMergedStatusRecords         -> HPCL merged status records
       // GET  /jioBP/getAllJioBPStatus       -> Jio records
@@ -488,6 +634,11 @@
         toDateEl,
         clearBtn,
         toastEl;
+
+      // modal refs
+      const editModalBackdrop = document.getElementById("editModalBackdrop");
+      const editForm = () => document.getElementById("editForm");
+      const modalLoader = document.getElementById("modalLoader");
 
       // small helpers
       function escapeHTML(s) {
@@ -521,13 +672,13 @@
         if (isNaN(dt)) return d;
         return dt.toISOString().slice(0, 10);
       }
-      function showToast(msg, timeout = 2000) {
+      function showToast(msg, timeout = 2500) {
         if (!toastEl) return;
         toastEl.textContent = msg;
-        toastEl.style.display = "block";
+        toastEl.classList.remove("hidden");
         clearTimeout(window._toastTimer);
         window._toastTimer = setTimeout(
-          () => (toastEl.style.display = "none"),
+          () => toastEl.classList.add("hidden"),
           timeout
         );
       }
@@ -863,10 +1014,9 @@
         }
       }
 
-      // Admin edit record (usedDetails, faulty & OMS) - delegated click handler
-      async function onEditRecord(id, source) {
+      // ---- Modal-based edit (consistent with bpclStatusreport.html) ----
+      function openEditModalById(id, source) {
         if (!id) return;
-        // find record
         const arr = source === "HPCL" ? hpclData : jioData;
         const it = arr.find((x) => String(x.id) === String(id));
         if (!it) {
@@ -874,25 +1024,49 @@
           return;
         }
 
-        // prompt for new values (simple inline edit)
-        const newUsed = prompt("Edit Used / Details:", it.usedDetails || "");
-        if (newUsed === null) return; // cancelled
-        const newFaulty = prompt("Edit Faulty details:", it.faulty || "");
-        if (newFaulty === null) return; // cancelled
+        // populate form
+        document.getElementById("edit_id").value = it.id || "";
+        document.getElementById("edit_source").value = it.source || "";
+        document.getElementById("edit_engineer").value = it.engineer || "";
+        document.getElementById("edit_roCode").value = it.roCode || "";
+        document.getElementById("edit_roName").value = it.roName || "";
+        document.getElementById("edit_usedDetails").value =
+          it.usedDetails || "";
+        document.getElementById("edit_faulty").value = it.faulty || "";
+        document.getElementById("edit_oms03").value = it.oms03 || "No";
 
-        // Ask for OMS (03) value as well
-        const curOms = it.oms03 || "No";
-        const newOmsRaw = prompt(
-          "Edit Faulty Code added in OMS (enter: No / Yes / PO Basis):",
-          curOms
+        // show modal
+        editModalBackdrop.style.display = "flex";
+        editModalBackdrop.setAttribute("aria-hidden", "false");
+      }
+
+      function closeEditModal() {
+        editModalBackdrop.style.display = "none";
+        editModalBackdrop.setAttribute("aria-hidden", "true");
+      }
+
+      async function saveEditModal() {
+        const id = document.getElementById("edit_id").value;
+        const source = document.getElementById("edit_source").value;
+        if (!id || !source) {
+          showToast("Missing id/source");
+          return;
+        }
+
+        const newUsed = document.getElementById("edit_usedDetails").value || "";
+        const newFaulty = document.getElementById("edit_faulty").value || "";
+        const newOms = normalizeOms(
+          document.getElementById("edit_oms03").value || "No"
         );
-        if (newOmsRaw === null) return; // cancelled
-        const newOms = normalizeOms(newOmsRaw);
 
-        // optimistic update
-        it.usedDetails = newUsed;
-        it.faulty = newFaulty;
-        it.oms03 = newOms;
+        // optimistic update in memory
+        const arr = source === "HPCL" ? hpclData : jioData;
+        const it = arr.find((x) => String(x.id) === String(id));
+        if (it) {
+          it.usedDetails = newUsed;
+          it.faulty = newFaulty;
+          it.oms03 = newOms;
+        }
         combinedFiltered.forEach((r) => {
           if (String(r.id) === String(id)) {
             r.usedDetails = newUsed;
@@ -901,13 +1075,14 @@
           }
         });
         renderPage(combinedFiltered);
+        closeEditModal();
+        modalLoader.classList.remove("hidden");
 
         try {
           let url = "";
           let body = {};
           if (source === "HPCL") {
             url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
-            // backend expects activeSpare/faultySpare for HPCL — also send oms03
             body = {
               activeSpare: newUsed,
               faultySpare: newFaulty,
@@ -945,6 +1120,8 @@
           console.error("Edit update error", err);
           showToast("Save error");
           await reloadSources();
+        } finally {
+          modalLoader.classList.add("hidden");
         }
       }
 
@@ -1125,9 +1302,28 @@
             if (btn.classList && btn.classList.contains("edit-btn")) {
               const id = btn.dataset.id;
               const source = btn.dataset.source;
-              onEditRecord(id, source);
+              openEditModalById(id, source);
             }
           });
+
+        // modal buttons
+        document
+          .getElementById("editCancelBtn")
+          .addEventListener("click", (ev) => {
+            ev.preventDefault();
+            closeEditModal();
+          });
+        document
+          .getElementById("editSaveBtn")
+          .addEventListener("click", async (ev) => {
+            ev.preventDefault();
+            await saveEditModal();
+          });
+
+        // allow backdrop click to close
+        editModalBackdrop.addEventListener("click", (ev) => {
+          if (ev.target === editModalBackdrop) closeEditModal();
+        });
       }
 
       // init
