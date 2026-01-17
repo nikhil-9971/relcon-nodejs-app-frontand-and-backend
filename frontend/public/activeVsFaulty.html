@@ -457,6 +457,7 @@
 
     <script>
       // Improved UI version — functionality preserved (export + OMS + admin edit)
+      // Now Edit button also lets admin edit the "OMS (03)" column (No / Yes / PO Basis)
       // Endpoints used by this script:
       // GET  /getMergedStatusRecords         -> HPCL merged status records
       // GET  /jioBP/getAllJioBPStatus       -> Jio records
@@ -544,6 +545,15 @@
         }
       }
       const currentUser = getUserFromToken(token);
+
+      // normalize OMS value to one of allowed options if possible
+      function normalizeOms(val) {
+        const opts = ["No", "Yes", "PO Basis"];
+        if (!val && val !== "") return "No";
+        const v = String(val).trim();
+        const found = opts.find((o) => o.toLowerCase() === v.toLowerCase());
+        return found || v;
+      }
 
       // fetchers
       async function fetchHPCL() {
@@ -805,7 +815,7 @@
         const sel = e.target;
         if (!sel || !sel.classList || !sel.classList.contains("oms-select"))
           return;
-        const val = sel.value,
+        const val = normalizeOms(sel.value),
           id = sel.dataset.id,
           source = sel.dataset.source;
         if (!id) {
@@ -853,7 +863,7 @@
         }
       }
 
-      // Admin edit record (usedDetails & faulty) - delegated click handler
+      // Admin edit record (usedDetails, faulty & OMS) - delegated click handler
       async function onEditRecord(id, source) {
         if (!id) return;
         // find record
@@ -870,13 +880,24 @@
         const newFaulty = prompt("Edit Faulty details:", it.faulty || "");
         if (newFaulty === null) return; // cancelled
 
+        // Ask for OMS (03) value as well
+        const curOms = it.oms03 || "No";
+        const newOmsRaw = prompt(
+          "Edit Faulty Code added in OMS (enter: No / Yes / PO Basis):",
+          curOms
+        );
+        if (newOmsRaw === null) return; // cancelled
+        const newOms = normalizeOms(newOmsRaw);
+
         // optimistic update
         it.usedDetails = newUsed;
         it.faulty = newFaulty;
+        it.oms03 = newOms;
         combinedFiltered.forEach((r) => {
           if (String(r.id) === String(id)) {
             r.usedDetails = newUsed;
             r.faulty = newFaulty;
+            r.oms03 = newOms;
           }
         });
         renderPage(combinedFiltered);
@@ -886,10 +907,11 @@
           let body = {};
           if (source === "HPCL") {
             url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
-            // backend expects activeSpare/faultySpare for HPCL
+            // backend expects activeSpare/faultySpare for HPCL — also send oms03
             body = {
               activeSpare: newUsed,
               faultySpare: newFaulty,
+              oms03: newOms,
             };
           } else {
             url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(
@@ -898,6 +920,7 @@
             body = {
               usedMaterialDetails: newUsed,
               faultyMaterialDetails: newFaulty,
+              oms03: newOms,
             };
           }
 
