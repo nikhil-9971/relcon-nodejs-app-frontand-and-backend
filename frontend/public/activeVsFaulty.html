@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>Active vs Faulty — Report</title>
 
-    <!-- Poppins -->
+    <!-- Poppins font + SheetJS -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
@@ -16,11 +16,9 @@
       :root {
         --bg: #f5f7fa;
         --muted: #6b7280;
-        --card-radius: 12px;
         --accent: #06b6a4;
         --accent-700: #059669;
       }
-
       html,
       body {
         height: 100%;
@@ -32,13 +30,11 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
-
       .page {
         max-width: 1200px;
         margin: 18px auto;
         padding: 12px;
       }
-
       .topbar {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(6px);
@@ -53,19 +49,16 @@
         align-items: center;
         flex-wrap: wrap;
       }
-
       .title {
         display: flex;
         gap: 10px;
         align-items: center;
       }
-
       .title h1 {
         margin: 0;
         font-size: 18px;
         font-weight: 600;
       }
-
       .filters {
         display: flex;
         gap: 10px;
@@ -73,18 +66,15 @@
         flex: 1;
         flex-wrap: wrap;
       }
-
       .control {
         display: inline-flex;
         flex-direction: column;
         gap: 6px;
       }
-
       label.small {
         font-size: 12px;
         color: var(--muted);
       }
-
       input[type="date"],
       select,
       input[type="text"] {
@@ -96,12 +86,10 @@
         font-size: 13px;
         min-width: 160px;
       }
-
       input[type="text"].search {
         min-width: 300px;
         max-width: 520px;
       }
-
       .chips {
         display: flex;
         gap: 8px;
@@ -117,11 +105,10 @@
       }
       .chip.active {
         background: linear-gradient(90deg, var(--accent), var(--accent-700));
-        color: white;
+        color: #fff;
         border-color: rgba(5, 150, 105, 0.85);
         box-shadow: 0 6px 16px rgba(6, 182, 164, 0.12);
       }
-
       .card {
         margin-top: 14px;
         background: #fff;
@@ -130,7 +117,6 @@
         box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
         border: 1px solid rgba(2, 6, 23, 0.04);
       }
-
       .card h2 {
         font-size: 15px;
         margin: 0 0 4px 0;
@@ -141,26 +127,23 @@
         font-size: 12px;
         margin-bottom: 8px;
       }
-
       .table-wrapper {
         max-height: 64vh;
         overflow: auto;
         border-radius: 8px;
         border: 1px solid rgba(15, 23, 42, 0.06);
-        background: white;
+        background: #fff;
       }
-
       table {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
         border: 1px solid rgba(15, 23, 42, 0.06);
       }
-
       thead th {
         position: sticky;
         top: 0;
-        background: #ffffff;
+        background: #fff;
         color: #111827;
         font-weight: 700;
         text-align: left;
@@ -168,27 +151,15 @@
         border-bottom: 1px solid rgba(15, 23, 42, 0.06);
         z-index: 40;
       }
-
       tbody td {
         padding: 10px 12px;
         border-bottom: 1px solid rgba(15, 23, 42, 0.03);
         color: #111827;
       }
-
       thead th,
       tbody td {
         border-right: 1px solid rgba(15, 23, 42, 0.03);
       }
-      tbody tr:last-child td {
-        border-bottom: none;
-      }
-
-      .count-badge {
-        color: #374151;
-        font-weight: 700;
-        font-size: 13px;
-      }
-
       .paginator {
         display: flex;
         gap: 8px;
@@ -205,29 +176,26 @@
       }
       .paginator button.active {
         background: #2563eb;
-        color: white;
+        color: #fff;
         border-color: #2563eb;
       }
-
       .oms-select {
         padding: 6px 8px;
         border-radius: 6px;
         border: 1px solid rgba(15, 23, 42, 0.06);
-        background: white;
+        background: #fff;
       }
-
       .empty-row {
         text-align: center;
         color: var(--muted);
         padding: 18px;
       }
-
       .toast {
         position: fixed;
         right: 18px;
         bottom: 22px;
         background: rgba(17, 24, 39, 0.95);
-        color: white;
+        color: #fff;
         padding: 10px 14px;
         border-radius: 8px;
         z-index: 9999;
@@ -281,12 +249,10 @@
             <label class="small">From</label>
             <input id="fromDate" type="date" />
           </div>
-
           <div class="control">
             <label class="small">To</label>
             <input id="toDate" type="date" />
           </div>
-
           <div class="control">
             <label class="small">Source</label>
             <div class="chips" role="tablist" aria-label="Source selector">
@@ -297,14 +263,12 @@
               <div class="chip" data-source="jio" tabindex="0">Jio BP</div>
             </div>
           </div>
-
           <div class="control">
             <label class="small">Engineer</label>
             <select id="engineerFilter">
               <option value="ALL">All Engineers</option>
             </select>
           </div>
-
           <div class="control" style="flex: 1; min-width: 220px">
             <label class="small">Search</label>
             <input
@@ -317,28 +281,15 @@
         </div>
 
         <div class="actions" style="margin-left: auto">
-          <button
-            id="clearFilters"
-            class="chip"
-            type="button"
-            title="Clear filters"
-          >
-            ♻️ Clear
-          </button>
-          <!-- IMPORTANT: type="button" prevents accidental form submit / reload -->
+          <button id="clearFilters" class="chip" type="button">♻️ Clear</button>
           <button
             id="exportCombined"
             class="chip"
             type="button"
             style="
-              background: linear-gradient(
-                90deg,
-                var(--accent),
-                var(--accent-700)
-              );
+              background: linear-gradient(90deg, #06b6a4, #059669);
               color: #fff;
             "
-            title="Export all filtered rows (CSV)"
           >
             📤 Export Shown
           </button>
@@ -394,8 +345,8 @@
 
         <div class="paginator" id="paginator" aria-hidden="false"></div>
 
-        <div class="mt-3 flex justify-end gap-2">
-          <button id="exportDisplayed" type="button" class="chip">
+        <div style="margin-top: 12px; display: flex; justify-content: flex-end">
+          <button id="exportDisplayed" class="chip" type="button">
             Export Current Page
           </button>
         </div>
@@ -405,34 +356,14 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      // Implementation notes (what I changed / why)
-      // - export now uses CSV download logic (very reliable cross-browser)
-      // - export functions compute fresh filtered rows at export time so they never rely on stale arrays
-      // - export buttons explicitly set type="button" to avoid accidental form submit / reload that was clearing data
-      // - export shows helpful alerts and console logs when empty
-
-      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
-      const token = localStorage.getItem("token");
-      let hpclData = [];
-      let jioData = [];
-      let combinedFiltered = [];
-      let combinedDisplayed = [];
-      let currentPage = 1;
-      const rowsPerPage = 50;
-
-      // UI refs to be filled in init
-      let combinedBody,
-        combinedCountEl,
-        chips,
-        paginatorEl,
-        exportCombinedBtn,
-        exportDisplayedBtn,
-        engineerSelect,
-        searchInput,
-        fromDateEl,
-        toDateEl,
-        clearBtn,
-        toastEl;
+      // --- helpers (defined first) ---
+      function escapeHTML(s) {
+        if (s === null || s === undefined) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
 
       function escapeCSVCell(s) {
         if (s === null || s === undefined) return "";
@@ -455,13 +386,35 @@
         URL.revokeObjectURL(url);
       }
 
+      // --- page variables & refs ---
+      const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+      const token = localStorage.getItem("token");
+      let hpclData = [],
+        jioData = [],
+        combinedFiltered = [],
+        combinedDisplayed = [];
+      let currentPage = 1;
+      const rowsPerPage = 50;
+
+      let combinedBody,
+        combinedCountEl,
+        chips,
+        paginatorEl,
+        exportCombinedBtn,
+        exportDisplayedBtn,
+        engineerSelect,
+        searchInput,
+        fromDateEl,
+        toDateEl,
+        clearBtn,
+        toastEl;
+
       function formatDate(d) {
         if (!d) return "";
         const dt = new Date(d);
         if (isNaN(dt)) return d;
         return dt.toISOString().slice(0, 10);
       }
-
       function showToast(msg, timeout = 2000) {
         if (!toastEl) return;
         toastEl.textContent = msg;
@@ -514,7 +467,6 @@
           hpclData = [];
         }
       }
-
       async function fetchJIO() {
         try {
           const res = await fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
@@ -561,12 +513,11 @@
         if (uniq.includes(cur)) sel.value = cur;
       }
 
-      // build rows (filtered) - same logic used for display & export
+      // build rows (same for display & export)
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
-
         const addRow = (r) => {
           if (!r.isVerified) return;
           if ((r.active || "").toString().toLowerCase() !== "yes") return;
@@ -595,16 +546,14 @@
             oms03: r.oms03 || "No",
           });
         };
-
         if (sourceFilter === "both" || sourceFilter === "hpcl")
           hpclData.forEach(addRow);
         if (sourceFilter === "both" || sourceFilter === "jio")
           jioData.forEach(addRow);
-
         return rows;
       }
 
-      // render page & paginator
+      // render + pagination
       function renderPage(rows) {
         combinedFiltered = rows || [];
         const total = combinedFiltered.length;
@@ -614,13 +563,29 @@
         const pageData = combinedFiltered.slice(start, start + rowsPerPage);
         combinedDisplayed = pageData;
 
-        if (!pageData.length) {
+        if (!pageData || pageData.length === 0) {
           combinedBody.innerHTML =
             '<tr><td colspan="10" class="empty-row">No records found</td></tr>';
         } else {
           combinedBody.innerHTML = pageData
-            .map(
-              (r) => `<tr>
+            .map((r) => {
+              const isAdmin = currentUser.role === "admin";
+              const omsCell = isAdmin
+                ? `<select class="oms-select" data-id="${r.id}" data-source="${
+                    r.source
+                  }">
+                   ${["No", "Yes", "PO Basis"]
+                     .map(
+                       (opt) =>
+                         `<option value="${opt}" ${
+                           (r.oms03 || "No") === opt ? "selected" : ""
+                         }>${opt}</option>`
+                     )
+                     .join("")}
+                 </select>`
+                : `<div>${escapeHTML(r.oms03 || "No")}</div>`;
+
+              return `<tr>
               <td>${escapeHTML(r.source)}</td>
               <td>${escapeHTML(r.engineer)}</td>
               <td>${escapeHTML(r.roCode)}</td>
@@ -630,33 +595,14 @@
               <td>${escapeHTML(r.faulty)}</td>
               <td>${r.isVerified ? "✅ Verified" : "❌"}</td>
               <td>${escapeHTML(formatDate(r.date))}</td>
-              <td>${
-                currentUser.role === "admin"
-                  ? `<select class="oms-select" data-id="${
-                      r.id
-                    }" data-source="${r.source}">${["No", "Yes", "PO Basis"]
-                      .map(
-                        (opt) =>
-                          `<option ${
-                            (r.oms03 || "No") === opt ? "selected" : ""
-                          } value="${opt}">${opt}</option>`
-                      )
-                      .join("")}</select>`
-                  : escapeHTML(r.oms03 || "No")
-              }</td>
-            </tr>`
-            )
+              <td>${omsCell}</td>
+            </tr>`;
+            })
             .join("");
         }
 
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
-
-        // attach oms change listener (delegated)
-        document.querySelectorAll(".oms-select").forEach((sel) => {
-          sel.removeEventListener("change", onOmsChange);
-          sel.addEventListener("change", onOmsChange);
-        });
       }
 
       function renderPaginator(totalRows, totalPages) {
@@ -676,9 +622,8 @@
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-        if (endPage - startPage < maxButtons - 1) {
+        if (endPage - startPage < maxButtons - 1)
           startPage = Math.max(1, endPage - maxButtons + 1);
-        }
 
         for (let i = startPage; i <= endPage; i++) {
           const btn = document.createElement("button");
@@ -717,26 +662,29 @@
         paginatorEl.appendChild(summary);
       }
 
-      // OMS change handler - saves immediately
+      // OMS change handler (delegation)
       async function onOmsChange(e) {
         const sel = e.target;
+        if (!sel.classList.contains("oms-select")) return;
         const val = sel.value;
         const id = sel.dataset.id;
         const source = sel.dataset.source;
-        // optimistic update in memory
-        for (const arr of [hpclData, jioData]) {
-          const item = arr.find((it) => it.id === id);
-          if (item) item.oms03 = val;
-        }
+        // update local arrays (optimistic)
+        [hpclData, jioData].forEach((arr) => {
+          const it = arr.find((x) => x.id === id);
+          if (it) it.oms03 = val;
+        });
         combinedFiltered.forEach((r) => {
           if (r.id === id) r.oms03 = val;
         });
+        // no need to re-render full table here; keep optimistic and re-render page
         renderPage(combinedFiltered);
 
+        // call backend
         try {
           if (!id) throw new Error("Missing id");
-          let url = "";
-          let body = {};
+          let url = "",
+            body = {};
           if (source === "HPCL") {
             url = `${baseUrl}/updateStatus/${id}`;
             body = { oms03: val };
@@ -763,95 +711,86 @@
         }
       }
 
-      // ---------- EXPORTS ----------
-      // Build fresh filtered rows at export time (prevents stale/clearing issues)
-      function getCurrentFilterInputs() {
+      // --- Export functions (CSV fallback, builds fresh filtered rows) ---
+      function buildExportRows(rows) {
+        return rows.map((r) => ({
+          Source: r.source,
+          Engineer: r.engineer,
+          RO_Code: r.roCode,
+          RO_Name: r.roName,
+          Active: r.active,
+          UsedDetails: r.usedDetails,
+          Faulty: r.faulty,
+          Verified: r.isVerified ? "Yes" : "No",
+          Date: formatDate(r.date),
+          OMS_03: r.oms03 || "No",
+        }));
+      }
+
+      function exportRowsAsCSV(rows, filename) {
+        if (!rows || rows.length === 0) {
+          alert("No rows to export");
+          return;
+        }
+        const header = Object.keys(rows[0]);
+        const csv = [header.map((h) => escapeCSVCell(h)).join(",")]
+          .concat(
+            rows.map((r) => header.map((h) => escapeCSVCell(r[h])).join(","))
+          )
+          .join("\n");
+        downloadCSV(filename, csv);
+      }
+
+      function onExportAllFiltered() {
+        // recompute filters to ensure up-to-date
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
         const to = toDateEl.value || null;
         const eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
-        return { source, from, to, eng, q };
-      }
-
-      function exportRowsToCSV(rows, filename) {
+        const rows = buildCombinedRows(source, from, to, eng, q);
+        console.log("Exporting filtered rows count:", rows.length);
         if (!rows || rows.length === 0) {
           alert("No rows to export");
           return;
         }
-        // columns
-        const headers = [
-          "Source",
-          "Engineer",
-          "RO Code",
-          "RO Name",
-          "Active",
-          "UsedDetails",
-          "Faulty",
-          "Verified",
-          "Date",
-          "OMS_03",
-        ];
-        const lines = [headers.map(escapeCSVCell).join(",")];
-        rows.forEach((r) => {
-          const line = [
-            r.source,
-            r.engineer,
-            r.roCode,
-            r.roName,
-            r.active,
-            r.usedDetails,
-            r.faulty,
-            r.isVerified ? "Yes" : "No",
-            formatDate(r.date),
-            r.oms03 || "No",
-          ]
-            .map(escapeCSVCell)
-            .join(",");
-          lines.push(line);
-        });
-        const csv = lines.join("\n");
-        downloadCSV(filename, csv);
-      }
-
-      function exportAllFilteredCSV() {
-        // compute fresh filtered rows to avoid side-effects
-        const { source, from, to, eng, q } = getCurrentFilterInputs();
-        const rows = buildCombinedRows(source, from, to, eng, q);
-        console.log("Export all filtered count:", rows.length);
-        if (!rows.length) {
-          alert("No rows to export");
-          return;
-        }
-        exportRowsToCSV(
-          rows,
+        const out = buildExportRows(rows);
+        exportRowsAsCSV(
+          out,
           `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`
         );
       }
 
-      function exportCurrentPageCSV() {
+      function onExportCurrentPage() {
         if (!combinedDisplayed || combinedDisplayed.length === 0) {
           alert("No rows to export");
           return;
         }
-        exportRowsToCSV(
-          combinedDisplayed,
+        const out = buildExportRows(combinedDisplayed);
+        exportRowsAsCSV(
+          out,
           `ActiveVsFaulty_Page_${currentPage}_${new Date()
             .toISOString()
             .slice(0, 10)}.csv`
         );
       }
 
-      // ---------- UI wiring ----------
+      // --- UI wiring & filters ---
       function applyFiltersAndRender() {
-        const { source, from, to, eng, q } = getCurrentFilterInputs();
+        const activeChip = document.querySelector(".chip.active");
+        const source = activeChip ? activeChip.dataset.source : "both";
+        const from = fromDateEl.value || null;
+        const to = toDateEl.value || null;
+        const eng = engineerSelect.value || "ALL";
+        const q = (searchInput.value || "").toLowerCase().trim();
         const rows = buildCombinedRows(source, from, to, eng, q);
         currentPage = 1;
         renderPage(rows);
       }
 
       function wireControls() {
+        // chips
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
@@ -866,10 +805,11 @@
           });
         });
 
-        searchInput.addEventListener(
-          "input",
-          debounce(() => applyFiltersAndRender(), 220)
-        );
+        // inputs
+        searchInput.addEventListener("input", () => {
+          clearTimeout(window._searchTimer);
+          window._searchTimer = setTimeout(() => applyFiltersAndRender(), 200);
+        });
         engineerSelect.addEventListener("change", applyFiltersAndRender);
         fromDateEl.addEventListener("change", applyFiltersAndRender);
         toDateEl.addEventListener("change", applyFiltersAndRender);
@@ -886,28 +826,17 @@
           applyFiltersAndRender();
         });
 
-        exportCombinedBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          // ensure controls don't trigger any default navigation
-          exportAllFilteredCSV();
-        });
-        exportDisplayedBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          exportCurrentPageCSV();
-        });
+        // export buttons
+        exportCombinedBtn.addEventListener("click", onExportAllFiltered);
+        exportDisplayedBtn.addEventListener("click", onExportCurrentPage);
 
-        // Delegated change listener for OMS selects remains attached during render via onOmsChange
+        // delegate OMS select change
+        document
+          .querySelector(".table-wrapper")
+          .addEventListener("change", onOmsChange);
       }
 
-      function debounce(fn, t = 180) {
-        let timer;
-        return (...args) => {
-          clearTimeout(timer);
-          timer = setTimeout(() => fn(...args), t);
-        };
-      }
-
-      // Initialization
+      // --- init ---
       (async function init() {
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
@@ -922,7 +851,7 @@
         clearBtn = document.getElementById("clearFilters");
         toastEl = document.getElementById("toast");
 
-        // fetch in parallel and render
+        // fetch in parallel then populate UI
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         wireControls();
