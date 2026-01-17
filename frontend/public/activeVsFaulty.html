@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>Active vs Faulty — Report</title>
 
-    <!-- Poppins font + SheetJS -->
+    <!-- Poppins + SheetJS -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
@@ -27,8 +27,6 @@
           "Helvetica Neue", Arial, sans-serif;
         background: var(--bg);
         color: #0b1220;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
       }
       .page {
         max-width: 1200px;
@@ -37,7 +35,6 @@
       }
       .topbar {
         background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(6px);
         border-radius: 10px;
         padding: 12px;
         box-shadow: 0 6px 18px rgba(3, 10, 24, 0.06);
@@ -109,6 +106,7 @@
         border-color: rgba(5, 150, 105, 0.85);
         box-shadow: 0 6px 16px rgba(6, 182, 164, 0.12);
       }
+
       .card {
         margin-top: 14px;
         background: #fff;
@@ -127,6 +125,7 @@
         font-size: 12px;
         margin-bottom: 8px;
       }
+
       .table-wrapper {
         max-height: 64vh;
         overflow: auto;
@@ -160,6 +159,20 @@
       tbody td {
         border-right: 1px solid rgba(15, 23, 42, 0.03);
       }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .count-badge {
+        color: #374151;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
       .paginator {
         display: flex;
         gap: 8px;
@@ -176,14 +189,15 @@
       }
       .paginator button.active {
         background: #2563eb;
-        color: #fff;
+        color: white;
         border-color: #2563eb;
       }
+
       .oms-select {
         padding: 6px 8px;
         border-radius: 6px;
         border: 1px solid rgba(15, 23, 42, 0.06);
-        background: #fff;
+        background: white;
       }
       .empty-row {
         text-align: center;
@@ -195,7 +209,7 @@
         right: 18px;
         bottom: 22px;
         background: rgba(17, 24, 39, 0.95);
-        color: #fff;
+        color: white;
         padding: 10px 14px;
         border-radius: 8px;
         z-index: 9999;
@@ -249,10 +263,12 @@
             <label class="small">From</label>
             <input id="fromDate" type="date" />
           </div>
+
           <div class="control">
             <label class="small">To</label>
             <input id="toDate" type="date" />
           </div>
+
           <div class="control">
             <label class="small">Source</label>
             <div class="chips" role="tablist" aria-label="Source selector">
@@ -263,12 +279,14 @@
               <div class="chip" data-source="jio" tabindex="0">Jio BP</div>
             </div>
           </div>
+
           <div class="control">
             <label class="small">Engineer</label>
             <select id="engineerFilter">
               <option value="ALL">All Engineers</option>
             </select>
           </div>
+
           <div class="control" style="flex: 1; min-width: 220px">
             <label class="small">Search</label>
             <input
@@ -287,7 +305,11 @@
             class="chip"
             type="button"
             style="
-              background: linear-gradient(90deg, #06b6a4, #059669);
+              background: linear-gradient(
+                90deg,
+                var(--accent),
+                var(--accent-700)
+              );
               color: #fff;
             "
           >
@@ -346,7 +368,7 @@
         <div class="paginator" id="paginator" aria-hidden="false"></div>
 
         <div style="margin-top: 12px; display: flex; justify-content: flex-end">
-          <button id="exportDisplayed" class="chip" type="button">
+          <button id="exportDisplayed" type="button" class="chip">
             Export Current Page
           </button>
         </div>
@@ -356,46 +378,26 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      // --- helpers (defined first) ---
-      function escapeHTML(s) {
-        if (s === null || s === undefined) return "";
-        return String(s)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;");
-      }
+      /*
+        Complete ready-to-paste activeVsFaulty.html
+        - Export (CSV) logic intentionally built to match bpclVisitReport style.
+        - Export buttons compute fresh filtered rows at export time so they never rely on stale globals.
+        - Buttons set type="button" (prevents accidental form submit / page reload).
+        - Defensive checks & helpful console logs when empty.
+      */
 
-      function escapeCSVCell(s) {
-        if (s === null || s === undefined) return "";
-        const str = String(s);
-        if (str.includes('"') || str.includes(",") || str.includes("\n")) {
-          return '"' + str.replaceAll('"', '""') + '"';
-        }
-        return str;
-      }
-
-      function downloadCSV(filename, csv) {
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }
-
-      // --- page variables & refs ---
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
+
+      // data stores
       let hpclData = [],
-        jioData = [],
-        combinedFiltered = [],
+        jioData = [];
+      let combinedFiltered = [],
         combinedDisplayed = [];
       let currentPage = 1;
       const rowsPerPage = 50;
 
+      // UI refs (populated in init)
       let combinedBody,
         combinedCountEl,
         chips,
@@ -409,6 +411,33 @@
         clearBtn,
         toastEl;
 
+      // helpers
+      function escapeHTML(s) {
+        if (s === null || s === undefined) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+      function escapeCSVCell(s) {
+        if (s === null || s === undefined) return "";
+        const str = String(s);
+        if (str.includes('"') || str.includes(",") || str.includes("\n")) {
+          return '"' + str.replaceAll('"', '""') + '"';
+        }
+        return str;
+      }
+      function downloadCSV(filename, csv) {
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
       function formatDate(d) {
         if (!d) return "";
         const dt = new Date(d);
@@ -467,6 +496,7 @@
           hpclData = [];
         }
       }
+
       async function fetchJIO() {
         try {
           const res = await fetch(`${baseUrl}/jioBP/getAllJioBPStatus`, {
@@ -513,7 +543,7 @@
         if (uniq.includes(cur)) sel.value = cur;
       }
 
-      // build rows (same for display & export)
+      // buildCombinedRows used for both rendering and exporting
       function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
@@ -553,7 +583,7 @@
         return rows;
       }
 
-      // render + pagination
+      // render + paginator
       function renderPage(rows) {
         combinedFiltered = rows || [];
         const total = combinedFiltered.length;
@@ -573,18 +603,15 @@
               const omsCell = isAdmin
                 ? `<select class="oms-select" data-id="${r.id}" data-source="${
                     r.source
-                  }">
-                   ${["No", "Yes", "PO Basis"]
-                     .map(
-                       (opt) =>
-                         `<option value="${opt}" ${
-                           (r.oms03 || "No") === opt ? "selected" : ""
-                         }>${opt}</option>`
-                     )
-                     .join("")}
-                 </select>`
+                  }">${["No", "Yes", "PO Basis"]
+                    .map(
+                      (opt) =>
+                        `<option value="${opt}" ${
+                          (r.oms03 || "No") === opt ? "selected" : ""
+                        }>${opt}</option>`
+                    )
+                    .join("")}</select>`
                 : `<div>${escapeHTML(r.oms03 || "No")}</div>`;
-
               return `<tr>
               <td>${escapeHTML(r.source)}</td>
               <td>${escapeHTML(r.engineer)}</td>
@@ -600,9 +627,14 @@
             })
             .join("");
         }
-
         combinedCountEl.textContent = `${total} rows`;
         renderPaginator(total, totalPages);
+
+        // wire OMS change handlers
+        document.querySelectorAll(".oms-select").forEach((sel) => {
+          sel.removeEventListener("change", onOmsChange);
+          sel.addEventListener("change", onOmsChange);
+        });
       }
 
       function renderPaginator(totalRows, totalPages) {
@@ -662,14 +694,13 @@
         paginatorEl.appendChild(summary);
       }
 
-      // OMS change handler (delegation)
+      // OMS change handler - saves to backend
       async function onOmsChange(e) {
         const sel = e.target;
-        if (!sel.classList.contains("oms-select")) return;
         const val = sel.value;
         const id = sel.dataset.id;
-        const source = sel.dataset.source;
-        // update local arrays (optimistic)
+        const source = sel.dataset.source; // "HPCL" or "JIO"
+        // optimistic UI update
         [hpclData, jioData].forEach((arr) => {
           const it = arr.find((x) => x.id === id);
           if (it) it.oms03 = val;
@@ -677,10 +708,8 @@
         combinedFiltered.forEach((r) => {
           if (r.id === id) r.oms03 = val;
         });
-        // no need to re-render full table here; keep optimistic and re-render page
         renderPage(combinedFiltered);
 
-        // call backend
         try {
           if (!id) throw new Error("Missing id");
           let url = "",
@@ -704,93 +733,111 @@
             const txt = await res.text().catch(() => "");
             console.error("OMS save failed", res.status, txt);
             showToast("Failed to save OMS value");
-          } else showToast("Saved");
+          } else {
+            showToast("Saved");
+          }
         } catch (err) {
           console.error("OMS update error", err);
           showToast("Save error");
         }
       }
 
-      // --- Export functions (CSV fallback, builds fresh filtered rows) ---
-      function buildExportRows(rows) {
-        return rows.map((r) => ({
-          Source: r.source,
-          Engineer: r.engineer,
-          RO_Code: r.roCode,
-          RO_Name: r.roName,
-          Active: r.active,
-          UsedDetails: r.usedDetails,
-          Faulty: r.faulty,
-          Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-          OMS_03: r.oms03 || "No",
-        }));
-      }
-
-      function exportRowsAsCSV(rows, filename) {
-        if (!rows || rows.length === 0) {
-          alert("No rows to export");
-          return;
-        }
-        const header = Object.keys(rows[0]);
-        const csv = [header.map((h) => escapeCSVCell(h)).join(",")]
-          .concat(
-            rows.map((r) => header.map((h) => escapeCSVCell(r[h])).join(","))
-          )
-          .join("\n");
-        downloadCSV(filename, csv);
-      }
-
-      function onExportAllFiltered() {
-        // recompute filters to ensure up-to-date
+      // --- export functions (CSV) ---
+      // Build fresh filtered rows at export time to avoid stale/clearing issues
+      function readFilters() {
         const activeChip = document.querySelector(".chip.active");
         const source = activeChip ? activeChip.dataset.source : "both";
         const from = fromDateEl.value || null;
         const to = toDateEl.value || null;
         const eng = engineerSelect.value || "ALL";
         const q = (searchInput.value || "").toLowerCase().trim();
-        const rows = buildCombinedRows(source, from, to, eng, q);
-        console.log("Exporting filtered rows count:", rows.length);
+        return { source, from, to, eng, q };
+      }
+
+      function exportRowsAsCSV(rows, filename) {
+        if (!rows || rows.length === 0) {
+          alert("No rows to export");
+          console.warn("Export attempted with 0 rows");
+          return;
+        }
+        const header = [
+          "Source",
+          "Engineer",
+          "RO_Code",
+          "RO_Name",
+          "Active",
+          "UsedDetails",
+          "Faulty",
+          "Verified",
+          "Date",
+          "OMS_03",
+        ];
+        const lines = [header.map(escapeCSVCell).join(",")];
+        rows.forEach((r, idx) => {
+          const line = [
+            r.source,
+            r.engineer,
+            r.roCode,
+            r.roName,
+            r.active,
+            r.usedDetails,
+            r.faulty,
+            r.isVerified ? "Yes" : "No",
+            formatDate(r.date),
+            r.oms03 || "No",
+          ]
+            .map(escapeCSVCell)
+            .join(",");
+          lines.push(line);
+        });
+        const csv = lines.join("\n");
+        downloadCSV(
+          filename ||
+            `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`,
+          csv
+        );
+      }
+
+      function exportAllFiltered() {
+        const f = readFilters();
+        const rows = buildCombinedRows(f.source, f.from, f.to, f.eng, f.q);
+        console.log("Exporting all filtered rows:", rows.length);
         if (!rows || rows.length === 0) {
           alert("No rows to export");
           return;
         }
-        const out = buildExportRows(rows);
         exportRowsAsCSV(
-          out,
-          `ActiveVsFaulty_${new Date().toISOString().slice(0, 10)}.csv`
+          rows,
+          `ActiveVsFaulty_Filtered_${new Date().toISOString().slice(0, 10)}.csv`
         );
       }
 
-      function onExportCurrentPage() {
+      function exportCurrentPage() {
+        // combinedDisplayed is kept current by renderPage
+        console.log("Exporting current page rows:", combinedDisplayed.length);
         if (!combinedDisplayed || combinedDisplayed.length === 0) {
           alert("No rows to export");
           return;
         }
-        const out = buildExportRows(combinedDisplayed);
         exportRowsAsCSV(
-          out,
+          combinedDisplayed,
           `ActiveVsFaulty_Page_${currentPage}_${new Date()
             .toISOString()
             .slice(0, 10)}.csv`
         );
       }
 
-      // --- UI wiring & filters ---
+      // apply filters & render
       function applyFiltersAndRender() {
-        const activeChip = document.querySelector(".chip.active");
-        const source = activeChip ? activeChip.dataset.source : "both";
-        const from = fromDateEl.value || null;
-        const to = toDateEl.value || null;
-        const eng = engineerSelect.value || "ALL";
-        const q = (searchInput.value || "").toLowerCase().trim();
+        const { source, from, to, eng, q } = readFilters();
         const rows = buildCombinedRows(source, from, to, eng, q);
+        // reset to first page when filters change
         currentPage = 1;
         renderPage(rows);
       }
 
+      // wiring & init
       function wireControls() {
-        // chips
         chips.forEach((c) => {
           c.addEventListener("click", () => {
             chips.forEach((ch) => ch.classList.remove("active"));
@@ -805,14 +852,14 @@
           });
         });
 
-        // inputs
         searchInput.addEventListener("input", () => {
           clearTimeout(window._searchTimer);
-          window._searchTimer = setTimeout(() => applyFiltersAndRender(), 200);
+          window._searchTimer = setTimeout(applyFiltersAndRender, 180);
         });
         engineerSelect.addEventListener("change", applyFiltersAndRender);
         fromDateEl.addEventListener("change", applyFiltersAndRender);
         toDateEl.addEventListener("change", applyFiltersAndRender);
+
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
           toDateEl.value = "";
@@ -826,18 +873,13 @@
           applyFiltersAndRender();
         });
 
-        // export buttons
-        exportCombinedBtn.addEventListener("click", onExportAllFiltered);
-        exportDisplayedBtn.addEventListener("click", onExportCurrentPage);
-
-        // delegate OMS select change
-        document
-          .querySelector(".table-wrapper")
-          .addEventListener("change", onOmsChange);
+        exportCombinedBtn.addEventListener("click", exportAllFiltered);
+        exportDisplayedBtn.addEventListener("click", exportCurrentPage);
       }
 
-      // --- init ---
+      // init: fetch data then populate UI
       (async function init() {
+        // grab refs
         combinedBody = document.getElementById("combinedBody");
         combinedCountEl = document.getElementById("combinedCount");
         chips = Array.from(document.querySelectorAll(".chip"));
@@ -851,7 +893,7 @@
         clearBtn = document.getElementById("clearFilters");
         toastEl = document.getElementById("toast");
 
-        // fetch in parallel then populate UI
+        // parallel fetch
         await Promise.all([fetchHPCL(), fetchJIO()]);
         populateEngineerSelect();
         wireControls();
