@@ -832,12 +832,12 @@
           Engineer: r.engineer,
           RO_Code: r.roCode,
           RO_Name: r.roName,
-          Active: r.active,
-          UsedDetails: r.usedDetails,
-          Faulty: r.faulty,
+          Active_Material_Used_in_RO: r.active,
+          Used_Material_Details: r.usedDetails,
+          Faulty_Material_Details: r.faulty,
           Verified: r.isVerified ? "Yes" : "No",
-          Date: formatDate(r.date),
-          OMS_03: r.oms03 || "No",
+          Visit_Date: formatDate(r.date),
+          Faulty_Code_added_in_OMS_portal: r.oms03 || "No",
         }));
       }
 
