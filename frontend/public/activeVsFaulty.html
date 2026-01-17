@@ -527,6 +527,14 @@
           </div>
 
           <div>
+            <label class="small">Active</label>
+            <select name="active" id="edit_active" class="oms-select">
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          <div>
             <label class="small">Used / Details</label>
             <textarea
               name="usedDetails"
@@ -542,15 +550,6 @@
               id="edit_faulty"
               placeholder="Faulty material details"
             ></textarea>
-          </div>
-
-          <div>
-            <label class="small">Faulty Code added in OMS</label>
-            <select name="oms03" id="edit_oms03" class="oms-select">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-              <option value="PO Basis">PO Basis</option>
-            </select>
           </div>
         </form>
 
@@ -696,15 +695,6 @@
         }
       }
       const currentUser = getUserFromToken(token);
-
-      // normalize OMS value to one of allowed options if possible
-      function normalizeOms(val) {
-        const opts = ["No", "Yes", "PO Basis"];
-        if (!val && val !== "") return "No";
-        const v = String(val).trim();
-        const found = opts.find((o) => o.toLowerCase() === v.toLowerCase());
-        return found || v;
-      }
 
       // fetchers
       async function fetchHPCL() {
@@ -966,9 +956,9 @@
         const sel = e.target;
         if (!sel || !sel.classList || !sel.classList.contains("oms-select"))
           return;
-        const val = normalizeOms(sel.value),
-          id = sel.dataset.id,
-          source = sel.dataset.source;
+        const val = sel.value || "No";
+        const id = sel.dataset.id;
+        const source = sel.dataset.source;
         if (!id) {
           showToast("Missing id - cannot save");
           return;
@@ -1014,7 +1004,7 @@
         }
       }
 
-      // ---- Modal-based edit (consistent with bpclStatusreport.html) ----
+      // ---- Modal-based edit (consistent with bpclStatusreport.html), updated: modal edits Active instead of OMS ----
       function openEditModalById(id, source) {
         if (!id) return;
         const arr = source === "HPCL" ? hpclData : jioData;
@@ -1033,7 +1023,8 @@
         document.getElementById("edit_usedDetails").value =
           it.usedDetails || "";
         document.getElementById("edit_faulty").value = it.faulty || "";
-        document.getElementById("edit_oms03").value = it.oms03 || "No";
+        // IMPORTANT: show Active (Yes/No) here instead of OMS
+        document.getElementById("edit_active").value = it.active || "Yes";
 
         // show modal
         editModalBackdrop.style.display = "flex";
@@ -1053,11 +1044,11 @@
           return;
         }
 
+        const newActive = (
+          document.getElementById("edit_active").value || "No"
+        ).toString();
         const newUsed = document.getElementById("edit_usedDetails").value || "";
         const newFaulty = document.getElementById("edit_faulty").value || "";
-        const newOms = normalizeOms(
-          document.getElementById("edit_oms03").value || "No"
-        );
 
         // optimistic update in memory
         const arr = source === "HPCL" ? hpclData : jioData;
@@ -1065,13 +1056,13 @@
         if (it) {
           it.usedDetails = newUsed;
           it.faulty = newFaulty;
-          it.oms03 = newOms;
+          it.active = newActive;
         }
         combinedFiltered.forEach((r) => {
           if (String(r.id) === String(id)) {
             r.usedDetails = newUsed;
             r.faulty = newFaulty;
-            r.oms03 = newOms;
+            r.active = newActive;
           }
         });
         renderPage(combinedFiltered);
@@ -1083,19 +1074,21 @@
           let body = {};
           if (source === "HPCL") {
             url = `${baseUrl}/updateStatus/${encodeURIComponent(id)}`;
+            // For HPCL: spareUsed -> active field, activeSpare -> usedDetails, faultySpare -> faulty
             body = {
+              spareUsed: newActive,
               activeSpare: newUsed,
               faultySpare: newFaulty,
-              oms03: newOms,
             };
           } else {
             url = `${baseUrl}/jioBP/updateJioBPStatus/${encodeURIComponent(
               id
             )}`;
+            // For JIO: activeMaterialUsed -> active, usedMaterialDetails -> usedDetails, faultyMaterialDetails -> faulty
             body = {
+              activeMaterialUsed: newActive,
               usedMaterialDetails: newUsed,
               faultyMaterialDetails: newFaulty,
-              oms03: newOms,
             };
           }
 
