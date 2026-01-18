@@ -410,6 +410,16 @@
               </select>
             </div>
 
+            <div class="control">
+              <label class="small">Faulty Code in OMS</label>
+              <select id="omsFilter">
+                <option value="ALL">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="PO Basis">PO Basis</option>
+              </select>
+            </div>
+
             <div class="control" style="grid-column: span 2">
               <label class="small">Search</label>
               <input
@@ -437,7 +447,7 @@
                 type="button"
                 title="Export all filtered rows"
               >
-                📤 Export Shown
+                📤 Export
               </button>
             </div>
           </div>
@@ -655,6 +665,7 @@
         exportCombinedBtn,
         exportDisplayedBtn,
         engineerSelect,
+        omsFilter,
         searchInput,
         fromDateEl,
         toDateEl,
@@ -822,7 +833,14 @@
       }
 
       // build rows applying Verified & Active=yes rules + filters
-      function buildCombinedRows(sourceFilter, fromDate, toDate, eng, q) {
+      function buildCombinedRows(
+        sourceFilter,
+        fromDate,
+        toDate,
+        eng,
+        q,
+        omsVal,
+      ) {
         const rows = [];
         const f = fromDate ? new Date(fromDate) : null;
         const t = toDate ? new Date(toDate) : null;
@@ -839,6 +857,8 @@
         const addRow = (r) => {
           if (!r.isVerified) return;
           if ((r.active || "").toString().toLowerCase() !== "yes") return;
+          if (omsVal && omsVal !== "ALL" && (r.oms03 || "No") !== omsVal)
+            return;
           if (eng && eng !== "ALL" && r.engineer !== eng) return;
           if (f || t) {
             const d = r.date ? new Date(r.date) : null;
@@ -1215,7 +1235,8 @@
         )
           eng = currentUser.username;
 
-        const rows = buildCombinedRows(source, from, to, eng, q);
+        const omsVal = omsFilter ? omsFilter.value : "ALL";
+        const rows = buildCombinedRows(source, from, to, eng, q, omsVal);
         if (!rows || rows.length === 0) {
           alert("No rows to export");
           return;
@@ -1262,7 +1283,8 @@
         }
 
         const q = (searchInput.value || "").toLowerCase().trim();
-        const rows = buildCombinedRows(source, from, to, eng, q);
+        const omsVal = omsFilter ? omsFilter.value : "ALL";
+        const rows = buildCombinedRows(source, from, to, eng, q, omsVal);
         currentPage = 1;
         renderPage(rows);
       }
@@ -1289,12 +1311,14 @@
           window._searchTimer = setTimeout(() => applyFiltersAndRender(), 200);
         });
         engineerSelect.addEventListener("change", applyFiltersAndRender);
+        omsFilter.addEventListener("change", applyFiltersAndRender);
         fromDateEl.addEventListener("change", applyFiltersAndRender);
         toDateEl.addEventListener("change", applyFiltersAndRender);
         clearBtn.addEventListener("click", () => {
           fromDateEl.value = "";
           toDateEl.value = "";
           searchInput.value = "";
+          if (omsFilter) omsFilter.value = "ALL";
           chips.forEach((ch) => ch.classList.remove("active"));
           document
             .querySelector(".chip[data-source='both']")
@@ -1370,6 +1394,7 @@
         exportCombinedBtn = document.getElementById("exportCombined");
         exportDisplayedBtn = document.getElementById("exportDisplayed");
         engineerSelect = document.getElementById("engineerFilter");
+        omsFilter = document.getElementById("omsFilter"); // ✅ ADD
         searchInput = document.getElementById("globalSearch");
         fromDateEl = document.getElementById("fromDate");
         toDateEl = document.getElementById("toDate");
