@@ -2183,36 +2183,64 @@
         box.style.display = box.style.display === "flex" ? "none" : "flex";
       }
 
-      function sendAIMessage() {
+      async function sendAIMessage() {
         const input = document.getElementById("aiInput");
         const msg = input.value.trim();
         if (!msg) return;
 
         const messages = document.getElementById("aiMessages");
 
-        // User message
+        // 👤 USER MESSAGE
         messages.innerHTML += `
-      <div style="text-align:right;margin-bottom:6px;">
-        <span style="background:#dcfce7;padding:6px 10px;border-radius:8px;display:inline-block;">
-          ${msg}
-        </span>
-      </div>
-    `;
-
+    <div style="text-align:right;margin-bottom:6px;">
+      <span style="background:#dcfce7;padding:6px 10px;border-radius:8px;display:inline-block;">
+        ${msg}
+      </span>
+    </div>
+  `;
         input.value = "";
         messages.scrollTop = messages.scrollHeight;
 
-        // Fake AI response (backend later)
-        setTimeout(() => {
+        // 🤖 THINKING
+        messages.innerHTML += `
+    <div id="aiThinking" style="margin-bottom:6px;">
+      <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;">
+        🤖 Thinking...
+      </span>
+    </div>
+  `;
+
+        try {
+          const res = await fetch("/ai/ask", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt: msg,
+              user: {
+                engineerName: "Nikhil Trivedi", // 🔁 login user se dynamic kar sakte ho
+              },
+            }),
+          });
+
+          const data = await res.json();
+          document.getElementById("aiThinking").remove();
+
           messages.innerHTML += `
-        <div style="margin-bottom:6px;">
-          <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;display:inline-block;">
-            🤖 I received: "${msg}"
-          </span>
-        </div>
-      `;
+      <div style="margin-bottom:6px;">
+        <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;display:inline-block;">
+          🤖 ${data.answer}
+        </span>
+      </div>
+    `;
           messages.scrollTop = messages.scrollHeight;
-        }, 800);
+        } catch (err) {
+          document.getElementById("aiThinking").remove();
+          messages.innerHTML += `
+      <div style="color:red;">❌ AI Server Error</div>
+    `;
+        }
       }
     </script>
   </body>
