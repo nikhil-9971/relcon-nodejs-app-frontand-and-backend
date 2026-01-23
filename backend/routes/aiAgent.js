@@ -3,7 +3,6 @@ const router = express.Router();
 const OpenAI = require("openai").default;
 
 const DailyPlan = require("../models/DailyPlan");
-const Status = require("../models/Status");
 const Task = require("../models/Task");
 const BPCLStatus = require("../models/BPCLStatus");
 
@@ -14,50 +13,64 @@ const openai = new OpenAI({
 router.post("/ask", async (req, res) => {
   try {
     const { prompt, user } = req.body;
-
     let context = "";
 
-    // 🔍 TODAY VISITS
+    /* =========================
+       TODAY VISITS
+    ========================= */
     if (/today|aaj/i.test(prompt)) {
       const today = new Date().toISOString().slice(0, 10);
-      const count = await DailyPlan.countDocuments({ visitDate: today });
-      context = `Today's total visits: ${count}`;
-    }
+      const count = await DailyPlan.countDocuments({ date: today });
 
-    // 🔍 PENDING TASK
-    else if (/pending.*task/i.test(prompt)) {
+      context = `Total visits today: ${count}`;
+    } else if (/pending.*task/i.test(prompt)) {
+
+    /* =========================
+       PENDING TASKS
+    ========================= */
       const pending = await Task.countDocuments({ status: "Pending" });
-      context = `Pending tasks: ${pending}`;
-    }
+      context = `Pending tasks count: ${pending}`;
+    } else if (/engineer|mera/i.test(prompt) && user?.engineerName) {
 
-    // 🔍 ENGINEER DATA
-    else if (/engineer|mera/i.test(prompt) && user?.engineerName) {
-      const data = await DailyPlan.find({ engineerName: user.engineerName })
-        .sort({ visitDate: -1 })
+    /* =========================
+       ENGINEER VISITS
+    ========================= */
+      const plans = await DailyPlan.find({
+        engineer: user.engineerName,
+      })
+        .sort({ _id: -1 })
         .limit(5);
 
-      context = data
-        .map((d) => `Site: ${d.siteName}, Date: ${d.visitDate}`)
-        .join("\n");
-    }
+      context =
+        plans.length > 0
+          ? plans
+              .map((p) => `RO: ${p.roName || "NA"} | Date: ${p.date || "NA"}`)
+              .join("\n")
+          : "No recent visits found for this engineer.";
+    } else if (/bpcl/i.test(prompt)) {
 
-    // 🔍 BPCL FAULT
-    else if (/bpcl/i.test(prompt)) {
-      const bpclPending = await BPCLStatus.countDocuments({
-        status: "Pending",
+    /* =========================
+       BPCL STATUS
+    ========================= */
+      const total = await BPCLStatus.countDocuments();
+      const verified = await BPCLStatus.countDocuments({
+        isVerified: true,
       });
-      context = `BPCL pending faults: ${bpclPending}`;
+
+      context = `BPCL Status Records: ${total}, Verified: ${verified}`;
     } else {
-      context = "No matching data found";
+      context = "No matching data found in system.";
     }
 
-    // 🧠 SYSTEM PROMPT
+    /* =========================
+       AI RESPONSE
+    ========================= */
     const systemPrompt = `
 You are RELCON AI Assistant.
 Rules:
-- Answer only using given data
-- No guessing
-- Simple English or Hinglish
+- Answer ONLY using given data
+- No assumptions
+- Simple Hinglish / English
 Data:
 ${context}
 `;
@@ -70,10 +83,16 @@ ${context}
       ],
     });
 
-    res.json({ answer: response.choices[0].message.content });
+    const answer =
+      response?.choices?.[0]?.message?.content ||
+      "AI could not generate a response.";
+
+    res.json({ answer });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "AI processing failed" });
+    console.error("AI ERROR:", err.message);
+    res.json({
+      answer: "⚠️ AI backend error. Please try again.",
+    });
   }
 });
 
