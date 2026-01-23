@@ -76,3 +76,5 @@ ${context}
     res.status(500).json({ error: "AI processing failed" });
   }
 });
+
+module.exports = router;
