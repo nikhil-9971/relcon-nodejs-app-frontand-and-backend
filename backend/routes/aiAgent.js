@@ -1,64 +1,70 @@
 const express = require("express");
 const router = express.Router();
 
-const DailyPlan = require("../models/DailyPlan");
-const Task = require("../models/Task");
-const Status = require("../models/Status");
+const DailyPlan = require("./models/DailyPlan");
+const Task = require("./models/Task");
+const Status = require("./models/Status");
+const BPCLStatus = require("./models/BPCLStatus");
+
+// helper – today date
+function todayDate() {
+  return new Date().toISOString().split("T")[0];
+}
 
 router.post("/ask", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { question } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ reply: "Message required" });
+    if (!question) {
+      return res.status(400).json({ reply: "Question missing" });
     }
 
-    const msg = message.toLowerCase();
+    const q = question.toLowerCase();
+    let reply = "Sorry, samajh nahi aaya 😐";
 
-    // 🔹 VISIT COUNT
-    if (msg.includes("visit")) {
-      const today = new Date().toISOString().split("T")[0];
+    /* ---------------- VISIT COUNT ---------------- */
+    if (q.includes("visit")) {
+      const today = todayDate();
 
       const count = await DailyPlan.countDocuments({
         scheduleDate: today,
       });
 
-      return res.json({
-        reply: `Aaj total ${count} visit plan hue hain.`,
-      });
-    }
+      reply = `📍 Aaj total ${count} visits planned hain.`;
+    } else if (q.includes("pending")) {
 
-    // 🔹 PENDING TASK
-    if (msg.includes("pending")) {
+    /* ---------------- PENDING TASK ---------------- */
       const pending = await Task.countDocuments({
         status: "Pending",
       });
 
-      return res.json({
-        reply: `Total ${pending} pending tasks hain.`,
-      });
+      reply = `⏳ Abhi ${pending} pending tasks hain.`;
+    } else if (q.includes("incident")) {
+
+    /* ---------------- INCIDENT STATUS ---------------- */
+      const open = await BPCLStatus.countDocuments({ status: "Open" });
+      const closed = await BPCLStatus.countDocuments({ status: "Closed" });
+
+      reply = `🚨 Incident Status:\nOpen: ${open}\nClosed: ${closed}`;
+    } else if (q.includes("ro")) {
+
+    /* ---------------- RO DETAILS ---------------- */
+      const roCount = await DailyPlan.distinct("roCode");
+      reply = `🏭 Total active RO: ${roCount.length}`;
+    } else if (q.includes("status")) {
+
+    /* ---------------- STATUS UPDATED ---------------- */
+      const today = todayDate();
+      const updated = await Status.countDocuments({ date: today });
+
+      reply = `✅ Aaj ${updated} status update hue hain.`;
     }
 
-    // 🔹 INCIDENT / STATUS
-    if (msg.includes("incident")) {
-      const open = await Status.countDocuments({
-        status: "Open",
-      });
-
-      return res.json({
-        reply: `Currently ${open} open incidents hain.`,
-      });
-    }
-
-    // 🔹 DEFAULT
-    return res.json({
-      reply:
-        "Main visit, task aur incident related help kar sakta hoon. Kripya clear poochhein 🙂",
-    });
+    res.json({ reply });
   } catch (err) {
-    console.error("AI Agent Error:", err);
+    console.error("AI ERROR:", err);
     res.status(500).json({
-      reply: "AI backend error. Please try again.",
+      reply: "⚠ AI backend error. Please try again.",
     });
   }
 });
