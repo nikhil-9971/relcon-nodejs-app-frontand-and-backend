@@ -17,6 +17,7 @@ const bpclStatusRoutes = require("./routes/bpclStatusRoutes");
 const materialRoutes = require("./routes/materialRequirement");
 const chatRoutes = require("./routes/chatRoutes");
 const incidentRoutes = require("./routes/incidentRoutes");
+const aiAgentRoutes = require("./routes/aiAgent");
 const { setupWebsocket, broadcastToAll } = require("./chat.ws"); // ✅ updated import
 const { startCronJobs } = require("./routes/corn"); // ✅ import cron job
 
@@ -41,7 +42,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 
 // ✅ Body parsers
@@ -71,6 +72,7 @@ app.use("/bpclStatus", bpclStatusRoutes);
 app.use("/materialRequirement", materialRoutes);
 app.use("/chat", chatRoutes);
 app.use("/", incidentRoutes);
+app.use("/ai", aiAgentRoutes);
 
 const server = http.createServer(app);
 setupWebsocket(server); // attach WS logic
