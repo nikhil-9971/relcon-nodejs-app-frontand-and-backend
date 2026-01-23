@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const OpenAI = require("openai").default;
 
-const Plan = require("../models/plan");
-const Task = require("../models/taskModel");
-const Status = require("../models/statusmodel");
-const Bpcl = require("../models/bpclStatusModel");
+const DailyPlan = require("../models/DailyPlan");
+const Status = require("../models/Status");
+const Task = require("../models/Task");
+const BPCLStatus = require("../models/BPCLStatus");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,44 +15,54 @@ router.post("/ask", async (req, res) => {
   try {
     const { prompt, user } = req.body;
 
-    let contextData = "";
+    let context = "";
 
-    // 🔍 INTENT DETECTION
-    if (/pending.*task/i.test(prompt)) {
-      const count = await Task.countDocuments({ status: "Pending" });
-      contextData = `Pending Tasks Count: ${count}`;
-    } else if (/today.*visit/i.test(prompt)) {
+    // 🔍 TODAY VISITS
+    if (/today|aaj/i.test(prompt)) {
       const today = new Date().toISOString().slice(0, 10);
-      const visits = await Plan.countDocuments({ visitDate: today });
-      contextData = `Today's Visits Count: ${visits}`;
-    } else if (/engineer/i.test(prompt)) {
-      const plans = await Plan.find({ engineerName: user.engineerName })
+      const count = await DailyPlan.countDocuments({ visitDate: today });
+      context = `Today's total visits: ${count}`;
+    }
+
+    // 🔍 PENDING TASK
+    else if (/pending.*task/i.test(prompt)) {
+      const pending = await Task.countDocuments({ status: "Pending" });
+      context = `Pending tasks: ${pending}`;
+    }
+
+    // 🔍 ENGINEER DATA
+    else if (/engineer|mera/i.test(prompt) && user?.engineerName) {
+      const data = await DailyPlan.find({ engineerName: user.engineerName })
         .sort({ visitDate: -1 })
         .limit(5);
-      contextData = plans
-        .map((p) => `Site: ${p.siteName}, Date: ${p.visitDate}`)
+
+      context = data
+        .map((d) => `Site: ${d.siteName}, Date: ${d.visitDate}`)
         .join("\n");
-    } else if (/bpcl/i.test(prompt)) {
-      const pending = await Bpcl.countDocuments({ status: "Pending" });
-      contextData = `BPCL Pending Faults: ${pending}`;
+    }
+
+    // 🔍 BPCL FAULT
+    else if (/bpcl/i.test(prompt)) {
+      const bpclPending = await BPCLStatus.countDocuments({
+        status: "Pending",
+      });
+      context = `BPCL pending faults: ${bpclPending}`;
     } else {
-      contextData = "No specific dataset matched.";
+      context = "No matching data found";
     }
 
     // 🧠 SYSTEM PROMPT
     const systemPrompt = `
 You are RELCON AI Assistant.
 Rules:
-- Answer ONLY from provided data
-- Be clear and professional
-- Use simple English or Hinglish
-- If data missing, say "Data not available"
-
+- Answer only using given data
+- No guessing
+- Simple English or Hinglish
 Data:
-${contextData}
+${context}
 `;
 
-    const completion = await openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
@@ -60,13 +70,9 @@ ${contextData}
       ],
     });
 
-    res.json({
-      answer: completion.choices[0].message.content,
-    });
+    res.json({ answer: response.choices[0].message.content });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "AI Agent failed" });
+    res.status(500).json({ error: "AI processing failed" });
   }
 });
-
-module.exports = router;
