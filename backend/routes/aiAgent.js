@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const OpenAI = require("openai");
+const OpenAI = require("openai").default;
 
 const Plan = require("../models/plan");
 const Task = require("../models/taskModel");
