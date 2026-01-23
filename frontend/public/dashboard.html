@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -75,7 +75,9 @@
         background-color: var(--bg);
         color: var(--text);
         font-size: 12px;
-        transition: background-color 0.25s ease, color 0.25s ease,
+        transition:
+          background-color 0.25s ease,
+          color 0.25s ease,
           border-color 0.25s ease;
         scrollbar-width: thin;
         scrollbar-color: var(--accent-700) transparent;
@@ -131,7 +133,9 @@
         width: 0%;
         background-color: var(--accent);
         z-index: 1000;
-        transition: width 0.4s ease, opacity 0.3s ease;
+        transition:
+          width 0.4s ease,
+          opacity 0.3s ease;
       }
 
       /* Smooth transitions for key UI areas */
@@ -142,7 +146,9 @@
       #chatInput,
       .active-link,
       #userDetails {
-        transition: background-color 0.25s ease, color 0.25s ease,
+        transition:
+          background-color 0.25s ease,
+          color 0.25s ease,
           border-color 0.25s ease;
       }
 
@@ -167,7 +173,9 @@
         font-size: 14px;
         line-height: 1;
         opacity: 0.9;
-        transition: opacity 0.2s ease, transform 0.1s ease;
+        transition:
+          opacity 0.2s ease,
+          transform 0.1s ease;
       }
       .sidebar-nav a:hover i {
         opacity: 1;
@@ -382,6 +390,35 @@
       }
       .dark #mentionBox div:hover {
         background: #111827;
+      }
+
+      .ai-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        border-radius: 10px 10px 0 0;
+        color: #fff;
+      }
+
+      .ai-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .ai-icon {
+        font-size: 28px;
+      }
+
+      .ai-title {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .ai-status {
+        font-size: 11px;
+        color: #4ade80;
       }
     </style>
   </head>
@@ -838,6 +875,17 @@
 
     <div id="progressBar"></div>
 
+    <!-- AI Assistant Header -->
+    <div class="ai-header">
+      <div class="ai-left">
+        <span class="ai-icon">🤖</span>
+        <div>
+          <div class="ai-title">RELCON AI Assistant</div>
+          <div class="ai-status" id="aiStatus">Online</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Chat Box -->
     <!-- 💬 Chat Toggle Button -->
     <button
@@ -883,7 +931,7 @@
         <b>Team Chat</b>
         <span
           style="cursor: pointer"
-          onclick="document.getElementById('chatBox').style.display='none'"
+          onclick="document.getElementById('chatBox').style.display = 'none'"
           >×</span
         >
       </div>
@@ -980,7 +1028,7 @@
           hideGlobalLoader(); // Finish progress
           try {
             injectDarkStylesInto(
-              iframe.contentDocument || iframe.contentWindow.document
+              iframe.contentDocument || iframe.contentWindow.document,
             );
           } catch (e) {}
         };
@@ -1105,14 +1153,17 @@
       let inactivityTimeout;
       function resetInactivityTimer() {
         clearTimeout(inactivityTimeout);
-        inactivityTimeout = setTimeout(() => {
-          alert("You were inactive for 30 minutes. Logging out.");
-          logout();
-        }, 30 * 60 * 1000);
+        inactivityTimeout = setTimeout(
+          () => {
+            alert("You were inactive for 30 minutes. Logging out.");
+            logout();
+          },
+          30 * 60 * 1000,
+        );
       }
 
       ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) =>
-        window.addEventListener(evt, resetInactivityTimer)
+        window.addEventListener(evt, resetInactivityTimer),
       );
 
       async function submitNewSite() {
@@ -1223,7 +1274,7 @@
           try {
             const iframe = document.getElementById("contentFrame");
             injectDarkStylesInto(
-              iframe.contentDocument || iframe.contentWindow.document
+              iframe.contentDocument || iframe.contentWindow.document,
             );
           } catch (e) {}
         }
@@ -1299,8 +1350,8 @@
       function initWS() {
         ws = new WebSocket(
           `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(
-            token
-          )}`
+            token,
+          )}`,
         );
 
         ws.onopen = () => {
@@ -1328,7 +1379,7 @@
           // 🗑️ Message deleted
           if (msg.type === "message_deleted") {
             const messageElement = document.querySelector(
-              `[data-message-id="${msg.messageId}"]`
+              `[data-message-id="${msg.messageId}"]`,
             );
             if (messageElement) {
               messageElement.remove();
@@ -1422,7 +1473,7 @@
         // Mention detection
         const mentionPattern = new RegExp(
           `@${currentUser.replace(/[-/\\^$*+?.()|[\\]{}]/g, "\\$&")}`,
-          "i"
+          "i",
         );
         const isMentioned = !isOwn && mentionPattern.test(msg.text || "");
 
@@ -1466,7 +1517,7 @@
               return `<span style="background:#fde68a; padding:2px 4px; border-radius:4px; color:#1f2937; font-weight:600;">${display}</span>`;
             }
             return `<span style="color:#2563eb; font-weight:500;">${display}</span>`;
-          }
+          },
         );
 
         let replyHTML = "";
@@ -1486,8 +1537,8 @@
         const messageContent = msg.html
           ? `<div class="chat-table-wrapper">${msg.html}</div>`
           : msg.system && msg.text && msg.text.includes("<table")
-          ? `<div class="chat-table-wrapper">${msg.text}</div>`
-          : `<div>${highlightedText}</div>`;
+            ? `<div class="chat-table-wrapper">${msg.text}</div>`
+            : `<div>${highlightedText}</div>`;
 
         const isBot = (msg.from || "").toLowerCase().includes("chatbot");
         const showReplyButton =
@@ -1539,7 +1590,7 @@
             const existingTime = existingMsg.querySelector("[data-timestamp]");
             if (existingTime) {
               const existingMsgTime = new Date(
-                existingTime.getAttribute("data-timestamp")
+                existingTime.getAttribute("data-timestamp"),
               );
               if (msgTime < existingMsgTime) {
                 insertPosition = existingMsg;
@@ -1601,7 +1652,7 @@
             const error = await response.json();
             showToast(
               `❌ Failed to delete message: ${error.error}`,
-              "bg-red-600"
+              "bg-red-600",
             );
           }
         } catch (error) {
@@ -1720,7 +1771,7 @@
 
         // filter matching
         let matches = mentionList.filter((u) =>
-          u.name.toLowerCase().includes(term)
+          u.name.toLowerCase().includes(term),
         );
 
         if (matches.length === 0) {
@@ -1786,8 +1837,8 @@
       function initWS() {
         ws = new WebSocket(
           `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(
-            token
-          )}`
+            token,
+          )}`,
         );
 
         ws.onopen = () => {
@@ -1972,8 +2023,8 @@
           try {
             const res = await fetch(
               `${baseUrl}/getIncidentsByRoCodeAndStatus?roCode=${encodeURIComponent(
-                chatbotState.roCode
-              )}&status=${encodeURIComponent(chatbotState.status)}`
+                chatbotState.roCode,
+              )}&status=${encodeURIComponent(chatbotState.status)}`,
             );
             const data = await res.json();
 
@@ -2027,6 +2078,34 @@
 
       // 🚀 Start
       initWS();
+
+      function setAIStatus(status, color = "#4ade80") {
+        const el = document.getElementById("aiStatus");
+        el.innerText = status;
+        el.style.color = color;
+      }
+
+      setAIStatus("Thinking...", "#facc15");
+
+      fetch(`${baseUrl}/ai/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: text.replace("/ai", "").trim(),
+          user: { engineerName: currentUser },
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          renderMessage({
+            from: "🤖 RELCON AI",
+            text: data.answer,
+          });
+          setAIStatus("Online");
+        })
+        .catch(() => {
+          setAIStatus("Offline", "#ef4444");
+        });
     </script>
   </body>
 </html>
