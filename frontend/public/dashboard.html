@@ -2211,18 +2211,21 @@
   `;
 
         try {
-          const res = await fetch("/ai/ask", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              prompt: msg,
-              user: {
-                engineerName: "Nikhil Trivedi", // 🔁 login user se dynamic kar sakte ho
+          const res = await fetch(
+            "https://relcon-backend-jwt-backup.onrender.com/ai/ask",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
               },
-            }),
-          });
+              body: JSON.stringify({
+                prompt: msg,
+                user: {
+                  engineerName: "Nikhil Trivedi", // 🔁 login user se dynamic kar sakte ho
+                },
+              }),
+            },
+          );
 
           const data = await res.json();
           document.getElementById("aiThinking").remove();
