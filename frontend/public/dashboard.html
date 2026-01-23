@@ -875,14 +875,113 @@
 
     <div id="progressBar"></div>
 
-    <!-- AI Assistant Header -->
-    <div class="ai-header">
-      <div class="ai-left">
-        <span class="ai-icon">🤖</span>
-        <div>
-          <div class="ai-title">RELCON AI Assistant</div>
-          <div class="ai-status" id="aiStatus">Online</div>
+    <!-- 🤖 AI Agent Floating Button -->
+    <div
+      id="aiAgentBtn"
+      style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        cursor: pointer;
+        z-index: 9999;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      "
+      onclick="toggleAIChat()"
+    >
+      🤖
+    </div>
+
+    <!-- 🧠 AI Chat UI -->
+    <div
+      id="aiChatBox"
+      style="
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 360px;
+        height: 460px;
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        display: none;
+        flex-direction: column;
+        z-index: 9999;
+        overflow: hidden;
+      "
+    >
+      <!-- Header -->
+      <div
+        style="
+          background: linear-gradient(135deg, #16a34a, #22c55e);
+          color: white;
+          padding: 12px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 600;
+        "
+      >
+        🤖 RELCON AI Assistant
+        <span style="cursor: pointer" onclick="toggleAIChat()">✖</span>
+      </div>
+
+      <!-- Messages -->
+      <div
+        id="aiMessages"
+        style="
+          flex: 1;
+          padding: 12px;
+          overflow-y: auto;
+          font-size: 13px;
+          background: #f9fafb;
+        "
+      >
+        <div style="background: #e5fbe9; padding: 8px; border-radius: 8px">
+          Hello 👋<br />
+          I can help you with:
+          <ul>
+            <li>📌 Incident status</li>
+            <li>📌 RO details</li>
+            <li>📌 Reports help</li>
+          </ul>
         </div>
+      </div>
+
+      <!-- Input -->
+      <div style="display: flex; border-top: 1px solid #ddd">
+        <input
+          id="aiInput"
+          placeholder="Ask something..."
+          style="
+            flex: 1;
+            border: none;
+            padding: 10px;
+            font-size: 13px;
+            outline: none;
+          "
+          onkeydown="if (event.key === 'Enter') sendAIMessage();"
+        />
+        <button
+          onclick="sendAIMessage()"
+          style="
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 0 16px;
+            cursor: pointer;
+          "
+        >
+          ➤
+        </button>
       </div>
     </div>
 
@@ -2079,33 +2178,42 @@
       // 🚀 Start
       initWS();
 
-      function setAIStatus(status, color = "#4ade80") {
-        const el = document.getElementById("aiStatus");
-        el.innerText = status;
-        el.style.color = color;
+      function toggleAIChat() {
+        const box = document.getElementById("aiChatBox");
+        box.style.display = box.style.display === "flex" ? "none" : "flex";
       }
 
-      setAIStatus("Thinking...", "#facc15");
+      function sendAIMessage() {
+        const input = document.getElementById("aiInput");
+        const msg = input.value.trim();
+        if (!msg) return;
 
-      fetch(`${baseUrl}/ai/ask`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: text.replace("/ai", "").trim(),
-          user: { engineerName: currentUser },
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          renderMessage({
-            from: "🤖 RELCON AI",
-            text: data.answer,
-          });
-          setAIStatus("Online");
-        })
-        .catch(() => {
-          setAIStatus("Offline", "#ef4444");
-        });
+        const messages = document.getElementById("aiMessages");
+
+        // User message
+        messages.innerHTML += `
+      <div style="text-align:right;margin-bottom:6px;">
+        <span style="background:#dcfce7;padding:6px 10px;border-radius:8px;display:inline-block;">
+          ${msg}
+        </span>
+      </div>
+    `;
+
+        input.value = "";
+        messages.scrollTop = messages.scrollHeight;
+
+        // Fake AI response (backend later)
+        setTimeout(() => {
+          messages.innerHTML += `
+        <div style="margin-bottom:6px;">
+          <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;display:inline-block;">
+            🤖 I received: "${msg}"
+          </span>
+        </div>
+      `;
+          messages.scrollTop = messages.scrollHeight;
+        }, 800);
+      }
     </script>
   </body>
 </html>
