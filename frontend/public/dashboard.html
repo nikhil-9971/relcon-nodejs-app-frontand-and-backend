@@ -2219,7 +2219,7 @@
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                prompt: msg,
+                question: msg,
                 user: {
                   engineerName: "Nikhil Trivedi", // 🔁 login user se dynamic kar sakte ho
                 },
@@ -2233,7 +2233,7 @@
           messages.innerHTML += `
       <div style="margin-bottom:6px;">
         <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;display:inline-block;">
-          🤖 ${data.answer}
+          🤖 ${data.reply}
         </span>
       </div>
     `;
