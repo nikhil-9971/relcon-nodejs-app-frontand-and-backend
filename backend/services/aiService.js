@@ -70,7 +70,7 @@ Respond ONLY with the JSON array for the aggregation pipeline.
 
   try {
     const modelResponse = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // ✅ SAFE MODEL
       messages: [
         {
           role: "system",
@@ -89,7 +89,7 @@ Respond ONLY with the JSON array for the aggregation pipeline.
     }
 
     const queryResponse = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // ✅ SAFE MODEL
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Question: "${question}"` },
@@ -123,7 +123,7 @@ Keep your response concise and easy to understand.
 `;
 
     const finalResponse = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // ✅ SAFE MODEL
       messages: [{ role: "system", content: finalPrompt }],
       temperature: 0.7,
     });
