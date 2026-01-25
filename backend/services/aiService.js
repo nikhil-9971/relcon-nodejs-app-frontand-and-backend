@@ -1,13 +1,15 @@
+const Groq = require("groq-sdk");
 const mongoose = require("mongoose");
 
-// Models import (Path sahi check kar lena)
+// Models import
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
 const ROMaster = require("../models/ROMaster");
 const Incident = require("../models/Incident");
 const User = require("../models/User");
 
-// Schema helper
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
 const getSchemas = () => {
   const schemas = {
     DailyPlan: Object.keys(DailyPlan.schema.paths).join(", "),
@@ -21,82 +23,66 @@ const getSchemas = () => {
     .join("\n");
 };
 
-// 🔹 Direct Fetch function for Gemini (Using Stable v1 Endpoint)
-async function callGemini(prompt) {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  // FIXED URL: Using 'v1' and 'gemini-pro' for maximum compatibility
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-    }),
-  });
-
-  const data = await response.json();
-
-  if (data.error) {
-    console.error("Gemini API Error Detail:", data.error);
-    throw new Error(data.error.message);
-  }
-
-  if (!data.candidates || data.candidates.length === 0) {
-    throw new Error("No response from AI. Possible safety filter trigger.");
-  }
-
-  return data.candidates[0].content.parts[0].text;
-}
-
 async function handleAIQuery(question) {
   try {
     const schemaDesc = getSchemas();
 
-    // 1. SELECT MODEL
-    const modelPrompt = `Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
-    const modelNameRaw = await callGemini(modelPrompt);
-    const modelName = modelNameRaw.trim().replace(/[^a-zA-Z]/g, "");
+    // 1. SELECT MODEL & GENERATE PIPELINE (Combined for Speed)
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: `You are a MongoDB expert for RELCON SYSTEMS. 
+          Today's date: ${new Date().toISOString().split("T")[0]}.
+          Available Models: DailyPlan, Task, ROMaster, Incident, User.
+          Schemas: ${schemaDesc}
+          
+          Task: 
+          1. Identify the single best Mongoose model name.
+          2. Generate a valid MongoDB aggregation pipeline array.
+          
+          Respond ONLY in this JSON format:
+          {"model": "ModelName", "pipeline": [...]}
+          No markdown, no talk.`,
+        },
+        { role: "user", content: question },
+      ],
+      model: "llama-3.3-70b-versatile", // Very powerful free model
+      temperature: 0,
+      response_format: { type: "json_object" },
+    });
+
+    const aiResponse = JSON.parse(completion.choices[0].message.content);
+    const modelName = aiResponse.model;
+    const pipeline = aiResponse.pipeline;
 
     const Model = mongoose.models[modelName];
     if (!Model)
-      return "I couldn't identify the right category. Try asking about visits, tasks, or incidents.";
+      return "I couldn't find the correct data category. Please try again.";
 
-    // 2. GENERATE PIPELINE
-    const pipelinePrompt = `
-      You are a MongoDB expert. Generate a JSON aggregation pipeline array for model "${modelName}" with fields: ${schemaDesc}.
-      Today's date: ${new Date().toISOString().split("T")[0]}.
-      User Question: "${question}"
-      Respond with ONLY the JSON array. Do not include markdown or backticks.
-    `;
-    const pipelineRaw = await callGemini(pipelinePrompt);
-    let rawJson = pipelineRaw
-      .trim()
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    let pipeline;
-    try {
-      pipeline = JSON.parse(rawJson);
-    } catch (e) {
-      return "I generated an invalid query format. Please try again.";
-    }
-
-    // 3. FETCH DATA
+    // 2. FETCH DATA
     const results = await Model.aggregate(pipeline).limit(5);
 
-    // 4. FINAL SUMMARY
-    const summaryPrompt = `
-      Question: "${question}"
-      Results: ${JSON.stringify(results)}
-      Summarize this in a simple, professional, friendly sentence. If no data, say no records found.
-    `;
-    const finalAnswer = await callGemini(summaryPrompt);
-    return finalAnswer.trim();
+    // 3. FINAL SUMMARY
+    const summary = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "Summarize the database results clearly for the user. If no data, say 'No records found'.",
+        },
+        {
+          role: "user",
+          content: `Question: ${question} \nData: ${JSON.stringify(results)}`,
+        },
+      ],
+      model: "llama-3.1-8b-instant",
+      temperature: 0.7,
+    });
+
+    return summary.choices[0].message.content.trim();
   } catch (error) {
-    console.error("GEMINI FETCH ERROR:", error);
+    console.error("GROQ ERROR:", error);
     return "AI error: " + error.message;
   }
 }
