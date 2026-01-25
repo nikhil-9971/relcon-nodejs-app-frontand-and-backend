@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-// Models import
+// Models import (Path sahi check kar lena)
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
 const ROMaster = require("../models/ROMaster");
@@ -21,10 +21,12 @@ const getSchemas = () => {
     .join("\n");
 };
 
-// 🔹 Direct Fetch function for Gemini (No Library needed)
+// 🔹 Direct Fetch function for Gemini (Using Stable v1 Endpoint)
 async function callGemini(prompt) {
   const apiKey = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  // FIXED URL: Using 'v1' and 'gemini-pro' for maximum compatibility
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -35,9 +37,16 @@ async function callGemini(prompt) {
   });
 
   const data = await response.json();
+
   if (data.error) {
+    console.error("Gemini API Error Detail:", data.error);
     throw new Error(data.error.message);
   }
+
+  if (!data.candidates || data.candidates.length === 0) {
+    throw new Error("No response from AI. Possible safety filter trigger.");
+  }
+
   return data.candidates[0].content.parts[0].text;
 }
 
@@ -46,7 +55,7 @@ async function handleAIQuery(question) {
     const schemaDesc = getSchemas();
 
     // 1. SELECT MODEL
-    const modelPrompt = `System: Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
+    const modelPrompt = `Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
     const modelNameRaw = await callGemini(modelPrompt);
     const modelName = modelNameRaw.trim().replace(/[^a-zA-Z]/g, "");
 
@@ -72,7 +81,6 @@ async function handleAIQuery(question) {
     try {
       pipeline = JSON.parse(rawJson);
     } catch (e) {
-      console.error("JSON Parse Error:", rawJson);
       return "I generated an invalid query format. Please try again.";
     }
 
