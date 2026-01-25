@@ -2189,11 +2189,12 @@
         if (!msg) return;
 
         const messages = document.getElementById("aiMessages");
+        const backendBaseUrl = "https://relcon-backend-jwt-backup.onrender.com"; // Aapka Base URL
 
-        // User message UI
+        // User Message UI
         messages.innerHTML += `
-    <div style="text-align:right;margin-bottom:6px;">
-      <span style="background:#dcfce7;padding:6px 10px;border-radius:8px;display:inline-block;max-width:80%;">
+    <div style="text-align:right;margin-bottom:8px;">
+      <span style="background:#dcfce7;padding:8px 12px;border-radius:10px;display:inline-block;max-width:80%;box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         ${msg}
       </span>
     </div>
@@ -2201,44 +2202,47 @@
         input.value = "";
         messages.scrollTop = messages.scrollHeight;
 
-        // Thinking UI
+        // Thinking... UI
         const thinkingId = "ai-thinking-" + Date.now();
         messages.innerHTML += `
-    <div id="${thinkingId}" style="margin-bottom:6px;">
-      <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;font-style:italic;">
-        🤖 AI is searching...
+    <div id="${thinkingId}" style="margin-bottom:10px;">
+      <span style="background:#e5e7eb;padding:8px 12px;border-radius:10px;display:inline-block;font-style:italic;">
+        🤖 AI is searching database...
       </span>
     </div>
   `;
         messages.scrollTop = messages.scrollHeight;
 
         try {
-          // Note: use absolute path if testing locally, or just '/ai/ask' for production
-          const res = await fetch("/ai/ask", {
+          const res = await fetch(`${backendBaseUrl}/ai/ask`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`, // Added token
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
             body: JSON.stringify({ question: msg }),
           });
 
+          if (!res.ok) throw new Error("Server Error");
+
           const data = await res.json();
           document.getElementById(thinkingId).remove();
 
+          // AI Response UI
           messages.innerHTML += `
-      <div style="margin-bottom:10px; display:flex; gap:8px;">
-        <span style="font-size:20px;">🤖</span>
-        <span style="background:#f1f5f9;padding:8px 12px;border-radius:8px;display:inline-block;max-width:85%;line-height:1.4;">
+      <div style="margin-bottom:15px; display:flex; gap:10px; align-items: flex-start;">
+        <div style="background:#16a34a; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">🤖</div>
+        <div style="background:#f1f5f9;padding:10px 14px;border-radius:12px;display:inline-block;max-width:85%;line-height:1.5; color:#1e293b; border: 1px solid #e2e8f0;">
           ${data.reply}
-        </span>
+        </div>
       </div>
     `;
           messages.scrollTop = messages.scrollHeight;
         } catch (err) {
           if (document.getElementById(thinkingId))
             document.getElementById(thinkingId).remove();
-          messages.innerHTML += `<div style="color:red; font-size:11px; margin-bottom:5px;">❌ Connection error. Try again.</div>`;
+          messages.innerHTML += `<div style="color:#ef4444; font-size:12px; margin: 10px 0; text-align:center;">❌ Connection failed. Check internet or backend.</div>`;
+          console.error("AI Fetch Error:", err);
         }
       }
     </script>
