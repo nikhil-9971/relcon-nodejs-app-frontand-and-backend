@@ -1,89 +1,109 @@
 const Groq = require("groq-sdk");
 const mongoose = require("mongoose");
 
-// Models import
+// --- Models Import ---
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
-const ROMaster = require("../models/ROMaster");
+const Status = require("../models/Status"); // HPCL Status
+const BPCLStatus = require("../models/BPCLStatus");
+const JioBPStatus = require("../models/JioBPStatus");
 const Incident = require("../models/Incident");
+const MaterialRequirement = require("../models/MaterialRequirement");
+const ROMaster = require("../models/ROMaster");
 const User = require("../models/User");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const getSchemas = () => {
+// Sabhi models ke fields ko AI ko samjhane ke liye detail helper
+const getFullContext = () => {
   const schemas = {
-    DailyPlan: Object.keys(DailyPlan.schema.paths).join(", "),
-    Task: Object.keys(Task.schema.paths).join(", "),
-    ROMaster: Object.keys(ROMaster.schema.paths).join(", "),
-    Incident: Object.keys(Incident.schema.paths).join(", "),
-    User: Object.keys(User.schema.paths).join(", "),
+    DailyPlan:
+      "Visits, roCode, roName, engineer, date, purpose, arrivalTime, leaveTime, completionStatus. (Main Model for visits)",
+    Status:
+      "HPCL sites details: probeMake, probeSize, sim1Number, sim2Number, earthingStatus, voltageReading, duOffline, tankOffline, oms03. (HPCL Specific)",
+    BPCLStatus:
+      "BPCL sites: class1DeviceCount, class2DeviceCount, relconAtgProvided, jioSimNumber, airtelSimNumber. (BPCL Specific)",
+    JioBPStatus:
+      "JioBP/RBML sites: hpsdId, diagnosis, solution, activeMaterialUsed, oms03, status. (JioBP Specific)",
+    Incident:
+      "Complaints: roCode, incidentId, incidentDate, status (Pending/Closed), complaintRemark, closeRemark.",
+    Task: "Follow-ups: roCode, issue, status, emailContent, followUpDates, duRemark, tankRemark.",
+    MaterialRequirement:
+      "Stock/Material: material, materialDispatchStatus, materialRequestDate, engineer, roCode.",
+    ROMaster:
+      "Master Data: zone, region, roCode, roName, phase, siteStatus, siteActivestatus.",
   };
   return Object.entries(schemas)
-    .map(([n, f]) => `${n}: ${f}`)
+    .map(([n, d]) => `[${n}]: ${d}`)
     .join("\n");
 };
 
 async function handleAIQuery(question) {
   try {
-    const schemaDesc = getSchemas();
+    const context = getFullContext();
+    const today = new Date().toISOString().split("T")[0];
 
-    // 1. SELECT MODEL & GENERATE PIPELINE (Combined for Speed)
+    // STEP 1: Think and Generate Query
     const completion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are a MongoDB expert for RELCON SYSTEMS. 
-          Today's date: ${new Date().toISOString().split("T")[0]}.
-          Available Models: DailyPlan, Task, ROMaster, Incident, User.
-          Schemas: ${schemaDesc}
+          content: `You are the Lead Data Analyst for RELCON SYSTEMS. 
+          Today's Date: ${today}.
           
-          Task: 
-          1. Identify the single best Mongoose model name.
-          2. Generate a valid MongoDB aggregation pipeline array.
-          
-          Respond ONLY in this JSON format:
-          {"model": "ModelName", "pipeline": [...]}
-          No markdown, no talk.`,
+          COLLECTIONS KNOWLEDGE:
+          ${context}
+
+          CRITICAL RULES:
+          1. For questions about HPCL, use 'Status' model.
+          2. For questions about BPCL, use 'BPCLStatus' model.
+          3. For questions about Jio/RBML, use 'JioBPStatus' model.
+          4. For visits/schedules, use 'DailyPlan'.
+          5. Many dates in DB are STRINGS (DD-MM-YYYY). Use $regex for partial date matching.
+          6. Use 'i' in $regex for case-insensitive text search.
+
+          Response Format (Strict JSON):
+          {"model": "ModelName", "pipeline": [...], "explanation": "Why you chose this"}
+          `,
         },
         { role: "user", content: question },
       ],
-      model: "llama-3.3-70b-versatile", // Very powerful free model
+      model: "llama-3.3-70b-versatile",
       temperature: 0,
       response_format: { type: "json_object" },
     });
 
-    const aiResponse = JSON.parse(completion.choices[0].message.content);
-    const modelName = aiResponse.model;
-    const pipeline = aiResponse.pipeline;
+    const aiPlan = JSON.parse(completion.choices[0].message.content);
+    console.log("AI Strategy:", aiPlan.explanation);
 
-    const Model = mongoose.models[modelName];
+    const Model = mongoose.models[aiPlan.model];
     if (!Model)
-      return "I couldn't find the correct data category. Please try again.";
+      return `Model '${aiPlan.model}' not found. Please ask specifically about HPCL, BPCL, Jio, or Plans.`;
 
-    // 2. FETCH DATA
-    const results = await Model.aggregate(pipeline).limit(5);
+    // STEP 2: Execute Aggregation
+    const results = await Model.aggregate(aiPlan.pipeline).limit(10);
 
-    // 3. FINAL SUMMARY
+    // STEP 3: Humanize the Data
     const summary = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
           content:
-            "Summarize the database results clearly for the user. If no data, say 'No records found'.",
+            "You are a helpful assistant. Translate the database JSON into a clear, professional English/Hindi mixed response. Format as a list if multiple records. If no data, explain what you searched for but found nothing.",
         },
         {
           role: "user",
-          content: `Question: ${question} \nData: ${JSON.stringify(results)}`,
+          content: `Question: ${question} \nDatabase Results: ${JSON.stringify(results)} \nContext: Used Model ${aiPlan.model}`,
         },
       ],
       model: "llama-3.1-8b-instant",
-      temperature: 0.7,
+      temperature: 0.5,
     });
 
     return summary.choices[0].message.content.trim();
   } catch (error) {
-    console.error("GROQ ERROR:", error);
-    return "AI error: " + error.message;
+    console.error("POWERFUL AI ERROR:", error);
+    return "Maaf kijiye, database query generate karne mein issue aaya. Kripya sawaal thoda aur detail mein puchein (jaise RO Code mention karein).";
   }
 }
 
