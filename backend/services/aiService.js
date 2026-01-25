@@ -1,46 +1,40 @@
 const Groq = require("groq-sdk");
 const mongoose = require("mongoose");
 
-// --- Ensure all models are loaded ---
+// Models
 const DailyPlan = require("../models/DailyPlan");
-const Task = require("../models/Task");
+const Incident = require("../models/Incident");
 const Status = require("../models/Status");
 const BPCLStatus = require("../models/BPCLStatus");
 const JioBPStatus = require("../models/jioBPStatus");
-const Incident = require("../models/Incident");
-const MaterialRequirement = require("../models/MaterialRequirement");
+const Task = require("../models/Task");
 const ROMaster = require("../models/ROMaster");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 async function handleAIQuery(question) {
   try {
-    const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
+    const todayDate = new Date()
+      .toLocaleDateString("en-GB")
+      .replace(/\//g, "-");
 
-    // Stage 1: The Architect (Smart Query Generation)
     const architectCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are the Lead Data Analyst for RELCON SYSTEMS. Today is ${today}.
+          content: `You are the Lead Analyst for RELCON. Today: ${todayDate}.
           
-          VALID MODELS (Use EXACT names):
-          - DailyPlan: For visits, engineer schedules, work done, and "last visit" queries.
-          - Incident: For complaints, tickets, pending/closed status.
-          - Status: For HPCL site details (earthing, voltage, SIM, DU offline).
-          - BPCLStatus: For BPCL site details (IOT devices, ATG).
-          - JioBPStatus: For JioBP/RBML diagnosis and solution.
-          - Task: For follow-ups and mailed issues.
-          - ROMaster: For site master data (zone, region, status).
+          MODELS:
+          - DailyPlan: { roCode (String), roName, date (DD-MM-YYYY), engineer, whatDone, completionStatus }
+          - Incident: { roCode (String), incidentId, status, complaintRemark }
+          - Status: { planId, sim1Number, earthingStatus }
+          - ROMaster: { roCode (String), roName, region, phase }
 
-          RULES:
-          1. Identify the BEST model from the list above.
-          2. Use $regex for RO Code or text search.
-          3. If asking for "last visit", sort by 'date' descending in pipeline.
-          4. RO Code ${question.match(/\d+/)} should be treated as a string in $match.
-          
-          RESPONSE FORMAT (JSON ONLY):
-          {"collection": "EXACT_MODEL_NAME", "pipeline": [...]}`,
+          CRITICAL RULES:
+          1. RO Code MUST be a String in $match. Example: { "roCode": "13872800" }.
+          2. For "last visit", match the roCode, then sort by _id descending (as it's more reliable than string dates).
+          3. If searching by date string, use $regex.
+          4. Return ONLY JSON: {"collection": "ModelName", "pipeline": [...]}`,
         },
         { role: "user", content: question },
       ],
@@ -51,28 +45,26 @@ async function handleAIQuery(question) {
 
     const strategy = JSON.parse(architectCompletion.choices[0].message.content);
 
-    // --- SAFE MODEL LOADING ---
-    const modelName = strategy.collection.trim();
-    const Model = mongoose.models[modelName];
+    // Debugging: Terminal logs mein pipeline check karne ke liye
+    console.log("AI Collection:", strategy.collection);
+    console.log("AI Pipeline:", JSON.stringify(strategy.pipeline));
 
-    if (!Model) {
-      console.error(`ERROR: AI chose invalid model: ${modelName}`);
-      return "I apologize, but I couldn't retrieve that information. Could you please specify if you're asking about a visit, an incident, or site status?";
+    const Model = mongoose.models[strategy.collection];
+    if (!Model) return "System busy. Please try rephrasing.";
+
+    const rawData = await Model.aggregate(strategy.pipeline).limit(5);
+
+    // Agar data nahi mila toh AI ko ek chance aur dena detail batane ke liye
+    if (!rawData || rawData.length === 0) {
+      return `Mujhe RO Code ${question.match(/\d+/)} ke liye koi record nahi mila. Kripya check karein ki RO Code sahi hai ya nahi.`;
     }
 
-    // Execution
-    const rawData = await Model.aggregate(strategy.pipeline).limit(10);
-
-    // Stage 2: Communicator (Hide Technicals)
     const communicatorCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are a Professional Assistant. Summarize data for the user.
-          RULES:
-          1. NEVER mention "Database", "Model", "JSON", or "Pipeline".
-          2. If data is found, present it clearly.
-          3. If no data, say: "No records were found for the requested information."`,
+          content:
+            "You are a professional RELCON assistant. Summarize the data. If multiple visits, mention the latest one first. Do not mention technical terms like JSON or Pipeline.",
         },
         {
           role: "user",
@@ -86,7 +78,7 @@ async function handleAIQuery(question) {
     return communicatorCompletion.choices[0].message.content.trim();
   } catch (error) {
     console.error("AI SYSTEM ERROR:", error);
-    return "I am sorry, I am currently having trouble accessing the records. Please try again in a moment.";
+    return "Something went wrong while fetching data. Please try again.";
   }
 }
 
