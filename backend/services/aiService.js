@@ -1,15 +1,14 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const mongoose = require("mongoose");
 
-// Models import (Sahi path check kar lena)
+// Models import
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
 const ROMaster = require("../models/ROMaster");
 const Incident = require("../models/Incident");
 const User = require("../models/User");
 
-// Gemini Setup
-// Zaroori: Render ke environment variables mein GEMINI_API_KEY hona chahiye
+// GEMINI_API_KEY Render ke Environment Variables mein check karein
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const getSchemas = () => {
@@ -27,12 +26,12 @@ const getSchemas = () => {
 
 async function handleAIQuery(question) {
   try {
-    // Model name change: "gemini-1.5-flash" use karein
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // FIX: "gemini-1.5-flash" ki jagah "gemini-pro" use karein (zyada stable hai)
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const schemaDesc = getSchemas();
 
     // 1. SELECT MODEL
-    const modelPrompt = `System: Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
+    const modelPrompt = `Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
     const modelResult = await model.generateContent(modelPrompt);
     const modelName = modelResult.response
       .text()
@@ -41,7 +40,7 @@ async function handleAIQuery(question) {
 
     const Model = mongoose.models[modelName];
     if (!Model)
-      return "I'm sorry, I couldn't find the right category for that data.";
+      return "I couldn't identify the right category. Try asking about visits, tasks, or incidents.";
 
     // 2. GENERATE PIPELINE
     const pipelinePrompt = `
@@ -63,24 +62,28 @@ async function handleAIQuery(question) {
     try {
       pipeline = JSON.parse(rawJson);
     } catch (e) {
-      return "I generated an invalid query. Please try asking differently.";
+      return "I generated an invalid query. Please try asking again.";
     }
 
     // 3. FETCH DATA
-    const results = await Model.aggregate(pipeline).limit(10);
+    const results = await Model.aggregate(pipeline).limit(5);
 
     // 4. FINAL ANSWER
     const summaryPrompt = `
       Question: "${question}"
       Results: ${JSON.stringify(results)}
-      Summarize this in a simple, friendly sentence for the user. If no data, say no records found.
+      Summarize this in a simple, friendly sentence. If no data, say no records found.
     `;
     const finalResult = await model.generateContent(summaryPrompt);
     return finalResult.response.text().trim();
   } catch (error) {
     console.error("GEMINI ERROR:", error);
-    // Agar 404 abhi bhi aaye, toh error message return karo
-    return "AI error: " + (error.message || "Something went wrong.");
+    return (
+      "AI error: " +
+      (error.message.includes("404")
+        ? "Model not found. Use gemini-pro instead."
+        : error.message)
+    );
   }
 }
 
