@@ -1,23 +1,18 @@
-const OpenAI = require("openai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const mongoose = require("mongoose");
 
-// Sare models load karein
+// Models import
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
-const Status = require("../models/Status");
-const BPCLStatus = require("../models/BPCLStatus");
 const ROMaster = require("../models/ROMaster");
 const Incident = require("../models/Incident");
-const MaterialRequirement = require("../models/MaterialRequirement");
 const User = require("../models/User");
-const atgStatus = require("../models/atgStatus");
-const jioBPStatus = require("../models/jioBPStatus");
+// Baki models bhi import kar sakte hain...
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Gemini setup
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Helper to get fields
 const getSchemas = () => {
   const schemas = {
     DailyPlan: Object.keys(DailyPlan.schema.paths).join(", "),
@@ -35,43 +30,29 @@ async function handleAIQuery(question) {
   try {
     const schemaDesc = getSchemas();
 
-    // STEP 1: Select Model
-    const modelStep = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Respond with only the model name (DailyPlan, Task, Status, BPCLStatus, ROMaster, Incident, MaterialRequirement, User, atgStatus, jioBPStatus) that fits the question.",
-        },
-        { role: "user", content: question },
-      ],
-      temperature: 0,
-    });
-
-    const modelName = modelStep.choices[0].message.content
+    // 1. SELECT MODEL
+    const modelPrompt = `Which Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) is best for this question: "${question}"? Respond with ONLY the word.`;
+    const modelResult = await model.generateContent(modelPrompt);
+    const modelName = modelResult.response
+      .text()
       .trim()
       .replace(/[^a-zA-Z]/g, "");
+
     const Model = mongoose.models[modelName];
-
     if (!Model)
-      return "I couldn't find the right data category. Please try mentioning 'Incidents' or 'RO Master'.";
+      return "I'm not sure which data to look for. Try asking about visits, tasks, or incidents.";
 
-    // STEP 2: Generate MongoDB Pipeline
-    const pipelineStep = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `You are a MongoDB expert. Generate a JSON aggregation array for ${modelName} using these fields: ${schemaDesc}. Respond ONLY with the JSON array. Today is ${new Date().toISOString().split("T")[0]}.`,
-        },
-        { role: "user", content: question },
-      ],
-      temperature: 0,
-    });
+    // 2. GENERATE MONGODB PIPELINE
+    const pipelinePrompt = `
+      You are a MongoDB expert. Generate a JSON aggregation pipeline array for the model "${modelName}" with fields: ${schemaDesc}.
+      User Question: "${question}"
+      Today's date is ${new Date().toISOString().split("T")[0]}.
+      Respond ONLY with the JSON array. No markdown, no backticks.
+    `;
+    const pipelineResult = await model.generateContent(pipelinePrompt);
+    let rawJson = pipelineResult.response.text().trim();
 
-    let rawJson = pipelineStep.choices[0].message.content.trim();
-    // CLEANING: Remove markdown if AI adds it
+    // Cleaning
     rawJson = rawJson
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -81,34 +62,24 @@ async function handleAIQuery(question) {
     try {
       pipeline = JSON.parse(rawJson);
     } catch (e) {
-      console.error("Parse Error:", rawJson);
-      return "I had trouble generating a clear query. Could you try asking in a different way?";
+      console.error("Gemini JSON Error:", rawJson);
+      return "I encountered an error formatting the query. Please try again.";
     }
 
-    // STEP 3: Database Query
-    const results = await Model.aggregate(pipeline).limit(10); // Limit to 10 for safety
+    // 3. DB QUERY
+    const results = await Model.aggregate(pipeline).limit(5);
 
-    // STEP 4: Final Summary
-    const finalStep = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Summarize the database results clearly in a user-friendly way. If results are empty, say no records found.",
-        },
-        {
-          role: "user",
-          content: `Question: ${question} \nData: ${JSON.stringify(results)}`,
-        },
-      ],
-      temperature: 0.7,
-    });
-
-    return finalStep.choices[0].message.content.trim();
+    // 4. FINAL SUMMARY
+    const summaryPrompt = `
+      Question: "${question}"
+      Data from Database: ${JSON.stringify(results)}
+      Summarize this data into a professional and friendly answer for the user. If no data, say no records found.
+    `;
+    const finalResult = await model.generateContent(summaryPrompt);
+    return finalResult.response.text().trim();
   } catch (error) {
-    console.error("AI AGENT ERROR:", error);
-    return "Error processing your request. Please check if the OpenAI API Key is valid.";
+    console.error("GEMINI ERROR:", error);
+    return "The free AI service is currently busy or the API key is missing. Please try again later.";
   }
 }
 
