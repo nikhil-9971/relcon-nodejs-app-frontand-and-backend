@@ -6,7 +6,7 @@ const DailyPlan = require("../models/DailyPlan");
 const Incident = require("../models/Incident");
 const Status = require("../models/Status");
 const BPCLStatus = require("../models/BPCLStatus");
-const JioBPStatus = require("../models/JioBPStatus");
+const JioBPStatus = require("../models/jioBPStatus");
 const Task = require("../models/Task");
 const ROMaster = require("../models/ROMaster");
 
