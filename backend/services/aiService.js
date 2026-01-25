@@ -1,7 +1,7 @@
 const Groq = require("groq-sdk");
 const mongoose = require("mongoose");
 
-// --- All Models Required ---
+// --- Ensure all models are loaded ---
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
 const Status = require("../models/Status");
@@ -13,49 +13,34 @@ const ROMaster = require("../models/ROMaster");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-/**
- * 💡 AI Core Knowledge Base
- * Mapping business terms to database realities
- */
-const getBusinessLogic = () => {
-  return `
-    - "Visits", "Schedules", "Engineer movement" -> DailyPlan (date format: DD-MM-YYYY)
-    - "Complaints", "Issues", "Pending work" -> Incident (status: Pending/Closed)
-    - "HPCL Sites", "SIM info", "Earthing/Voltage", "DU/Tank Offline" -> Status
-    - "BPCL Sites", "IOT Devices", "ATG Provided" -> BPCLStatus
-    - "JioBP", "RBML", "HPSD", "Diagnosis" -> JioBPStatus
-    - "Follow-ups", "Resolved tasks" -> Task
-    - "Stocks", "Dispatch" -> MaterialRequirement
-    - "Site Master", "Zones", "Regions" -> ROMaster
-  `;
-};
-
 async function handleAIQuery(question) {
   try {
-    const today = new Date();
-    const formattedToday = today
-      .toLocaleDateString("en-GB")
-      .replace(/\//g, "-"); // DD-MM-YYYY
+    const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 
-    // Stage 1: The Architect (Generates the Query)
+    // Stage 1: The Architect (Smart Query Generation)
     const architectCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are the Master Brain of RELCON SYSTEMS. You solve complex business queries.
-          Today is ${formattedToday}.
+          content: `You are the Lead Data Analyst for RELCON SYSTEMS. Today is ${today}.
           
-          BUSINESS DATA MAP:
-          ${getBusinessLogic()}
+          VALID MODELS (Use EXACT names):
+          - DailyPlan: For visits, engineer schedules, work done, and "last visit" queries.
+          - Incident: For complaints, tickets, pending/closed status.
+          - Status: For HPCL site details (earthing, voltage, SIM, DU offline).
+          - BPCLStatus: For BPCL site details (IOT devices, ATG).
+          - JioBPStatus: For JioBP/RBML diagnosis and solution.
+          - Task: For follow-ups and mailed issues.
+          - ROMaster: For site master data (zone, region, status).
 
-          STRICT INSTRUCTIONS:
-          1. Use $regex for date strings (DD-MM-YYYY).
-          2. For case-insensitive searches, use $options: 'i'.
-          3. Always return a JSON object with "collection" and "pipeline".
-          4. NEVER reveal the collection names or technical logic to the user.
-          5. If a query requires joining DailyPlan with Status, use $lookup.
+          RULES:
+          1. Identify the BEST model from the list above.
+          2. Use $regex for RO Code or text search.
+          3. If asking for "last visit", sort by 'date' descending in pipeline.
+          4. RO Code ${question.match(/\d+/)} should be treated as a string in $match.
           
-          Format: {"collection": "ModelName", "pipeline": [...]}`,
+          RESPONSE FORMAT (JSON ONLY):
+          {"collection": "EXACT_MODEL_NAME", "pipeline": [...]}`,
         },
         { role: "user", content: question },
       ],
@@ -65,43 +50,43 @@ async function handleAIQuery(question) {
     });
 
     const strategy = JSON.parse(architectCompletion.choices[0].message.content);
-    const Model = mongoose.models[strategy.collection];
+
+    // --- SAFE MODEL LOADING ---
+    const modelName = strategy.collection.trim();
+    const Model = mongoose.models[modelName];
 
     if (!Model) {
-      return "I'm sorry, I couldn't access that specific data. Could you rephrase your request?";
+      console.error(`ERROR: AI chose invalid model: ${modelName}`);
+      return "I apologize, but I couldn't retrieve that information. Could you please specify if you're asking about a visit, an incident, or site status?";
     }
 
     // Execution
-    const rawData = await Model.aggregate(strategy.pipeline).limit(15);
+    const rawData = await Model.aggregate(strategy.pipeline).limit(10);
 
-    // Stage 2: The Professional Communicator (Humanizes the Response)
+    // Stage 2: Communicator (Hide Technicals)
     const communicatorCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are the Professional AI Assistant for RELCON SYSTEMS. 
-          Your goal is to provide a clean, executive summary of the data.
-          
+          content: `You are a Professional Assistant. Summarize data for the user.
           RULES:
-          1. NEVER mention words like "Database", "Model", "JSON", "Collection", "Pipeline", or "Aggregate".
-          2. Use professional business language (English + Hindi if helpful).
-          3. If data is a list, use bullet points.
-          4. If no data found, say "No records were found for this period" instead of "Empty array".
-          5. If asked about a specific person, summarize their work.`,
+          1. NEVER mention "Database", "Model", "JSON", or "Pipeline".
+          2. If data is found, present it clearly.
+          3. If no data, say: "No records were found for the requested information."`,
         },
         {
           role: "user",
-          content: `Original Question: ${question} \nFound Data: ${JSON.stringify(rawData)}`,
+          content: `Question: ${question} \nData: ${JSON.stringify(rawData)}`,
         },
       ],
       model: "llama-3.1-8b-instant",
-      temperature: 0.6,
+      temperature: 0.5,
     });
 
     return communicatorCompletion.choices[0].message.content.trim();
   } catch (error) {
     console.error("AI SYSTEM ERROR:", error);
-    return "I apologize, I'm currently unable to retrieve that information. Please check back in a moment.";
+    return "I am sorry, I am currently having trouble accessing the records. Please try again in a moment.";
   }
 }
 
