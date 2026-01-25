@@ -2180,7 +2180,46 @@
 
       function toggleAIChat() {
         const box = document.getElementById("aiChatBox");
-        box.style.display = box.style.display === "flex" ? "none" : "flex";
+        const messages = document.getElementById("aiMessages");
+
+        if (box.style.display === "none" || box.style.display === "") {
+          box.style.display = "flex";
+
+          // 🌟 Professional Greeting agar pehle se message nahi hai
+          if (messages.innerHTML.trim().length < 200) {
+            // Check if only default welcome exists
+            const time = new Date().getHours();
+            let greeting =
+              time < 12
+                ? "Good Morning"
+                : time < 17
+                  ? "Good Afternoon"
+                  : "Good Evening";
+
+            messages.innerHTML = `
+        <div style="margin-bottom:15px; border-left: 4px solid #16a34a; padding-left:10px;">
+          <div style="font-weight:bold; color:#16a34a; font-size:14px;">${greeting}, ${currentUser || "Admin"}</div>
+          <div style="font-size:12px; color:#4b5563; margin-top:4px;">
+            I am the <b>RELCON Intelligence Engine</b>. <br>
+            Aap mujhse live reports, engineer plans ya site status ke baare mein kuch bhi pooch sakte hain.
+          </div>
+        </div>
+        <div style="font-size:11px; color:#9ca3af; margin-bottom:10px;">PROMPT EXAMPLES:</div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px;">
+           <span onclick="setAIInput('Yesterday HPCL ki kitni visits thin?')" style="cursor:pointer; background:#f3f4f6; padding:4px 8px; border-radius:12px; font-size:11px; border:1px solid #ddd;">Yesterday HPCL plans?</span>
+           <span onclick="setAIInput('Pending incidents dikhao')" style="cursor:pointer; background:#f3f4f6; padding:4px 8px; border-radius:12px; font-size:11px; border:1px solid #ddd;">Pending Incidents</span>
+        </div>
+      `;
+          }
+        } else {
+          box.style.display = "none";
+        }
+      }
+
+      // Helper function to auto-fill input
+      function setAIInput(text) {
+        document.getElementById("aiInput").value = text;
+        document.getElementById("aiInput").focus();
       }
 
       async function sendAIMessage() {
