@@ -1,17 +1,16 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const mongoose = require("mongoose");
 
-// Models import
+// Models import (Sahi path check kar lena)
 const DailyPlan = require("../models/DailyPlan");
 const Task = require("../models/Task");
 const ROMaster = require("../models/ROMaster");
 const Incident = require("../models/Incident");
 const User = require("../models/User");
-// Baki models bhi import kar sakte hain...
 
-// Gemini setup
+// Gemini Setup
+// Zaroori: Render ke environment variables mein GEMINI_API_KEY hona chahiye
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const getSchemas = () => {
   const schemas = {
@@ -28,10 +27,12 @@ const getSchemas = () => {
 
 async function handleAIQuery(question) {
   try {
+    // Model name change: "gemini-1.5-flash" use karein
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const schemaDesc = getSchemas();
 
     // 1. SELECT MODEL
-    const modelPrompt = `Which Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) is best for this question: "${question}"? Respond with ONLY the word.`;
+    const modelPrompt = `System: Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
     const modelResult = await model.generateContent(modelPrompt);
     const modelName = modelResult.response
       .text()
@@ -40,19 +41,19 @@ async function handleAIQuery(question) {
 
     const Model = mongoose.models[modelName];
     if (!Model)
-      return "I'm not sure which data to look for. Try asking about visits, tasks, or incidents.";
+      return "I'm sorry, I couldn't find the right category for that data.";
 
-    // 2. GENERATE MONGODB PIPELINE
+    // 2. GENERATE PIPELINE
     const pipelinePrompt = `
-      You are a MongoDB expert. Generate a JSON aggregation pipeline array for the model "${modelName}" with fields: ${schemaDesc}.
+      You are a MongoDB expert. Generate a JSON aggregation pipeline array for model "${modelName}" with fields: ${schemaDesc}.
+      Today's date: ${new Date().toISOString().split("T")[0]}.
       User Question: "${question}"
-      Today's date is ${new Date().toISOString().split("T")[0]}.
-      Respond ONLY with the JSON array. No markdown, no backticks.
+      Respond with ONLY the JSON array. Do not include markdown or backticks.
     `;
     const pipelineResult = await model.generateContent(pipelinePrompt);
     let rawJson = pipelineResult.response.text().trim();
 
-    // Cleaning
+    // Cleaning the JSON
     rawJson = rawJson
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -62,24 +63,24 @@ async function handleAIQuery(question) {
     try {
       pipeline = JSON.parse(rawJson);
     } catch (e) {
-      console.error("Gemini JSON Error:", rawJson);
-      return "I encountered an error formatting the query. Please try again.";
+      return "I generated an invalid query. Please try asking differently.";
     }
 
-    // 3. DB QUERY
-    const results = await Model.aggregate(pipeline).limit(5);
+    // 3. FETCH DATA
+    const results = await Model.aggregate(pipeline).limit(10);
 
-    // 4. FINAL SUMMARY
+    // 4. FINAL ANSWER
     const summaryPrompt = `
       Question: "${question}"
-      Data from Database: ${JSON.stringify(results)}
-      Summarize this data into a professional and friendly answer for the user. If no data, say no records found.
+      Results: ${JSON.stringify(results)}
+      Summarize this in a simple, friendly sentence for the user. If no data, say no records found.
     `;
     const finalResult = await model.generateContent(summaryPrompt);
     return finalResult.response.text().trim();
   } catch (error) {
     console.error("GEMINI ERROR:", error);
-    return "The free AI service is currently busy or the API key is missing. Please try again later.";
+    // Agar 404 abhi bhi aaye, toh error message return karo
+    return "AI error: " + (error.message || "Something went wrong.");
   }
 }
 
