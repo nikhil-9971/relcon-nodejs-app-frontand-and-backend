@@ -1,4 +1,3 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const mongoose = require("mongoose");
 
 // Models import
@@ -8,9 +7,7 @@ const ROMaster = require("../models/ROMaster");
 const Incident = require("../models/Incident");
 const User = require("../models/User");
 
-// GEMINI_API_KEY Render ke Environment Variables mein check karein
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
+// Schema helper
 const getSchemas = () => {
   const schemas = {
     DailyPlan: Object.keys(DailyPlan.schema.paths).join(", "),
@@ -24,19 +21,34 @@ const getSchemas = () => {
     .join("\n");
 };
 
+// 🔹 Direct Fetch function for Gemini (No Library needed)
+async function callGemini(prompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
+  });
+
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error.message);
+  }
+  return data.candidates[0].content.parts[0].text;
+}
+
 async function handleAIQuery(question) {
   try {
-    // FIX: "gemini-1.5-flash" ki jagah "gemini-pro" use karein (zyada stable hai)
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const schemaDesc = getSchemas();
 
     // 1. SELECT MODEL
-    const modelPrompt = `Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
-    const modelResult = await model.generateContent(modelPrompt);
-    const modelName = modelResult.response
-      .text()
-      .trim()
-      .replace(/[^a-zA-Z]/g, "");
+    const modelPrompt = `System: Respond with ONLY the Mongoose model name (DailyPlan, Task, ROMaster, Incident, User) for this question: "${question}".`;
+    const modelNameRaw = await callGemini(modelPrompt);
+    const modelName = modelNameRaw.trim().replace(/[^a-zA-Z]/g, "");
 
     const Model = mongoose.models[modelName];
     if (!Model)
@@ -49,11 +61,9 @@ async function handleAIQuery(question) {
       User Question: "${question}"
       Respond with ONLY the JSON array. Do not include markdown or backticks.
     `;
-    const pipelineResult = await model.generateContent(pipelinePrompt);
-    let rawJson = pipelineResult.response.text().trim();
-
-    // Cleaning the JSON
-    rawJson = rawJson
+    const pipelineRaw = await callGemini(pipelinePrompt);
+    let rawJson = pipelineRaw
+      .trim()
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
@@ -62,28 +72,24 @@ async function handleAIQuery(question) {
     try {
       pipeline = JSON.parse(rawJson);
     } catch (e) {
-      return "I generated an invalid query. Please try asking again.";
+      console.error("JSON Parse Error:", rawJson);
+      return "I generated an invalid query format. Please try again.";
     }
 
     // 3. FETCH DATA
     const results = await Model.aggregate(pipeline).limit(5);
 
-    // 4. FINAL ANSWER
+    // 4. FINAL SUMMARY
     const summaryPrompt = `
       Question: "${question}"
       Results: ${JSON.stringify(results)}
-      Summarize this in a simple, friendly sentence. If no data, say no records found.
+      Summarize this in a simple, professional, friendly sentence. If no data, say no records found.
     `;
-    const finalResult = await model.generateContent(summaryPrompt);
-    return finalResult.response.text().trim();
+    const finalAnswer = await callGemini(summaryPrompt);
+    return finalAnswer.trim();
   } catch (error) {
-    console.error("GEMINI ERROR:", error);
-    return (
-      "AI error: " +
-      (error.message.includes("404")
-        ? "Model not found. Use gemini-pro instead."
-        : error.message)
-    );
+    console.error("GEMINI FETCH ERROR:", error);
+    return "AI error: " + error.message;
   }
 }
 
