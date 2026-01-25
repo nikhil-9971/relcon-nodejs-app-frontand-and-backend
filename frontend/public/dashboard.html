@@ -2185,29 +2185,29 @@
         if (box.style.display === "none" || box.style.display === "") {
           box.style.display = "flex";
 
-          // 🌟 Professional Greeting agar pehle se message nahi hai
-          if (messages.innerHTML.trim().length < 200) {
-            // Check if only default welcome exists
-            const time = new Date().getHours();
-            let greeting =
-              time < 12
+          // 🌟 Check if greeting is already there, if not, add it
+          if (messages.children.length <= 1) {
+            const hour = new Date().getHours();
+            let greetText =
+              hour < 12
                 ? "Good Morning"
-                : time < 17
+                : hour < 17
                   ? "Good Afternoon"
                   : "Good Evening";
 
             messages.innerHTML = `
-        <div style="margin-bottom:15px; border-left: 4px solid #16a34a; padding-left:10px;">
-          <div style="font-weight:bold; color:#16a34a; font-size:14px;">${greeting}, ${currentUser || "Admin"}</div>
-          <div style="font-size:12px; color:#4b5563; margin-top:4px;">
-            I am the <b>RELCON Intelligence Engine</b>. <br>
-            Aap mujhse live reports, engineer plans ya site status ke baare mein kuch bhi pooch sakte hain.
+        <div style="margin-bottom:20px; border-left: 4px solid #16a34a; padding-left:12px; animation: fadeIn 0.5s;">
+          <div style="font-weight:600; color:#16a34a; font-size:15px;">${greetText}, Admin</div>
+          <div style="font-size:12px; color:#374151; margin-top:5px; line-height:1.5;">
+            Welcome to <b>RELCON AI Intelligence</b>. Main aapke database se live reports aur site analytics nikaal sakta hoon.
           </div>
-        </div>
-        <div style="font-size:11px; color:#9ca3af; margin-bottom:10px;">PROMPT EXAMPLES:</div>
-        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px;">
-           <span onclick="setAIInput('Yesterday HPCL ki kitni visits thin?')" style="cursor:pointer; background:#f3f4f6; padding:4px 8px; border-radius:12px; font-size:11px; border:1px solid #ddd;">Yesterday HPCL plans?</span>
-           <span onclick="setAIInput('Pending incidents dikhao')" style="cursor:pointer; background:#f3f4f6; padding:4px 8px; border-radius:12px; font-size:11px; border:1px solid #ddd;">Pending Incidents</span>
+          
+          <div style="margin-top:12px; font-size:11px; color:#6b7280; font-weight:600; text-transform:uppercase;">Quick Actions:</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+            <button onclick="setAIInput('Yesterday HPCL ki kitni visits thin?')" style="background:#f3f4f6; border:1px solid #d1d5db; padding:4px 10px; border-radius:15px; font-size:11px; cursor:pointer; hover:bg-gray-200;">Yesterday's Plans</button>
+            <button onclick="setAIInput('Pending incidents ki list dikhao')" style="background:#f3f4f6; border:1px solid #d1d5db; padding:4px 10px; border-radius:15px; font-size:11px; cursor:pointer;">Pending Incidents</button>
+            <button onclick="setAIInput('Kitne record verified hain?')" style="background:#f3f4f6; border:1px solid #d1d5db; padding:4px 10px; border-radius:15px; font-size:11px; cursor:pointer;">Verified Stats</button>
+          </div>
         </div>
       `;
           }
@@ -2216,10 +2216,11 @@
         }
       }
 
-      // Helper function to auto-fill input
+      // ⌨️ Helper to auto-fill input
       function setAIInput(text) {
-        document.getElementById("aiInput").value = text;
-        document.getElementById("aiInput").focus();
+        const input = document.getElementById("aiInput");
+        input.value = text;
+        input.focus();
       }
 
       async function sendAIMessage() {
