@@ -2190,10 +2190,10 @@
 
         const messages = document.getElementById("aiMessages");
 
-        // 👤 USER MESSAGE
+        // User message UI
         messages.innerHTML += `
     <div style="text-align:right;margin-bottom:6px;">
-      <span style="background:#dcfce7;padding:6px 10px;border-radius:8px;display:inline-block;">
+      <span style="background:#dcfce7;padding:6px 10px;border-radius:8px;display:inline-block;max-width:80%;">
         ${msg}
       </span>
     </div>
@@ -2201,48 +2201,44 @@
         input.value = "";
         messages.scrollTop = messages.scrollHeight;
 
-        // 🤖 THINKING
+        // Thinking UI
+        const thinkingId = "ai-thinking-" + Date.now();
         messages.innerHTML += `
-    <div id="aiThinking" style="margin-bottom:6px;">
-      <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;">
-        🤖 Thinking...
+    <div id="${thinkingId}" style="margin-bottom:6px;">
+      <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;font-style:italic;">
+        🤖 AI is searching...
       </span>
     </div>
   `;
+        messages.scrollTop = messages.scrollHeight;
 
         try {
-          const res = await fetch(
-            "https://relcon-backend-jwt-backup.onrender.com/ai/ask",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                question: msg,
-                user: {
-                  engineerName: "Nikhil Trivedi", // 🔁 login user se dynamic kar sakte ho
-                },
-              }),
+          // Note: use absolute path if testing locally, or just '/ai/ask' for production
+          const res = await fetch("/ai/ask", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`, // Added token
             },
-          );
+            body: JSON.stringify({ question: msg }),
+          });
 
           const data = await res.json();
-          document.getElementById("aiThinking").remove();
+          document.getElementById(thinkingId).remove();
 
           messages.innerHTML += `
-      <div style="margin-bottom:6px;">
-        <span style="background:#e5e7eb;padding:6px 10px;border-radius:8px;display:inline-block;">
-          🤖 ${data.reply}
+      <div style="margin-bottom:10px; display:flex; gap:8px;">
+        <span style="font-size:20px;">🤖</span>
+        <span style="background:#f1f5f9;padding:8px 12px;border-radius:8px;display:inline-block;max-width:85%;line-height:1.4;">
+          ${data.reply}
         </span>
       </div>
     `;
           messages.scrollTop = messages.scrollHeight;
         } catch (err) {
-          document.getElementById("aiThinking").remove();
-          messages.innerHTML += `
-      <div style="color:red;">❌ AI Server Error</div>
-    `;
+          if (document.getElementById(thinkingId))
+            document.getElementById(thinkingId).remove();
+          messages.innerHTML += `<div style="color:red; font-size:11px; margin-bottom:5px;">❌ Connection error. Try again.</div>`;
         }
       }
     </script>
