@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -27,7 +27,9 @@
       }
       .toast-show {
         display: block !important;
-        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation:
+          fadein 0.5s,
+          fadeout 0.5s 2.5s;
       }
 
       @keyframes fadein {
@@ -1537,7 +1539,7 @@
         btnElement = null,
         selectedEngineer = "",
         from = "",
-        to = ""
+        to = "",
       ) {
         const fromDate = from || document.getElementById("fromDate").value;
         const toDate = to || document.getElementById("toDate").value;
@@ -1564,7 +1566,7 @@
 
           if (loggedInUser.role === "engineer") {
             filteredData = filteredData.filter(
-              (p) => p.engineer === loggedInUser.engineerName
+              (p) => p.engineer === loggedInUser.engineerName,
             );
           }
 
@@ -1574,13 +1576,13 @@
 
           if (fromDate) {
             filteredData = filteredData.filter(
-              (p) => new Date(p.date) >= new Date(fromDate)
+              (p) => new Date(p.date) >= new Date(fromDate),
             );
           }
 
           if (toDate) {
             filteredData = filteredData.filter(
-              (p) => new Date(p.date) <= new Date(toDate)
+              (p) => new Date(p.date) <= new Date(toDate),
             );
           }
 
@@ -1613,7 +1615,7 @@
           Object.values(plan).some((val) => {
             if (val == null) return false;
             return String(val).toLowerCase().includes(query);
-          })
+          }),
         );
 
         populateTable(result); // 👈 Corrected function call
@@ -1827,9 +1829,9 @@
         document.getElementById("editRoCode").value = plan.roCode || "";
         document.getElementById("editRoName").value = plan.roName || "";
         document.getElementById("editempId").value = plan.empId || "";
-        (document.getElementById("editincidentId").value =
+        ((document.getElementById("editincidentId").value =
           plan.incidentId || ""),
-          (document.getElementById("editPurpose").value = plan.purpose || "");
+          (document.getElementById("editPurpose").value = plan.purpose || ""));
         document.getElementById("editDate").value = plan.date || "";
         document.getElementById("editIssueType").value = plan.issueType || "";
         document.getElementById("editAmcQtr").value = plan.amcQtr || "";
@@ -1891,7 +1893,7 @@
           earthingCheckedby: document.getElementById("editearthingCheckedby")
             .value,
           detailEarthingremark: document.getElementById(
-            "editdetailEarthingremark"
+            "editdetailEarthingremark",
           ).value,
 
           cableRequirmentremark: document.getElementById("editcablerequirment")
@@ -2095,8 +2097,8 @@
         XLSX.writeFile(
           wb,
           `${safeName}_VisitRecords_${date}_${Math.floor(
-            1000 + Math.random() * 9000
-          )}.xlsx`
+            1000 + Math.random() * 9000,
+          )}.xlsx`,
         );
         closeExportMenu();
       }
@@ -2157,8 +2159,8 @@
               d.cableRequirmentremark) &&
             d.roName &&
             !["NO PLAN", "IN LEAVE", "HPCL OFFICE"].includes(
-              d.roName.trim().toUpperCase()
-            )
+              d.roName.trim().toUpperCase(),
+            ),
         );
 
         // ✅ Count RO Code occurrences to detect duplicates
@@ -2206,8 +2208,8 @@
         XLSX.writeFile(
           wb,
           `Earthing Status Report_LKO PAT BEG Site_${safeName}_${fromDate}_${Math.floor(
-            1000 + Math.random() * 9000
-          )}.xlsx`
+            1000 + Math.random() * 9000,
+          )}.xlsx`,
         );
         closeExportMenu();
       }
@@ -2297,7 +2299,7 @@
             document
               .getElementById(id)
               .addEventListener("change", applyAutoFieldLogic);
-          }
+          },
         );
 
         // Connectivity Auto feild
@@ -2386,7 +2388,7 @@
             (err) => {
               console.warn("Location access denied or error:", err.message);
               locationField.value = "Unable to fetch location";
-            }
+            },
           );
         } else {
           locationField.value = "Geolocation not supported";
@@ -2450,7 +2452,7 @@
           location === "Geolocation not supported"
         ) {
           alert(
-            "❌ Location not available. Please allow location access before saving."
+            "❌ Location not available. Please allow location access before saving.",
           );
           return;
         }
@@ -2538,8 +2540,8 @@
             currentSort.direction === "asc"
               ? "desc"
               : currentSort.direction === "desc"
-              ? null
-              : "asc";
+                ? null
+                : "asc";
         } else {
           currentSort.key = key;
           currentSort.direction = "asc";
@@ -2651,7 +2653,7 @@
             `${reportType === "JIOBP" ? "Jio BP" : reportType} Visit Report`,
             pageWidth / 2,
             35,
-            { align: "center" }
+            { align: "center" },
           );
           doc.line(15, 43, pageWidth - 15, 43);
 
@@ -2711,7 +2713,7 @@
               ["Material Requirement", cleanText(status.materialRequirement)],
               ["Relcon Support", cleanText(status.relconsupport)],
               ["RBML Person Informed", cleanText(status.rbmlperson)],
-              ["Status", cleanText(status.status)]
+              ["Status", cleanText(status.status)],
             );
           }
 
@@ -2753,7 +2755,7 @@
 
               // 🔹 SIM DETAILS
               ["JIO SIM Number", cleanText(status.jioSimNumber)],
-              ["Airtel SIM Number", cleanText(status.airtelSimNumber)]
+              ["Airtel SIM Number", cleanText(status.airtelSimNumber)],
             );
           }
 
@@ -2769,13 +2771,13 @@
               [
                 "SIM 1 (Provider / Number)",
                 `${cleanText(status.sim1Provider)} / ${cleanText(
-                  status.sim1Number
+                  status.sim1Number,
                 )}`,
               ],
               [
                 "SIM 2 (Provider / Number)",
                 `${cleanText(status.sim2Provider)} / ${cleanText(
-                  status.sim2Number
+                  status.sim2Number,
                 )}`,
               ],
               ["IEMI Number", cleanText(status.iemiNumber)],
@@ -2800,7 +2802,7 @@
               ["Tank Offline Remark", cleanText(status.tankRemark)],
               ["BOS IP", cleanText(status.bosIP)],
               ["FCC IP", cleanText(status.fccIP)],
-              ["Site Location", cleanText(status.locationField)]
+              ["Site Location", cleanText(status.locationField)],
             );
           }
 
@@ -2835,7 +2837,7 @@
 
           /* ---------------- SAVE ---------------- */
           doc.save(
-            `${reportType}_Report_${plan.roCode}_${plan.roName}_${plan.date}.pdf`
+            `${reportType}_Report_${plan.roCode}_${plan.roName}_${plan.date}.pdf`,
           );
         } catch (err) {
           console.error("❌ PDF Generation Error:", err);
@@ -2984,10 +2986,10 @@
 
         // ✅ Independent handling for Active Material Used
         const usedMaterialField = document.getElementById(
-          "usedMaterialDetails"
+          "usedMaterialDetails",
         );
         const faultyMaterialField = document.getElementById(
-          "faultyMaterialDetails"
+          "faultyMaterialDetails",
         );
 
         if (activeMaterialUsed === "No") {
@@ -3005,7 +3007,7 @@
 
         // ✅ Independent handling for Spare Required
         const materialRequirementField = document.getElementById(
-          "materialRequirement"
+          "materialRequirement",
         );
 
         if (spareRequired === "No") {
@@ -3130,10 +3132,10 @@
       // 🔹 Class-1 WITHOUT SIM
       function renderClass1WithoutSimDevices() {
         const count = Number(
-          document.getElementById("class1Countwithoutsim").value
+          document.getElementById("class1Countwithoutsim").value,
         );
         const container = document.getElementById(
-          "class1DevicesContainerwithoutsim"
+          "class1DevicesContainerwithoutsim",
         );
         container.innerHTML = "";
 
@@ -3185,7 +3187,7 @@
 
       function renderRelconATGFields() {
         const count = parseInt(
-          document.getElementById("relconAtgCount").value || 0
+          document.getElementById("relconAtgCount").value || 0,
         );
 
         const container = document.getElementById("relconAtgContainer");
@@ -3233,7 +3235,7 @@
           // 🔹 Class-1 WITH SIM
           class1DeviceCount: Number(class1Count.value),
           class1Devices: [...document.querySelectorAll(".class1Device")].map(
-            (i) => i.value
+            (i) => i.value,
           ),
 
           // 🔹 Class-1 WITHOUT SIM
@@ -3245,7 +3247,7 @@
           // 🔹 Class-2
           class2DeviceCount: Number(class2Count.value),
           class2Devices: [...document.querySelectorAll(".class2Device")].map(
-            (i) => i.value
+            (i) => i.value,
           ),
 
           // 🔹 RELCON ATG ✅ NEW
@@ -3284,89 +3286,105 @@
       async function openBPCLModal(planId) {
         document.getElementById("bpclPlanId").value = planId;
 
-        // 🔹 Reset
+        // 1. फॉर्म को रिसेट करें
         document.getElementById("bpclForm").reset();
         document.getElementById("class1DevicesContainer").innerHTML = "";
         document.getElementById("class1DevicesContainerwithoutsim").innerHTML =
           "";
         document.getElementById("class2DevicesContainer").innerHTML = "";
-
-        // 🔹 ATG Reset
-        document.getElementById("relconAtgProvided").value = "";
         document.getElementById("relconAtgCountDiv").classList.add("hidden");
         document.getElementById("relconAtgContainer").classList.add("hidden");
         document.getElementById("relconAtgContainer").innerHTML = "";
-        document.getElementById("relconAtgCount").value = "";
+
+        // वर्तमान प्लान का RO Code निकालें
+        const currentPlan = fullData.find((p) => p._id === planId);
+        const roCode = currentPlan ? currentPlan.roCode : null;
 
         try {
+          // 2. पहले चेक करें कि क्या इस विशिष्ट प्लान का डेटा पहले से सेव है
           const res = await fetch(
             `${baseUrl}/bpclStatus/getBPCLStatusByPlan/${planId}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
-            }
+            },
           );
 
           if (res.status === 200) {
             const data = await res.json();
+            populateBPCLFields(data);
+          } else if (roCode) {
+            // 3. अगर इस प्लान का डेटा नहीं है, तो RO Code के आधार पर Verified डेटा ढूंढें
+            console.log(`Checking for verified records for RO: ${roCode}`);
+            const resVerified = await fetch(
+              `${baseUrl}/bpclStatus/getLatestVerifiedByRoCode/${roCode}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              },
+            );
 
-            // 🔹 Counts
-            class1Count.value = data.class1DeviceCount || 0;
-            class1Countwithoutsim.value = data.class1WithoutSimCount || 0;
-            class2Count.value = data.class2DeviceCount || 0;
-
-            // 🔹 Render device fields
-            renderClass1Devices();
-            renderClass1WithoutSimDevices();
-            renderClass2Devices();
-
-            // 🔹 Fill values
-            data.class1Devices?.forEach((v, i) => {
-              document.querySelectorAll(".class1Device")[i].value = v;
-            });
-
-            data.class1WithoutSimDevices?.forEach((v, i) => {
-              document.querySelectorAll(".class1WithoutSimDevice")[i].value = v;
-            });
-
-            data.class2Devices?.forEach((v, i) => {
-              document.querySelectorAll(".class2Device")[i].value = v;
-            });
-
-            // 🔹 ATG DETAILS ✅ NEW
-            if (data.relconAtgProvided === "YES") {
-              document.getElementById("relconAtgProvided").value = "YES";
-              document
-                .getElementById("relconAtgCountDiv")
-                .classList.remove("hidden");
-              document
-                .getElementById("relconAtgContainer")
-                .classList.remove("hidden");
-
-              document.getElementById("relconAtgCount").value =
-                data.relconAtgCount || 0;
-
-              renderRelconATGFields();
-
-              data.relconAtgDetails?.forEach((v, i) => {
-                const el = document.getElementById(`relconAtg_${i + 1}`);
-                if (el) el.value = v;
-              });
-            } else {
-              document.getElementById("relconAtgProvided").value = "NO";
+            if (resVerified.ok) {
+              const verifiedData = await resVerified.json();
+              console.log("✅ Verified record found! Auto-filling fields...");
+              populateBPCLFields(verifiedData);
+              showToast("Auto-filled from last verified record", "bg-blue-600");
             }
-
-            // 🔹 SIM DETAILS
-            bpclJioSim.value = data.jioSimNumber || "";
-            bpclAirtelSim.value = data.airtelSimNumber || "";
           }
         } catch (err) {
-          console.warn("BPCL status not found, opening blank form");
+          console.warn("Error during pre-fill logic:", err);
         }
 
-        // 🔹 Open modal
         document.getElementById("bpclModal").classList.remove("hidden");
+      }
+      // फॉर्म भरने के लिए हेल्पर फंक्शन
+      function populateBPCLFields(data) {
+        class1Count.value = data.class1DeviceCount || 0;
+        class1Countwithoutsim.value = data.class1WithoutSimCount || 0;
+        class2Count.value = data.class2DeviceCount || 0;
+
+        renderClass1Devices();
+        renderClass1WithoutSimDevices();
+        renderClass2Devices();
+
+        data.class1Devices?.forEach((v, i) => {
+          const inputs = document.querySelectorAll(".class1Device");
+          if (inputs[i]) inputs[i].value = v;
+        });
+
+        data.class1WithoutSimDevices?.forEach((v, i) => {
+          const inputs = document.querySelectorAll(".class1WithoutSimDevice");
+          if (inputs[i]) inputs[i].value = v;
+        });
+
+        data.class2Devices?.forEach((v, i) => {
+          const inputs = document.querySelectorAll(".class2Device");
+          if (inputs[i]) inputs[i].value = v;
+        });
+
+        if (data.relconAtgProvided === "YES") {
+          document.getElementById("relconAtgProvided").value = "YES";
+          document
+            .getElementById("relconAtgCountDiv")
+            .classList.remove("hidden");
+          document
+            .getElementById("relconAtgContainer")
+            .classList.remove("hidden");
+          document.getElementById("relconAtgCount").value =
+            data.relconAtgCount || 0;
+          renderRelconATGFields();
+          data.relconAtgDetails?.forEach((v, i) => {
+            const el = document.getElementById(`relconAtg_${i + 1}`);
+            if (el) el.value = v;
+          });
+        } else {
+          document.getElementById("relconAtgProvided").value = "NO";
+        }
+
+        bpclJioSim.value = data.jioSimNumber || "";
+        bpclAirtelSim.value = data.airtelSimNumber || "";
       }
     </script>
   </body>
