@@ -1,12 +1,25 @@
 const Groq = require("groq-sdk");
 const mongoose = require("mongoose");
 
-// Models (Ensure they are registered)
+// Models Import (Sahi paths ensure karein)
 const DailyPlan = require("../models/DailyPlan");
 const Incident = require("../models/Incident");
 const Status = require("../models/Status");
 const BPCLStatus = require("../models/BPCLStatus");
 const JioBPStatus = require("../models/jioBPStatus");
+const Task = require("../models/Task");
+const MaterialRequirement = require("../models/MaterialRequirement");
+
+// Model Map (Taaki case-sensitive error na aaye)
+const modelMap = {
+  Status: Status,
+  DailyPlan: DailyPlan,
+  Incident: Incident,
+  BPCLStatus: BPCLStatus,
+  JioBPStatus: JioBPStatus,
+  Task: Task,
+  MaterialRequirement: MaterialRequirement,
+};
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -15,34 +28,25 @@ async function handleAIQuery(question) {
     const now = new Date();
     const todayStr = now.toLocaleDateString("en-GB").replace(/\//g, "-");
 
-    // Step 1: Architect - Generate the perfect MongoDB Pipeline
     const architectCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are the Master Database Architect for RELCON SYSTEMS.
-          Today's Date: ${todayStr}.
-
-          DATABASE STRUCTURE (CRITICAL):
-          - DailyPlan (Collection: 'dailyplans'): Fields: roCode, roName, engineer, date, completionStatus.
-          - Status (Collection: 'status'): Fields: planId, spareUsed (contains material codes), earthingStatus. [Used for HPCL]
-          - JioBPStatus (Collection: 'jiobpsstatuses'): Fields: planId, usedMaterialDetails (contains material codes), hpsdId.
-          - BPCLStatus (Collection: 'bpclstatuses'): Fields: planId, relconAtgDetails, class1Devices.
-
-          SEARCH RULES:
-          1. Material Search (Codes like 5ER..., J0K..., 1-RF...):
-             - These codes are often PART of a string (e.g., "1-RF SLAVE (5ER32505070)").
-             - Use $regex with $options: "i".
-             - ALWAYS $lookup with 'dailyplans' to get the RO Name and Engineer.
+          content: `You are the Lead Data Engineer at RELCON. Today: ${todayStr}.
           
-          2. Joins (Lookup):
-             - Join from 'status'/'jiobpsstatuses' to 'dailyplans' using:
-               { "$lookup": { "from": "dailyplans", "localField": "planId", "foreignField": "_id", "as": "planDetails" } }
+          COLLECTION NAMES:
+          - HPCL Spares: 'Status' (field: spareUsed)
+          - JioBP Spares: 'JioBPStatus' (field: usedMaterialDetails)
+          - BPCL Spares: 'BPCLStatus' (fields: class1Devices, relconAtgDetails)
+          - Plans/ROs/Engineers: 'DailyPlan'
+          
+          SEARCH RULES:
+          1. If searching for codes (5ER..., J0K..., 1-RF...), ALWAYS use {"$regex": "code_without_special_chars", "$options": "i"}.
+          2. IMPORTANT: To get RO Name or Engineer Name from a Status/Spare search, you MUST use $lookup:
+             { "$lookup": { "from": "dailyplans", "localField": "planId", "foreignField": "_id", "as": "planDetails" } }
+          3. Collection names must be exactly: "Status", "DailyPlan", "Incident", "BPCLStatus", or "JioBPStatus".
 
-          3. Formatting:
-             - If the user provides a code with a dash like '5ER32505070-', clean it to '5ER32505070'.
-
-          STRICT RESPONSE: Respond ONLY with JSON {"collection": "ModelName", "pipeline": [...]}.`,
+          STRICT RESPONSE: Respond ONLY with JSON {"collection": "ExactModelName", "pipeline": [...]}.`,
         },
         { role: "user", content: question },
       ],
@@ -53,25 +57,25 @@ async function handleAIQuery(question) {
 
     const strategy = JSON.parse(architectCompletion.choices[0].message.content);
 
-    // Step 2: Model Retrieval with Fallback
-    const modelName = strategy.collection;
-    const Model = mongoose.model(modelName);
+    // Fix: Use the Map instead of mongoose.model() to avoid Schema errors
+    const Model = modelMap[strategy.collection];
 
-    if (!Model) return "Database Error: Model not found.";
+    if (!Model) {
+      console.error("Model Not Found in Map:", strategy.collection);
+      return "System configuration error: Model mapping failed.";
+    }
 
-    // Step 3: Execute Aggregation
+    // Execute Data Fetching
     const rawData = await Model.aggregate(strategy.pipeline).limit(10);
 
-    // Step 4: Communicator - Final Answer
     const communicatorCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `You are a Senior RELCON Admin. 
-          Analyze the data. If 'planDetails' is present, it contains information about the site (RO Name, Code, Engineer).
-          - If data is found: Tell the user EXACTLY which RO (Name & Code) used the material and which engineer did it.
-          - If no data: Explain that you checked all status reports for the code but couldn't find a match.
-          - Language: Hinglish (Hindi + English).`,
+          content: `You are a helpful RELCON Business Assistant. 
+          - If data contains 'planDetails', use it to mention RO Name, RO Code, and Engineer.
+          - If no data [], explain exactly what was searched.
+          - Use a mix of Hindi and English.`,
         },
         {
           role: "user",
@@ -79,13 +83,13 @@ async function handleAIQuery(question) {
         },
       ],
       model: "llama-3.1-8b-instant",
-      temperature: 0.2,
+      temperature: 0.3,
     });
 
     return communicatorCompletion.choices[0].message.content.trim();
   } catch (error) {
-    console.error("DEBUG_AI_LOG:", error);
-    return "Query process karne mein samasya ho rahi hai. Kripya details re-check karein.";
+    console.error("CRITICAL_AI_ERROR:", error);
+    return "Maaf kijiye, database access karne mein error aaya. Kripya check karein ki query sahi hai.";
   }
 }
 
