@@ -2216,11 +2216,59 @@
 
       //Status model
 
-      function openStatusModal(planId) {
+      async function openStatusModal(planId) {
+        // 1. Modal और Plan ID सेट करें
         document.getElementById("statusPlanId").value = planId;
         document.getElementById("statusModal").classList.remove("hidden");
 
-        // 🔁 Apply logic to auto-fill & make fields readonly based on dropdown values
+        // 2. फॉर्म को पूरी तरह रिसेट करें (ताकि पुराना डेटा न दिखे)
+        if (typeof isViewOnly === "undefined" || !isViewOnly) {
+          document.getElementById("statusForm").reset();
+        }
+
+        // 3. वर्तमान प्लान से RO Code निकालें
+        const currentPlan = fullData.find((p) => p._id === planId);
+        const roCode = currentPlan ? currentPlan.roCode : null;
+
+        // 4. ✅ Verified Data Prefill Logic (New)
+        if (roCode) {
+          try {
+            const response = await fetch(
+              `${baseUrl}/getLatestVerifiedHPCLByRoCode/${roCode}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              },
+            );
+
+            if (response.ok) {
+              const verifiedData = await response.json();
+
+              // डेटा मिलने पर फील्ड्स भरें
+              if (verifiedData.probeMake) {
+                document.getElementById("probeMake").value =
+                  verifiedData.probeMake;
+              }
+              if (verifiedData.probeSize) {
+                document.getElementById("probeSize").value =
+                  verifiedData.probeSize;
+              }
+
+              console.log(
+                "✅ Probe details pre-filled from last verified record.",
+              );
+              showToast(
+                "Auto-filled Probe details from verified record",
+                "bg-blue-600",
+              );
+            }
+          } catch (err) {
+            console.warn("Could not fetch verified HPCL status:", err);
+          }
+        }
+
+        // 5. 🔁 Dropdown के आधार पर फील्ड्स को ऑटो-फिल और Readonly करने का लॉजिक
         function applyAutoFieldLogic() {
           const duOffline = document.getElementById("duOffline").value;
           const tankOffline = document.getElementById("tankOffline").value;
@@ -2232,7 +2280,6 @@
           if (duOffline === "ALL OK") {
             document.getElementById("duDependency").value = "NO";
             document.getElementById("duRemark").value = "ALL DU IN ONLINE MODE";
-
             document
               .getElementById("duDependency")
               .setAttribute("disabled", true);
@@ -2247,7 +2294,6 @@
             document.getElementById("tankDependency").value = "NO";
             document.getElementById("tankRemark").value =
               "ALL TANK IN ONLINE MODE";
-
             document
               .getElementById("tankDependency")
               .setAttribute("disabled", true);
@@ -2267,13 +2313,9 @@
               "NO ACTIVE MATERIAL USED";
             document.getElementById("faultySpare").value =
               "NO FAULTY MATERIAL CREATED";
-
             document
               .getElementById("activeSpare")
               .setAttribute("readonly", true);
-            // document
-            // .getElementById("faultySpare")
-            // .setAttribute("readonly", true);
           } else {
             document.getElementById("activeSpare").removeAttribute("readonly");
             document.getElementById("faultySpare").removeAttribute("readonly");
@@ -2293,7 +2335,7 @@
           }
         }
 
-        // 👂 Add listeners for changes to trigger auto-fill logic
+        // Event Listeners जोड़ें
         ["duOffline", "tankOffline", "spareUsed", "spareRequirment"].forEach(
           (id) => {
             document
@@ -2302,12 +2344,11 @@
           },
         );
 
-        // Connectivity Auto feild
+        // Connectivity Auto field logic
         document
           .getElementById("connectivityType")
           .addEventListener("change", function () {
             const selected = this.value;
-
             const sim1Provider = document.getElementById("sim1Provider");
             const sim1Number = document.getElementById("sim1Number");
             const sim2Provider = document.getElementById("sim2Provider");
@@ -2315,22 +2356,12 @@
             const iemiNumber = document.getElementById("iemiNumber");
 
             if (selected === "RELCON SIM") {
-              // ✅ Enable fields
               sim1Provider.removeAttribute("disabled");
               sim1Number.removeAttribute("disabled");
               sim2Provider.removeAttribute("disabled");
               sim2Number.removeAttribute("disabled");
               iemiNumber.removeAttribute("disabled");
 
-              // Clear first
-              sim1Provider.value = "";
-              sim1Number.value = "";
-              sim2Provider.value = "";
-              sim2Number.value = "";
-              iemiNumber.value = "";
-
-              // ✅ Fetch SIM details from backend if RO Code exists
-              const roCode = getCurrentRoCode(); // implement this function
               if (roCode) {
                 fetch(`${baseUrl}/getSimDetails/${roCode}`, {
                   headers: {
@@ -2345,18 +2376,16 @@
                     sim2Provider.value = data.sim2Provider || "";
                     iemiNumber.value = data.iemiNumber || "";
                   })
-                  .catch((err) => {
-                    console.error("❌ Failed to fetch SIM details", err);
-                  });
+                  .catch((err) =>
+                    console.error("❌ SIM detail fetch failed", err),
+                  );
               }
             } else {
-              // ❌ Not RELCON SIM → disable & NA
               sim1Provider.value = "NA";
               sim1Number.value = "NA";
               sim2Provider.value = "NA";
               sim2Number.value = "NA";
               iemiNumber.value = "NA";
-
               sim1Provider.setAttribute("disabled", true);
               sim1Number.setAttribute("disabled", true);
               sim2Provider.setAttribute("disabled", true);
@@ -2365,18 +2394,14 @@
             }
           });
 
-        //Capital Letter
+        // 6. Textarea Capitalization
         document.querySelectorAll("textarea").forEach((el) => {
           el.addEventListener("input", function () {
             this.value = this.value.toUpperCase();
           });
         });
-        // Clear fields if adding
-        if (typeof isViewOnly === "undefined" || !isViewOnly) {
-          document.getElementById("statusForm").reset();
-        }
 
-        // 🛰️ Fetch and set current location
+        // 7. 🛰️ Geolocation Fetching
         const locationField = document.getElementById("locationField");
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -2386,7 +2411,7 @@
               locationField.value = `${lat}, ${lng}`;
             },
             (err) => {
-              console.warn("Location access denied or error:", err.message);
+              console.warn("Location error:", err.message);
               locationField.value = "Unable to fetch location";
             },
           );
@@ -2394,7 +2419,6 @@
           locationField.value = "Geolocation not supported";
         }
       }
-
       // Example: Add this above or below openStatusModal(planId)
       function getCurrentRoCode() {
         const planId = document.getElementById("statusPlanId").value;
