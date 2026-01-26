@@ -175,7 +175,7 @@ router.put("/verifyBPCLStatus/:id", authMiddleware, async (req, res) => {
         verifiedBy: req.user.username,
         verifiedAt: new Date(),
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
@@ -232,5 +232,42 @@ router.delete("/deleteBPCLStatus/:id", authMiddleware, async (req, res) => {
     });
   }
 });
+
+/* -------------------------------------------------
+   GET LATEST VERIFIED STATUS BY RO CODE (FOR AUTO-FILL)
+------------------------------------------------- */
+router.get(
+  "/getLatestVerifiedByRoCode/:roCode",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { roCode } = req.params;
+
+      // 1. पहले इस RO Code से जुड़े सभी DailyPlans ढूँढें
+      const plans = await DailyPlan.find({ roCode }).select("_id");
+      const planIds = plans.map((p) => p._id);
+
+      // 2. इन Plans में से वो BPCLStatus ढूँढें जो Verified हो और सबसे लेटेस्ट हो
+      const status = await BPCLStatus.findOne({
+        planId: { $in: planIds },
+        isVerified: true,
+      })
+        .sort({ createdAt: -1 }) // सबसे नया पहले
+        .lean();
+
+      if (!status) {
+        return res.status(404).json({
+          success: false,
+          message: "No verified record found for this RO Code",
+        });
+      }
+
+      res.status(200).json(status);
+    } catch (err) {
+      console.error("❌ Error fetching verified status:", err);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  },
+);
 
 module.exports = router;
