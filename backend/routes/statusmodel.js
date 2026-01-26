@@ -152,7 +152,7 @@ router.post("/saveStatus", async (req, res) => {
         fccIP,
         locationField,
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     // ✅ Mark DailyPlan as statusSaved = true
@@ -227,7 +227,7 @@ router.get("/getMergedStatusRecords", async (req, res) => {
           taskGenerated: !!taskExists, // ✅ new field
           oms03: status.oms03 || "No",
         };
-      })
+      }),
     );
 
     res.json(merged);
@@ -329,7 +329,7 @@ router.put("/updateStatus/:id", verifyToken, async (req, res) => {
 
     const { before, after } = getChangedFields(
       oldData.toObject(),
-      updated.toObject()
+      updated.toObject(),
     );
 
     const plan = updated.planId || {};
@@ -419,7 +419,7 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
     const updated = await Status.findByIdAndUpdate(
       id,
       { isVerified: true },
-      { new: true }
+      { new: true },
     ).populate("planId");
 
     if (!updated) return res.status(404).send("Status not found");
@@ -525,11 +525,43 @@ router.put("/verifyStatus/:id", verifyToken, async (req, res) => {
     res.send(
       taskCreated
         ? "Status verified successfully and task generated"
-        : "Status verified successfully"
+        : "Status verified successfully",
     );
   } catch (err) {
     console.error("Verify error:", err);
     res.status(500).send("Verify error: " + err.message);
+  }
+});
+
+/* -------------------------------------------------
+   GET LATEST VERIFIED HPCL STATUS BY RO CODE
+------------------------------------------------- */
+router.get("/getLatestVerifiedHPCLByRoCode/:roCode", async (req, res) => {
+  try {
+    const { roCode } = req.params;
+
+    // 1. इस RO Code के सभी DailyPlans ढूंढें
+    const plans = await DailyPlan.find({ roCode }).select("_id");
+    const planIds = plans.map((p) => p._id);
+
+    // 2. सबसे लेटेस्ट Verified स्टेटस ढूंढें
+    const lastVerified = await Status.findOne({
+      planId: { $in: planIds },
+      isVerified: true,
+    })
+      .sort({ createdAt: -1 })
+      .select("probeMake probeSize") // हमें सिर्फ ये दो फील्ड्स चाहिए
+      .lean();
+
+    if (!lastVerified) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No verified record found" });
+    }
+
+    res.json(lastVerified);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
