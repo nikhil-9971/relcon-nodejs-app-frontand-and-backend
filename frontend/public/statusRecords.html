@@ -46,16 +46,28 @@
     animation: popBadge 0.6s ease;
   }
 
-  .action-required-badge {
-    display: inline-block;
-    background-color: #fef3c7; /* Light Yellow */
-    color: #92400e; /* Brownish Yellow */
-    font-size: 10px;
-    font-weight: 600;
-    border: 1px solid #f59e0b; /* Orange/Yellow */
-    border-radius: 4px;
-    padding: 2px 6px;
-    margin-left: 4px;
+/* Professional Glow Animation */
+@keyframes pulse-warning {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.action-required-badge {
+  display: inline-block;
+  background-color: #fffbeb; /* Light amber */
+  color: #b45309; /* Deep amber text */
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: pulse-warning 2s infinite; /* Glow Effect */
+  cursor: help;
 }
 
   @keyframes popBadge {
@@ -711,23 +723,25 @@ function _renderTableNow(data) {
           // ... existing code in _renderTableNow ...
 
 if (col.key === "roCode") {
-    // Check if Verified
-    if (isVerified) {
-        cellContent += ` <span class="verified-badge">✔ Verified</span>`;
-        if (record.taskGenerated) {
-            cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
-        }
-    } else {
-        // ✅ New Feature: Action Required Logic
-        const needsAction = 
-            (record.duOffline && record.duOffline !== "ALL OK") || 
-            (record.tankOffline && record.tankOffline !== "ALL OK") || 
-            (record.earthingStatus && record.earthingStatus !== "OK");
+  const isVerified = record.isVerified === true || record.isVerified === "true";
 
-        if (needsAction) {
-            cellContent += ` <span class="action-required-badge">⚠️ Action Required</span>`;
-        }
+  if (isVerified) {
+    // अगर Verified है तो ग्रीन बैच
+    cellContent += ` <span class="verified-badge">✔ Verified</span>`;
+    if (record.taskGenerated) {
+      cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
     }
+  } else {
+    // ✅ Logic for Action Required (When NOT Verified)
+    // conditions: duOffline != ALL OK OR tankOffline != ALL OK OR earthingStatus != OK
+    const hasDuIssue = record.duOffline && record.duOffline !== "ALL OK";
+    const hasTankIssue = record.tankOffline && record.tankOffline !== "ALL OK";
+    const hasEarthingIssue = record.earthingStatus && record.earthingStatus !== "OK";
+
+    if (hasDuIssue || hasTankIssue || hasEarthingIssue) {
+      cellContent += ` <span class="action-required-badge" title="Pending: Issues in DU/Tank/Earthing">Action Required</span>`;
+    }
+  }
 }
 
 // ... rest of the code ...
