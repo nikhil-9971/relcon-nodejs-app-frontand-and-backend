@@ -18,6 +18,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+
+    <!-- Tailwind & Plugins -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/emoji-button.min.js"></script>
 
@@ -38,12 +40,34 @@
         overflow: hidden;
       }
 
-      /* Sidebar Salesforce Style */
+      /* Sidebar Responsive Logic */
       .sidebar {
         width: var(--sidebar-w);
         background: #ffffff;
         border-right: 1px solid var(--sf-border);
-        z-index: 50;
+        transition: transform 0.3s ease-in-out;
+        z-index: 100;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          position: fixed;
+          height: 100%;
+          transform: translateX(-100%);
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          z-index: 90;
+        }
+        .sidebar-overlay.show {
+          display: block;
+        }
       }
 
       .nav-link {
@@ -56,7 +80,6 @@
         transition: all 0.2s;
         cursor: pointer;
       }
-
       .nav-link i {
         width: 22px;
         font-size: 14px;
@@ -86,7 +109,6 @@
         padding: 1.5rem 1.25rem 0.5rem;
       }
 
-      /* Header Area */
       .top-header {
         height: 55px;
         background: #ffffff;
@@ -94,21 +116,10 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 1.5rem;
+        padding: 0 1rem;
         z-index: 60;
       }
 
-      .search-bar {
-        background: #f3f3f2;
-        border: 1px solid var(--sf-border);
-        border-radius: 4px;
-        padding: 4px 12px 4px 32px;
-        font-size: 12px;
-        width: 320px;
-        outline: none;
-      }
-
-      /* Stylish Progress Bar */
       #progressBar {
         position: fixed;
         top: 0;
@@ -134,7 +145,6 @@
         border-radius: 10px;
       }
 
-      /* Floating Action Buttons */
       .fab-btn {
         width: 50px;
         height: 50px;
@@ -150,7 +160,13 @@
         transform: scale(1.1);
       }
 
-      /* Chat Styles */
+      /* Chat UI Components */
+      #chatBox,
+      #aiChatBox {
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        border: 1px solid var(--sf-border);
+      }
       .msg {
         max-width: 85%;
         padding: 8px 12px;
@@ -174,45 +190,51 @@
   <body class="flex flex-col h-screen">
     <div id="progressBar"></div>
 
-    <!-- Header Section -->
+    <!-- Mobile Sidebar Overlay -->
+    <div
+      id="sidebarOverlay"
+      class="sidebar-overlay"
+      onclick="toggleSidebar()"
+    ></div>
+
+    <!-- Header -->
     <header class="top-header">
-      <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="md:hidden text-slate-600 p-1">
+          <i class="fa-solid fa-bars-staggered text-xl"></i>
+        </button>
         <div class="flex items-center gap-2">
-          <div class="bg-blue-600 p-1 rounded shadow-lg shadow-blue-200">
-            <i class="fa-solid fa-bolt-lightning text-white text-lg"></i>
+          <div class="bg-blue-600 p-1.5 rounded shadow-lg shadow-blue-200">
+            <i class="fa-solid fa-cloud text-white text-base"></i>
           </div>
-          <span class="font-bold text-lg text-slate-800 tracking-tight"
+          <span
+            class="font-bold text-base text-slate-800 tracking-tight hidden xs:block"
             >RELCON <span class="text-blue-600">SYSTEMS</span></span
           >
         </div>
-
-        <div class="relative hidden lg:block">
+        <div class="relative hidden lg:block ml-4">
           <i
             class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-slate-400 text-xs"
           ></i>
           <input
             type="text"
-            placeholder="Search Sites, Reports or Tasks..."
-            class="search-bar"
+            placeholder="Global Search..."
+            class="bg-[#f3f3f2] border border-[#dddbda] rounded px-8 py-1 text-xs w-72 outline-none focus:bg-white focus:border-blue-500"
           />
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <span
-          class="text-[10px] font-bold text-slate-400 border-r pr-4 border-slate-200 uppercase tracking-widest"
-          >Build 27.10.25</span
+          class="hidden sm:inline text-[9px] font-bold text-slate-400 uppercase tracking-widest border-r pr-3"
+          >V 27.10.25</span
         >
         <div
           id="userDetails"
-          class="text-[12px] font-semibold text-slate-700 flex items-center gap-2"
+          class="text-[11px] font-semibold text-slate-700 flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border"
         >
-          <div
-            class="w-8 h-8 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full font-bold"
-          >
-            U
-          </div>
-          <span>Loading Profile...</span>
+          <i class="fa-solid fa-user-circle text-blue-600 text-lg"></i>
+          <span>Loading User...</span>
         </div>
       </div>
     </header>
@@ -220,10 +242,11 @@
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar Navigation -->
       <aside id="sidebar" class="sidebar flex flex-col h-full overflow-hidden">
-        <nav class="flex-1 overflow-y-auto custom-scrollbar">
-          <p class="menu-category">General</p>
+        <nav class="flex-1 overflow-y-auto custom-scrollbar pt-2">
+          <p class="menu-category">Main Console</p>
           <a onclick="loadPage('overview.html', this)" class="nav-link">
-            <i class="fa-solid fa-gauge-high"></i> <span>Dashboard Home</span>
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Insights Dashboard</span>
           </a>
           <a
             onclick="loadPage('dailyPlan.html', this)"
@@ -245,23 +268,23 @@
             onclick="loadPage('statusRecords.html', this)"
             class="nav-link hidden"
           >
-            <i class="fa-solid fa-database"></i> <span>HPCL Status</span>
+            <i class="fa-solid fa-server"></i> <span>HPCL Status Logs</span>
           </a>
           <a
             id="tasklink"
             onclick="loadPage('taskReport.html', this)"
             class="nav-link hidden"
           >
-            <i class="fa-solid fa-list-check"></i> <span>Task Report</span>
+            <i class="fa-solid fa-clipboard-list"></i> <span>Tasks Report</span>
           </a>
 
-          <p class="menu-category">Field Ops</p>
+          <p class="menu-category">Operations</p>
           <a
             id="taskManagementLink"
             onclick="loadPage('taskManager.html', this)"
             class="nav-link hidden"
           >
-            <i class="fa-solid fa-tasks"></i> <span>Task Management</span>
+            <i class="fa-solid fa-list-check"></i> <span>Task Management</span>
           </a>
           <a
             id="incidentId"
@@ -269,17 +292,10 @@
             class="nav-link hidden"
           >
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>Incidents</span>
+            <span>Field Incidents</span>
           </a>
           <a onclick="loadPage('romaster.html', this)" class="nav-link">
-            <i class="fa-solid fa-building-circle-check"></i>
-            <span>RO Master</span>
-          </a>
-          <a
-            onclick="loadPage('materialrequirement.html', this)"
-            class="nav-link"
-          >
-            <i class="fa-solid fa-box-open"></i> <span>Material Tracking</span>
+            <i class="fa-solid fa-database"></i> <span>RO Master Database</span>
           </a>
 
           <p id="adminLabel" class="menu-category hidden">Governance</p>
@@ -288,59 +304,63 @@
             onclick="loadPage('auditReport.html', this)"
             class="nav-link hidden"
           >
-            <i class="fa-solid fa-shield-halved"></i> <span>Audit Logs</span>
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>System Audit Logs</span>
           </a>
         </nav>
 
-        <!-- Bottom Control -->
         <div class="p-4 bg-slate-50 border-t">
           <button
             id="addSiteBtn"
             onclick="openNewSiteModal()"
-            class="hidden w-full mb-3 bg-white border border-blue-600 text-blue-600 py-2 rounded font-bold text-[11px] hover:bg-blue-50 transition uppercase"
+            class="hidden w-full mb-3 bg-white border border-blue-600 text-blue-600 py-2 rounded font-bold text-[10px] uppercase transition hover:bg-blue-50"
           >
             + Add New Site
           </button>
           <button
             onclick="logout()"
-            class="w-full bg-rose-600 text-white py-2 rounded font-bold text-[11px] hover:bg-rose-700 transition uppercase"
+            class="w-full bg-rose-600 text-white py-2 rounded font-bold text-[10px] uppercase hover:bg-rose-700 transition shadow-md shadow-rose-100"
           >
-            Logout
+            Sign Out
           </button>
         </div>
       </aside>
 
-      <!-- Main Workspace -->
+      <!-- Main Content Area -->
       <main class="flex-1 relative bg-white">
         <iframe id="contentFrame" src="dailyPlan.html"></iframe>
       </main>
     </div>
 
-    <!-- Modals Section -->
+    <!-- Modals (Add Site) -->
     <div
       id="newSiteModal"
-      class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100]"
+      class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4"
     >
-      <div class="bg-white rounded-lg w-full max-w-2xl shadow-2xl border">
+      <div
+        class="bg-white rounded-lg w-full max-w-2xl shadow-2xl border overflow-hidden"
+      >
         <div
-          class="px-6 py-4 border-b flex justify-between items-center bg-slate-50 rounded-t-lg"
+          class="px-6 py-4 border-b flex justify-between items-center bg-slate-50"
         >
-          <h2 class="text-sm font-bold text-slate-800">ADD NEW SITE RECORD</h2>
+          <h2 class="text-xs font-bold text-slate-800">
+            CREATE NEW SITE RECORD
+          </h2>
           <button
             onclick="closeNewSiteModal()"
-            class="text-slate-400 hover:text-slate-800"
+            class="text-slate-400 hover:text-slate-800 text-xl"
           >
             ✕
           </button>
         </div>
-        <div class="p-6 grid grid-cols-2 gap-4 text-xs">
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div>
             <label class="font-bold text-slate-500 uppercase block mb-1"
               >Zone</label
             >
             <select
               id="newZone"
-              class="w-full border p-2 rounded outline-blue-500"
+              class="w-full border p-2 rounded outline-none focus:border-blue-500"
             >
               <option>ECZ</option>
               <option>NCZ</option>
@@ -353,17 +373,18 @@
             <input
               id="newRoCode"
               type="text"
-              class="w-full border p-2 rounded outline-blue-500"
+              class="w-full border p-2 rounded outline-none focus:border-blue-500"
+              placeholder="1362xxxx"
             />
           </div>
-          <div class="col-span-2">
+          <div class="sm:col-span-2">
             <label class="font-bold text-slate-500 uppercase block mb-1"
               >RO Name</label
             >
             <input
               id="newRoName"
               type="text"
-              class="w-full border p-2 rounded uppercase outline-blue-500"
+              class="w-full border p-2 rounded uppercase outline-none focus:border-blue-500"
             />
           </div>
           <div>
@@ -372,7 +393,7 @@
             >
             <select
               id="newRegion"
-              class="w-full border p-2 rounded outline-blue-500"
+              class="w-full border p-2 rounded outline-none focus:border-blue-500"
             >
               <option>BEGUSARAI RET RO</option>
               <option>PATNA RET RO</option>
@@ -385,25 +406,24 @@
             >
             <select
               id="newPhase"
-              class="w-full border p-2 rounded outline-blue-500"
+              class="w-full border p-2 rounded outline-none focus:border-blue-500"
             >
               <option>HPCL/Phase-X</option>
               <option>RBML</option>
+              <option>BPCL/IOT</option>
             </select>
           </div>
         </div>
-        <div
-          class="p-4 bg-slate-50 border-t flex justify-end gap-3 rounded-b-lg"
-        >
+        <div class="p-4 bg-slate-50 border-t flex justify-end gap-3">
           <button
             onclick="closeNewSiteModal()"
-            class="px-4 py-1.5 border rounded font-semibold text-slate-600"
+            class="px-5 py-2 border rounded font-semibold text-slate-600"
           >
             Cancel
           </button>
           <button
             onclick="submitNewSite()"
-            class="px-6 py-1.5 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700"
+            class="px-7 py-2 bg-blue-600 text-white rounded font-bold uppercase text-[10px]"
           >
             Save Record
           </button>
@@ -411,7 +431,7 @@
       </div>
     </div>
 
-    <!-- Floating Buttons -->
+    <!-- Floating UI Controls -->
     <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-[1000]">
       <div
         onclick="toggleAIChat()"
@@ -419,7 +439,10 @@
       >
         🤖
       </div>
-      <div onclick="openChatBox()" class="fab-btn bg-blue-600 text-white">
+      <div
+        onclick="openChatBox()"
+        class="fab-btn bg-blue-600 text-white relative"
+      >
         <i class="fa-solid fa-comments text-xl"></i>
         <span
           id="mentionBadge"
@@ -429,44 +452,46 @@
       </div>
     </div>
 
-    <!-- AI & Chat Logic Blocks -->
+    <!-- AI Chat Box -->
     <div
       id="aiChatBox"
-      class="hidden fixed bottom-24 right-6 w-80 h-[450px] bg-white shadow-2xl rounded-2xl overflow-hidden flex flex-col z-[1000] border"
+      class="hidden fixed bottom-24 right-6 w-80 h-[450px] bg-white shadow-2xl flex flex-col z-[1000] overflow-hidden"
     >
       <div
         class="p-4 bg-emerald-600 text-white flex justify-between items-center font-bold"
       >
-        <span>🤖 AI Assistant</span><button onclick="toggleAIChat()">✕</button>
+        <span>🤖 AI ASSISTANT</span><button onclick="toggleAIChat()">✕</button>
       </div>
       <div
         id="aiMessages"
-        class="flex-1 p-4 overflow-y-auto bg-slate-50 space-y-3"
+        class="flex-1 p-4 overflow-y-auto bg-slate-50 space-y-3 custom-scrollbar"
       ></div>
-      <div class="p-3 border-t flex gap-2">
+      <div class="p-3 border-t bg-white flex gap-2">
         <input
           id="aiInput"
           type="text"
-          placeholder="Ask AI..."
-          class="flex-1 p-2 border rounded-lg text-xs outline-none"
-        /><button
+          placeholder="Ask something..."
+          class="flex-1 border p-2 rounded-lg text-xs outline-none focus:border-emerald-500"
+        />
+        <button
           onclick="sendAIMessage()"
-          class="bg-emerald-600 text-white p-2 rounded-lg px-3"
+          class="bg-emerald-600 text-white p-2 rounded-lg px-3 hover:bg-emerald-700 transition"
         >
           ➤
         </button>
       </div>
     </div>
 
+    <!-- Team Chat Box -->
     <div
       id="chatBox"
-      class="hidden fixed bottom-24 right-6 w-[350px] h-[500px] bg-white shadow-2xl rounded-2xl overflow-hidden flex flex-col z-[1000] border"
+      class="hidden fixed bottom-24 right-6 w-full sm:w-[350px] h-[500px] bg-white shadow-2xl flex flex-col z-[1000] overflow-hidden"
     >
       <div
         class="p-4 bg-blue-600 text-white flex justify-between items-center font-bold"
       >
-        <span><i class="fa-solid fa-users mr-2"></i> TEAM CHAT</span
-        ><button
+        <span><i class="fa-solid fa-users mr-2"></i> TEAM CHAT</span>
+        <button
           onclick="document.getElementById('chatBox').style.display = 'none'"
         >
           ✕
@@ -474,49 +499,70 @@
       </div>
       <div
         id="typingIndicator"
-        class="text-[10px] italic px-4 text-blue-600 h-4 mt-1"
+        class="text-[10px] italic px-4 text-blue-600 h-4 mt-1 bg-white"
       ></div>
       <div
         id="chatMessages"
-        class="flex-1 p-4 overflow-y-auto flex flex-col gap-2"
+        class="flex-1 p-4 overflow-y-auto flex flex-col gap-2 bg-white custom-scrollbar"
       ></div>
       <div
         id="replyBox"
-        class="hidden mx-4 my-1 p-2 bg-yellow-50 text-[10px] rounded border-l-4 border-yellow-400"
+        class="hidden mx-4 my-1 p-2 bg-yellow-50 text-[10px] rounded border-l-4 border-yellow-400 font-medium"
       ></div>
-      <div class="p-3 border-t flex gap-2 items-center">
-        <button id="emojiBtn" class="text-xl">😊</button>
+      <div class="p-3 border-t flex gap-2 items-center bg-white">
+        <button id="emojiBtn" class="text-xl hover:scale-110 transition">
+          😊
+        </button>
         <input
           id="chatInput"
           type="text"
           placeholder="Type message..."
-          class="flex-1 bg-slate-100 rounded-lg p-2 text-xs outline-none"
+          class="flex-1 bg-slate-100 rounded-lg p-2 text-xs outline-none focus:bg-white focus:ring-1 focus:ring-blue-500"
         />
         <button
+          id="micBtn"
+          class="text-slate-400 hover:text-blue-500 transition"
+        >
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+        <button
           id="sendBtn"
-          class="bg-blue-600 text-white w-9 h-9 flex items-center justify-center rounded-lg shadow-md"
+          class="bg-blue-600 text-white w-9 h-9 flex items-center justify-center rounded-lg shadow-lg hover:bg-blue-700 transition"
         >
           <i class="fa-solid fa-paper-plane"></i>
         </button>
       </div>
     </div>
 
-    <!-- Core Scripts -->
+    <!-- SCRIPT LOGIC -->
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
 
-      // Page Logic
+      // Mobile Sidebar Toggle
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        sidebar.classList.toggle("open");
+        overlay.classList.toggle("show");
+      }
+
+      // Page Control with Progress Bar
       function loadPage(page, el) {
         const bar = document.getElementById("progressBar");
         bar.style.width = "70%";
         bar.style.opacity = "1";
+
         const iframe = document.getElementById("contentFrame");
         iframe.src = page + "?cb=" + Date.now();
+
         document
           .querySelectorAll(".nav-link")
           .forEach((l) => l.classList.remove("active-link"));
         if (el) el.classList.add("active-link");
+
+        if (window.innerWidth < 768) toggleSidebar();
+
         iframe.onload = () => {
           bar.style.width = "100%";
           setTimeout(() => {
@@ -526,31 +572,37 @@
         };
       }
 
+      // Auth and Role Control
       async function fetchUser() {
         if (!token) return logout();
         try {
           const res = await fetch(`${baseUrl}/user`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (res.status === 403 || res.status === 401)
-            throw new Error("Expired");
+          if (!res.ok) throw new Error();
           const user = await res.json();
+
           document
             .getElementById("userDetails")
             .querySelector("span").innerText =
             `${user.engineerName || user.username} (${user.role})`;
 
           if (user.role === "admin") {
-            document.getElementById("statusLink").classList.remove("hidden");
-            document.getElementById("tasklink").classList.remove("hidden");
-            document
-              .getElementById("taskManagementLink")
-              .classList.remove("hidden");
-            document.getElementById("incidentId").classList.remove("hidden");
-            document.getElementById("addSiteBtn").classList.remove("hidden");
-            document.getElementById("adminLabel").classList.remove("hidden");
-            if (user.engineerName === "Nikhil Trivedi")
-              document.getElementById("auditLink").classList.remove("hidden");
+            [
+              "statusLink",
+              "tasklink",
+              "taskManagementLink",
+              "incidentId",
+              "addSiteBtn",
+              "adminLabel",
+            ].forEach((id) => {
+              const el = document.getElementById(id);
+              if (el) el.classList.remove("hidden");
+            });
+            if (user.engineerName === "Nikhil Trivedi") {
+              const audit = document.getElementById("auditLink");
+              if (audit) audit.classList.remove("hidden");
+            }
           }
         } catch {
           logout();
@@ -568,16 +620,8 @@
         document.getElementById("newSiteModal").classList.add("hidden");
       }
 
-      window.onload = () => {
-        fetchUser();
-        initWS();
-        fetchUserListForMention();
-      };
-
-      // Team Chat & AI Integration (All existing WebSocket functionality)
-      let ws,
-        currentUser,
-        unreadsMentionCount = 0;
+      // Team Chat & WebSockets
+      let ws, currentUser;
       function initWS() {
         if (!token) return;
         const p = JSON.parse(atob(token.split(".")[1]));
@@ -585,24 +629,21 @@
         ws = new WebSocket(
           `wss://relcon-backend-jwt-backup.onrender.com?token=${encodeURIComponent(token)}`,
         );
+
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
           if (msg.type === "group" && msg.from !== currentUser)
             renderMessage(msg);
           if (msg.type === "typing" && msg.from !== currentUser) {
-            document.getElementById("typingIndicator").innerText =
-              `${msg.from} is typing...`;
-            setTimeout(
-              () => (document.getElementById("typingIndicator").innerText = ""),
-              2000,
-            );
+            const indicator = document.getElementById("typingIndicator");
+            indicator.innerText = `${msg.from} is typing...`;
+            setTimeout(() => (indicator.innerText = ""), 2000);
           }
         };
       }
 
       function openChatBox() {
         document.getElementById("chatBox").style.display = "flex";
-        unreadsMentionCount = 0;
         document.getElementById("mentionBadge").style.display = "none";
         const m = document.getElementById("chatMessages");
         m.scrollTop = m.scrollHeight;
@@ -612,7 +653,7 @@
         const chatMessages = document.getElementById("chatMessages");
         const div = document.createElement("div");
         const isOwn = msg.from === currentUser;
-        div.className = "msg " + (isOwn ? "me" : "them");
+        div.className = "msg " + (isOwn ? "me shadow-sm" : "them shadow-sm");
         div.innerHTML = `<div class="text-[9px] font-bold text-blue-700">${msg.from}</div><div>${msg.text}</div>`;
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -632,6 +673,7 @@
         inp.value = "";
       };
 
+      // AI Logic
       function toggleAIChat() {
         document.getElementById("aiChatBox").classList.toggle("hidden");
       }
@@ -641,7 +683,7 @@
         const msg = inp.value.trim();
         if (!msg) return;
         const aiMessages = document.getElementById("aiMessages");
-        aiMessages.innerHTML += `<div class="text-right"><span class="bg-blue-600 text-white p-2 rounded-lg inline-block">${msg}</span></div>`;
+        aiMessages.innerHTML += `<div class="text-right"><span class="bg-blue-600 text-white p-2 rounded-lg inline-block shadow-sm">${msg}</span></div>`;
         inp.value = "";
         try {
           const res = await fetch(`${baseUrl}/ai/ask`, {
@@ -653,15 +695,49 @@
             body: JSON.stringify({ question: msg }),
           });
           const data = await res.json();
-          aiMessages.innerHTML += `<div class="flex gap-2"><div class="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[10px]">AI</div><div class="bg-white border p-2 rounded-lg text-slate-700">${data.reply}</div></div>`;
+          aiMessages.innerHTML += `<div class="flex gap-2"><div class="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[10px]">AI</div><div class="bg-white border p-2 rounded-lg text-slate-700 shadow-sm leading-tight">${data.reply}</div></div>`;
         } catch {
           aiMessages.innerHTML += `<div class="text-center text-red-500 text-[10px]">AI Offline</div>`;
         }
         aiMessages.scrollTop = aiMessages.scrollHeight;
       }
 
-      // Mention / Emoji Dummy Stubs (As per Original Code functionality)
-      function fetchUserListForMention() {}
+      // Inactivity Timer
+      let inactivityTimeout;
+      function resetTimer() {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(
+          () => {
+            alert("Session Expired!");
+            logout();
+          },
+          30 * 60 * 1000,
+        );
+      }
+      ["click", "mousemove", "keydown"].forEach((e) =>
+        window.addEventListener(e, resetTimer),
+      );
+
+      // Initialization
+      window.onload = () => {
+        fetchUser();
+        initWS();
+        resetTimer();
+      };
+
+      // Voice Recognition (Mic)
+      const micBtn = document.getElementById("micBtn");
+      if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+        const SpeechRec =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRec();
+        recognition.lang = "en-IN";
+        micBtn.onclick = () => recognition.start();
+        recognition.onresult = (e) => {
+          document.getElementById("chatInput").value =
+            e.results[0][0].transcript;
+        };
+      }
     </script>
   </body>
 </html>
