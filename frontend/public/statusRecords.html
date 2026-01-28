@@ -46,6 +46,18 @@
     animation: popBadge 0.6s ease;
   }
 
+  .action-required-badge {
+    display: inline-block;
+    background-color: #fef3c7; /* Light Yellow */
+    color: #92400e; /* Brownish Yellow */
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #f59e0b; /* Orange/Yellow */
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 4px;
+}
+
   @keyframes popBadge {
     0% {
       transform: scale(0.8);
@@ -704,6 +716,18 @@ function _renderTableNow(data) {
             if (record.taskGenerated) {
               cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
             }
+          } else {
+
+            // ✅ New Feature: Action Required Logic
+        const needsAction = 
+            (record.duOffline && record.duOffline !== "ALL OK") || 
+            (record.tankOffline && record.tankOffline !== "ALL OK") || 
+            (record.earthingStatus && record.earthingStatus !== "OK");
+
+        if (needsAction) {
+            cellContent += ` <span class="action-required-badge">Action Required</span>`;
+        }
+
           }
 
           return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
