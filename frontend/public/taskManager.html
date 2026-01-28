@@ -1,269 +1,371 @@
-<!DOCTYPE html>
+<!-- START OF FILE text/html -->
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Task Management | RELCON</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RELCON | Task Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
-
     <style>
       body {
         font-family: "Poppins", sans-serif;
-        background-color: #f1f5f9;
-        font-size: 12px;
+        background-color: #f8fafc;
       }
-      .email-content {
-        white-space: pre-wrap;
-        font-family: monospace;
-        background: #f3f4f6;
-        padding: 8px;
-        border-radius: 4px;
-        display: none;
+
+      /* Pulse Glow Animation for Pending Tasks */
+      @keyframes pulse-warning {
+        0% {
+          box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+        }
+      }
+      .status-pending {
+        animation: pulse-warning 2s infinite;
+        background-color: #fffbeb;
+        border: 1px solid #f59e0b;
+        color: #b45309;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+
+      .tab-active {
+        border-bottom: 3px solid #4f46e5;
+        color: #4f46e5;
+        font-weight: 600;
+      }
+      tr:hover {
+        background-color: #f1f5f9;
+        transition: 0.2s;
       }
     </style>
   </head>
-  <body class="p-6">
-    <div class="max-w-7xl mx-auto bg-white shadow p-6 rounded">
-      <div class="flex justify-between items-center mb-4">
-        <h1 class="text-xl font-bold">📌 Task Management</h1>
-        <button
-          onclick="exportTasksToExcel()"
-          class="bg-green-600 text-white px-3 py-1 rounded text-[-10px] mt-2 mb-4"
-        >
-          ⬇️ Export
-        </button>
-
-        <button
-          onclick="fetchTasks()"
-          class="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          🔄 Refresh
-        </button>
+  <body class="p-4 md:p-8">
+    <div class="max-w-full mx-auto">
+      <!-- Header Section -->
+      <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-slate-800 tracking-tight">
+            📌 Task Command Center
+          </h1>
+          <p class="text-slate-500 text-sm">
+            Monitor and resolve HPCL site dependencies.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            onclick="exportTasksToExcel()"
+            class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition shadow-sm font-medium"
+          >
+            <span>⬇️</span> Export Excel
+          </button>
+          <button
+            onclick="fetchTasks()"
+            class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition shadow-sm font-medium"
+          >
+            <span>🔄</span> Refresh Data
+          </button>
+        </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="min-w-full table-auto text-[11px] border">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="border px-2 py-1">RO Code</th>
-              <th class="border px-2 py-1">Region</th>
-              <th class="border px-2 py-1">RO Name</th>
-              <th class="border px-2 py-1">Date of Visit</th>
-              <th class="border px-2 py-1">Issue</th>
-              <th class="border px-2 py-1">Engineer</th>
-              <th class="border px-2 py-1">Email</th>
-              <th class="border px-2 py-1">Status</th>
-              <th class="border px-2 py-1">Mail Date</th>
-              <th class="border px-2 py-1">Task Completed By</th>
-              <th class="border px-2 py-1">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="taskTableBody"></tbody>
-        </table>
+      <!-- Dashboard Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <p
+            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
+          >
+            Total Tasks
+          </p>
+          <h3 id="statTotal" class="text-3xl font-bold text-slate-800 mt-1">
+            0
+          </h3>
+        </div>
+        <div
+          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500"
+        >
+          <p
+            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
+          >
+            Pending Action
+          </p>
+          <h3 id="statPending" class="text-3xl font-bold text-amber-600 mt-1">
+            0
+          </h3>
+        </div>
+        <div
+          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500"
+        >
+          <p
+            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
+          >
+            Mailed / Follow-up
+          </p>
+          <h3 id="statMailed" class="text-3xl font-bold text-blue-600 mt-1">
+            0
+          </h3>
+        </div>
+        <div
+          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500"
+        >
+          <p
+            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
+          >
+            Resolved
+          </p>
+          <h3
+            id="statResolved"
+            class="text-3xl font-bold text-emerald-600 mt-1"
+          >
+            0
+          </h3>
+        </div>
+      </div>
+
+      <!-- Controls Section -->
+      <div
+        class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden"
+      >
+        <div
+          class="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4"
+        >
+          <!-- Tabs -->
+          <div class="flex gap-6">
+            <button
+              onclick="switchTab('active')"
+              id="tabActive"
+              class="tab-active pb-2 text-sm uppercase tracking-wide"
+            >
+              Active Tasks
+            </button>
+            <button
+              onclick="switchTab('resolved')"
+              id="tabResolved"
+              class="pb-2 text-sm text-slate-400 uppercase tracking-wide hover:text-slate-600"
+            >
+              Resolved History
+            </button>
+          </div>
+          <!-- Search -->
+          <div class="relative w-full md:w-96">
+            <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+            <input
+              type="text"
+              id="taskSearch"
+              oninput="applyFilter()"
+              placeholder="Search RO Code, Name, or Region..."
+              class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse">
+            <thead
+              class="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold"
+            >
+              <tr>
+                <th class="px-4 py-3 border-b">Site Details</th>
+                <th class="px-4 py-3 border-b">Visit Date</th>
+                <th class="px-4 py-3 border-b">Critical Observations</th>
+                <th class="px-4 py-3 border-b">Engineer</th>
+                <th class="px-4 py-3 border-b">Email Tool</th>
+                <th class="px-4 py-3 border-b">Status</th>
+                <th class="px-4 py-3 border-b">Mail Timeline</th>
+                <th class="px-4 py-3 border-b text-center">Finalize</th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody" class="text-[11px] text-slate-700">
+              <!-- Data injected here -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="fixed bottom-5 right-5 hidden bg-slate-800 text-white px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 z-50"
+    ></div>
 
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
+      let allTasks = [];
+      let currentTab = "active";
 
       async function fetchTasks() {
-        const res = await fetch(`${baseUrl}/getTasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const tasks = await res.json();
+        try {
+          const res = await fetch(`${baseUrl}/getTasks`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          allTasks = await res.json();
+          updateStats();
+          applyFilter();
+        } catch (err) {
+          showToast("❌ Error fetching tasks", "error");
+        }
+      }
 
-        // ✅ Fix here: define isAdmin before renderTasks
+      function updateStats() {
+        document.getElementById("statTotal").innerText = allTasks.length;
+        document.getElementById("statPending").innerText = allTasks.filter(
+          (t) => t.status === "Pending",
+        ).length;
+        document.getElementById("statMailed").innerText = allTasks.filter(
+          (t) => t.status === "Mailed" || t.status === "Inprocess",
+        ).length;
+        document.getElementById("statResolved").innerText = allTasks.filter(
+          (t) => t.status === "Resolved" || t.status === "Done",
+        ).length;
+      }
+
+      function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById("tabActive").className =
+          tab === "active"
+            ? "tab-active pb-2 text-sm uppercase tracking-wide"
+            : "pb-2 text-sm text-slate-400 uppercase tracking-wide";
+        document.getElementById("tabResolved").className =
+          tab === "resolved"
+            ? "tab-active pb-2 text-sm uppercase tracking-wide"
+            : "pb-2 text-sm text-slate-400 uppercase tracking-wide";
+        applyFilter();
+      }
+
+      function applyFilter() {
+        const query = document.getElementById("taskSearch").value.toLowerCase();
         const user = JSON.parse(localStorage.getItem("user")) || {};
         const isAdmin = user.role === "admin";
-        renderTasks(tasks, isAdmin);
+
+        let filtered = allTasks.filter((task) => {
+          const matchesSearch =
+            task.roCode.includes(query) ||
+            task.roName.toLowerCase().includes(query) ||
+            task.region.toLowerCase().includes(query);
+          const isResolved =
+            task.status === "Resolved" || task.status === "Done";
+          return (
+            matchesSearch &&
+            (currentTab === "active" ? !isResolved : isResolved)
+          );
+        });
+
+        renderTable(filtered, isAdmin);
       }
 
-      function renderTasks(tasks, isAdmin) {
+      function renderTable(tasks, isAdmin) {
         const tbody = document.getElementById("taskTableBody");
         tbody.innerHTML = "";
-        tasks
-          .filter(
-            (task) =>
-              task.status !== "Resolved" &&
-              // task.status !== "Follow-up" &&
-              task.status !== "Done" &&
-              task.status !== "Inprocess" // 👈 Add this line
-          )
 
-          .forEach((task) => {
-            const row = document.createElement("tr");
-            row.className = "border-b";
-
-            let issueParts = [];
-            if (task.earthingStatus && task.earthingStatus !== "OK") {
-              let part = `Earthing Status → ${task.earthingStatus}`;
-              if (task.voltageReading)
-                part += ` (Voltage: ${task.voltageReading})`;
-              issueParts.push(part);
-            }
-
-            if (
-              task.duOffline &&
-              task.duOffline !== "ALL OK" &&
-              (task.duDependency === "HPCL" || task.duDependency === "BOTH")
-            ) {
-              let part = `DU Offline → ${task.duOffline}`;
-              if (task.duRemark) part += ` (Remark: ${task.duRemark})`;
-              issueParts.push(part);
-            }
-
-            if (
-              task.tankOffline &&
-              task.tankOffline !== "ALL OK" &&
-              (task.tankDependency === "HPCL" || task.tankDependency === "BOTH")
-            ) {
-              let part = `Tank Offline → ${task.tankOffline}`;
-              if (task.tankRemark) part += ` (Remark: ${task.tankRemark})`;
-              issueParts.push(part);
-            }
-
-            const issueFormatted = issueParts.length
-              ? issueParts.join("<br>")
-              : "-";
-
-            let emailContent = `Dear Sir/Ma'am,\n\nDuring the recent visit on dated ${task.date} at ${task.roName} (RO Code: ${task.roCode}), the engineer observed:\n\n`;
-            if (task.earthingStatus && task.earthingStatus !== "OK") {
-              emailContent += `⚡Earthing Status → ${task.earthingStatus}`;
-              if (task.voltageReading)
-                emailContent += ` (Voltage measurement reading: ${task.voltageReading})`;
-              emailContent += "\n";
-            }
-            if (
-              task.duOffline &&
-              task.duOffline !== "ALL OK" &&
-              (task.duDependency === "HPCL" || task.duDependency === "BOTH")
-            ) {
-              emailContent += `⛽ DU Offline → ${task.duOffline}`;
-              if (task.duRemark)
-                emailContent += ` (Offline DU remark: ${task.duRemark})`;
-              emailContent += "\n";
-            }
-
-            if (
-              task.tankOffline &&
-              task.tankOffline !== "ALL OK" &&
-              (task.tankDependency === "HPCL" || task.tankDependency === "BOTH")
-            ) {
-              emailContent += `🛢️Tank Offline → ${task.tankOffline}`;
-              if (task.tankRemark)
-                emailContent += ` (Offline Tank remark: ${task.tankRemark})`;
-              emailContent += "\n";
-            }
-
-            // ✅ Add NOTE if earthing is not OK
-            if (task.earthingStatus && task.earthingStatus !== "OK") {
-              emailContent += `\n\nNote: We request to resolve earthing issue at most priority basis. If any automation device failure due to earthing issue, then it will be replaced on chargeable basis.\n\n Please resolve HPCL dependencies at the earliest and confirm on mail after resolution.`;
-            }
-
-            emailContent += `\n\nPlease resolve HPCL dependencies at the earliest and confirm on mail after resolution.`;
-
-            row.innerHTML = `
-                  <td class="border px-3 py-2">${task.roCode}</td>
-                  <td class="border px-3 py-2">${task.region}</td>
-                  <td class="border px-3 py-2">${task.roName}</td>
-                  <td class="border px-3 py-2">${task.date}</td>
-                  <td class="border px-3 py-2 text-red-600 font-semibold text-[9px]">${issueFormatted}</td>
-                  <td class="border px-3 py-2">${task.engineer}</td>
-                  <td class="border text-center px-2 py-1">
-        <button onclick="copyEmail('${
-          task._id
-        }')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">
-          📋 Copy Email
-        </button>
-      </td>
-
-      <td class="border px-3 py-2 text-center" id="statusCell-${task._id}">
-  ${
-    task.status === "Follow-up"
-      ? `<span class="bg-yellow-300 text-yellow-900 font-semibold text-[10px] px-2 py-1 rounded cursor-pointer" onclick="convertToDropdown('${task._id}')">🔁 Follow-up</span>`
-      : `
-    <select onchange="updateTaskStatus('${
-      task._id
-    }', this.value)" class="border px-2 py-1 rounded text-[11px]">
-      <option value="Pending" ${
-        task.status === "Pending" ? "selected" : ""
-      }>Pending</option>
-      <option value="Mailed" ${
-        task.status === "Mailed" ? "selected" : ""
-      }>Mailed</option>
-      <option value="Resolved" ${
-        task.status === "Resolved" ? "selected" : ""
-      }>Resolved</option>
-    </select>`
-  }
-</td>
-
-     
-
-                  <td class="border px-3 py-2">
-                    <input type="date" value="${
-                      task.mailDate || ""
-                    }" onchange="updateTaskField('${
-              task._id
-            }', 'mailDate', this.value)" class="border px-2 py-1 rounded w-full" />
-                  </td>
-                  <td class="border px-3 py-2">
-                    <select onchange="updateTaskField('${
-                      task._id
-                    }', 'completedBy', this.value)" class="border px-2 py-1 rounded w-full">
-                      <option value="">Select</option>
-                      <option value="Anurag Mishra" ${
-                        task.completedBy === "Anurag Mishra" ? "selected" : ""
-                      }>Anurag Mishra</option>
-                      <option value="Nikhil Trivedi" ${
-                        task.completedBy === "Nikhil Trivedi" ? "selected" : ""
-                      }>Nikhil Trivedi</option>
-                    </select>
-                  </td>
-                  <td class="border text-center px-2 py-1">
-        ${
-          isAdmin && task.status === "Mailed"
-            ? `
-          <button onclick="submitTask('${task._id}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">
-            ✅ Submit
-          </button>
-        `
-            : ""
+        if (tasks.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400 italic">No tasks found matching current filters.</td></tr>`;
+          return;
         }
-      </td>
 
+        tasks.forEach((task) => {
+          const row = document.createElement("tr");
+          row.className = "border-b border-slate-100";
+
+          // Issue Logic
+          let issues = [];
+          if (task.earthingStatus !== "OK")
+            issues.push(`⚡ Earthing: ${task.earthingStatus}`);
+          if (task.duOffline && task.duOffline !== "ALL OK")
+            issues.push(`⛽ DU Offline: ${task.duOffline}`);
+          if (task.tankOffline && task.tankOffline !== "ALL OK")
+            issues.push(`🛢️ Tank Offline: ${task.tankOffline}`);
+          const issueFormatted = issues.join("<br>");
+
+          // Status Badge Logic
+          let statusBadgeClass = "";
+          if (task.status === "Pending")
+            statusBadgeClass =
+              "status-pending px-2 py-1 rounded text-[9px] font-bold uppercase";
+          else if (task.status === "Mailed")
+            statusBadgeClass =
+              "bg-blue-100 text-blue-700 px-2 py-1 rounded text-[9px] font-bold uppercase";
+          else if (task.status === "Resolved")
+            statusBadgeClass =
+              "bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[9px] font-bold uppercase";
+          else
+            statusBadgeClass =
+              "bg-slate-100 text-slate-600 px-2 py-1 rounded text-[9px] font-bold uppercase";
+
+          row.innerHTML = `
+                    <td class="px-4 py-4">
+                        <div class="font-bold text-slate-800">${task.roCode}</div>
+                        <div class="text-[10px] text-slate-500">${task.roName}</div>
+                        <div class="text-[9px] text-indigo-500 font-medium">${task.region}</div>
+                    </td>
+                    <td class="px-4 py-4 text-slate-600">${task.date}</td>
+                    <td class="px-4 py-4 text-red-500 font-medium leading-relaxed">${issueFormatted || "-"}</td>
+                    <td class="px-4 py-4 font-medium">${task.engineer}</td>
+                    <td class="px-4 py-4">
+                        <button onclick="copyEmail('${task._id}')" class="bg-slate-800 hover:bg-black text-white px-3 py-1.5 rounded-md text-[10px] transition flex items-center gap-1">
+                           📋 Copy Draft
+                        </button>
+                    </td>
+                    <td class="px-4 py-4">
+                        <select onchange="updateTaskStatus('${task._id}', this.value)" class="bg-white border border-slate-200 rounded p-1 focus:ring-2 focus:ring-indigo-400 outline-none">
+                            <option value="Pending" ${task.status === "Pending" ? "selected" : ""}>Pending</option>
+                            <option value="Mailed" ${task.status === "Mailed" ? "selected" : ""}>Mailed</option>
+                            <option value="Resolved" ${task.status === "Resolved" ? "selected" : ""}>Resolved</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="flex flex-col gap-1">
+                            <input type="date" value="${task.mailDate || ""}" onchange="updateTaskField('${task._id}', 'mailDate', this.value)" 
+                                   class="border border-slate-200 rounded px-1 py-1 text-[10px] focus:border-indigo-500 outline-none">
+                            <select onchange="updateTaskField('${task._id}', 'completedBy', this.value)" class="border border-slate-200 rounded px-1 py-1 text-[10px]">
+                                <option value="">Assignee</option>
+                                <option value="Anurag Mishra" ${task.completedBy === "Anurag Mishra" ? "selected" : ""}>Anurag Mishra</option>
+                                <option value="Nikhil Trivedi" ${task.completedBy === "Nikhil Trivedi" ? "selected" : ""}>Nikhil Trivedi</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        ${
+                          isAdmin && task.status === "Mailed"
+                            ? `
+                            <button onclick="submitTask('${task._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg shadow-sm text-[10px] font-bold">
+                                SUBMIT
+                            </button>
+                        `
+                            : task.status === "Resolved"
+                              ? "✅"
+                              : "⏳"
+                        }
+                    </td>
                 `;
-            tbody.appendChild(row);
-          });
-      }
-
-      function toggleEmail(taskId) {
-        const emailDiv = document.getElementById("email_" + taskId);
-        if (emailDiv) {
-          emailDiv.style.display =
-            emailDiv.style.display === "none" ? "block" : "none";
-        }
-      }
-
-      async function copyEmail(id) {
-        const res = await fetch(`${baseUrl}/getTasks`, {
-          headers: { Authorization: `Bearer ${token}` },
+          tbody.appendChild(row);
         });
-        const tasks = await res.json();
-        const task = tasks.find((t) => t._id === id);
-        if (task?.emailContent) {
-          await navigator.clipboard.writeText(task.emailContent);
-          alert("📋 Email copied!");
-        }
       }
 
       async function updateTaskStatus(id, status) {
-        await fetch(`${baseUrl}/updateTask/${id}`, {
+        const res = await fetch(`${baseUrl}/updateTask/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -271,6 +373,10 @@
           },
           body: JSON.stringify({ status }),
         });
+        if (res.ok) {
+          showToast(`Status updated to ${status}`);
+          fetchTasks();
+        }
       }
 
       async function updateTaskField(id, field, value) {
@@ -282,116 +388,35 @@
           },
           body: JSON.stringify({ [field]: value }),
         });
+        showToast("Field updated");
       }
 
-      async function submitTask(id) {
-        const row = document
-          .querySelector(`button[onclick="submitTask('${id}')"]`)
-          .closest("tr");
-
-        const statusSelect = row.querySelector("select");
-        const status = statusSelect ? statusSelect.value : "";
-
-        const mailDate = row.querySelector('input[type="date"]').value;
-
-        const selects = row.querySelectorAll("select");
-        const completedBy = selects.length > 1 ? selects[1].value : "";
-
-        // 🛑 Validation checks
-        if (status !== "Mailed") {
-          alert("❌ Set Status to 'Mailed' before submitting.");
-          return;
-        }
-
-        if (!mailDate) {
-          alert("❌ Please select Mail Date before submitting.");
-          return;
-        }
-
-        if (!completedBy) {
-          alert("❌ Please select who completed the task.");
-          return;
-        }
-
-        // ✅ Submit request
-        const res = await fetch(`${baseUrl}/updateTask/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            status: "Inprocess",
-            mailDate,
-            completedBy,
-            followUp: true,
-          }),
-        });
-
-        if (res.ok) {
-          alert("✅ Task submitted and marked as Inprocess");
-          fetchTasks(); // Refresh UI
-        } else {
-          alert("❌ Failed to submit task");
+      async function copyEmail(id) {
+        const task = allTasks.find((t) => t._id === id);
+        if (task?.emailContent) {
+          await navigator.clipboard.writeText(task.emailContent);
+          showToast("📋 Email Template Copied!");
         }
       }
 
-      window.onload = fetchTasks;
-
-      function convertToDropdown(taskId) {
-        const cell = document.getElementById(`statusCell-${taskId}`);
-        if (!cell) return;
-
-        cell.innerHTML = `
-    <select onchange="updateTaskStatus('${taskId}', this.value)" class="border px-2 py-1 rounded text-[11px]">
-      <option value="Pending">Pending</option>
-      <option value="Mailed">Mailed</option>
-      <option value="Resolved">Resolved</option>
-    </select>
-  `;
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.innerText = msg;
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 3000);
       }
 
       function exportTasksToExcel() {
-        const table = document.getElementById("taskTableBody");
-        const rows = table.querySelectorAll("tr");
-        const data = [];
-
-        const headers = [
-          "RO Code",
-          "Region",
-          "RO Name",
-          "Date",
-          "Engineer",
-          "Issue",
-          "Mail Date",
-          "Completed By",
-          "Mail Reply",
-          "Previous Status",
-          "Current Status",
-          "Follow-up Date",
-        ];
-
-        data.push(headers);
-
-        rows.forEach((tr) => {
-          const cells = tr.querySelectorAll("td");
-          const row = [];
-
-          for (let i = 0; i < 12; i++) {
-            let text = cells[i]?.innerText?.trim() || "";
-            row.push(text.replace(/\s+/g, " "));
-          }
-
-          data.push(row);
-        });
-
-        const worksheet = XLSX.utils.aoa_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
-
-        const today = new Date().toLocaleDateString("en-CA");
-        XLSX.writeFile(workbook, `Task_Manager_${today}.xlsx`);
+        const ws = XLSX.utils.json_to_sheet(allTasks);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+        XLSX.writeFile(
+          wb,
+          `Relcon_Task_Report_${new Date().toISOString().split("T")[0]}.xlsx`,
+        );
       }
+
+      window.onload = fetchTasks;
     </script>
   </body>
 </html>
