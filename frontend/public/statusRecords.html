@@ -708,27 +708,29 @@ function _renderTableNow(data) {
 
           let cellContent = record[col.key] || "";
 
-          if (
-            col.key === "roCode" &&
-            (record.isVerified === true || record.isVerified === "true")
-          ) {
-            cellContent += ` <span class="verified-badge">✔ Verified</span>`;
-            if (record.taskGenerated) {
-              cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
-            }
-          } else {
+          // ... existing code in _renderTableNow ...
 
-            // ✅ New Feature: Action Required Logic
+if (col.key === "roCode") {
+    // Check if Verified
+    if (isVerified) {
+        cellContent += ` <span class="verified-badge">✔ Verified</span>`;
+        if (record.taskGenerated) {
+            cellContent += ` <span class="task-badge" title="Task was auto-generated">📌</span>`;
+        }
+    } else {
+        // ✅ New Feature: Action Required Logic
         const needsAction = 
             (record.duOffline && record.duOffline !== "ALL OK") || 
             (record.tankOffline && record.tankOffline !== "ALL OK") || 
             (record.earthingStatus && record.earthingStatus !== "OK");
 
         if (needsAction) {
-            cellContent += ` <span class="action-required-badge">Action Required</span>`;
+            cellContent += ` <span class="action-required-badge">⚠️ Action Required</span>`;
         }
+    }
+}
 
-          }
+// ... rest of the code ...
 
           return `<td class="border text-center px-2 py-1">${cellContent}</td>`;
         })
