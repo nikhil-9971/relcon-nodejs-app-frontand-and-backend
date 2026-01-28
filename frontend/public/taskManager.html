@@ -1,10 +1,9 @@
-<!-- START OF FILE text/html -->
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RELCON | Task Dashboard</title>
+    <title>RELCON | Enterprise Task Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -14,207 +13,219 @@
     <style>
       body {
         font-family: "Poppins", sans-serif;
-        background-color: #f8fafc;
+        background-color: #f4f7fa;
+        color: #1e293b;
       }
 
-      /* Pulse Glow Animation for Pending Tasks */
-      @keyframes pulse-warning {
+      /* Glow Animation for Urgent Pending Tasks */
+      @keyframes pulse-red {
         0% {
-          box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
         }
         70% {
-          box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+          box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
         }
       }
-      .status-pending {
-        animation: pulse-warning 2s infinite;
-        background-color: #fffbeb;
-        border: 1px solid #f59e0b;
-        color: #b45309;
+      .urgent-glow {
+        animation: pulse-red 2s infinite;
+        border: 1px solid #fee2e2;
+      }
+
+      .tab-active {
+        border-bottom: 3px solid #4f46e5;
+        color: #4f46e5;
+        background-color: rgba(79, 70, 229, 0.05);
+        font-weight: 700;
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
 
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
         height: 6px;
       }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-      }
       .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #cbd5e1;
         border-radius: 10px;
       }
-
-      .tab-active {
-        border-bottom: 3px solid #4f46e5;
-        color: #4f46e5;
-        font-weight: 600;
-      }
-      tr:hover {
-        background-color: #f1f5f9;
-        transition: 0.2s;
-      }
     </style>
   </head>
   <body class="p-4 md:p-8">
-    <div class="max-w-full mx-auto">
-      <!-- Header Section -->
+    <div class="max-w-[1600px] mx-auto">
+      <!-- TOP HEADER -->
       <div
         class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
       >
         <div>
-          <h1 class="text-3xl font-bold text-slate-800 tracking-tight">
-            📌 Task Command Center
-          </h1>
-          <p class="text-slate-500 text-sm">
-            Monitor and resolve HPCL site dependencies.
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🚀</span>
+            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">
+              Task Command Center
+            </h1>
+          </div>
+          <p class="text-slate-500 mt-1 ml-10">
+            Manage, Track and Resolve HPCL site issues efficiently.
           </p>
         </div>
         <div class="flex gap-3">
           <button
             onclick="exportTasksToExcel()"
-            class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition shadow-sm font-medium"
+            class="bg-white text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-slate-50 transition shadow-sm font-semibold flex items-center gap-2"
           >
-            <span>⬇️</span> Export Excel
+            📥 Export Report
           </button>
           <button
             onclick="fetchTasks()"
-            class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition shadow-sm font-medium"
+            class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-md font-semibold flex items-center gap-2"
           >
-            <span>🔄</span> Refresh Data
+            🔄 Sync Data
           </button>
         </div>
       </div>
 
-      <!-- Dashboard Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <p
-            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
-          >
-            Total Tasks
+      <!-- DASHBOARD STATS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div
+          class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-slate-400"
+        >
+          <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">
+            Global Tasks
           </p>
-          <h3 id="statTotal" class="text-3xl font-bold text-slate-800 mt-1">
+          <h3 id="statTotal" class="text-3xl font-black text-slate-800 mt-2">
             0
           </h3>
         </div>
         <div
-          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500"
+          class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-red-500"
         >
-          <p
-            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
-          >
+          <p class="text-red-500 text-xs font-bold uppercase tracking-widest">
             Pending Action
           </p>
-          <h3 id="statPending" class="text-3xl font-bold text-amber-600 mt-1">
+          <h3 id="statPending" class="text-3xl font-black text-red-600 mt-2">
             0
           </h3>
         </div>
         <div
-          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500"
+          class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-blue-500"
         >
-          <p
-            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
-          >
-            Mailed / Follow-up
+          <p class="text-blue-500 text-xs font-bold uppercase tracking-widest">
+            Active / Mailed
           </p>
-          <h3 id="statMailed" class="text-3xl font-bold text-blue-600 mt-1">
+          <h3 id="statActive" class="text-3xl font-black text-blue-600 mt-2">
             0
           </h3>
         </div>
         <div
-          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500"
+          class="glass-card p-6 rounded-2xl shadow-sm border-t-4 border-t-emerald-500"
         >
           <p
-            class="text-slate-500 text-xs font-semibold uppercase tracking-wider"
+            class="text-emerald-500 text-xs font-bold uppercase tracking-widest"
           >
             Resolved
           </p>
           <h3
             id="statResolved"
-            class="text-3xl font-bold text-emerald-600 mt-1"
+            class="text-3xl font-black text-emerald-600 mt-2"
           >
             0
           </h3>
         </div>
       </div>
 
-      <!-- Controls Section -->
+      <!-- MAIN CONTENT AREA -->
       <div
-        class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden"
+        class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden"
       >
+        <!-- TAB NAVIGATION & SEARCH -->
         <div
-          class="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4"
+          class="p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 bg-slate-50/50"
         >
-          <!-- Tabs -->
-          <div class="flex gap-6">
+          <div class="flex p-1 bg-slate-200/50 rounded-2xl w-full lg:w-auto">
+            <button
+              onclick="switchTab('pending')"
+              id="tabPending"
+              class="flex-1 lg:flex-none px-6 py-3 rounded-xl text-sm transition-all duration-200 tab-active"
+            >
+              🚨 Pending Action
+              <span
+                id="countPendingBadge"
+                class="ml-2 bg-red-100 text-red-600 px-2 py-0.5 rounded-md text-[10px]"
+                >0</span
+              >
+            </button>
             <button
               onclick="switchTab('active')"
               id="tabActive"
-              class="tab-active pb-2 text-sm uppercase tracking-wide"
+              class="flex-1 lg:flex-none px-6 py-3 rounded-xl text-sm transition-all duration-200 text-slate-500 hover:text-slate-700"
             >
-              Active Tasks
+              ⚙️ Active Tasks
             </button>
             <button
               onclick="switchTab('resolved')"
               id="tabResolved"
-              class="pb-2 text-sm text-slate-400 uppercase tracking-wide hover:text-slate-600"
+              class="flex-1 lg:flex-none px-6 py-3 rounded-xl text-sm transition-all duration-200 text-slate-500 hover:text-slate-700"
             >
-              Resolved History
+              ✅ Resolved History
             </button>
           </div>
-          <!-- Search -->
-          <div class="relative w-full md:w-96">
-            <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+
+          <div class="relative w-full lg:w-96">
             <input
               type="text"
               id="taskSearch"
               oninput="applyFilter()"
-              placeholder="Search RO Code, Name, or Region..."
-              class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              placeholder="Search site, code or region..."
+              class="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm"
             />
+            <span class="absolute left-4 top-4 text-slate-400">🔍</span>
           </div>
         </div>
 
-        <!-- Table Section -->
+        <!-- TABLE -->
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left border-collapse">
-            <thead
-              class="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold"
-            >
-              <tr>
-                <th class="px-4 py-3 border-b">Site Details</th>
-                <th class="px-4 py-3 border-b">Visit Date</th>
-                <th class="px-4 py-3 border-b">Critical Observations</th>
-                <th class="px-4 py-3 border-b">Engineer</th>
-                <th class="px-4 py-3 border-b">Email Tool</th>
-                <th class="px-4 py-3 border-b">Status</th>
-                <th class="px-4 py-3 border-b">Mail Timeline</th>
-                <th class="px-4 py-3 border-b text-center">Finalize</th>
+            <thead>
+              <tr
+                class="bg-slate-50/80 text-slate-500 uppercase text-[11px] font-bold tracking-widest"
+              >
+                <th class="px-6 py-5 border-b">Site Information</th>
+                <th class="px-6 py-5 border-b">Visit Date</th>
+                <th class="px-6 py-5 border-b">Observations</th>
+                <th class="px-6 py-5 border-b">Engineer</th>
+                <th class="px-6 py-5 border-b">Actions & Tools</th>
+                <th class="px-6 py-5 border-b">Mail Status</th>
+                <th class="px-6 py-5 border-b text-center">Process</th>
               </tr>
             </thead>
-            <tbody id="taskTableBody" class="text-[11px] text-slate-700">
-              <!-- Data injected here -->
+            <tbody
+              id="taskTableBody"
+              class="text-[12px] text-slate-700 divide-y divide-slate-100"
+            >
+              <!-- Dynamic Content -->
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- TOAST -->
     <div
       id="toast"
-      class="fixed bottom-5 right-5 hidden bg-slate-800 text-white px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 z-50"
+      class="fixed bottom-8 right-8 hidden bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl transition-all duration-500 transform translate-y-0 z-50 font-medium"
     ></div>
 
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
       const token = localStorage.getItem("token");
       let allTasks = [];
-      let currentTab = "active";
+      let currentTab = "pending";
 
       async function fetchTasks() {
         try {
@@ -225,33 +236,39 @@
           updateStats();
           applyFilter();
         } catch (err) {
-          showToast("❌ Error fetching tasks", "error");
+          showToast("❌ Connection error. Please refresh.");
         }
       }
 
       function updateStats() {
-        document.getElementById("statTotal").innerText = allTasks.length;
-        document.getElementById("statPending").innerText = allTasks.filter(
-          (t) => t.status === "Pending",
-        ).length;
-        document.getElementById("statMailed").innerText = allTasks.filter(
+        const pCount = allTasks.filter((t) => t.status === "Pending").length;
+        const aCount = allTasks.filter(
           (t) => t.status === "Mailed" || t.status === "Inprocess",
         ).length;
-        document.getElementById("statResolved").innerText = allTasks.filter(
+        const rCount = allTasks.filter(
           (t) => t.status === "Resolved" || t.status === "Done",
         ).length;
+
+        document.getElementById("statTotal").innerText = allTasks.length;
+        document.getElementById("statPending").innerText = pCount;
+        document.getElementById("statActive").innerText = aCount;
+        document.getElementById("statResolved").innerText = rCount;
+        document.getElementById("countPendingBadge").innerText = pCount;
       }
 
       function switchTab(tab) {
         currentTab = tab;
-        document.getElementById("tabActive").className =
-          tab === "active"
-            ? "tab-active pb-2 text-sm uppercase tracking-wide"
-            : "pb-2 text-sm text-slate-400 uppercase tracking-wide";
-        document.getElementById("tabResolved").className =
-          tab === "resolved"
-            ? "tab-active pb-2 text-sm uppercase tracking-wide"
-            : "pb-2 text-sm text-slate-400 uppercase tracking-wide";
+        const tabs = ["Pending", "Active", "Resolved"];
+        tabs.forEach((t) => {
+          const el = document.getElementById(`tab${t}`);
+          if (t.toLowerCase() === tab) {
+            el.className =
+              "flex-1 lg:flex-none px-6 py-3 rounded-xl text-sm transition-all duration-200 tab-active";
+          } else {
+            el.className =
+              "flex-1 lg:flex-none px-6 py-3 rounded-xl text-sm transition-all duration-200 text-slate-500 hover:text-slate-700";
+          }
+        });
         applyFilter();
       }
 
@@ -265,12 +282,22 @@
             task.roCode.includes(query) ||
             task.roName.toLowerCase().includes(query) ||
             task.region.toLowerCase().includes(query);
-          const isResolved =
-            task.status === "Resolved" || task.status === "Done";
-          return (
-            matchesSearch &&
-            (currentTab === "active" ? !isResolved : isResolved)
-          );
+
+          if (currentTab === "pending")
+            return matchesSearch && task.status === "Pending";
+          if (currentTab === "active")
+            return (
+              matchesSearch &&
+              (task.status === "Mailed" ||
+                task.status === "Inprocess" ||
+                task.status === "Follow-up")
+            );
+          if (currentTab === "resolved")
+            return (
+              matchesSearch &&
+              (task.status === "Resolved" || task.status === "Done")
+            );
+          return matchesSearch;
         });
 
         renderTable(filtered, isAdmin);
@@ -281,82 +308,72 @@
         tbody.innerHTML = "";
 
         if (tasks.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400 italic">No tasks found matching current filters.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-20 text-slate-400 font-medium italic">No tasks found in this category.</td></tr>`;
           return;
         }
 
         tasks.forEach((task) => {
           const row = document.createElement("tr");
-          row.className = "border-b border-slate-100";
+          row.className =
+            currentTab === "pending"
+              ? "urgent-glow hover:bg-slate-50"
+              : "hover:bg-slate-50";
 
-          // Issue Logic
-          let issues = [];
+          let obs = [];
           if (task.earthingStatus !== "OK")
-            issues.push(`⚡ Earthing: ${task.earthingStatus}`);
+            obs.push(
+              `<span class="text-red-600 font-bold">⚡ Earthing: ${task.earthingStatus}</span>`,
+            );
           if (task.duOffline && task.duOffline !== "ALL OK")
-            issues.push(`⛽ DU Offline: ${task.duOffline}`);
+            obs.push(
+              `<span class="text-orange-600 font-bold">⛽ DU Off: ${task.duOffline}</span>`,
+            );
           if (task.tankOffline && task.tankOffline !== "ALL OK")
-            issues.push(`🛢️ Tank Offline: ${task.tankOffline}`);
-          const issueFormatted = issues.join("<br>");
-
-          // Status Badge Logic
-          let statusBadgeClass = "";
-          if (task.status === "Pending")
-            statusBadgeClass =
-              "status-pending px-2 py-1 rounded text-[9px] font-bold uppercase";
-          else if (task.status === "Mailed")
-            statusBadgeClass =
-              "bg-blue-100 text-blue-700 px-2 py-1 rounded text-[9px] font-bold uppercase";
-          else if (task.status === "Resolved")
-            statusBadgeClass =
-              "bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[9px] font-bold uppercase";
-          else
-            statusBadgeClass =
-              "bg-slate-100 text-slate-600 px-2 py-1 rounded text-[9px] font-bold uppercase";
+            obs.push(
+              `<span class="text-blue-600 font-bold">🛢️ Tank Off: ${task.tankOffline}</span>`,
+            );
 
           row.innerHTML = `
-                    <td class="px-4 py-4">
-                        <div class="font-bold text-slate-800">${task.roCode}</div>
-                        <div class="text-[10px] text-slate-500">${task.roName}</div>
-                        <div class="text-[9px] text-indigo-500 font-medium">${task.region}</div>
+                    <td class="px-6 py-5">
+                        <div class="font-black text-slate-800 text-[14px]">${task.roCode}</div>
+                        <div class="text-[11px] text-slate-500 font-medium uppercase mt-0.5">${task.roName}</div>
+                        <div class="text-[10px] text-indigo-500 font-bold mt-1">${task.region}</div>
                     </td>
-                    <td class="px-4 py-4 text-slate-600">${task.date}</td>
-                    <td class="px-4 py-4 text-red-500 font-medium leading-relaxed">${issueFormatted || "-"}</td>
-                    <td class="px-4 py-4 font-medium">${task.engineer}</td>
-                    <td class="px-4 py-4">
-                        <button onclick="copyEmail('${task._id}')" class="bg-slate-800 hover:bg-black text-white px-3 py-1.5 rounded-md text-[10px] transition flex items-center gap-1">
-                           📋 Copy Draft
+                    <td class="px-6 py-5 font-semibold text-slate-600">${task.date}</td>
+                    <td class="px-6 py-5 leading-relaxed">${obs.join("<br>") || '<span class="text-slate-300">No critical issues</span>'}</td>
+                    <td class="px-6 py-5"><span class="bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-600">${task.engineer}</span></td>
+                    <td class="px-6 py-5">
+                        <button onclick="copyEmail('${task._id}')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-bold hover:scale-105 transition active:scale-95 shadow-lg">
+                           📋 COPY EMAIL
                         </button>
                     </td>
-                    <td class="px-4 py-4">
-                        <select onchange="updateTaskStatus('${task._id}', this.value)" class="bg-white border border-slate-200 rounded p-1 focus:ring-2 focus:ring-indigo-400 outline-none">
-                            <option value="Pending" ${task.status === "Pending" ? "selected" : ""}>Pending</option>
-                            <option value="Mailed" ${task.status === "Mailed" ? "selected" : ""}>Mailed</option>
-                            <option value="Resolved" ${task.status === "Resolved" ? "selected" : ""}>Resolved</option>
-                        </select>
-                    </td>
-                    <td class="px-4 py-4">
-                        <div class="flex flex-col gap-1">
-                            <input type="date" value="${task.mailDate || ""}" onchange="updateTaskField('${task._id}', 'mailDate', this.value)" 
-                                   class="border border-slate-200 rounded px-1 py-1 text-[10px] focus:border-indigo-500 outline-none">
-                            <select onchange="updateTaskField('${task._id}', 'completedBy', this.value)" class="border border-slate-200 rounded px-1 py-1 text-[10px]">
-                                <option value="">Assignee</option>
-                                <option value="Anurag Mishra" ${task.completedBy === "Anurag Mishra" ? "selected" : ""}>Anurag Mishra</option>
-                                <option value="Nikhil Trivedi" ${task.completedBy === "Nikhil Trivedi" ? "selected" : ""}>Nikhil Trivedi</option>
+                    <td class="px-6 py-5">
+                        <div class="flex flex-col gap-2">
+                             <select onchange="updateTaskStatus('${task._id}', this.value)" class="border-2 border-slate-200 rounded-lg p-1.5 focus:border-indigo-500 outline-none font-bold text-slate-600">
+                                <option value="Pending" ${task.status === "Pending" ? "selected" : ""}>Pending</option>
+                                <option value="Mailed" ${task.status === "Mailed" ? "selected" : ""}>Mailed</option>
+                                <option value="Resolved" ${task.status === "Resolved" ? "selected" : ""}>Resolved</option>
                             </select>
+                            <input type="date" value="${task.mailDate || ""}" onchange="updateTaskField('${task._id}', 'mailDate', this.value)" class="border-2 border-slate-200 rounded-lg p-1 text-[11px] font-medium outline-none">
                         </div>
                     </td>
-                    <td class="px-4 py-4 text-center">
+                    <td class="px-6 py-5 text-center">
                         ${
-                          isAdmin && task.status === "Mailed"
+                          currentTab === "pending"
                             ? `
-                            <button onclick="submitTask('${task._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg shadow-sm text-[10px] font-bold">
+                            <button onclick="submitToActive('${task._id}')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] hover:bg-indigo-700 shadow-lg shadow-indigo-200">
                                 SUBMIT
                             </button>
                         `
                             : task.status === "Resolved"
-                              ? "✅"
-                              : "⏳"
+                              ? '<span class="text-xl">✅</span>'
+                              : `
+                             <select onchange="updateTaskField('${task._id}', 'completedBy', this.value)" class="border-2 border-slate-200 rounded-lg p-1.5 text-[10px] font-bold">
+                                <option value="">Assignee</option>
+                                <option value="Anurag Mishra" ${task.completedBy === "Anurag Mishra" ? "selected" : ""}>Anurag</option>
+                                <option value="Nikhil Trivedi" ${task.completedBy === "Nikhil Trivedi" ? "selected" : ""}>Nikhil</option>
+                            </select>
+                        `
                         }
                     </td>
                 `;
@@ -364,8 +381,36 @@
         });
       }
 
-      async function updateTaskStatus(id, status) {
+      // Feature: Pending से Active में भेजने का नया फंक्शन
+      async function submitToActive(id) {
+        const task = allTasks.find((t) => t._id === id);
+
+        // Validation
+        if (!task.mailDate) {
+          showToast("⚠️ Please select Mail Date first!");
+          return;
+        }
+
         const res = await fetch(`${baseUrl}/updateTask/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "Mailed", // Status change
+            followUp: true,
+          }),
+        });
+
+        if (res.ok) {
+          showToast("🚀 Task moved to Active Queue!");
+          fetchTasks(); // Refresh
+        }
+      }
+
+      async function updateTaskStatus(id, status) {
+        await fetch(`${baseUrl}/updateTask/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -373,10 +418,8 @@
           },
           body: JSON.stringify({ status }),
         });
-        if (res.ok) {
-          showToast(`Status updated to ${status}`);
-          fetchTasks();
-        }
+        showToast(`Status: ${status}`);
+        fetchTasks();
       }
 
       async function updateTaskField(id, field, value) {
@@ -388,14 +431,16 @@
           },
           body: JSON.stringify({ [field]: value }),
         });
-        showToast("Field updated");
+        const t = allTasks.find((x) => x._id === id);
+        if (t) t[field] = value; // Update local data
+        showToast("Updated successfully");
       }
 
       async function copyEmail(id) {
         const task = allTasks.find((t) => t._id === id);
         if (task?.emailContent) {
           await navigator.clipboard.writeText(task.emailContent);
-          showToast("📋 Email Template Copied!");
+          showToast("📋 Draft Copied to Clipboard!");
         }
       }
 
@@ -409,10 +454,10 @@
       function exportTasksToExcel() {
         const ws = XLSX.utils.json_to_sheet(allTasks);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+        XLSX.utils.book_append_sheet(wb, ws, "TaskReport");
         XLSX.writeFile(
           wb,
-          `Relcon_Task_Report_${new Date().toISOString().split("T")[0]}.xlsx`,
+          `Relcon_Tasks_${new Date().toLocaleDateString()}.xlsx`,
         );
       }
 
