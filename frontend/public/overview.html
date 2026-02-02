@@ -76,6 +76,11 @@
         padding: 12px !important;
         border-bottom: 1px solid #f3f2f2;
       }
+      .total-row {
+        background-color: #f8f9fa;
+        font-weight: 700;
+        border-top: 2px solid var(--sf-border);
+      }
       .kpi-export {
         opacity: 0.3;
         transition: opacity 0.2s;
@@ -223,7 +228,7 @@
         </div>
       </div>
 
-      <!-- Customer Bar -->
+      <!-- Performance Section -->
       <div class="crm-card">
         <div class="crm-card-header">
           <span class="font-bold text-xs uppercase"
@@ -279,9 +284,9 @@
             <thead>
               <tr>
                 <th>Engineer Name</th>
-                <th>Assigned</th>
-                <th>Completed</th>
-                <th>Pending</th>
+                <th class="text-center">Assigned</th>
+                <th class="text-center">Completed</th>
+                <th class="text-center">Pending</th>
                 <th class="text-right">Completion %</th>
               </tr>
             </thead>
@@ -322,7 +327,7 @@
         <div id="pcbInstallationCard" class="crm-card">
           <div class="crm-card-header">
             <span class="font-bold text-xs uppercase"
-              >Power Protection PCB</span
+              >Power Protection PCB Status</span
             >
             <div class="flex gap-2">
               <button
@@ -344,10 +349,10 @@
               <thead class="sticky top-0 z-10">
                 <tr>
                   <th>Engineer</th>
-                  <th>Provided</th>
-                  <th>Today</th>
-                  <th>Installed</th>
-                  <th>Pending</th>
+                  <th class="text-center">Provided</th>
+                  <th class="text-center">Today</th>
+                  <th class="text-center">Installed</th>
+                  <th class="text-center">Pending</th>
                 </tr>
               </thead>
               <tbody id="pcbInstallationBody"></tbody>
@@ -359,7 +364,9 @@
       <!-- Monthly Summary -->
       <div class="crm-card">
         <div class="crm-card-header">
-          <span class="font-bold text-xs uppercase">Monthly Performance</span>
+          <span class="font-bold text-xs uppercase"
+            >Monthly Performance Summary</span
+          >
           <div class="flex items-center gap-3">
             <select
               id="monthSelect"
@@ -505,7 +512,6 @@
               .map((l) => l.engineerName || l.username),
           ).size;
 
-          // 7 Day Pending Logic
           const k = (rc, d) =>
             `${String(rc || "")
               .trim()
@@ -554,7 +560,6 @@
           byId("kpiPendingBreakdown").textContent =
             `HPCL: ${p7H} • RBML: ${p7R} (7 days)`;
 
-          // KPI Exports
           byId("exportPlansToday").onclick = () =>
             downloadCSV(
               plansToday,
@@ -646,6 +651,7 @@
           "OTHER",
           "IN LEAVE",
         ];
+        const tCol = cats.map(() => 0);
         plans
           .filter(
             (p) =>
@@ -661,14 +667,19 @@
             if (!map.has(eng)) map.set(eng, new Map(cats.map((x) => [x, 0])));
             map.get(eng).set(c, (map.get(eng).get(c) || 0) + 1);
           });
-        byId("engMonthBody").innerHTML = Array.from(map.entries())
+        const rows = Array.from(map.entries())
           .sort()
-          .map(
-            ([eng, row]) => `
-          <tr class="hover:bg-gray-50"><td>${eng}</td>${cats.map((c) => `<td class="text-center">${row.get(c) || 0}</td>`).join("")}
-          <td class="text-right font-bold text-blue-600">${cats.filter((x) => x !== "IN LEAVE").reduce((s, c) => s + row.get(c), 0)}</td></tr>`,
-          )
+          .map(([eng, row]) => {
+            const total = cats
+              .filter((x) => x !== "IN LEAVE")
+              .reduce((s, c) => s + row.get(c), 0);
+            cats.forEach((c, idx) => (tCol[idx] += row.get(c)));
+            return `<tr class="hover:bg-gray-50"><td>${eng}</td>${cats.map((c) => `<td class="text-center">${row.get(c) || 0}</td>`).join("")}<td class="text-right font-bold text-blue-600">${total}</td></tr>`;
+          })
           .join("");
+        const grandTotal = tCol.slice(0, -1).reduce((a, b) => a + b, 0);
+        const footer = `<tr class="total-row"><td>Grand Total</td>${tCol.map((v) => `<td class="text-center">${v}</td>`).join("")}<td class="text-right">${grandTotal}</td></tr>`;
+        byId("engMonthBody").innerHTML = rows + footer;
       }
 
       window.exportEngineerMonthlyCSV = function () {
@@ -736,17 +747,25 @@
           }
         });
         const sortedPh = Array.from(phs).sort();
+        const colTotals = sortedPh.map(() => 0);
         byId("relconConnectivityHeader").innerHTML =
           `<th>Region</th>` +
           sortedPh.map((p) => `<th>${p}</th>`).join("") +
           `<th>Total</th>`;
-        byId("relconConnectivityBody").innerHTML = Array.from(regMap.keys())
+        const rows = Array.from(regMap.keys())
           .sort()
           .map((reg) => {
-            const cts = sortedPh.map((p) => regMap.get(reg).get(p)?.size || 0);
+            const cts = sortedPh.map((p, i) => {
+              const count = regMap.get(reg).get(p)?.size || 0;
+              colTotals[i] += count;
+              return count;
+            });
             return `<tr><td>${reg}</td>${cts.map((c) => `<td>${c}</td>`).join("")}<td class="font-bold">${cts.reduce((a, b) => a + b, 0)}</td></tr>`;
           })
           .join("");
+        const grandTotal = colTotals.reduce((a, b) => a + b, 0);
+        const footer = `<tr class="total-row"><td>Grand Total</td>${colTotals.map((v) => `<td>${v}</td>`).join("")}<td>${grandTotal}</td></tr>`;
+        byId("relconConnectivityBody").innerHTML = rows + footer;
         byId("relconOverallCount").innerHTML =
           `Unique Sites: ${new Set(relcon.map((r) => r.roCode)).size}`;
       }
@@ -769,6 +788,9 @@
           localStorage.getItem("pcb_provided_alltime") || "{}",
         );
         const map = new Map();
+        let tP = 0,
+          tToday = 0,
+          tInst = 0;
         recs.forEach((r) => {
           const eng = r.engineer || "-";
           if (!map.has(eng))
@@ -789,14 +811,18 @@
               map.get(eng).today++;
           }
         });
-        byId("pcbInstallationBody").innerHTML = Array.from(map.entries())
+        const rows = Array.from(map.entries())
           .sort()
-          .map(
-            ([eng, rec]) => `
-          <tr><td>${eng}</td><td>${isAdmin ? `<input type="number" class="border w-16 text-center" value="${rec.provided}" data-eng="${eng}">` : rec.provided}</td>
-          <td class="text-center">${rec.today}</td><td class="text-center">${rec.installed}</td><td class="text-center font-bold text-red-600">${Math.max(0, rec.provided - rec.installed)}</td></tr>`,
-          )
+          .map(([eng, rec]) => {
+            tP += rec.provided;
+            tToday += rec.today;
+            tInst += rec.installed;
+            return `<tr><td>${eng}</td><td class="text-center">${isAdmin ? `<input type="number" class="border w-16 text-center" value="${rec.provided}" data-eng="${eng}">` : rec.provided}</td>
+          <td class="text-center">${rec.today}</td><td class="text-center">${rec.installed}</td><td class="text-center font-bold text-red-600">${Math.max(0, rec.provided - rec.installed)}</td></tr>`;
+          })
           .join("");
+        const footer = `<tr class="total-row"><td>Grand Total</td><td class="text-center">${tP}</td><td class="text-center">${tToday}</td><td class="text-center">${tInst}</td><td class="text-center">${Math.max(0, tP - tInst)}</td></tr>`;
+        byId("pcbInstallationBody").innerHTML = rows + footer;
         if (isAdmin && byId("savePcbProvidedBtn"))
           byId("savePcbProvidedBtn").classList.remove("hidden");
       }
@@ -845,8 +871,14 @@
           data = data.filter(
             (i) => String(i.engineerName).toLowerCase() === eng,
           );
-        byId("amcVisitStatusBody").innerHTML = data
+        let tA = 0,
+          tC = 0,
+          tP = 0;
+        const rows = data
           .map((item) => {
+            tA += item.totalAMCAssigned;
+            tC += item.totalAMCCompleted;
+            tP += item.pendingAMC;
             const pct =
               item.totalAMCAssigned > 0
                 ? (
@@ -857,6 +889,9 @@
             return `<tr><td>${item.engineerName}</td><td class="text-center">${item.totalAMCAssigned}</td><td class="text-center">${item.totalAMCCompleted}</td><td class="text-center">${item.pendingAMC}</td><td class="text-right font-bold text-blue-600">${pct}%</td></tr>`;
           })
           .join("");
+        const totalPct = tA > 0 ? ((tC / tA) * 100).toFixed(1) : 0;
+        const footer = `<tr class="total-row"><td>Grand Total</td><td class="text-center">${tA}</td><td class="text-center">${tC}</td><td class="text-center">${tP}</td><td class="text-right">${totalPct}%</td></tr>`;
+        byId("amcVisitStatusBody").innerHTML = rows + footer;
       }
 
       window.exportAMCVisitStatusCSV = function () {
@@ -950,17 +985,6 @@
           },
           options: { indexAxis: "y", maintainAspectRatio: false },
         });
-      }
-      function renderCustomerCards(counts) {
-        byId("customerCards").innerHTML = Array.from(counts.entries())
-          .map(
-            ([label, count]) => `
-          <div class="border p-2 rounded bg-slate-50 flex items-center gap-2">
-            <div class="w-1 h-6 bg-blue-600"></div>
-            <div><p class="text-[9px] font-bold text-gray-500 uppercase">${label}</p><p class="text-sm font-bold">${count}</p></div>
-          </div>`,
-          )
-          .join("");
       }
       function buildMonthDropdown(plans) {
         const keys = new Set(plans.map((p) => ymKey(p.date)).filter(Boolean));
