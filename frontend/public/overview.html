@@ -207,6 +207,7 @@
         </div>
       </div>
 
+      <!-- Charts Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="crm-card p-4">
           <p class="font-bold text-gray-600 mb-4 text-xs uppercase">
@@ -222,6 +223,7 @@
         </div>
       </div>
 
+      <!-- Performance Section -->
       <div class="crm-card">
         <div class="crm-card-header">
           <span class="font-bold text-xs uppercase"
@@ -237,23 +239,28 @@
         </div>
       </div>
 
+      <!-- AMC Table -->
       <div id="amcVisitStatusCard" class="crm-card">
         <div class="crm-card-header">
           <div class="flex items-center gap-4">
             <span class="font-bold text-xs uppercase">AMC Visit Status</span>
-            <div class="flex items-center gap-2 bg-white border p-1 rounded">
+            <div
+              class="flex items-center gap-2 bg-white border p-1 rounded shadow-sm"
+            >
               <input
                 type="date"
                 id="amcStartDate"
                 class="text-[11px] outline-none"
                 value="2026-01-01"
-              /><span>to</span
-              ><input
+              />
+              <span class="text-gray-300">to</span>
+              <input
                 type="date"
                 id="amcEndDate"
                 class="text-[11px] outline-none"
                 value="2026-03-31"
-              /><button
+              />
+              <button
                 onclick="loadAMCVisitStatus()"
                 class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-bold"
               >
@@ -263,7 +270,7 @@
           </div>
           <button
             onclick="exportAMCVisitStatusCSV()"
-            class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold"
+            class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm"
           >
             EXPORT CSV
           </button>
@@ -284,6 +291,7 @@
         </div>
       </div>
 
+      <!-- Relcon & PCB -->
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div id="relconConnectivityCard" class="crm-card">
           <div class="crm-card-header">
@@ -323,8 +331,9 @@
                 onclick="savePcbProvidedCounts()"
                 class="hidden bg-blue-600 text-white px-3 py-1 rounded text-[11px] font-bold"
               >
-                SAVE</button
-              ><button
+                SAVE
+              </button>
+              <button
                 onclick="exportPcbInstallationExcel()"
                 class="text-emerald-600"
               >
@@ -349,15 +358,16 @@
         </div>
       </div>
 
+      <!-- Monthly Summary -->
       <div class="crm-card">
         <div class="crm-card-header">
           <span class="font-bold text-xs uppercase">Monthly Performance</span>
           <div class="flex items-center gap-3">
             <select
               id="monthSelect"
-              class="border p-1 text-[11px] rounded bg-white font-bold text-blue-600"
-            ></select
-            ><button
+              class="border p-1 text-[11px] rounded bg-white font-bold text-blue-600 shadow-sm"
+            ></select>
+            <button
               onclick="exportEngineerMonthlyCSV()"
               class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold"
             >
@@ -395,32 +405,11 @@
         return localStorage.getItem("token");
       }
 
-      // --- Global Helper for CSV ---
-      function downloadCSV(rows, headers, filename) {
-        const csvContent =
-          headers.join(",") +
-          "\n" +
-          rows
-            .map((r) =>
-              headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
-            )
-            .join("\n");
-        const blob = new Blob([csvContent], {
-          type: "text/csv;charset=utf-8;",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-
       async function loadOverview() {
         try {
           const token = getToken();
           const headers = { Authorization: `Bearer ${token}` };
+
           const [
             userRes,
             plansRes,
@@ -436,36 +425,101 @@
             fetch(`${baseUrl}/getAllIncidents`, { headers }),
             fetch(`${baseUrl}/audit/loginLogs`, { headers }),
           ]);
+
           const currentUser = await userRes.json();
+          // CRITICAL FIX: Set global user before calling sub-functions
           window.__currentUser = currentUser;
+
           const plans = await plansRes.json();
-          window.__allPlans = plans;
           const hpcl = await statusRes.json();
-          window.__statusRecords = hpcl;
           const jio = await jioRes.json();
-          window.__allJio = jio;
           const incJson = await incidentRes.json();
           const loginLogs = await loginLogsRes.json();
 
           const today = new Date().toLocaleDateString("en-CA");
-          const plansT = plans.filter(
-            (p) =>
-              (p.date || "").slice(0, 10) === today &&
-              !["NO PLAN", "IN LEAVE"].includes(
-                String(p.purpose).toUpperCase(),
-              ),
+          const plansT = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const pd = String(p.date || "").slice(0, 10);
+            const prp = String(p.purpose || "").toUpperCase();
+            return pd === today && prp !== "NO PLAN" && prp !== "IN LEAVE";
+          });
+
+          const holdT = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const pd = String(p.date || "").slice(0, 10);
+            const prp = String(p.purpose || "").toUpperCase();
+            return pd === today && (prp === "NO PLAN" || prp === "IN LEAVE");
+          });
+
+          const uHpcl = hpcl.filter(
+            (r) => String(r.isVerified).toLowerCase() !== "true",
           );
-          const holdT = plans.filter(
-            (p) =>
-              (p.date || "").slice(0, 10) === today &&
-              ["NO PLAN", "IN LEAVE"].includes(String(p.purpose).toUpperCase()),
+          const uJio = jio.filter(
+            (r) => String(r.isVerified).toLowerCase() !== "true",
           );
+          window.__unverifiedHpcl = uHpcl;
+          window.__unverifiedJio = uJio;
 
           byId("kpiPlansToday").textContent = plansT.length;
-          byId("kpiUnverified").textContent =
-            hpcl.filter((r) => String(r.isVerified) !== "true").length +
-            jio.filter((r) => String(r.isVerified) !== "true").length;
+          byId("kpiUnverified").textContent = uHpcl.length + uJio.length;
+          byId("kpiUnverifiedBreakdown").textContent =
+            `HPCL: ${uHpcl.length} • RBML: ${uJio.length}`;
+          byId("kpiOpenIncidents").textContent = (
+            incJson?.incidents || []
+          ).filter((i) => (i.status || "").toLowerCase() !== "close").length;
           byId("kpiHold").textContent = holdT.length;
+          byId("kpiHoldBreakdown").textContent =
+            `NO PLAN: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "NO PLAN").length} • LEAVE: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "IN LEAVE").length}`;
+
+          // Pending Logics
+          const key = (rc, d) =>
+            `${String(rc || "")
+              .trim()
+              .toUpperCase()}-${String(d || "").slice(0, 10)}`;
+          const tObj = new Date();
+          const endD = tObj.toISOString().slice(0, 10);
+          tObj.setDate(tObj.getDate() - 6);
+          const startD = tObj.toISOString().slice(0, 10);
+
+          const hpclSet = new Set(
+            hpcl
+              .filter(
+                (r) => (r.date || r.uploadDate || "").slice(0, 10) >= startD,
+              )
+              .map((r) => key(r.roCode, r.date || r.uploadDate)),
+          );
+          const rbmlSet = new Set(
+            jio
+              .filter(
+                (r) => (r.date || r.uploadDate || "").slice(0, 10) >= startD,
+              )
+              .map((r) =>
+                key(r.roCode || r.siteCode || "", r.date || r.uploadDate),
+              ),
+          );
+
+          const p7 = plans.filter((p) => {
+            const d = (p.date || "").slice(0, 10);
+            const prp = String(p.purpose).toUpperCase();
+            return (
+              d >= startD &&
+              d <= endD &&
+              prp !== "NO PLAN" &&
+              prp !== "IN LEAVE"
+            );
+          });
+          const p7H = p7.filter(
+            (p) =>
+              String(p.phase).toUpperCase().startsWith("HPCL") &&
+              !hpclSet.has(key(p.roCode, p.date)),
+          ).length;
+          const p7R = p7.filter(
+            (p) =>
+              String(p.phase).toUpperCase().includes("RBML") &&
+              !rbmlSet.has(key(p.roCode, p.date)),
+          ).length;
+
+          byId("kpiPendingToday").textContent = p7H + p7R;
+          byId("kpiPendingBreakdown").textContent =
+            `HPCL: ${p7H} • RBML: ${p7R} (7d)`;
           byId("kpiActiveUsers").textContent = new Set(
             loginLogs
               .filter(
@@ -475,93 +529,50 @@
               )
               .map((l) => l.engineerName || l.username),
           ).size;
+          byId("lastUpdated").textContent =
+            `LAST SYNC: ${new Date().toLocaleTimeString()}`;
 
-          // Wire up simple KPI Exports
-          byId("exportPlansToday").onclick = () =>
-            downloadCSV(
-              plansT,
-              ["date", "engineer", "roCode", "roName", "region"],
-              "plans_today.csv",
-            );
-          byId("exportHold").onclick = () =>
-            downloadCSV(
-              holdT,
-              ["date", "engineer", "purpose"],
-              "hold_engineers.csv",
-            );
+          const isAdmin = String(currentUser.role).toLowerCase() === "admin";
+          if (!isAdmin) {
+            [
+              "exportPlansToday",
+              "exportUnverified",
+              "exportOpenInc",
+              "exportActiveUsers",
+              "exportHold",
+              "exportPending",
+            ].forEach((id) => {
+              if (byId(id)) byId(id).style.display = "none";
+            });
+            if (byId("holdEngineersCard"))
+              byId("holdEngineersCard").style.display = "none";
+          }
 
           renderVerifyChart(
-            hpcl.filter((r) => String(r.isVerified) !== "true").length,
-            hpcl.length -
-              hpcl.filter((r) => String(r.isVerified) !== "true").length,
+            uHpcl.length + uJio.length,
+            hpcl.length + jio.length - (uHpcl.length + uJio.length),
           );
           renderPlansRegionChart(plansT);
           renderCustomerChart(plansT);
+
+          const cCounts = new Map();
+          plansT.forEach((p) => {
+            const c = customerFromPlan(p);
+            cCounts.set(c, (cCounts.get(c) || 0) + 1);
+          });
+          renderCustomerCards(cCounts);
+
+          window.__allPlans = plans;
+          window.__statusRecords = hpcl;
           buildMonthDropdown(plans);
           renderEngineerMonthly(plans, byId("monthSelect").value);
           renderRelconConnectivity(hpcl);
           renderPcbInstallation(hpcl);
           loadAMCVisitStatus();
         } catch (e) {
-          console.error(e);
+          console.error("overview load error", e);
         }
       }
-
-      // --- Export Functions Fix ---
-
-      window.exportAMCVisitStatusCSV = function () {
-        const rows = Array.from(
-          document.querySelectorAll("#amcVisitStatusBody tr"),
-        ).map((tr) => {
-          const tds = tr.querySelectorAll("td");
-          return {
-            name: tds[0]?.innerText,
-            assigned: tds[1]?.innerText,
-            completed: tds[2]?.innerText,
-            pending: tds[3]?.innerText,
-            pct: tds[4]?.innerText,
-          };
-        });
-        downloadCSV(
-          rows,
-          ["name", "assigned", "completed", "pending", "pct"],
-          "amc_visit_status.csv",
-        );
-      };
-
-      window.exportEngineerMonthlyCSV = function () {
-        const ym = byId("monthSelect").value;
-        const data = window.__allPlans.filter((p) => ymKey(p.date) === ym);
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, "Monthly Data");
-        XLSX.writeFile(wb, `Monthly_Report_${ym}.xlsx`);
-      };
-
-      window.exportRelconConnectivityCSV = function () {
-        const data = window.__statusRecords.filter((r) =>
-          String(r.connectivityType).toUpperCase().includes("RELCON"),
-        );
-        downloadCSV(
-          data,
-          ["region", "roCode", "roName", "phase", "engineer"],
-          "relcon_connectivity.csv",
-        );
-      };
-
-      window.exportPcbInstallationExcel = function () {
-        const data = window.__statusRecords.filter(
-          (r) =>
-            String(r.purpose).toUpperCase().includes("PCB") &&
-            String(r.purpose).toUpperCase().includes("INSTALL"),
-        );
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, "PCB Data");
-        XLSX.writeFile(wb, "PCB_Installation_Report.xlsx");
-      };
-
-      // --- Original Rendering Functions ---
 
       function renderVerifyChart(u, v) {
         new Chart(byId("chartVerify"), {
@@ -572,126 +583,285 @@
               { data: [u, v], backgroundColor: ["#b78103", "#2e844a"] },
             ],
           },
-          options: { maintainAspectRatio: false, cutout: "75%" },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "75%",
+            plugins: { legend: { position: "bottom" } },
+          },
         });
       }
+
       function renderPlansRegionChart(plans) {
-        const c = {};
+        const counts = new Map();
         plans.forEach((p) => {
-          const r = (p.region || "").toUpperCase();
-          c[r] = (c[r] || 0) + 1;
+          const r = (p.region || "Unknown").toUpperCase();
+          counts.set(r, (counts.get(r) || 0) + 1);
         });
         new Chart(byId("chartPlansRegion"), {
           type: "bar",
           data: {
-            labels: Object.keys(c),
+            labels: Array.from(counts.keys()),
             datasets: [
               {
                 label: "Plans",
-                data: Object.values(c),
+                data: Array.from(counts.values()),
                 backgroundColor: "#0176d3",
               },
             ],
           },
-          options: { maintainAspectRatio: false },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+          },
         });
       }
+
       function customerFromPlan(p) {
         const ph = String(p.phase || "").toUpperCase();
         if (ph.startsWith("HPCL")) return "HPCL";
         if (ph.includes("RBML")) return "RBML";
         if (ph.includes("BPCL")) return "BPCL";
+        if (ph.includes("NAYARA")) return "NAYARA";
         return "OTHER";
       }
+
       function renderCustomerChart(plans) {
-        const c = {};
+        const counts = new Map();
         plans.forEach((p) => {
           const cust = customerFromPlan(p);
-          c[cust] = (c[cust] || 0) + 1;
+          counts.set(cust, (counts.get(cust) || 0) + 1);
         });
+        const labels = Array.from(counts.keys());
         new Chart(byId("chartCustomer"), {
           type: "bar",
           data: {
-            labels: Object.keys(c),
-            datasets: [{ data: Object.values(c), backgroundColor: "#0176d3" }],
+            labels,
+            datasets: [
+              {
+                data: labels.map((l) => counts.get(l)),
+                backgroundColor: "#0176d3",
+              },
+            ],
           },
-          options: { indexAxis: "y", maintainAspectRatio: false },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+          },
         });
       }
+
+      function renderCustomerCards(counts) {
+        byId("customerCards").innerHTML = Array.from(counts.entries())
+          .map(
+            ([label, count]) => `
+          <div class="border p-2 rounded bg-slate-50 flex items-center gap-2">
+            <div class="w-1 h-6 bg-blue-600"></div>
+            <div><p class="text-[9px] font-bold text-gray-500 uppercase">${label}</p><p class="text-sm font-bold">${count}</p></div>
+          </div>`,
+          )
+          .join("");
+      }
+
       function ymKey(d) {
         return new Date(d).toLocaleDateString("en-CA").slice(0, 7);
       }
       function buildMonthDropdown(plans) {
         const keys = new Set(plans.map((p) => ymKey(p.date)).filter(Boolean));
+        if (keys.size === 0)
+          keys.add(new Date().toLocaleDateString("en-CA").slice(0, 7));
         byId("monthSelect").innerHTML = Array.from(keys)
           .sort()
           .reverse()
           .map((k) => `<option value="${k}">${k}</option>`)
           .join("");
       }
+
       function renderEngineerMonthly(plans, ym) {
         const map = new Map();
-        const custs = ["HPCL", "RBML", "BPCL", "NAYARA", "OTHER", "IN LEAVE"];
+        const customers = [
+          "HPCL",
+          "RBML",
+          "BPCL",
+          "NAYARA",
+          "OTHER",
+          "IN LEAVE",
+        ];
         plans
-          .filter((p) => ymKey(p.date) === ym)
+          .filter(
+            (p) =>
+              ymKey(p.date) === ym &&
+              String(p.purpose).toUpperCase() !== "NO PLAN",
+          )
           .forEach((p) => {
             const eng = p.engineer || "-";
-            const c =
+            const cust =
               String(p.purpose).toUpperCase() === "IN LEAVE"
                 ? "IN LEAVE"
                 : customerFromPlan(p);
-            if (!map.has(eng)) map.set(eng, new Map(custs.map((x) => [x, 0])));
-            map.get(eng).set(c, map.get(eng).get(c) + 1);
+            if (!map.has(eng))
+              map.set(eng, new Map(customers.map((c) => [c, 0])));
+            const row = map.get(eng);
+            row.set(cust, row.get(cust) + 1);
           });
         byId("engMonthBody").innerHTML = Array.from(map.entries())
-          .map(
-            ([eng, row]) =>
-              `<tr><td>${eng}</td>${custs.map((c) => `<td>${row.get(c)}</td>`).join("")}<td>${Array.from(row.values()).reduce((a, b) => a + b, 0)}</td></tr>`,
-          )
+          .sort()
+          .map(([eng, row]) => {
+            const total = customers
+              .filter((c) => c !== "IN LEAVE")
+              .reduce((s, c) => s + row.get(c), 0);
+            return `<tr><td>${eng}</td>${customers.map((c) => `<td class="text-center">${row.get(c)}</td>`).join("")}<td class="text-right font-bold">${total}</td></tr>`;
+          })
           .join("");
       }
-      function renderRelconConnectivity(recs) {
-        byId("relconConnectivityBody").innerHTML =
-          "<tr><td>Total unique RELCON sites found</td><td>" +
-          new Set(
-            recs
-              .filter((r) =>
-                String(r.connectivityType).toUpperCase().includes("RELCON"),
-              )
-              .map((r) => r.roCode),
-          ).size +
-          "</td></tr>";
+
+      function renderRelconConnectivity(statusRecords) {
+        const relcon = statusRecords.filter((r) =>
+          String(r.connectivityType || r.ConnectivityType || "")
+            .toUpperCase()
+            .includes("RELCON"),
+        );
+        const regMap = new Map();
+        const phs = new Set();
+        relcon.forEach((r) => {
+          const reg = r.region || "-";
+          const ph = r.phase || "-";
+          if (!regMap.has(reg)) regMap.set(reg, new Map());
+          if (!regMap.get(reg).has(ph)) regMap.get(reg).set(ph, new Set());
+          if (r.roCode) {
+            regMap.get(reg).get(ph).add(r.roCode);
+            phs.add(ph);
+          }
+        });
+        const sortedPh = Array.from(phs).sort();
+        byId("relconConnectivityHeader").innerHTML =
+          `<th>Region</th>` +
+          sortedPh.map((p) => `<th>${p}</th>`).join("") +
+          `<th>Total</th>`;
+        byId("relconConnectivityBody").innerHTML = Array.from(regMap.keys())
+          .sort()
+          .map((reg) => {
+            const cts = sortedPh.map((p) => regMap.get(reg).get(p)?.size || 0);
+            return `<tr><td>${reg}</td>${cts.map((c) => `<td>${c}</td>`).join("")}<td class="font-bold">${cts.reduce((a, b) => a + b, 0)}</td></tr>`;
+          })
+          .join("");
+        byId("relconOverallCount").innerHTML =
+          `Unique Sites: ${new Set(relcon.map((r) => r.roCode)).size}`;
       }
-      function renderPcbInstallation(recs) {
+
+      function renderPcbInstallation(statusRecords) {
+        const isAdmin =
+          String(window.__currentUser.role).toLowerCase() === "admin";
+        const providedMap = JSON.parse(
+          localStorage.getItem("pcb_provided_alltime") || "{}",
+        );
         const map = new Map();
-        recs.forEach((r) => {
+        statusRecords.forEach((r) => {
+          const eng = r.engineer || "-";
+          if (!map.has(eng))
+            map.set(eng, {
+              provided: Number(providedMap[eng] || 0),
+              installed: 0,
+              today: 0,
+            });
           if (
-            String(r.purpose).toUpperCase().includes("PCB") &&
+            String(r.purpose).toUpperCase().includes("POWER PROTECTION PCB") &&
             String(r.purpose).toUpperCase().includes("INSTALL")
           ) {
-            map.set(r.engineer, (map.get(r.engineer) || 0) + 1);
+            map.get(eng).installed++;
+            if (
+              String(r.date).slice(0, 10) ===
+              new Date().toISOString().slice(0, 10)
+            )
+              map.get(eng).today++;
           }
         });
         byId("pcbInstallationBody").innerHTML = Array.from(map.entries())
+          .sort()
           .map(
-            ([e, c]) =>
-              `<tr><td>${e}</td><td>-</td><td>-</td><td>${c}</td><td>-</td></tr>`,
+            ([eng, rec]) => `
+          <tr><td>${eng}</td><td>${isAdmin ? `<input type="number" class="border w-16 text-center" value="${rec.provided}" data-eng="${eng}">` : rec.provided}</td>
+          <td class="text-center">${rec.today}</td><td class="text-center">${rec.installed}</td><td class="text-center font-bold text-red-600">${Math.max(0, rec.provided - rec.installed)}</td></tr>`,
           )
           .join("");
+        if (isAdmin && byId("savePcbProvidedBtn"))
+          byId("savePcbProvidedBtn").classList.remove("hidden");
       }
+
+      function savePcbProvidedCounts() {
+        const p = {};
+        document
+          .querySelectorAll("#pcbInstallationBody input[data-eng]")
+          .forEach((i) => (p[i.dataset.eng] = Number(i.value)));
+        localStorage.setItem("pcb_provided_alltime", JSON.stringify(p));
+        renderPcbInstallation(window.__statusRecords);
+      }
+
       async function loadAMCVisitStatus() {
-        const res = await fetch(
-          `${baseUrl}/romaster/amcCountStatus?startDate=${byId("amcStartDate").value}&endDate=${byId("amcEndDate").value}`,
-          { headers: { Authorization: `Bearer ${getToken()}` } },
-        );
-        const json = await res.json();
-        byId("amcVisitStatusBody").innerHTML = json.data
-          .map(
-            (i) =>
-              `<tr><td>${i.engineerName}</td><td>${i.totalAMCAssigned}</td><td>${i.totalAMCCompleted}</td><td>${i.pendingAMC}</td><td>${((i.totalAMCCompleted / i.totalAMCAssigned) * 100 || 0).toFixed(1)}%</td></tr>`,
-          )
-          .join("");
+        try {
+          const s = byId("amcStartDate").value;
+          const e = byId("amcEndDate").value;
+          const res = await fetch(
+            `${baseUrl}/romaster/amcCountStatus?startDate=${s}&endDate=${e}`,
+            { headers: { Authorization: `Bearer ${getToken()}` } },
+          );
+          const result = await res.json();
+          const isAdmin =
+            String(window.__currentUser?.role || "").toLowerCase() === "admin";
+          const eng = (
+            window.__currentUser?.engineerName ||
+            window.__currentUser?.username ||
+            ""
+          ).toLowerCase();
+          let data = result.data.filter(
+            (i) => i.engineerName !== "NAVAL KISHOR PANDEY",
+          );
+          if (!isAdmin)
+            data = data.filter(
+              (i) => String(i.engineerName).toLowerCase() === eng,
+            );
+          byId("amcVisitStatusBody").innerHTML = data
+            .map((item) => {
+              const pct =
+                item.totalAMCAssigned > 0
+                  ? (
+                      (item.totalAMCCompleted / item.totalAMCAssigned) *
+                      100
+                    ).toFixed(1)
+                  : 0;
+              return `<tr><td>${item.engineerName}</td><td>${item.totalAMCAssigned}</td><td>${item.totalAMCCompleted}</td><td>${item.pendingAMC}</td><td class="text-right font-bold text-blue-600">${pct}%</td></tr>`;
+            })
+            .join("");
+        } catch (err) {
+          console.error(err);
+        }
       }
+
+      byId("copyUnverifiedMail")?.addEventListener("click", () => {
+        let mail = `<p>Unverified Report:</p><table border="1" style="border-collapse:collapse"><thead><tr><th>Engineer</th><th>Count</th></tr></thead><tbody>`;
+        const map = new Map();
+        [
+          ...(window.__unverifiedHpcl || []),
+          ...(window.__unverifiedJio || []),
+        ].forEach((r) => {
+          const e = r.engineer || "-";
+          map.set(e, (map.get(e) || 0) + 1);
+        });
+        map.forEach((c, e) => {
+          mail += `<tr><td>${e}</td><td>${c}</td></tr>`;
+        });
+        mail += `</tbody></table>`;
+        const bH = new Blob([mail], { type: "text/html" });
+        const bT = new Blob([mail.replace(/<[^>]+>/g, "")], {
+          type: "text/plain",
+        });
+        navigator.clipboard
+          .write([new ClipboardItem({ "text/html": bH, "text/plain": bT })])
+          .then(() => alert("Copied!"));
+      });
 
       window.onload = loadOverview;
     </script>
