@@ -101,7 +101,7 @@
   </head>
   <body class="p-6">
     <section class="max-w-[1600px] mx-auto space-y-6">
-      <!-- Top Title Bar -->
+      <!-- Title Bar -->
       <div
         class="flex items-center justify-between border-b border-gray-300 pb-4"
       >
@@ -228,7 +228,7 @@
         </div>
       </div>
 
-      <!-- Performance Section -->
+      <!-- Customer Performance Bar Chart -->
       <div class="crm-card">
         <div class="crm-card-header">
           <span class="font-bold text-xs uppercase"
@@ -236,7 +236,7 @@
           >
         </div>
         <div class="p-4">
-          <div class="h-20"><canvas id="chartCustomer"></canvas></div>
+          <div class="h-40"><canvas id="chartCustomer"></canvas></div>
           <div
             id="customerCards"
             class="grid grid-cols-2 md:grid-cols-6 gap-3 mt-4"
@@ -409,6 +409,7 @@
       function getToken() {
         return localStorage.getItem("token");
       }
+
       function downloadCSV(rows, headers, filename) {
         const csvContent =
           headers.join(",") +
@@ -560,6 +561,7 @@
           byId("kpiPendingBreakdown").textContent =
             `HPCL: ${p7H} • RBML: ${p7R} (7 days)`;
 
+          // KPI Exports
           byId("exportPlansToday").onclick = () =>
             downloadCSV(
               plansToday,
@@ -618,7 +620,9 @@
               "exportOpenInc",
               "exportPending",
               "exportActiveUsers",
-            ].forEach((id) => (byId(id).style.display = "none"));
+            ].forEach((id) => {
+              if (byId(id)) byId(id).style.display = "none";
+            });
 
           renderVerifyChart(
             uH.length + uJ.length,
@@ -677,7 +681,9 @@
             return `<tr class="hover:bg-gray-50"><td>${eng}</td>${cats.map((c) => `<td class="text-center">${row.get(c) || 0}</td>`).join("")}<td class="text-right font-bold text-blue-600">${total}</td></tr>`;
           })
           .join("");
-        const grandTotal = tCol.slice(0, -1).reduce((a, b) => a + b, 0);
+        const grandTotal = tCol
+          .filter((_, i) => cats[i] !== "IN LEAVE")
+          .reduce((a, b) => a + b, 0);
         const footer = `<tr class="total-row"><td>Grand Total</td>${tCol.map((v) => `<td class="text-center">${v}</td>`).join("")}<td class="text-right">${grandTotal}</td></tr>`;
         byId("engMonthBody").innerHTML = rows + footer;
       }
@@ -971,21 +977,25 @@
           options: { maintainAspectRatio: false },
         });
       }
+
       function renderCustomerChart(plans) {
-        const c = {};
-        plans.forEach((p) => {
-          const cust = customerFromPlan(p);
-          c[cust] = (c[cust] || 0) + 1;
-        });
+        const counts = { HPCL: 0, RBML: 0, BPCL: 0, OTHER: 0 };
+        plans.forEach((p) => counts[customerFromPlan(p)]++);
+        const labels = ["HPCL", "BPCL", "RBML", "OTHER"];
+        const data = labels.map((l) => counts[l]);
+        const colors = ["#0176d3", "#fcc003", "#2e844a", "#e96d9d"];
         new Chart(byId("chartCustomer"), {
           type: "bar",
-          data: {
-            labels: Object.keys(c),
-            datasets: [{ data: Object.values(c), backgroundColor: "#0176d3" }],
+          data: { labels, datasets: [{ data, backgroundColor: colors }] },
+          options: {
+            indexAxis: "y",
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
           },
-          options: { indexAxis: "y", maintainAspectRatio: false },
         });
       }
+
       function buildMonthDropdown(plans) {
         const keys = new Set(plans.map((p) => ymKey(p.date)).filter(Boolean));
         byId("monthSelect").innerHTML = Array.from(keys)
