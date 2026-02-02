@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Enterprise Dashboard | Relcon CRM</title>
-    <!-- Modern Font: Inter -->
+    <title>Dashboard Overview</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
     <link
@@ -16,391 +15,727 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
-
     <style>
-      :root {
-        --sf-blue: #0176d3;
-        --sf-bg: #f3f3f3;
-        --sf-border: #dddbda;
-        --sf-text: #181818;
-      }
       body {
-        font-family: "Inter", sans-serif;
-        background-color: var(--sf-bg);
-        color: var(--sf-text);
-        font-size: 13px;
+        font-family: "Poppins", sans-serif;
+        background: #f1f5f9;
+        font-size: 12px;
       }
-      .crm-card {
-        background: #ffffff;
-        border: 1px solid var(--sf-border);
-        border-radius: 0.25rem;
-        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
-        position: relative;
-        overflow: hidden;
+      .dark body {
+        background: #1f2937;
       }
-      .crm-card-header {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--sf-border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #f8f9fa;
+
+      /* Force black text in light mode */
+      body * {
+        color: #000000 !important;
       }
-      /* Accent Stripes */
-      .accent-green {
-        border-top: 4px solid #2e844a;
+
+      /* Dark mode overrides */
+      .dark body * {
+        color: inherit !important;
       }
-      .accent-amber {
-        border-top: 4px solid #b78103;
+
+      /* Smoky white background for cards in light mode */
+      body .bg-white {
+        background-color: #f8fafc !important;
       }
-      .accent-red {
-        border-top: 4px solid #ea001e;
+
+      /* Specific overrides for elements that should keep their colors */
+      body .bg-green-600,
+      body .bg-blue-600,
+      body .bg-red-600,
+      body .bg-amber-600,
+      body .bg-teal-600,
+      body .bg-purple-600,
+      body .bg-orange-600,
+      body .bg-lime-600,
+      body .bg-emerald-600,
+      body .bg-sky-600,
+      body .bg-indigo-600,
+      body .bg-rose-600,
+      body .bg-pink-600,
+      body .bg-violet-600,
+      body .bg-cyan-600,
+      body .bg-yellow-600,
+      body .bg-gray-600,
+      body .bg-green-100,
+      body .bg-blue-100,
+      body .bg-red-100,
+      body .bg-amber-100,
+      body .bg-teal-100,
+      body .bg-purple-100,
+      body .bg-orange-100,
+      body .bg-lime-100,
+      body .bg-emerald-100,
+      body .bg-sky-100,
+      body .bg-indigo-100,
+      body .bg-rose-100,
+      body .bg-pink-100,
+      body .bg-violet-100,
+      body .bg-cyan-100,
+      body .bg-yellow-100,
+      body .bg-gray-100,
+      body .bg-green-700,
+      body .bg-blue-700,
+      body .bg-red-700,
+      body .bg-amber-700,
+      body .bg-teal-700,
+      body .bg-purple-700,
+      body .bg-orange-700,
+      body .bg-lime-700,
+      body .bg-emerald-700,
+      body .bg-sky-700,
+      body .bg-indigo-700,
+      body .bg-rose-700,
+      body .bg-pink-700,
+      body .bg-violet-700,
+      body .bg-cyan-700,
+      body .bg-yellow-700,
+      body .bg-gray-700,
+      body .bg-green-800,
+      body .bg-blue-800,
+      body .bg-red-800,
+      body .bg-amber-800,
+      body .bg-teal-800,
+      body .bg-purple-800,
+      body .bg-orange-800,
+      body .bg-lime-800,
+      body .bg-emerald-800,
+      body .bg-sky-800,
+      body .bg-indigo-800,
+      body .bg-rose-800,
+      body .bg-pink-800,
+      body .bg-violet-800,
+      body .bg-cyan-800,
+      body .bg-yellow-800,
+      body .bg-gray-800,
+      body .bg-green-900,
+      body .bg-blue-900,
+      body .bg-red-900,
+      body .bg-amber-900,
+      body .bg-teal-900,
+      body .bg-purple-900,
+      body .bg-orange-900,
+      body .bg-lime-900,
+      body .bg-emerald-900,
+      body .bg-sky-900,
+      body .bg-indigo-900,
+      body .bg-rose-900,
+      body .bg-pink-900,
+      body .bg-violet-900,
+      body .bg-cyan-900,
+      body .bg-yellow-900,
+      body .bg-gray-900,
+      body .text-white,
+      body .text-green-700,
+      body .text-blue-700,
+      body .text-red-700,
+      body .text-amber-700,
+      body .text-teal-700,
+      body .text-purple-700,
+      body .text-orange-700,
+      body .text-lime-700,
+      body .text-emerald-700,
+      body .text-sky-700,
+      body .text-indigo-700,
+      body .text-rose-700,
+      body .text-pink-700,
+      body .text-violet-700,
+      body .text-cyan-700,
+      body .text-yellow-700,
+      body .text-gray-700,
+      body .text-green-300,
+      body .text-blue-300,
+      body .text-red-300,
+      body .text-amber-300,
+      body .text-teal-300,
+      body .text-purple-300,
+      body .text-orange-300,
+      body .text-lime-300,
+      body .text-emerald-300,
+      body .text-sky-300,
+      body .text-indigo-300,
+      body .text-rose-300,
+      body .text-pink-300,
+      body .text-violet-300,
+      body .text-cyan-300,
+      body .text-yellow-300,
+      body .text-gray-300 {
+        color: inherit !important;
       }
-      .accent-blue {
-        border-top: 4px solid #0176d3;
-      }
-      .accent-teal {
-        border-top: 4px solid #00a1e0;
-      }
-      .accent-gray {
-        border-top: 4px solid #747474;
-      }
-      /* Tables */
-      table thead th {
-        background-color: #f3f2f2;
-        color: #514f4d;
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 11px;
-        padding: 8px 12px !important;
-        border-bottom: 2px solid var(--sf-border);
-      }
-      table tbody td {
-        padding: 10px 12px !important;
-        border-bottom: 1px solid #f3f2f2;
-      }
-      .total-row {
-        background-color: #f8f9fa !important;
-        font-weight: 800 !important;
-        border-top: 2px solid #ccc !important;
-      }
-      .kpi-export {
-        opacity: 0.3;
-        transition: opacity 0.2s;
-        cursor: pointer;
+
+      /* Show CSV icon only on hover over KPI cards (admin only buttons remain hidden for non-admin via JS) */
+      .kpi-card .kpi-export {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(2px);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
       }
       .kpi-card:hover .kpi-export {
         opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
       }
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+      /* Icon color tuning */
+      .kpi-export i {
+        color: #2563eb;
       }
-      ::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 10px;
+      .dark .kpi-export,
+      .dark .kpi-export i {
+        color: var(--accent) !important;
       }
     </style>
   </head>
-  <body class="p-6">
-    <section class="max-w-[1600px] mx-auto space-y-6">
-      <!-- Header -->
-      <div
-        class="flex items-center justify-between border-b border-gray-300 pb-4"
-      >
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-blue-600 rounded text-white">
-            <i class="fa-solid fa-chart-line text-xl"></i>
+  <body class="p-4">
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-black dark:text-gray-200">
+          Dashboard Overview
+        </h2>
+        <div id="lastUpdated" class="text-xs text-black dark:text-gray-400">
+          —
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-600"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-calendar-check"></i>
           </div>
           <div>
-            <h2 class="text-xl font-bold tracking-tight">Dashboard Overview</h2>
-            <p
-              id="lastUpdated"
-              class="text-[11px] text-gray-500 uppercase font-semibold"
-            >
-              Syncing...
-            </p>
-          </div>
-        </div>
-        <button
-          onclick="window.location.reload()"
-          class="bg-white border p-2 rounded hover:bg-gray-100 shadow-sm"
-        >
-          <i class="fa-solid fa-sync text-gray-600"></i>
-        </button>
-      </div>
-
-      <!-- KPI Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-        <div class="crm-card accent-green p-4 kpi-card">
-          <p class="text-[11px] font-bold text-gray-500 uppercase">
-            Plans Today
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <h3 id="kpiPlansToday" class="text-3xl font-light">—</h3>
-            <button id="exportPlansToday" class="kpi-export text-blue-600">
-              <i class="fa-solid fa-file-csv text-lg"></i>
-            </button>
-          </div>
-        </div>
-        <div id="holdEngineersCard" class="crm-card accent-gray p-4 kpi-card">
-          <p class="text-[11px] font-bold text-gray-500 uppercase">
-            Hold Engineers
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <h3 id="kpiHold" class="text-3xl font-light">—</h3>
-            <button id="exportHold" class="kpi-export text-blue-600">
-              <i class="fa-solid fa-file-csv text-lg"></i>
-            </button>
-          </div>
-          <p id="kpiHoldBreakdown" class="text-[10px] text-gray-400 mt-1">—</p>
-        </div>
-        <div class="crm-card accent-amber p-4 kpi-card">
-          <p class="text-[11px] font-bold text-gray-500 uppercase">
-            Unverified
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <h3 id="kpiUnverified" class="text-3xl font-light">—</h3>
-            <div class="flex gap-2">
-              <button id="exportUnverified" class="kpi-export text-blue-600">
-                <i class="fa-solid fa-file-csv text-lg"></i>
+            <div class="text-xs text-black dark:text-gray-400 font-medium">
+              Plans Today
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                id="kpiPlansToday"
+                class="text-xl font-semibold text-black dark:text-gray-200"
+              >
+                —
+              </div>
+              <button
+                id="exportPlansToday"
+                class="text-[10px] text-blue-600 kpi-export"
+                title="Export CSV"
+              >
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hold Engineers (NO PLAN + IN LEAVE) -->
+        <div
+          id="holdEngineersCard"
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-600"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-user-slash"></i>
+          </div>
+          <div>
+            <div class="text-xs text-black dark:text-gray-400">
+              Hold Engineers
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                id="kpiHold"
+                class="text-xl font-semibold text-black dark:text-gray-200"
+              >
+                —
+              </div>
+              <button
+                id="exportHold"
+                class="text-[10px] text-blue-600 kpi-export"
+                title="Export CSV"
+              >
+                <i class="fa-solid fa-download text-[11px]"></i>
+              </button>
+            </div>
+            <div
+              id="kpiHoldBreakdown"
+              class="text-[10px] text-black dark:text-gray-400"
+            >
+              —
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-600"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <div class="text-xs text-black dark:text-gray-400 font-medium">
+              Unverified Status
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                id="kpiUnverified"
+                class="text-xl font-semibold text-black dark:text-gray-200"
+              >
+                —
+              </div>
+              <button
+                id="exportUnverified"
+                class="text-[10px] text-blue-600 kpi-export"
+                title="Export CSV"
+              >
+                <i class="fa-solid fa-download text-[11px]"></i>
+              </button>
+
+              <!-- mail clipboard added -->
+
               <button
                 id="copyUnverifiedMail"
-                class="kpi-export text-emerald-600"
+                class="text-[10px] text-green-600 kpi-export"
+                title="Copy Mail Content"
               >
-                <i class="fa-solid fa-copy text-lg"></i>
+                <i class="fa-solid fa-copy text-[11px]"></i>
+              </button>
+            </div>
+            <!-- ✅ Breakdown line add karo -->
+            <div
+              id="kpiUnverifiedBreakdown"
+              class="text-[10px] text-black dark:text-gray-400"
+            >
+              —
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-600"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-bell"></i>
+          </div>
+          <div>
+            <div class="text-xs text-black dark:text-gray-400 font-medium">
+              Open Incidents
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                id="kpiOpenIncidents"
+                class="text-xl font-semibold text-black dark:text-gray-200"
+              >
+                —
+              </div>
+              <button
+                id="exportOpenInc"
+                class="text-[10px] text-blue-600 kpi-export"
+                title="Export CSV"
+              >
+                <i class="fa-solid fa-download text-[11px]"></i>
               </button>
             </div>
           </div>
-          <p id="kpiUnverifiedBreakdown" class="text-[10px] text-gray-400 mt-1">
-            —
-          </p>
         </div>
-        <div class="crm-card accent-red p-4 kpi-card">
-          <p class="text-[11px] font-bold text-gray-500 uppercase">
-            Open Incidents
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <h3 id="kpiOpenIncidents" class="text-3xl font-light">—</h3>
-            <button id="exportOpenInc" class="kpi-export text-blue-600">
-              <i class="fa-solid fa-file-csv text-lg"></i>
-            </button>
-          </div>
-        </div>
-        <div class="crm-card accent-teal p-4 kpi-card">
-          <p class="text-[11px] font-bold text-gray-500 uppercase">
-            Status Pending
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <h3 id="kpiPendingToday" class="text-3xl font-light">—</h3>
-            <button id="exportPending" class="kpi-export text-blue-600">
-              <i class="fa-solid fa-file-csv text-lg"></i>
-            </button>
-          </div>
-          <p id="kpiPendingBreakdown" class="text-[10px] text-gray-400 mt-1">
-            —
-          </p>
-        </div>
-        <div class="crm-card accent-blue p-4 kpi-card">
-          <p class="text-[11px] font-bold text-gray-500 uppercase">
-            Active Users
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <h3 id="kpiActiveUsers" class="text-3xl font-light">—</h3>
-            <button id="exportActiveUsers" class="kpi-export text-blue-600">
-              <i class="fa-solid fa-file-csv text-lg"></i>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="crm-card p-4">
-          <p class="font-bold text-gray-600 mb-4 text-xs uppercase">
-            Verification Split
-          </p>
-          <div class="h-52"><canvas id="chartVerify"></canvas></div>
-        </div>
-        <div class="crm-card p-4 lg:col-span-2">
-          <p class="font-bold text-gray-600 mb-4 text-xs uppercase">
-            Plans by Region (Today)
-          </p>
-          <div class="h-52"><canvas id="chartPlansRegion"></canvas></div>
-        </div>
-      </div>
-
-      <!-- Customer Performance Horizontal Bar -->
-      <div class="crm-card">
-        <div class="crm-card-header">
-          <span class="font-bold text-xs uppercase"
-            >Customer Performance (Today)</span
-          >
-        </div>
-        <div class="p-4">
-          <div class="h-40"><canvas id="chartCustomer"></canvas></div>
+        <!-- Today Pending Status (HPCL + RBML) -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-600"
+        >
           <div
-            id="customerCards"
-            class="grid grid-cols-2 md:grid-cols-6 gap-3 mt-4"
-          ></div>
+            class="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-hourglass-half"></i>
+          </div>
+          <div>
+            <div class="text-xs text-black dark:text-gray-400 font-medium">
+              Status Pending (HPCL + RBML)
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                id="kpiPendingToday"
+                class="text-xl font-semibold text-black dark:text-gray-200"
+              >
+                —
+              </div>
+              <button
+                id="exportPending"
+                class="text-[10px] text-blue-600 kpi-export"
+                title="Export CSV"
+              >
+                <i class="fa-solid fa-download text-[11px]"></i>
+              </button>
+            </div>
+            <div
+              id="kpiPendingBreakdown"
+              class="text-[10px] text-black dark:text-gray-400"
+            >
+              —
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex items-center gap-3 kpi-card border border-gray-200 dark:border-gray-600"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+          <div>
+            <div class="text-xs text-black dark:text-gray-400 font-medium">
+              Active Users Today
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                id="kpiActiveUsers"
+                class="text-xl font-semibold text-black dark:text-gray-200"
+              >
+                —
+              </div>
+              <button
+                id="exportActiveUsers"
+                class="text-[10px] text-blue-600 kpi-export"
+                title="Export CSV"
+              >
+                <i class="fa-solid fa-download text-[11px]"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- AMC Table with Totals -->
-      <div id="amcVisitStatusCard" class="crm-card">
-        <div class="crm-card-header">
-          <div class="flex items-center gap-4">
-            <span class="font-bold text-xs uppercase">AMC Visit Status</span>
-            <div
-              class="flex items-center gap-2 bg-white border p-1 rounded shadow-sm"
-            >
-              <input
-                type="date"
-                id="amcStartDate"
-                class="text-[11px] outline-none"
-                value="2026-01-01"
-              /><span>to</span
-              ><input
-                type="date"
-                id="amcEndDate"
-                class="text-[11px] outline-none"
-                value="2026-03-31"
-              />
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+        >
+          <div class="text-sm font-semibold text-black dark:text-gray-200 mb-2">
+            Verification Split
+          </div>
+          <canvas id="chartVerify" height="160"></canvas>
+        </div>
+        <div
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:col-span-2 border border-gray-200 dark:border-gray-600"
+        >
+          <div class="text-sm font-semibold text-black dark:text-gray-200 mb-2">
+            Plans by Region (Today)
+          </div>
+          <canvas id="chartPlansRegion" height="80"></canvas>
+        </div>
+      </div>
+
+      <!-- Customer-wise visits -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+      >
+        <div class="text-sm font-semibold text-black dark:text-gray-200 mb-2">
+          Customer-wise Visits (Today)
+        </div>
+        <canvas id="chartCustomer" height="80"></canvas>
+        <div
+          id="customerCards"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-3"
+        ></div>
+      </div>
+
+      <!-- AMC Visit Status -->
+      <div
+        id="amcVisitStatusCard"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div class="text-sm font-semibold text-black dark:text-gray-200">
+              AMC Visit Status
+            </div>
+            <div class="flex items-center gap-4 mt-1">
+              <div class="text-xs text-black dark:text-gray-400">
+                <label for="amcStartDate" class="mr-2">Start Date:</label>
+                <input
+                  type="date"
+                  id="amcStartDate"
+                  class="border rounded px-2 py-1 text-xs"
+                  value="2026-01-01"
+                />
+              </div>
+              <div class="text-xs text-black dark:text-gray-400">
+                <label for="amcEndDate" class="mr-2">End Date:</label>
+                <input
+                  type="date"
+                  id="amcEndDate"
+                  class="border rounded px-2 py-1 text-xs"
+                  value="2026-03-31"
+                />
+              </div>
               <button
                 onclick="loadAMCVisitStatus()"
-                class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-bold"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow"
               >
-                LOAD
+                Load Data
               </button>
             </div>
           </div>
-          <button
-            onclick="exportAMCVisitStatusCSV()"
-            class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm"
-          >
-            EXPORT CSV
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              onclick="exportAMCVisitStatusCSV()"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Export CSV
+            </button>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead
+              class="bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-gray-700 dark:to-gray-600"
+            >
               <tr>
-                <th>Engineer Name</th>
-                <th class="text-center">Assigned</th>
-                <th class="text-center">Completed</th>
-                <th class="text-center">Pending</th>
-                <th class="text-right">Completion %</th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Engineer Name
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total AMC Assigned
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total AMC Completed
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Pending AMC
+                </th>
+
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  AMC Completion %
+                </th>
               </tr>
             </thead>
-            <tbody id="amcVisitStatusBody"></tbody>
+            <tbody
+              id="amcVisitStatusBody"
+              class="text-sm text-black dark:text-gray-200"
+            ></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Relcon & PCB with Totals -->
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div id="relconConnectivityCard" class="crm-card">
-          <div class="crm-card-header">
-            <div>
-              <span class="font-bold text-xs uppercase text-slate-700"
-                >RELCON Connectivity</span
-              >
-              <p
-                id="relconOverallCount"
-                class="text-[10px] text-blue-600 mt-1 font-bold"
-              ></p>
+      <!-- RELCON Connectivity Provided (All Time) -->
+      <div
+        id="relconConnectivityCard"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div class="text-sm font-semibold text-black dark:text-gray-200">
+              RELCON Connectivity Provided (All Time)
             </div>
+            <div
+              id="relconOverallCount"
+              class="text-xs text-black dark:text-gray-400 mt-1"
+            >
+              Total RELCON Connectivity Sites:
+              <span class="font-semibold text-black dark:text-gray-200">0</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
             <button
               onclick="exportRelconConnectivityCSV()"
-              class="text-emerald-600 hover:text-emerald-800"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
             >
-              <i class="fa-solid fa-file-excel text-xl"></i>
+              Export CSV
             </button>
           </div>
-          <div class="overflow-auto max-h-80">
-            <table class="w-full text-sm">
-              <thead class="sticky top-0 z-10">
-                <tr id="relconConnectivityHeader"></tr>
-              </thead>
-              <tbody id="relconConnectivityBody"></tbody>
-            </table>
+        </div>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead
+              class="bg-gradient-to-r from-emerald-600 to-green-600 dark:from-gray-700 dark:to-gray-600"
+            >
+              <tr id="relconConnectivityHeader">
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Region
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="relconConnectivityBody"
+              class="text-sm text-black dark:text-gray-200"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Power Protection PCB Installation Status (All Time) -->
+      <div
+        id="pcbInstallationCard"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-black dark:text-gray-200">
+            Power Protection PCB Installation Status (All Time)
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              onclick="exportPcbInstallationExcel()"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Export xlsx
+            </button>
           </div>
         </div>
-
-        <div id="pcbInstallationCard" class="crm-card">
-          <div class="crm-card-header">
-            <span class="font-bold text-xs uppercase text-slate-700"
-              >Power Protection PCB Status</span
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead
+              class="bg-gradient-to-r from-orange-600 to-amber-600 dark:from-gray-700 dark:to-gray-600"
             >
-            <div class="flex gap-2">
-              <button
-                id="savePcbProvidedBtn"
-                onclick="savePcbProvidedCounts()"
-                class="hidden bg-blue-600 text-white px-3 py-1 rounded text-[11px] font-bold"
-              >
-                SAVE
-              </button>
-              <button
-                onclick="exportPcbInstallationExcel()"
-                class="text-emerald-600 hover:text-emerald-800"
-              >
-                <i class="fa-solid fa-file-excel text-xl"></i>
-              </button>
-            </div>
-          </div>
-          <div class="overflow-auto max-h-80">
-            <table class="w-full text-sm">
-              <thead class="sticky top-0 z-10">
-                <tr>
-                  <th>Engineer</th>
-                  <th class="text-center">Provided</th>
-                  <th class="text-center">Today</th>
-                  <th class="text-center">Installed</th>
-                  <th class="text-center">Pending</th>
-                </tr>
-              </thead>
-              <tbody id="pcbInstallationBody"></tbody>
-            </table>
+              <tr>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Engineer Name
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total PCB Provided (A)
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Today PCB Installation
+                </th>
+
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total PCB Install (B)
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total PCB Installation Pending
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="pcbInstallationBody"
+              class="text-sm text-black dark:text-gray-200"
+            ></tbody>
+          </table>
+          <div class="flex justify-end mt-2">
+            <button
+              id="savePcbProvidedBtn"
+              onclick="savePcbProvidedCounts()"
+              class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Monthly Summary with Totals -->
-      <div class="crm-card">
-        <div class="crm-card-header">
-          <span class="font-bold text-xs uppercase text-slate-700"
-            >Monthly Performance Summary</span
-          >
-          <div class="flex items-center gap-3">
+      <!-- Engineer Monthly Visits by Customer -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-600"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-black dark:text-gray-200">
+            Engineer Monthly Visits by Customer
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="exportEngMonth"
+              onclick="exportEngineerMonthlyCSV()"
+              class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs shadow"
+            >
+              Export Excel
+            </button>
+            <label
+              for="monthSelect"
+              class="text-xs text-black dark:text-gray-500"
+              >Select Month</label
+            >
             <select
               id="monthSelect"
-              class="border p-1 text-[11px] rounded bg-white font-bold text-blue-600 shadow-sm"
+              class="border rounded px-2 py-1 text-xs"
             ></select>
-            <button
-              onclick="exportEngineerMonthlyCSV()"
-              class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm"
-            >
-              <i class="fa-solid fa-file-excel mr-1"></i> DOWNLOAD EXCEL
-            </button>
           </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
+        <div class="overflow-auto">
+          <table class="min-w-max w-full table-auto">
+            <thead
+              class="bg-gradient-to-r from-lime-600 to-green-600 dark:from-gray-700 dark:to-gray-600"
+            >
               <tr>
-                <th>Engineer</th>
-                <th class="text-center">HPCL</th>
-                <th class="text-center">RBML</th>
-                <th class="text-center">BPCL</th>
-                <th class="text-center">NAYARA</th>
-                <th class="text-center">NPL</th>
-                <th class="text-center">OTHER</th>
-                <th class="text-center">LEAVE</th>
-                <th class="text-right">TOTAL</th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Engineer
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  HPCL
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  RBML
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  BPCL
+                </th>
+
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  NAYARA
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  NPL
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  OTHER
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  IN LEAVE
+                </th>
+                <th
+                  class="px-3 py-2 text-left text-white dark:text-gray-200 font-semibold"
+                >
+                  Total
+                </th>
               </tr>
             </thead>
-            <tbody id="engMonthBody"></tbody>
+            <tbody
+              id="engMonthBody"
+              class="text-sm text-black dark:text-gray-200"
+            ></tbody>
           </table>
         </div>
       </div>
@@ -408,49 +743,20 @@
 
     <script>
       const baseUrl = "https://relcon-backend-jwt-backup.onrender.com";
+
       function byId(id) {
         return document.getElementById(id);
       }
+
       function getToken() {
         return localStorage.getItem("token");
-      }
-      function downloadCSV(rows, headers, filename) {
-        const csvContent =
-          headers.join(",") +
-          "\n" +
-          rows
-            .map((r) =>
-              headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
-            )
-            .join("\n");
-        const blob = new Blob([csvContent], {
-          type: "text/csv;charset=utf-8;",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        a.click();
-      }
-
-      function customerFromPlan(p) {
-        const ph = String(p.phase || "").toUpperCase();
-        if (ph.startsWith("HPCL")) return "HPCL";
-        if (ph.includes("RBML")) return "RBML";
-        if (ph.includes("BPCL")) return "BPCL";
-        if (ph.includes("NPL")) return "NPL";
-        if (ph.includes("NAYARA")) return "NAYARA";
-        return "OTHER";
-      }
-
-      function ymKey(d) {
-        return new Date(d).toLocaleDateString("en-CA").slice(0, 7);
       }
 
       async function loadOverview() {
         try {
           const token = getToken();
           const headers = { Authorization: `Bearer ${token}` };
+
           const [
             userRes,
             plansRes,
@@ -466,570 +772,1826 @@
             fetch(`${baseUrl}/getAllIncidents`, { headers }),
             fetch(`${baseUrl}/audit/loginLogs`, { headers }),
           ]);
-          const user = await userRes.json();
-          window.__currentUser = user;
+
+          const currentUser = await userRes.json();
           const plans = await plansRes.json();
-          window.__allPlans = plans;
-          const status = await statusRes.json();
-          window.__statusRecords = status;
+          const hpcl = await statusRes.json();
           const jio = await jioRes.json();
-          window.__allJio = jio;
-          const inc = await incidentRes.json();
-          const logs = await loginLogsRes.json();
+          const incJson = await incidentRes.json();
+          const loginLogs = await loginLogsRes.json();
 
           const today = new Date().toLocaleDateString("en-CA");
-          const plansT = plans.filter(
+          const plansToday = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const isToday = String(p.date || "").slice(0, 10) === today;
+            const purpose = String(p.purpose || "")
+              .trim()
+              .toUpperCase();
+            const isNoPlanOrLeave =
+              purpose === "NO PLAN" || purpose === "IN LEAVE";
+            return isToday && !isNoPlanOrLeave;
+          });
+          const holdToday = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const isToday = String(p.date || "").slice(0, 10) === today;
+            const purpose = String(p.purpose || "")
+              .trim()
+              .toUpperCase();
+            return isToday && (purpose === "NO PLAN" || purpose === "IN LEAVE");
+          });
+          const noPlanCount = holdToday.filter(
             (p) =>
-              (p.date || "").slice(0, 10) === today &&
-              !["NO PLAN", "IN LEAVE"].includes(
-                String(p.purpose).toUpperCase(),
-              ),
-          );
-          const holdT = plans.filter(
-            (p) =>
-              (p.date || "").slice(0, 10) === today &&
-              ["NO PLAN", "IN LEAVE"].includes(String(p.purpose).toUpperCase()),
-          );
-
-          byId("kpiPlansToday").textContent = plansT.length;
-          byId("kpiHold").textContent = holdT.length;
-          byId("kpiHoldBreakdown").textContent =
-            `NO PLAN: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "NO PLAN").length} • LEAVE: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "IN LEAVE").length}`;
-
-          const uH = status.filter((r) => String(r.isVerified) !== "true");
-          const uJ = jio.filter((r) => String(r.isVerified) !== "true");
-          window.__uH = uH;
-          window.__uJ = uJ;
-          byId("kpiUnverified").textContent = uH.length + uJ.length;
-          byId("kpiUnverifiedBreakdown").textContent =
-            `HPCL: ${uH.length} • RBML: ${uJ.length}`;
-
-          byId("kpiOpenIncidents").textContent = (inc?.incidents || []).filter(
-            (i) => (i.status || "").toLowerCase() !== "close",
+              String(p.purpose || "")
+                .trim()
+                .toUpperCase() === "NO PLAN",
           ).length;
-          byId("kpiActiveUsers").textContent = new Set(
-            logs
+          const inLeaveCount = holdToday.filter(
+            (p) =>
+              String(p.purpose || "")
+                .trim()
+                .toUpperCase() === "IN LEAVE",
+          ).length;
+          const unverifiedHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
+            (r) => String(r.isVerified).toLowerCase() !== "true",
+          );
+          const unverifiedJio = (Array.isArray(jio) ? jio : []).filter(
+            (r) => String(r.isVerified).toLowerCase() !== "true",
+          );
+          const openIncidents = (incJson?.incidents || []).filter(
+            (i) => (i.status || "").toLowerCase() !== "close",
+          );
+          const activeUsernames = new Set(
+            (Array.isArray(loginLogs) ? loginLogs : [])
               .filter(
                 (l) =>
-                  new Date(l.loginTime).toDateString() ===
+                  (l.loginTime && new Date(l.loginTime)).toDateString() ===
                   new Date().toDateString(),
               )
               .map((l) => l.engineerName || l.username),
-          ).size;
+          );
 
-          // 7 Day Pending Logic
-          const k = (rc, d) =>
+          document.getElementById("kpiPlansToday").textContent =
+            plansToday.length;
+          document.getElementById("kpiUnverified").textContent =
+            unverifiedHpcl.length + unverifiedJio.length;
+          // ✅ Breakdown line update karo
+          document.getElementById("kpiUnverifiedBreakdown").textContent =
+            `HPCL: ${unverifiedHpcl.length} • RBML: ${unverifiedJio.length}`;
+
+          document.getElementById("kpiOpenIncidents").textContent =
+            openIncidents.length;
+
+          // Load AMC Visit Status data
+          await loadAMCVisitStatus();
+
+          // -----------------------
+          // KEY CHANGE: Calculate "Status Pending (HPCL + RBML)" for the last 7 days (including today)
+          // -----------------------
+          // helper key
+          const key = (rc, d) =>
             `${String(rc || "")
               .trim()
               .toUpperCase()}-${String(d || "").slice(0, 10)}`;
-          const tO = new Date();
-          const endD = tO.toISOString().slice(0, 10);
-          tO.setDate(tO.getDate() - 6);
-          const startD = tO.toISOString().slice(0, 10);
 
-          const sSet = new Set(
-            status
-              .filter(
-                (r) => (r.date || r.uploadDate || "").slice(0, 10) >= startD,
-              )
-              .map((r) => k(r.roCode, r.date || r.uploadDate)),
-          );
-          const jSet = new Set(
-            jio
-              .filter(
-                (r) => (r.date || r.uploadDate || "").slice(0, 10) >= startD,
-              )
-              .map((r) =>
-                k(r.roCode || r.siteCode || "", r.date || r.uploadDate),
-              ),
-          );
+          // build date range: last 7 days including today
+          const todayDateObj = new Date();
+          const endDateIso = todayDateObj.toISOString().slice(0, 10); // YYYY-MM-DD
+          const startDateObj = new Date(todayDateObj);
+          startDateObj.setDate(startDateObj.getDate() - 6); // includes today -> 7 days total
+          const startDateIso = startDateObj.toISOString().slice(0, 10);
 
-          const p7 = plans.filter((p) => {
-            const d = (p.date || "").slice(0, 10);
-            return (
-              d >= startD &&
-              d <= endD &&
-              !["NO PLAN", "IN LEAVE"].includes(String(p.purpose).toUpperCase())
-            );
+          // filter plans for last 7 days (exclude NO PLAN)
+          const plansLast7 = (Array.isArray(plans) ? plans : []).filter((p) => {
+            const pd = String(p.date || "").slice(0, 10);
+            if (!pd) return false;
+            if (pd < startDateIso || pd > endDateIso) return false;
+            const purpose = String(p.purpose || "")
+              .trim()
+              .toUpperCase();
+            if (purpose === "NO PLAN" || purpose === "IN LEAVE") return false;
+            return true;
           });
-          const p7H = p7.filter(
-            (p) =>
-              String(p.phase).toUpperCase().startsWith("HPCL") &&
-              !sSet.has(k(p.roCode, p.date)),
-          ).length;
-          const p7R = p7.filter(
-            (p) =>
-              String(p.phase).toUpperCase().includes("RBML") &&
-              !jSet.has(k(p.roCode, p.date)),
-          ).length;
-          byId("kpiPendingToday").textContent = p7H + p7R;
-          byId("kpiPendingBreakdown").textContent =
-            `HPCL: ${p7H} • RBML: ${p7R} (7 days)`;
 
-          // KPI Exports
-          byId("exportPlansToday").onclick = () =>
-            downloadCSV(
-              plansT,
-              ["date", "engineer", "roCode", "roName", "region"],
-              "plans_today.csv",
-            );
-          byId("exportHold").onclick = () =>
-            downloadCSV(
-              holdT,
-              ["date", "engineer", "purpose"],
-              "hold_engineers.csv",
-            );
-          byId("exportUnverified").onclick = () =>
-            downloadCSV(
-              [...uH, ...uJ],
-              ["engineer", "roCode", "roName", "phase", "date"],
-              "unverified.csv",
-            );
-          byId("exportOpenInc").onclick = () =>
-            downloadCSV(
-              inc.incidents.filter(
-                (i) => String(i.status).toLowerCase() !== "close",
-              ),
-              ["incidentId", "roCode", "siteName", "status"],
-              "incidents.csv",
-            );
-          byId("exportPending").onclick = () =>
-            downloadCSV(
-              p7.filter(
-                (p) =>
-                  (String(p.phase).toUpperCase().startsWith("HPCL") &&
-                    !sSet.has(k(p.roCode, p.date))) ||
-                  (String(p.phase).toUpperCase().includes("RBML") &&
-                    !jSet.has(k(p.roCode, p.date))),
-              ),
-              ["date", "engineer", "roCode", "roName", "phase"],
-              "pending_7days.csv",
-            );
-          byId("exportActiveUsers").onclick = () =>
-            downloadCSV(
-              logs.filter(
-                (l) =>
-                  new Date(l.loginTime).toDateString() ===
-                  new Date().toDateString(),
-              ),
-              ["username", "engineerName", "loginTime"],
-              "active_users.csv",
-            );
-
-          const isAdmin = String(user.role).toLowerCase() === "admin";
-          if (!isAdmin)
-            [
-              "exportPlansToday",
-              "exportHold",
-              "exportUnverified",
-              "exportOpenInc",
-              "exportPending",
-              "exportActiveUsers",
-            ].forEach((id) => {
-              if (byId(id)) byId(id).style.display = "none";
-            });
-
-          renderVerifyChart(
-            uH.length + uJ.length,
-            status.length + jio.length - (uH.length + uJ.length),
+          // separate HPCL and RBML plans in that 7-day window
+          const plansLast7Hpcl = (plansLast7 || []).filter((p) =>
+            String(p.phase || "")
+              .toUpperCase()
+              .startsWith("HPCL"),
           );
+          const plansLast7Rbml = (plansLast7 || []).filter((p) =>
+            String(p.phase || "")
+              .toUpperCase()
+              .includes("RBML"),
+          );
+
+          // build sets of submitted status keys for hpcl and rbml within the date range
+          const hpclStatusLast7Set = new Set(
+            (Array.isArray(hpcl) ? hpcl : [])
+              .filter((r) => {
+                const statusDate = String(r.date || r.uploadDate || "").slice(
+                  0,
+                  10,
+                );
+                return statusDate >= startDateIso && statusDate <= endDateIso;
+              })
+              .filter((r) =>
+                String(r.phase || "")
+                  .toUpperCase()
+                  .startsWith("HPCL"),
+              )
+              .map((r) => key(r.roCode, r.date || r.uploadDate)),
+          );
+
+          const rbmlStatusLast7Set = new Set(
+            (Array.isArray(jio) ? jio : [])
+              .filter((r) => {
+                const statusDate = String(
+                  r.date || r.uploadDate || r.planId?.date || "",
+                ).slice(0, 10);
+                return statusDate >= startDateIso && statusDate <= endDateIso;
+              })
+              .map((r) => {
+                const ro = (
+                  r.roCode ||
+                  r.siteCode ||
+                  r.ro ||
+                  r.planId?.roCode ||
+                  ""
+                )
+                  .trim()
+                  .toUpperCase();
+                const dt = String(
+                  r.date || r.uploadDate || r.planId?.date || "",
+                ).slice(0, 10);
+                return key(ro, dt);
+              }),
+          );
+
+          const pendingLast7Hpcl = plansLast7Hpcl.filter(
+            (p) => !hpclStatusLast7Set.has(key(p.roCode, p.date)),
+          ).length;
+
+          const pendingLast7Rbml = plansLast7Rbml.filter(
+            (p) => !rbmlStatusLast7Set.has(key(p.roCode, p.date)),
+          ).length;
+
+          const pendingLast7Total = pendingLast7Hpcl + pendingLast7Rbml;
+
+          // update the KPI card with the 7-day totals and a breakdown
+          document.getElementById("kpiPendingToday").textContent =
+            pendingLast7Total;
+          document.getElementById("kpiPendingBreakdown").textContent =
+            `HPCL: ${pendingLast7Hpcl} • RBML: ${pendingLast7Rbml} (Last 7 days ${startDateIso} → ${endDateIso})`;
+
+          // -----------------------
+          // Update exportPending to export the last-7-days pending list
+          // -----------------------
+          const pendingRows = [
+            ...plansLast7Hpcl
+              .filter(
+                (p) =>
+                  !hpclStatusLast7Set.has(
+                    `${String(p.roCode || "")
+                      .trim()
+                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`,
+                  ),
+              )
+              .map((p) => ({
+                customer: "HPCL",
+                date: String(p.date || "").slice(0, 10),
+                roCode: p.roCode || "",
+                roName: p.roName || "",
+                region: p.region || "",
+                engineer: p.engineer || "",
+              })),
+            ...plansLast7Rbml
+              .filter(
+                (p) =>
+                  !rbmlStatusLast7Set.has(
+                    `${String(p.roCode || "")
+                      .trim()
+                      .toUpperCase()}-${String(p.date || "").slice(0, 10)}`,
+                  ),
+              )
+              .map((p) => ({
+                customer: "RBML",
+                date: String(p.date || "").slice(0, 10),
+                roCode: p.roCode || "",
+                roName: p.roName || "",
+                region: p.region || "",
+                engineer: p.engineer || "",
+              })),
+          ];
+
+          // -----------------------
+          // continue with rest of KPIs unchanged
+          // -----------------------
+          document.getElementById("kpiActiveUsers").textContent =
+            activeUsernames.size;
+          document.getElementById("kpiHold").textContent = holdToday.length;
+          document.getElementById("kpiHoldBreakdown").textContent =
+            `NO PLAN: ${noPlanCount} • IN LEAVE: ${inLeaveCount}`;
+          document.getElementById("lastUpdated").textContent =
+            new Date().toLocaleString();
+
+          // CSV exports for KPI cards
+          const exportCSV = (rows, headers, filename) => {
+            try {
+              const csvHeader = headers.join(",") + "\n";
+              const csvRows = rows
+                .map((r) =>
+                  headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
+                )
+                .join("\n");
+              const blob = new Blob([csvHeader + csvRows], {
+                type: "text/csv;charset=utf-8;",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              console.error("CSV export failed", e);
+            }
+          };
+
+          // Build exportable datasets
+          const plansTodayRows = plansToday.map((p) => ({
+            date: String(p.date || "").slice(0, 10),
+            engineer: p.engineer || "",
+            roCode: p.roCode || "",
+            roName: p.roName || "",
+            region: p.region || "",
+            phase: p.phase || "",
+            purpose: p.purpose || "",
+          }));
+          const unverifiedRows = [
+            ...(unverifiedHpcl || []).map((r) => ({
+              source: "HPCL",
+              date: String(r.date || r.uploadDate || "").slice(0, 10),
+              engineer: r.engineer || "",
+              roCode: r.roCode || "",
+              roName: r.roName || "",
+              region: r.region || "",
+              phase: r.phase || "",
+              status: String(r.isVerified),
+            })),
+            ...(unverifiedJio || []).map((r) => ({
+              source: "RBML/JIO",
+              date: String(r.date || "").slice(0, 10),
+              engineer: r.engineer || "",
+              roCode: r.roCode || "",
+              roName: r.roName || "",
+              region: r.region || "",
+              phase: r.phase || "",
+              status: String(r.isVerified),
+            })),
+          ];
+          const openIncRows = (incJson?.incidents || [])
+            .filter((i) => (i.status || "").toLowerCase() !== "close")
+            .map((i) => ({
+              incidentId: i.incidentId || "",
+              roCode: i.roCode || "",
+              siteName: i.siteName || "",
+              region: i.region || "",
+              status: i.status || "",
+            }));
+          //const activeUserRows = Array.from(activeUsernames).map((name) => ({
+          // user: name,
+          // }));
+
+          // ✅ Group login logs by user
+          const todayLogins = (
+            Array.isArray(loginLogs) ? loginLogs : []
+          ).filter(
+            (l) =>
+              (l.loginTime && new Date(l.loginTime)).toDateString() ===
+              new Date().toDateString(),
+          );
+
+          const userLoginMap = new Map();
+          todayLogins.forEach((l) => {
+            const user = l.engineerName || l.username;
+            const time = new Date(l.loginTime).toLocaleString();
+            if (!userLoginMap.has(user)) {
+              userLoginMap.set(user, []);
+            }
+            userLoginMap.get(user).push(time);
+          });
+
+          // Prepare CSV rows
+          const activeUserRows = Array.from(userLoginMap.entries()).map(
+            ([user, times]) => ({
+              user,
+              totalLogins: times.length,
+              loginTimes: times.join(" | "), // sab times ek column me aa jayenge
+            }),
+          );
+
+          const holdRows = holdToday.map((p) => ({
+            date: String(p.date || "").slice(0, 10),
+            engineer: p.engineer || "",
+            roCode: p.roCode || "",
+            roName: p.roName || "",
+            purpose: p.purpose || "",
+          }));
+
+          // Wire export buttons
+          const byId = (id) => document.getElementById(id);
+          byId("exportPlansToday")?.addEventListener("click", () =>
+            exportCSV(
+              plansTodayRows,
+              [
+                "date",
+                "engineer",
+                "roCode",
+                "roName",
+                "region",
+                "phase",
+                "purpose",
+              ],
+              "plans_today.csv",
+            ),
+          );
+          byId("exportUnverified")?.addEventListener("click", () =>
+            exportCSV(
+              unverifiedRows,
+              [
+                "source",
+                "date",
+                "engineer",
+                "roCode",
+                "roName",
+                "region",
+                "phase",
+                "status",
+              ],
+              "unverified_status.csv",
+            ),
+          );
+          byId("exportOpenInc")?.addEventListener("click", () =>
+            exportCSV(
+              openIncRows,
+              ["incidentId", "roCode", "siteName", "region", "status"],
+              "open_incidents.csv",
+            ),
+          );
+          byId("exportActiveUsers")?.addEventListener("click", () =>
+            exportCSV(
+              activeUserRows,
+              ["user", "totalLogins", "loginTimes"],
+              "active_users_today.csv",
+            ),
+          );
+
+          byId("exportHold")?.addEventListener("click", () =>
+            exportCSV(
+              holdRows,
+              ["date", "engineer", "roCode", "roName", "purpose"],
+              "hold_engineers_today.csv",
+            ),
+          );
+
+          // Export pending now uses last-7-days pendingRows computed above
+          byId("exportPending")?.addEventListener("click", () =>
+            exportCSV(
+              pendingRows,
+              ["customer", "date", "roCode", "roName", "region", "engineer"],
+              `status_pending_last7_${startDateIso}_to_${endDateIso}.csv`,
+            ),
+          );
+
+          const holdCard = document.getElementById("holdEngineersCard");
+          if (holdCard) {
+            holdCard.style.display =
+              String(currentUser.role || "").toLowerCase() === "admin"
+                ? ""
+                : "none";
+          }
+
+          // Hide export CSV buttons for non-admin
+          const isAdmin =
+            String(currentUser.role || "").toLowerCase() === "admin";
+          const exportIds = [
+            "exportPlansToday",
+            "exportUnverified",
+            "exportOpenInc",
+            "exportActiveUsers",
+            "exportHold",
+            "exportPending",
+          ];
+          if (!isAdmin) {
+            exportIds.forEach((id) => {
+              const el = document.getElementById(id);
+              if (el) el.style.display = "none";
+            });
+          }
+
+          // Verification Split chart role-based
+          const userRole = String(currentUser.role || "").toLowerCase();
+          const uname = String(
+            currentUser.engineerName || currentUser.username || "",
+          )
+            .trim()
+            .toLowerCase();
+          const mineHpcl = (Array.isArray(hpcl) ? hpcl : []).filter(
+            (r) =>
+              String(r.engineer || "")
+                .trim()
+                .toLowerCase() === uname,
+          );
+          const mineJio = (Array.isArray(jio) ? jio : []).filter(
+            (r) =>
+              String(r.engineer || "")
+                .trim()
+                .toLowerCase() === uname,
+          );
+          const myTotal = mineHpcl.length + mineJio.length;
+          const myUnverified =
+            mineHpcl.filter(
+              (r) => String(r.isVerified).toLowerCase() !== "true",
+            ).length +
+            mineJio.filter((r) => String(r.isVerified).toLowerCase() !== "true")
+              .length;
+
+          const allUnverified = unverifiedHpcl.length + unverifiedJio.length;
+          const allTotal =
+            (Array.isArray(hpcl) ? hpcl.length : 0) +
+            (Array.isArray(jio) ? jio.length : 0);
+
+          const chartUnverified =
+            userRole === "admin" ? allUnverified : myUnverified;
+          const chartVerified =
+            userRole === "admin"
+              ? allTotal - allUnverified
+              : myTotal - myUnverified;
+
+          renderVerifyChart(chartUnverified, chartVerified);
           renderPlansRegionChart(plansToday);
           renderCustomerChart(plansToday);
-          buildMonthDropdown(plans);
-          renderEngineerMonthly(plans, byId("monthSelect").value);
-          byId("monthSelect").onchange = () =>
-            renderEngineerMonthly(plans, byId("monthSelect").value);
-          renderRelconConnectivity(status);
-          renderPcbInstallation(status);
-          loadAMCVisitStatus();
-          byId("lastUpdated").textContent =
-            `LAST SYNC: ${new Date().toLocaleTimeString()}`;
-        } catch (e) {
-          console.error(e);
-        }
-      }
 
-      function renderEngineerMonthly(plans, ym) {
-        const map = new Map();
-        const cats = [
-          "HPCL",
-          "RBML",
-          "BPCL",
-          "NAYARA",
-          "NPL",
-          "OTHER",
-          "IN LEAVE",
-        ];
-        const tCol = cats.map(() => 0);
-        plans
-          .filter(
-            (p) =>
-              ymKey(p.date) === ym &&
-              String(p.purpose).toUpperCase() !== "NO PLAN",
-          )
-          .forEach((p) => {
-            const eng = p.engineer || "-";
-            const c =
-              String(p.purpose).toUpperCase() === "IN LEAVE"
-                ? "IN LEAVE"
-                : customerFromPlan(p);
-            if (!map.has(eng)) map.set(eng, new Map(cats.map((x) => [x, 0])));
-            map.get(eng).set(c, (map.get(eng).get(c) || 0) + 1);
+          // Customer cards
+          const customerCounts = new Map();
+          (plansToday || []).forEach((p) => {
+            const cust = customerFromPlan(p);
+            customerCounts.set(cust, (customerCounts.get(cust) || 0) + 1);
           });
-        const rows = Array.from(map.entries())
-          .sort()
-          .map(([eng, row]) => {
-            const total = cats
-              .filter((x) => x !== "IN LEAVE")
-              .reduce((s, c) => s + row.get(c), 0);
-            cats.forEach((c, idx) => (tCol[idx] += row.get(c)));
-            return `<tr class="hover:bg-gray-50"><td>${eng}</td>${cats.map((c) => `<td class="text-center">${row.get(c) || 0}</td>`).join("")}<td class="text-right font-bold text-blue-600">${total}</td></tr>`;
-          })
-          .join("");
-        const grandTotal = tCol
-          .filter((_, i) => cats[i] !== "IN LEAVE")
-          .reduce((a, b) => a + b, 0);
-        const footer = `<tr class="total-row"><td>Grand Total</td>${tCol.map((v) => `<td class="text-center">${v}</td>`).join("")}<td class="text-right">${grandTotal}</td></tr>`;
-        byId("engMonthBody").innerHTML = rows + footer;
-      }
+          renderCustomerCards(customerCounts);
 
-      window.exportEngineerMonthlyCSV = function () {
-        const ym = byId("monthSelect").value;
-        const cats = [
-          "HPCL",
-          "RBML",
-          "BPCL",
-          "NAYARA",
-          "NPL",
-          "OTHER",
-          "IN LEAVE",
-        ];
-        const map = new Map();
-        const filtered = window.__allPlans.filter(
-          (p) =>
-            ymKey(p.date) === ym &&
-            String(p.purpose).toUpperCase() !== "NO PLAN",
-        );
-        filtered.forEach((p) => {
-          const eng = p.engineer || "-";
-          const c =
-            String(p.purpose).toUpperCase() === "IN LEAVE"
-              ? "IN LEAVE"
-              : customerFromPlan(p);
-          if (!map.has(eng))
-            map.set(eng, Object.fromEntries(cats.map((x) => [x, 0])));
-          map.get(eng)[c]++;
-        });
-        const summary = Array.from(map.entries()).map(([eng, counts]) => ({
-          Engineer: eng,
-          ...counts,
-          Total: cats
-            .filter((x) => x !== "IN LEAVE")
-            .reduce((s, c) => s + counts[c], 0),
-        }));
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(
-          wb,
-          XLSX.utils.json_to_sheet(summary),
-          "Summary",
-        );
-        XLSX.utils.book_append_sheet(
-          wb,
-          XLSX.utils.json_to_sheet(filtered),
-          "Details",
-        );
-        XLSX.writeFile(wb, `Monthly_Report_${ym}.xlsx`);
-      };
+          // Engineer monthly by customer (dropdown + table)
+          window.__allPlans = Array.isArray(plans) ? plans : [];
+          window.__statusRecords = Array.isArray(hpcl) ? hpcl : [];
+          window.__currentUser = currentUser || {};
+          buildMonthDropdown(window.__allPlans);
+          const sel = document.getElementById("monthSelect");
+          renderEngineerMonthly(window.__allPlans, sel.value);
+          sel.addEventListener("change", () => {
+            renderEngineerMonthly(window.__allPlans, sel.value);
+          });
 
-      function renderRelconConnectivity(recs) {
-        const relcon = recs.filter((r) =>
-          String(r.connectivityType).toUpperCase().includes("RELCON"),
-        );
-        const regMap = new Map();
-        const phs = new Set();
-        relcon.forEach((r) => {
-          const reg = r.region || "-";
-          const ph = r.phase || "-";
-          if (!regMap.has(reg)) regMap.set(reg, new Map());
-          if (!regMap.get(reg).has(ph)) regMap.get(reg).set(ph, new Set());
-          if (r.roCode) {
-            regMap.get(reg).get(ph).add(r.roCode);
-            phs.add(ph);
-          }
-        });
-        const sortedPh = Array.from(phs).sort();
-        const colTotals = sortedPh.map(() => 0);
-        byId("relconConnectivityHeader").innerHTML =
-          `<th>Region</th>` +
-          sortedPh.map((p) => `<th>${p}</th>`).join("") +
-          `<th>Total</th>`;
-        const rows = Array.from(regMap.keys())
-          .sort()
-          .map((reg) => {
-            const cts = sortedPh.map((p, i) => {
-              const count = regMap.get(reg).get(p)?.size || 0;
-              colTotals[i] += count;
-              return count;
-            });
-            return `<tr><td>${reg}</td>${cts.map((c) => `<td>${c}</td>`).join("")}<td class="font-bold">${cts.reduce((a, b) => a + b, 0)}</td></tr>`;
-          })
-          .join("");
-        const grandTotal = colTotals.reduce((a, b) => a + b, 0);
-        const footer = `<tr class="total-row"><td>Grand Total</td>${colTotals.map((v) => `<td>${v}</td>`).join("")}<td>${grandTotal}</td></tr>`;
-        byId("relconConnectivityBody").innerHTML = rows + footer;
-        byId("relconOverallCount").innerHTML =
-          `Unique Sites: ${new Set(relcon.map((r) => r.roCode)).size}`;
-      }
+          // Render RELCON connectivity and PCB status (all-time from statusRecords)
+          renderRelconConnectivity(window.__statusRecords);
+          renderPcbInstallation(window.__statusRecords);
+        } catch (e) {
+          console.error("overview load error", e);
+        }
 
-      window.exportRelconConnectivityCSV = function () {
-        const data = window.__statusRecords.filter((r) =>
-          String(r.connectivityType).toUpperCase().includes("RELCON"),
-        );
-        downloadCSV(
-          data,
-          ["region", "roCode", "roName", "phase", "engineer"],
-          "relcon_connectivity.csv",
-        );
-      };
+        //Mail Clip Added
 
-      function renderPcbInstallation(recs) {
-        const isAdmin =
-          String(window.__currentUser.role).toLowerCase() === "admin";
-        const provMap = JSON.parse(
-          localStorage.getItem("pcb_provided_alltime") || "{}",
-        );
-        const map = new Map();
-        let tP = 0,
-          tToday = 0,
-          tInst = 0;
-        recs.forEach((r) => {
-          const eng = r.engineer || "-";
-          if (!map.has(eng))
-            map.set(eng, {
-              provided: Number(provMap[eng] || 0),
-              installed: 0,
-              today: 0,
-            });
-          if (
-            String(r.purpose).toUpperCase().includes("PCB") &&
-            String(r.purpose).toUpperCase().includes("INSTALL")
-          ) {
-            map.get(eng).installed++;
-            if (
-              String(r.date).slice(0, 10) ===
-              new Date().toISOString().slice(0, 10)
-            )
-              map.get(eng).today++;
-          }
-        });
-        const rows = Array.from(map.entries())
-          .sort()
-          .map(([eng, rec]) => {
-            tP += rec.provided;
-            tToday += rec.today;
-            tInst += rec.installed;
-            return `<tr><td>${eng}</td><td class="text-center">${isAdmin ? `<input type="number" class="border w-16 text-center" value="${rec.provided}" data-eng="${eng}">` : rec.provided}</td>
-          <td class="text-center">${rec.today}</td><td class="text-center">${rec.installed}</td><td class="text-center font-bold text-red-600">${Math.max(0, rec.provided - rec.installed)}</td></tr>`;
-          })
-          .join("");
-        const footer = `<tr class="total-row"><td>Grand Total</td><td class="text-center">${tP}</td><td class="text-center">${tToday}</td><td class="text-center">${tInst}</td><td class="text-center">${Math.max(0, tP - tInst)}</td></tr>`;
-        byId("pcbInstallationBody").innerHTML = rows + footer;
-        if (isAdmin && byId("savePcbProvidedBtn"))
-          byId("savePcbProvidedBtn").classList.remove("hidden");
-      }
-
-      window.exportPcbInstallationExcel = function () {
-        const data = window.__statusRecords.filter(
-          (r) =>
-            String(r.purpose).toUpperCase().includes("PCB") &&
-            String(r.purpose).toUpperCase().includes("INSTALL"),
-        );
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(
-          wb,
-          XLSX.utils.json_to_sheet(data),
-          "PCB Data",
-        );
-        XLSX.writeFile(wb, "PCB_Installation_Report.xlsx");
-      };
-
-      function savePcbProvidedCounts() {
-        const p = {};
         document
-          .querySelectorAll("#pcbInstallationBody input[data-eng]")
-          .forEach((i) => (p[i.dataset.eng] = Number(i.value)));
-        localStorage.setItem("pcb_provided_alltime", JSON.stringify(p));
-        renderPcbInstallation(window.__statusRecords);
+          .getElementById("copyUnverifiedMail")
+          ?.addEventListener("click", () => {
+            try {
+              const unverifiedHpcl = window.__unverifiedHpcl || [];
+              const unverifiedJio = window.__unverifiedJio || [];
+
+              console.log("HPCL Unverified:", window.__unverifiedHpcl);
+              console.log("JIO Unverified:", window.__unverifiedJio);
+
+              const engineerMap = new Map();
+              [...unverifiedHpcl, ...unverifiedJio].forEach((r) => {
+                console.log("DEBUG ROW", r);
+                // ✅ Backend field = engineer
+                const eng = String(r.engineer || "").trim() || "-";
+                engineerMap.set(eng, (engineerMap.get(eng) || 0) + 1);
+              });
+
+              // Mail body
+              let mailHtml = `
+      <p>Dear Anurag,</p>
+      <p>Please find below the <b>Unverified Status Report</b> of HPCL & RBML Customer.</p>
+      <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; font-family:Poppins, Arial; font-size:12px; width:100%;">
+        <thead style="background:#f1f5f9;">
+          <tr>
+            <th style="text-align:left;">Engineer Name</th>
+            <th style="text-align:center;">Unverified Count</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+              engineerMap.forEach((count, eng) => {
+                mailHtml += `
+        <tr>
+          <td>${eng}</td>
+          <td style="text-align:center;">${count}</td>
+        </tr>
+      `;
+              });
+
+              mailHtml += `
+        </tbody>
+      </table>
+      <p><b>Note:</b> Kindly verify the pending status within <b>01 day</b> to avoid escalation.</p>
+      <p>Regards,<br/>Nikhil Trivedi</p>
+    `;
+
+              // Copy with formatting
+              const blobHtml = new Blob([mailHtml], { type: "text/html" });
+              const blobText = new Blob([mailHtml.replace(/<[^>]+>/g, "")], {
+                type: "text/plain",
+              });
+
+              navigator.clipboard
+                .write([
+                  new ClipboardItem({
+                    "text/html": blobHtml,
+                    "text/plain": blobText,
+                  }),
+                ])
+                .then(() => {
+                  alert("✅ Mail content copied with engineer rows!");
+                });
+            } catch (e) {
+              console.error("copy mail error", e);
+            }
+          });
       }
 
-      async function loadAMCVisitStatus() {
-        const s = byId("amcStartDate").value;
-        const e = byId("amcEndDate").value;
-        const res = await fetch(
-          `${baseUrl}/romaster/amcCountStatus?startDate=${s}&endDate=${e}`,
-          { headers: { Authorization: `Bearer ${getToken()}` } },
-        );
-        const json = await res.json();
-        const isAdmin =
-          String(window.__currentUser.role).toLowerCase() === "admin";
-        const eng = (
-          window.__currentUser.engineerName || window.__currentUser.username
-        ).toLowerCase();
-        let data = json.data.filter(
-          (i) => i.engineerName !== "NAVAL KISHOR PANDEY",
-        );
-        if (!isAdmin)
-          data = data.filter(
-            (i) => String(i.engineerName).toLowerCase() === eng,
-          );
-        let tA = 0,
-          tC = 0,
-          tP = 0;
-        const rows = data
-          .map((item) => {
-            tA += item.totalAMCAssigned;
-            tC += item.totalAMCCompleted;
-            tP += item.pendingAMC;
-            const pct =
-              item.totalAMCAssigned > 0
-                ? (
-                    (item.totalAMCCompleted / item.totalAMCAssigned) *
-                    100
-                  ).toFixed(1)
-                : 0;
-            return `<tr><td>${item.engineerName}</td><td class="text-center">${item.totalAMCAssigned}</td><td class="text-center">${item.totalAMCCompleted}</td><td class="text-center">${item.pendingAMC}</td><td class="text-right font-bold text-blue-600">${pct}%</td></tr>`;
-          })
-          .join("");
-        const totalPct = tA > 0 ? ((tC / tA) * 100).toFixed(1) : 0;
-        const footer = `<tr class="total-row"><td>Grand Total</td><td class="text-center">${tA}</td><td class="text-center">${tC}</td><td class="text-center">${tP}</td><td class="text-right">${totalPct}%</td></tr>`;
-        byId("amcVisitStatusBody").innerHTML = rows + footer;
-      }
-
-      window.exportAMCVisitStatusCSV = function () {
-        const rows = Array.from(
-          document.querySelectorAll("#amcVisitStatusBody tr"),
-        ).map((tr) => {
-          const tds = tr.querySelectorAll("td");
-          return {
-            Name: tds[0].innerText,
-            Assigned: tds[1].innerText,
-            Completed: tds[2].innerText,
-            Pending: tds[3].innerText,
-            Pct: tds[4].innerText,
-          };
-        });
-        downloadCSV(
-          rows,
-          ["Name", "Assigned", "Completed", "Pending", "Pct"],
-          "amc_status.csv",
-        );
-      };
-
-      byId("copyUnverifiedMail")?.addEventListener("click", () => {
-        let mail = `<p>Unverified Report:</p><table border="1" style="border-collapse:collapse"><thead><tr><th>Engineer</th><th>Count</th></tr></thead><tbody>`;
-        const map = new Map();
-        [...(window.__uH || []), ...(window.__uJ || [])].forEach((r) => {
-          const e = r.engineer || "-";
-          map.set(e, (map.get(e) || 0) + 1);
-        });
-        map.forEach((c, e) => {
-          mail += `<tr><td>${e}</td><td>${c}</td></tr>`;
-        });
-        mail += `</tbody></table>`;
-        const bH = new Blob([mail], { type: "text/html" });
-        const bT = new Blob([mail.replace(/<[^>]+>/g, "")], {
-          type: "text/plain",
-        });
-        navigator.clipboard
-          .write([new ClipboardItem({ "text/html": bH, "text/plain": bT })])
-          .then(() => alert("Copied!"));
-      });
-
-      function renderVerifyChart(u, v) {
-        new Chart(byId("chartVerify"), {
+      function renderVerifyChart(unverified, verified) {
+        const ctx = document.getElementById("chartVerify");
+        if (!ctx) return;
+        new Chart(ctx, {
           type: "doughnut",
           data: {
             labels: ["Unverified", "Verified"],
             datasets: [
-              { data: [u, v], backgroundColor: ["#b78103", "#2e844a"] },
+              {
+                data: [unverified, verified],
+                backgroundColor: ["#f59e0b", "#16a34a"],
+              },
             ],
           },
           options: {
-            maintainAspectRatio: false,
-            cutout: "75%",
+            responsive: true,
             plugins: { legend: { position: "bottom" } },
           },
         });
       }
       function renderPlansRegionChart(plans) {
-        const c = {};
-        plans.forEach((p) => {
+        const ctx = document.getElementById("chartPlansRegion");
+        if (!ctx) return;
+        const counts = new Map();
+        (plans || []).forEach((p) => {
           const r = (p.region || "").toUpperCase();
-          c[r] = (c[r] || 0) + 1;
+          counts.set(r, (counts.get(r) || 0) + 1);
         });
-        new Chart(byId("chartPlansRegion"), {
+        const labels = Array.from(counts.keys());
+        const data = labels.map((l) => counts.get(l));
+        new Chart(ctx, {
           type: "bar",
           data: {
-            labels: Object.keys(c),
-            datasets: [
-              {
-                label: "Plans",
-                data: Object.values(c),
-                backgroundColor: "#0176d3",
-              },
-            ],
+            labels,
+            datasets: [{ label: "Plans", data, backgroundColor: "#60a5fa" }],
           },
-          options: { maintainAspectRatio: false },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
         });
       }
 
+      function customerFromPlan(p) {
+        const ph = String(p.phase || "").toUpperCase();
+        if (ph.startsWith("HPCL")) return "HPCL";
+        if (ph.includes("RBML")) return "RBML";
+        if (ph.includes("BPCL")) return "BPCL";
+        if (ph.includes("NPL")) return "NPL";
+        if (ph.includes("NAYARA")) return "NAYARA";
+        return "OTHER";
+      }
+
       function renderCustomerChart(plans) {
-        const counts = { HPCL: 0, RBML: 0, BPCL: 0, OTHER: 0 };
-        plans.forEach((p) => {
-          const c = customerFromPlan(p);
-          if (counts[c] !== undefined) counts[c]++;
-          else counts.OTHER++;
+        const ctx = document.getElementById("chartCustomer");
+        if (!ctx) return;
+        const counts = new Map();
+        const labelColorMap = new Map([
+          ["HPCL", "#16a34a"],
+          ["RBML", "#f59e0b"],
+          ["NAYARA", "#1347ad"],
+          ["BPCL", "#60a5fa"],
+          ["NPL", "#34d399"],
+          ["OTHER", "#9ca3af"],
+        ]);
+
+        (plans || []).forEach((p) => {
+          const cust = customerFromPlan(p);
+          counts.set(cust, (counts.get(cust) || 0) + 1);
         });
-        const labels = ["HPCL", "BPCL", "RBML", "OTHER"];
-        const data = labels.map((l) => counts[l]);
-        const colors = ["#0176d3", "#fcc003", "#2e844a", "#e96d9d"];
-        new Chart(byId("chartCustomer"), {
+
+        const labels = Array.from(counts.keys());
+        const data = labels.map((l) => counts.get(l));
+        const colors = labels.map((l) => labelColorMap.get(l) || "#9ca3af");
+
+        new Chart(ctx, {
           type: "bar",
           data: {
             labels,
             datasets: [{ label: "Visits", data, backgroundColor: colors }],
           },
           options: {
-            indexAxis: "y",
-            maintainAspectRatio: false,
+            responsive: true,
             plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
           },
         });
       }
 
       function renderCustomerCards(counts) {
-        byId("customerCards").innerHTML = Array.from(counts.entries())
+        const container = document.getElementById("customerCards");
+        if (!container) return;
+        const color = (label) =>
+          ({
+            HPCL: "#16a34a",
+            RBML: "#f59e0b",
+            BPCL: "#60a5fa",
+            NAYARA: "#1347ad",
+            NPL: "#34d399",
+            "JIO BP": "#a78bfa",
+            OTHER: "#9ca3af",
+          })[label] || "#9ca3af";
+
+        const items = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+        container.innerHTML = items
           .map(
             ([label, count]) => `
-          <div class="border p-2 rounded bg-slate-50 flex items-center gap-2 shadow-sm">
-            <div class="w-1 h-6 bg-blue-600"></div>
-            <div><p class="text-[9px] font-bold text-gray-500 uppercase">${label}</p><p class="text-sm font-bold">${count}</p></div>
-          </div>`,
+          <div class="rounded-lg border bg-white p-3 flex items-center gap-3 shadow-sm">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white" style="background:${color(
+              label,
+            )}">${label.split(" ")[0][0]}</div>
+            <div>
+              <div class="text-[11px] text-black dark:text-gray-500">${label}</div>
+                              <div class="text-lg font-semibold text-black dark:text-gray-200">${count}</div>
+            </div>
+          </div>
+        `,
           )
           .join("");
       }
 
+      // ===== Monthly Engineer x Customer table =====
+      function ymKey(d) {
+        try {
+          return new Date(d).toLocaleDateString("en-CA").slice(0, 7);
+        } catch {
+          return "";
+        }
+      }
       function buildMonthDropdown(plans) {
-        const keys = new Set(plans.map((p) => ymKey(p.date)).filter(Boolean));
-        byId("monthSelect").innerHTML = Array.from(keys)
-          .sort()
-          .reverse()
-          .map((k) => `<option value="${k}">${k}</option>`)
+        const sel = document.getElementById("monthSelect");
+        if (!sel) return;
+        const keys = new Set(
+          (plans || []).map((p) => ymKey(p.date)).filter(Boolean),
+        );
+        // Fallback: include current month if none
+        if (keys.size === 0) {
+          keys.add(new Date().toLocaleDateString("en-CA").slice(0, 7));
+        }
+        const sorted = Array.from(keys).sort().reverse();
+        sel.innerHTML = sorted
+          .map((k) => {
+            const [y, m] = k.split("-");
+            const dt = new Date(`${k}-01T00:00:00`);
+            const label = dt.toLocaleString("en-US", {
+              month: "long",
+              year: "numeric",
+            });
+            return `<option value="${k}">${label}</option>`;
+          })
           .join("");
       }
+      function renderEngineerMonthly(plans, ym) {
+        const body = document.getElementById("engMonthBody");
+        if (!body) return;
+        const data = (plans || []).filter((p) => {
+          if (ymKey(p.date) !== ym) return false;
+          const purposeUpper = normalizeText(p.issueType || p.purpose);
+          // Exclude NO PLAN only; keep IN LEAVE so it can be counted
+          if (purposeUpper === "NO PLAN") return false;
+          return true;
+        });
 
-      window.onload = loadOverview;
+        // Aggregate: engineer -> customer -> count
+        const map = new Map();
+        const customers = [
+          "HPCL",
+          "RBML",
+          "BPCL",
+          "NAYARA",
+          "NPL",
+          "OTHER",
+          "IN LEAVE",
+        ];
+        data.forEach((p) => {
+          const eng = String(p.engineer || "").trim() || "-";
+          const purposeUpper = String(p.issueType || p.purpose || "")
+            .trim()
+            .toUpperCase();
+          const cust =
+            purposeUpper === "IN LEAVE" ? "IN LEAVE" : customerFromPlan(p);
+          if (!map.has(eng))
+            map.set(eng, new Map(customers.map((c) => [c, 0])));
+          const row = map.get(eng);
+          row.set(cust, (row.get(cust) || 0) + 1);
+        });
+
+        const rows = Array.from(map.entries()).sort((a, b) =>
+          a[0].localeCompare(b[0]),
+        );
+        body.innerHTML = rows
+          .map(([eng, row]) => {
+            const cells = customers
+              .map(
+                (c) =>
+                  `<td class="px-3 py-2 text-black dark:text-gray-200">${
+                    row.get(c) || 0
+                  }</td>`,
+              )
+              .join("");
+            const total = customers
+              .filter((c) => c !== "IN LEAVE")
+              .reduce((s, c) => s + (row.get(c) || 0), 0);
+            return `<tr class="border-b"><td class="px-3 py-2 font-medium text-black dark:text-gray-200">${eng}</td>${cells}<td class="px-3 py-2 font-semibold text-black dark:text-gray-200">${total}</td></tr>`;
+          })
+          .join("");
+
+        // Append totals row at the end
+        const totals = new Map(customers.map((c) => [c, 0]));
+        rows.forEach(([_, row]) => {
+          customers.forEach((c) =>
+            totals.set(c, totals.get(c) + (row.get(c) || 0)),
+          );
+        });
+        const grandTotal = customers
+          .filter((c) => c !== "IN LEAVE")
+          .reduce((s, c) => s + (totals.get(c) || 0), 0);
+        const totalCells = customers
+          .map(
+            (c) =>
+              `<td class="px-3 py-2 font-semibold text-black dark:text-gray-200">${
+                totals.get(c) || 0
+              }</td>`,
+          )
+          .join("");
+        body.innerHTML += `<tr class="border-t bg-gray-50 dark:bg-gray-700"><td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>${totalCells}<td class="px-3 py-2 font-bold text-black dark:text-gray-200">${grandTotal}</td></tr>`;
+      }
+
+      function normalizeText(s) {
+        return String(s || "")
+          .trim()
+          .toUpperCase();
+      }
+
+      function isPowerProtectionInstall(purpose) {
+        const t = normalizeText(purpose);
+        return (
+          t.includes("POWER PROTECTION PCB") &&
+          (t.includes("INSTALL") || t.includes("INSTAL"))
+        );
+      }
+
+      function isGsmModuleInstall(purpose) {
+        const t = normalizeText(purpose);
+        return (
+          (t.includes("GSM MODULE") &&
+            (t.includes("INSTALL") || t.includes("INSTAL"))) ||
+          t.includes("GSM MODULE INSTALLATION")
+        );
+      }
+
+      function deviceProvidedStorageKey(ym) {
+        return `device_provided_${ym}`;
+      }
+
+      function renderDeviceInstallations(plans, ym) {
+        const tbody = document.getElementById("deviceInstallBody");
+        const saveBtn = document.getElementById("saveDeviceProvidedBtn");
+        if (!tbody) return;
+        const data = (plans || []).filter((p) => {
+          if (ymKey(p.date) !== ym) return false;
+          const purposeUpper = normalizeText(p.issueType || p.purpose);
+          if (purposeUpper === "NO PLAN") return false;
+          return true;
+        });
+
+        const isAdmin = (window.__currentUser || {}).role === "admin";
+        const stored = JSON.parse(
+          localStorage.getItem(deviceProvidedStorageKey(ym)) || "{}",
+        );
+
+        const map = new Map(); // engineer -> { power: n, gsm: n, provided: n }
+        data.forEach((p) => {
+          const eng = String(p.engineer || "").trim() || "-";
+          const purpose = p.purpose || p.issueType || "";
+          if (!map.has(eng))
+            map.set(eng, { power: 0, gsm: 0, provided: stored[eng] || 0 });
+          const rec = map.get(eng);
+          if (isPowerProtectionInstall(purpose)) rec.power += 1;
+          if (isGsmModuleInstall(purpose)) rec.gsm += 1;
+        });
+
+        const rows = Array.from(map.entries()).sort((a, b) =>
+          a[0].localeCompare(b[0]),
+        );
+        const total = { power: 0, gsm: 0, provided: 0 };
+        tbody.innerHTML = rows
+          .map(([eng, rec]) => {
+            total.power += rec.power;
+            total.gsm += rec.gsm;
+            total.provided += Number(rec.provided) || 0;
+            const providedCell = isAdmin
+              ? `<input type="number" min="0" value="${rec.provided}" data-eng="${eng}" class="border px-2 py-1 rounded w-24" />`
+              : `<span>${rec.provided}</span>`;
+            return `<tr class="border-b">
+              <td class="px-3 py-2 font-medium">${eng}</td>
+              <td class="px-3 py-2">${rec.power}</td>
+              <td class="px-3 py-2">${rec.gsm}</td>
+              <td class="px-3 py-2">${providedCell}</td>
+            </tr>`;
+          })
+          .join("");
+
+        // Totals row
+        tbody.innerHTML += `<tr class="border-t bg-gray-50">
+          <td class="px-3 py-2 font-bold">Total</td>
+          <td class="px-3 py-2 font-bold">${total.power}</td>
+          <td class="px-3 py-2 font-bold">${total.gsm}</td>
+          <td class="px-3 py-2 font-bold">${total.provided}</td>
+        </tr>`;
+
+        // Show save button for admin only
+        if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
+      }
+
+      function saveDeviceProvidedCounts() {
+        try {
+          const sel = document.getElementById("monthSelect");
+          const ym = sel
+            ? sel.value
+            : new Date().toLocaleDateString("en-CA").slice(0, 7);
+          const inputs = document.querySelectorAll(
+            "#deviceInstallBody input[data-eng]",
+          );
+          const payload = {};
+          inputs.forEach((inp) => {
+            const eng = inp.getAttribute("data-eng");
+            const val = Number(inp.value || 0) || 0;
+            payload[eng] = val;
+          });
+          localStorage.setItem(
+            deviceProvidedStorageKey(ym),
+            JSON.stringify(payload),
+          );
+        } catch (e) {
+          console.error("save device provided error", e);
+        }
+      }
+
+      function renderRelconConnectivity(statusRecords) {
+        const tbody = document.getElementById("relconConnectivityBody");
+        const header = document.getElementById("relconConnectivityHeader");
+        if (!tbody || !header) return;
+
+        // Get user role and engineer name from currentUser
+        const currentUser = window.__currentUser || {};
+        const userRole = currentUser.role || "";
+        const currentEngineer =
+          currentUser.engineerName || currentUser.username || "";
+
+        // Filter records with ConnectivityType = RELCON SIM
+        let relcon = (statusRecords || []).filter((r) =>
+          String(r.connectivityType || r.ConnectivityType || "")
+            .trim()
+            .toUpperCase()
+            .includes("RELCON"),
+        );
+
+        // Filter by engineer if role is engineer
+        if (userRole === "engineer" && currentEngineer) {
+          relcon = relcon.filter((r) => {
+            // Try multiple possible field names for engineer
+            const engineer = String(
+              r.engineer ||
+                r.Engineer ||
+                r.engineerName ||
+                r.EngineerName ||
+                r.ENGINEER ||
+                r.ENGINEERNAME ||
+                "",
+            ).trim();
+            return engineer.toLowerCase() === currentEngineer.toLowerCase();
+          });
+        }
+
+        // Create pivot table: region -> phase -> count
+        const regionPhaseMap = new Map(); // region -> Map(phase -> Set(roCode))
+        const allPhases = new Set();
+
+        relcon.forEach((r) => {
+          const region = String(r.region || r.Region || "").trim() || "-";
+          const phase = String(r.phase || r.Phase || "").trim() || "-";
+          const ro = String(r.roCode || r.ROCode || r.rocode || "").trim();
+
+          if (!regionPhaseMap.has(region)) {
+            regionPhaseMap.set(region, new Map());
+          }
+          if (!regionPhaseMap.get(region).has(phase)) {
+            regionPhaseMap.get(region).set(phase, new Set());
+          }
+          if (ro) {
+            regionPhaseMap.get(region).get(phase).add(ro);
+            allPhases.add(phase);
+          }
+        });
+
+        // Sort phases and regions
+        const sortedPhases = Array.from(allPhases).sort();
+        const sortedRegions = Array.from(regionPhaseMap.keys()).sort();
+
+        // Build header with phases as columns
+        header.innerHTML =
+          `<th class="px-3 py-2 text-left">Region</th>` +
+          sortedPhases
+            .map((phase) => `<th class="px-3 py-2 text-left">${phase}</th>`)
+            .join("") +
+          `<th class="px-3 py-2 text-left">Total</th>`;
+
+        // Build rows
+        let totalRow = new Array(sortedPhases.length + 1).fill(0); // +1 for region column
+
+        tbody.innerHTML = sortedRegions
+          .map((region) => {
+            const phaseCounts = sortedPhases.map((phase) => {
+              const count = regionPhaseMap.get(region).get(phase)?.size || 0;
+              totalRow[sortedPhases.indexOf(phase) + 1] += count; // +1 because index 0 is region
+              return count;
+            });
+            const regionTotal = phaseCounts.reduce(
+              (sum, count) => sum + count,
+              0,
+            );
+            totalRow[0] += regionTotal;
+
+            return `<tr class="border-b">
+            <td class="px-3 py-2 font-medium">${region}</td>
+            ${phaseCounts
+              .map((count) => `<td class="px-3 py-2">${count}</td>`)
+              .join("")}
+            <td class="px-3 py-2 font-semibold">${regionTotal}</td>
+          </tr>`;
+          })
+          .join("");
+
+        // Add total row
+        if (sortedRegions.length > 0) {
+          tbody.innerHTML += `<tr class="border-t bg-gray-50">
+            <td class="px-3 py-2 font-bold">Total</td>
+            ${totalRow
+              .slice(1, -1)
+              .map((count) => `<td class="px-3 py-2 font-bold">${count}</td>`)
+              .join("")}
+            <td class="px-3 py-2 font-bold">${
+              totalRow[totalRow.length - 1]
+            }</td>
+          </tr>`;
+
+          // Calculate unique sites count (sum of all unique RO codes across all phases)
+          const uniqueSites = new Set();
+          relcon.forEach((r) => {
+            const roCode = String(
+              r.roCode || r.ROCode || r.rocode || "",
+            ).trim();
+            if (roCode) {
+              uniqueSites.add(roCode);
+            }
+          });
+
+          // Update overall count display
+          const overallCountElement =
+            document.getElementById("relconOverallCount");
+          if (overallCountElement) {
+            const uniqueSitesCount = uniqueSites.size;
+            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold text-black dark:text-gray-200">${uniqueSitesCount}</span>`;
+          }
+        } else {
+          tbody.innerHTML = `<tr><td colspan="${
+            sortedPhases.length + 2
+          }" class="px-3 py-4 text-center text-black dark:text-gray-400">No data</td></tr>`;
+
+          // Update overall count display for no data
+          const overallCountElement =
+            document.getElementById("relconOverallCount");
+          if (overallCountElement) {
+            overallCountElement.innerHTML = `Total RELCON Connectivity Sites: <span class="font-semibold text-black dark:text-gray-200">0</span>`;
+          }
+        }
+      }
+
+      function pcbProvidedStorageKey() {
+        return `pcb_provided_alltime`;
+      }
+
+      function renderPcbInstallation(statusRecords) {
+        const tbody = document.getElementById("pcbInstallationBody");
+        const saveBtn = document.getElementById("savePcbProvidedBtn");
+        if (!tbody) return;
+
+        const currentUser = window.__currentUser || {};
+        const userRole = currentUser.role || "";
+        const currentEngineer =
+          currentUser.engineerName || currentUser.username || "";
+        const isAdmin = userRole === "admin";
+
+        const providedMap = JSON.parse(
+          localStorage.getItem(pcbProvidedStorageKey()) || "{}",
+        );
+
+        // today date
+        const today = new Date().toISOString().slice(0, 10);
+
+        const isPcbInstall = (purpose) => {
+          const t = String(purpose || "")
+            .trim()
+            .toUpperCase();
+          return (
+            t.includes("POWER PROTECTION PCB") &&
+            (t.includes("INSTALL") || t.includes("INSTAL"))
+          );
+        };
+
+        let filteredRecords = statusRecords || [];
+        if (userRole === "engineer" && currentEngineer) {
+          filteredRecords = filteredRecords.filter((r) => {
+            const engineer = String(
+              r.engineer ||
+                r.Engineer ||
+                r.engineerName ||
+                r.EngineerName ||
+                r.ENGINEER ||
+                r.ENGINEERNAME ||
+                "",
+            ).trim();
+            return engineer.toLowerCase() === currentEngineer.toLowerCase();
+          });
+        }
+
+        const map = new Map(); // engineer -> { provided, installed, todayInstalled }
+        filteredRecords.forEach((r) => {
+          const eng = String(r.engineer || r.Engineer || "").trim() || "-";
+          if (!map.has(eng))
+            map.set(eng, {
+              provided: Number(providedMap[eng] || 0) || 0,
+              installed: 0,
+              todayInstalled: 0,
+            });
+
+          if (isPcbInstall(r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT)) {
+            map.get(eng).installed += 1;
+
+            // check if today's installation
+            const recordDate = String(r.date || r.Date || r.DATE || "").slice(
+              0,
+              10,
+            );
+            if (recordDate === today) {
+              map.get(eng).todayInstalled += 1;
+            }
+          }
+        });
+
+        const rows = Array.from(map.entries())
+          .map(([eng, rec]) => {
+            return {
+              eng,
+              provided: rec.provided,
+              todayInstalled: rec.todayInstalled,
+              installed: rec.installed,
+              pending: Math.max(0, rec.provided - rec.installed),
+            };
+          })
+          .filter((r) => r.eng.toUpperCase() !== "NAVAL KISHOR PANDEY")
+          .sort((a, b) => a.eng.localeCompare(b.eng));
+
+        const totalProvided = rows.reduce((sum, r) => sum + r.provided, 0);
+        const totalInstalled = rows.reduce((sum, r) => sum + r.installed, 0);
+        const totalPending = rows.reduce((sum, r) => sum + r.pending, 0);
+        const totalTodayInstalled = rows.reduce(
+          (sum, r) => sum + r.todayInstalled,
+          0,
+        );
+
+        tbody.innerHTML = rows
+          .map((r) => {
+            const providedCell = isAdmin
+              ? `<input type="number" min="0" value="${r.provided}" data-eng="${r.eng}" class="border px-2 py-1 rounded w-28 text-black dark:text-gray-200" />`
+              : `<span class="text-black dark:text-gray-200">${r.provided}</span>`;
+            return `<tr class="border-b">
+        <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${r.eng}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${providedCell}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${r.todayInstalled}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${r.installed}</td>
+        <td class="px-3 py-2 text-black dark:text-gray-200">${r.pending}</td>
+      </tr>`;
+          })
+          .join("");
+
+        if (rows.length > 0) {
+          tbody.innerHTML += `<tr class="border-t bg-gray-50 dark:bg-gray-700">
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalProvided}</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalTodayInstalled}</td>
+      <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalInstalled}</td>
+      <td class="px-3 py-2 font-bold text-red dark:text-gray-200">${totalPending}</td>
+    </tr>`;
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-black dark:text-gray-400">No data</td></tr>`;
+        }
+
+        if (saveBtn) saveBtn.classList.toggle("hidden", !isAdmin);
+      }
+
+      function savePcbProvidedCounts() {
+        try {
+          const inputs = document.querySelectorAll(
+            "#pcbInstallationBody input[data-eng]",
+          );
+          const payload = {};
+          inputs.forEach((inp) => {
+            const eng = inp.getAttribute("data-eng");
+            const val = Number(inp.value || 0) || 0;
+            payload[eng] = val;
+          });
+          localStorage.setItem(
+            pcbProvidedStorageKey(),
+            JSON.stringify(payload),
+          );
+          // Re-render to update pending calculations
+          renderPcbInstallation(window.__statusRecords);
+        } catch (e) {
+          console.error("save pcb provided error", e);
+        }
+      }
+
+      function exportRelconConnectivityCSV() {
+        try {
+          const statusRecords = window.__statusRecords || [];
+
+          // Get user role and engineer name from currentUser
+          const currentUser = window.__currentUser || {};
+          const userRole = currentUser.role || "";
+          const currentEngineer =
+            currentUser.engineerName || currentUser.username || "";
+
+          let relcon = statusRecords.filter((r) =>
+            String(r.connectivityType || r.ConnectivityType || "")
+              .trim()
+              .toUpperCase()
+              .includes("RELCON"),
+          );
+
+          // Filter by engineer if role is engineer
+          if (userRole === "engineer" && currentEngineer) {
+            relcon = relcon.filter((r) => {
+              // Try multiple possible field names for engineer
+              const engineer = String(
+                r.engineer ||
+                  r.Engineer ||
+                  r.engineerName ||
+                  r.EngineerName ||
+                  r.ENGINEER ||
+                  r.ENGINEERNAME ||
+                  "",
+              ).trim();
+              return engineer.toLowerCase() === currentEngineer.toLowerCase();
+            });
+          }
+
+          // Remove duplicate sites (unique RO codes)
+          const uniqueSites = new Map(); // roCode -> record
+          relcon.forEach((r) => {
+            const roCode = String(
+              r.roCode || r.ROCode || r.rocode || "",
+            ).trim();
+            if (roCode && !uniqueSites.has(roCode)) {
+              uniqueSites.set(roCode, r);
+            }
+          });
+
+          const csvRows = [
+            [
+              "EngineerName",
+              "Region",
+              "RO Code",
+              "RO Name",
+              "Phase",
+              "Connectivity Type",
+              "SIM1 Provider",
+              "SIM1 Number",
+              "SIM2 Provider",
+              "SIM2 Number",
+              "IEMI Number",
+            ],
+          ];
+
+          uniqueSites.forEach((r) => {
+            const eng = String(r.engineer || r.Engineer || "").trim();
+            const region = String(r.region || r.Region || "").trim();
+            const roCode = String(
+              r.roCode || r.ROCode || r.rocode || "",
+            ).trim();
+            const roName = String(r.roName || r.ROName || "").trim();
+            const phase = String(r.phase || r.Phase || "").trim();
+            const connectivityType = String(
+              r.connectivityType || r.ConnectivityType || "",
+            ).trim();
+            const sim1Provider = String(
+              r.sim1Provider || r.SIM1Provider || "",
+            ).trim();
+            const sim1Number = `\`${String(
+              r.sim1Number || r.SIM1Number || "",
+            ).trim()}`;
+            const sim2Provider = String(
+              r.sim2Provider || r.SIM2Provider || "",
+            ).trim();
+            const sim2Number = `\`${String(
+              r.sim2Number || r.SIM2Number || "",
+            ).trim()}`;
+            const iemiNumber = `\`${String(
+              r.iemiNumber || r.IEMINumber || r.imeiNumber || "",
+            ).trim()}`;
+
+            csvRows.push([
+              eng,
+              region,
+              roCode,
+              roName,
+              phase,
+              connectivityType,
+              sim1Provider,
+              sim1Number,
+              sim2Provider,
+              sim2Number,
+              iemiNumber,
+            ]);
+          });
+
+          // Add total connectivity count at the end
+          csvRows.push([]); // Empty row
+          csvRows.push(["Total RELCON Connectivity", uniqueSites.size]);
+
+          const blob = new Blob(
+            [csvRows.map((row) => row.join(",")).join("\n")],
+            { type: "text/csv;charset=utf-8;" },
+          );
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "relcon_connectivity_data.csv";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          console.error("export relcon csv error", e);
+        }
+      }
+
+      //export POWER PCB INstall Data
+
+      function exportPcbInstallationExcel() {
+        try {
+          let statusRecords = window.__statusRecords || [];
+
+          // Get user role and engineer name from currentUser
+          const currentUser = window.__currentUser || {};
+          const userRole = currentUser.role || "";
+          const currentEngineer =
+            currentUser.engineerName || currentUser.username || "";
+
+          let pcbRecords = statusRecords.filter((r) => {
+            const purpose = String(
+              r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || "",
+            )
+              .trim()
+              .toUpperCase();
+            return (
+              purpose.includes("POWER PROTECTION PCB") &&
+              (purpose.includes("INSTALL") || purpose.includes("INSTAL"))
+            );
+          });
+
+          // Filter by engineer if role is engineer
+          if (userRole === "engineer" && currentEngineer) {
+            pcbRecords = pcbRecords.filter((r) => {
+              const engineer = String(
+                r.engineer ||
+                  r.Engineer ||
+                  r.engineerName ||
+                  r.EngineerName ||
+                  r.ENGINEER ||
+                  r.ENGINEERNAME ||
+                  "",
+              ).trim();
+              return engineer.toLowerCase() === currentEngineer.toLowerCase();
+            });
+          }
+
+          // 1️⃣ Build Detail Sheet Data
+          const detailRows = pcbRecords.map((r) => ({
+            EngineerName: String(r.engineer || r.Engineer || "").trim(),
+            Region: String(r.region || r.Region || "").trim(),
+            ROCode: String(r.roCode || r.ROCode || r.rocode || "").trim(),
+            ROName: String(r.roName || r.ROName || "").trim(),
+            Phase: String(r.phase || "").trim(),
+            Date: String(r.date || r.Date || "").trim(),
+            PurposeOfVisit: String(
+              r.purpose || r.PurposeOfVisit || r.PURPOSEOFVISIT || "",
+            ).trim(),
+          }));
+
+          // 2️⃣ Build Summary Sheet Data
+          const summaryMap = {};
+
+          detailRows.forEach((r) => {
+            const eng = r.EngineerName || "Unknown";
+            if (!summaryMap[eng]) {
+              summaryMap[eng] = { Provided: 0, Today: 0, Total: 0, Pending: 0 };
+            }
+
+            summaryMap[eng].Provided = summaryMap[eng].Provided || 0; // agar provided ki value aap UI se aa rahi hai toh adjust karna padega
+            summaryMap[eng].Total += 1;
+
+            // Check if visit date is today
+            const today = new Date().toISOString().split("T")[0];
+            if (r.Date && r.Date.startsWith(today)) {
+              summaryMap[eng].Today += 1;
+            }
+          });
+
+          // Convert to array
+          const summaryRows = [
+            [
+              "Engineer Name",
+              "Total PCB Provided (A)",
+              "Today PCB Installation",
+              "Total PCB Install (B)",
+              "Total PCB Installation Pending",
+            ],
+          ];
+          Object.entries(summaryMap).forEach(([eng, val]) => {
+            summaryRows.push([
+              eng,
+              val.Provided,
+              val.Today,
+              val.Total,
+              (val.Provided || 0) - val.Total,
+            ]);
+          });
+
+          // Totals row
+          const totalProvided = Object.values(summaryMap).reduce(
+            (sum, v) => sum + (v.Provided || 0),
+            0,
+          );
+          const totalToday = Object.values(summaryMap).reduce(
+            (sum, v) => sum + v.Today,
+            0,
+          );
+          const totalInstall = Object.values(summaryMap).reduce(
+            (sum, v) => sum + v.Total,
+            0,
+          );
+          const totalPending = Object.values(summaryMap).reduce(
+            (sum, v) => sum + ((v.Provided || 0) - v.Total),
+            0,
+          );
+
+          summaryRows.push([
+            "Total",
+            totalProvided,
+            totalToday,
+            totalInstall,
+            totalPending,
+          ]);
+
+          // 3️⃣ Convert to Worksheet
+          const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
+          const ws2 = XLSX.utils.json_to_sheet(detailRows);
+
+          // 4️⃣ Create Workbook
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws1, "Summary");
+          XLSX.utils.book_append_sheet(wb, ws2, "Details");
+
+          // 5️⃣ Export
+          XLSX.writeFile(wb, "pcb_installation_report.xlsx");
+        } catch (e) {
+          console.error("export pcb excel error", e);
+        }
+      }
+
+      function exportEngineerMonthlyCSV() {
+        try {
+          const plans = window.__allPlans || [];
+          const sel = document.getElementById("monthSelect");
+          const ym = sel
+            ? sel.value
+            : new Date().toLocaleDateString("en-CA").slice(0, 7);
+          // Recompute the same aggregation as renderEngineerMonthly
+          const data = (plans || []).filter((p) => {
+            if (ymKey(p.date) !== ym) return false;
+            const purposeUpper = String(p.issueType || p.purpose || "")
+              .trim()
+              .toUpperCase();
+            if (purposeUpper === "NO PLAN") return false;
+            return true;
+          });
+          const customers = [
+            "HPCL",
+            "RBML",
+            "BPCL",
+            "NPL",
+            "OTHER",
+            "IN LEAVE",
+          ];
+          const map = new Map();
+          data.forEach((p) => {
+            const eng = String(p.engineer || "").trim() || "-";
+            const purposeUpper = String(p.issueType || p.purpose || "")
+              .trim()
+              .toUpperCase();
+            const cust =
+              purposeUpper === "IN LEAVE" ? "IN LEAVE" : customerFromPlan(p);
+            if (!map.has(eng))
+              map.set(eng, new Map(customers.map((c) => [c, 0])));
+            const row = map.get(eng);
+            row.set(cust, (row.get(cust) || 0) + 1);
+          });
+          const rows = Array.from(map.entries()).sort((a, b) =>
+            a[0].localeCompare(b[0]),
+          );
+          const totals = new Map(customers.map((c) => [c, 0]));
+          rows.forEach(([_, row]) => {
+            customers.forEach((c) =>
+              totals.set(c, totals.get(c) + (row.get(c) || 0)),
+            );
+          });
+          const grandTotal = customers
+            .filter((c) => c !== "IN LEAVE")
+            .reduce((s, c) => s + (totals.get(c) || 0), 0);
+
+          // Build aggregated sheet (Sheet1)
+          const aggHeader = ["Engineer", ...customers, "Total"];
+          const aggRows = rows.map(([eng, row]) => {
+            const total = customers
+              .filter((c) => c !== "IN LEAVE")
+              .reduce((s, c) => s + (row.get(c) || 0), 0);
+            const cells = customers.map((c) => row.get(c) || 0);
+            return {
+              Engineer: eng,
+              ...Object.fromEntries(customers.map((c, i) => [c, cells[i]])),
+              Total: total,
+            };
+          });
+          const totalObj = {
+            Engineer: "Total",
+            ...Object.fromEntries(
+              customers.map((c) => [c, totals.get(c) || 0]),
+            ),
+            Total: grandTotal,
+          };
+          const sheet1Data = [
+            Object.fromEntries(aggHeader.map((h) => [h, h])),
+            ...aggRows.map((r) => r),
+            totalObj,
+          ];
+
+          // Build detail sheet (Sheet2)
+          const detailRows = data.map((p) => {
+            const purposeUpper = String(p.issueType || p.purpose || "")
+              .trim()
+              .toUpperCase();
+            const cust =
+              purposeUpper === "IN LEAVE" ? "IN LEAVE" : customerFromPlan(p);
+            const totalEligible = cust !== "IN LEAVE";
+            return {
+              Date: String(p.date || "").slice(0, 10),
+              Engineer: p.engineer || "",
+              ROCode: p.roCode || "",
+              ROName: p.roName || "",
+              Phase: p.phase || "",
+              IssueType: p.issueType || p.purpose || "",
+              Customer: cust,
+              CountsTowardsTotal: totalEligible ? "Yes" : "No",
+            };
+          });
+
+          // Create workbook with two sheets
+          const wb = XLSX.utils.book_new();
+          const ws1 = XLSX.utils.json_to_sheet(sheet1Data, {
+            skipHeader: true,
+          });
+          const ws2 = XLSX.utils.json_to_sheet(detailRows);
+          XLSX.utils.book_append_sheet(wb, ws1, "Engineer Monthly");
+          XLSX.utils.book_append_sheet(wb, ws2, "Detail Rows");
+          XLSX.writeFile(wb, `engineer_monthly_${ym}.xlsx`);
+        } catch (e) {
+          console.error("export csv error", e);
+        }
+      }
+
+      // AMC Visit Status Functions
+      async function loadAMCVisitStatus() {
+        try {
+          const startDate = document.getElementById("amcStartDate").value;
+          const endDate = document.getElementById("amcEndDate").value;
+
+          if (!startDate || !endDate) {
+            alert("Please select both start and end dates");
+            return;
+          }
+
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("No token found");
+            return;
+          }
+
+          const response = await fetch(
+            `${baseUrl}/romaster/amcCountStatus?startDate=${startDate}&endDate=${endDate}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            },
+          );
+
+          if (!response.ok) {
+            console.error("Error fetching AMC status:", response.status);
+            return;
+          }
+
+          const result = await response.json();
+
+          // Get logged in user info
+          const userRes = await fetch(`${baseUrl}/user`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const currentUser = await userRes.json();
+
+          // Store for CSV export
+          window.__amcDetailedData = result.detailedData || [];
+
+          // Render table with role-based filter
+          renderAMCVisitStatus(result.data, currentUser);
+        } catch (error) {
+          console.error("Error loading AMC visit status:", error);
+        }
+      }
+
+      function renderAMCVisitStatus(data, currentUser) {
+        const tbody = document.getElementById("amcVisitStatusBody");
+        if (!tbody) return;
+
+        if (!data || data.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="px-3 py-2 text-center text-black dark:text-gray-400">No data available</td></tr>';
+          return;
+        }
+
+        const role = String(currentUser.role || "").toLowerCase();
+        const currentEngineer = (
+          currentUser.engineerName ||
+          currentUser.username ||
+          ""
+        ).trim();
+
+        // Filter out unwanted + role-based filter
+        let filteredData = data.filter(
+          (item) => item.engineerName !== "NAVAL KISHOR PANDEY",
+        );
+
+        if (role === "engineer" && currentEngineer) {
+          filteredData = filteredData.filter(
+            (item) =>
+              String(item.engineerName || "").toLowerCase() ===
+              currentEngineer.toLowerCase(),
+          );
+        }
+
+        // Sort by engineer name
+        filteredData.sort((a, b) =>
+          a.engineerName.localeCompare(b.engineerName),
+        );
+
+        let totalAssigned = 0;
+        let totalCompleted = 0;
+        let totalPending = 0;
+
+        tbody.innerHTML = filteredData
+          .map((item) => {
+            totalAssigned += item.totalAMCAssigned;
+            totalCompleted += item.totalAMCCompleted;
+            totalPending += item.pendingAMC;
+
+            const completionPct =
+              item.totalAMCAssigned > 0
+                ? (
+                    (item.totalAMCCompleted / item.totalAMCAssigned) *
+                    100
+                  ).toFixed(2)
+                : "0.00";
+
+            // ✅ Badge color logic
+            let badgeClass = "bg-red-100 text-red-700";
+            if (completionPct >= 70) {
+              badgeClass = "bg-green-100 text-green-700";
+            } else if (completionPct >= 40) {
+              badgeClass = "bg-yellow-100 text-yellow-700";
+            }
+
+            return `
+        <tr class="border-b">
+          <td class="px-3 py-2 font-medium text-black dark:text-gray-200">${item.engineerName}</td>
+          <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCAssigned}</td>
+          <td class="px-3 py-2 text-black dark:text-gray-200">${item.totalAMCCompleted}</td>
+          <td class="px-3 py-2 text-black dark:text-gray-200">${item.pendingAMC}</td>
+          <td class="px-3 py-2">
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}">
+              ${completionPct}%
+            </span>
+          </td>
+        </tr>
+      `;
+          })
+          .join("");
+
+        // Add total row only if Admin (Engineer should not see overall totals)
+        if (role === "admin") {
+          const totalPct =
+            totalAssigned > 0
+              ? ((totalCompleted / totalAssigned) * 100).toFixed(2)
+              : "0.00";
+
+          let totalBadge = "bg-red-100 text-red-700";
+          if (totalPct >= 70) {
+            totalBadge = "bg-green-100 text-green-700";
+          } else if (totalPct >= 40) {
+            totalBadge = "bg-yellow-100 text-yellow-700";
+          }
+
+          tbody.innerHTML += `
+      <tr class="border-t bg-gray-50">
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">Total</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalAssigned}</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalCompleted}</td>
+        <td class="px-3 py-2 font-bold text-black dark:text-gray-200">${totalPending}</td>
+        <td class="px-3 py-2">
+          <span class="px-2 py-1 rounded-full text-xs font-bold ${totalBadge}">
+            ${totalPct}%
+          </span>
+        </td>
+      </tr>
+    `;
+        }
+      }
+
+      async function exportAMCVisitStatusCSV() {
+        try {
+          const detailedData = window.__amcDetailedData || [];
+
+          if (detailedData.length === 0) {
+            alert("No data available for export. Please load AMC data first.");
+            return;
+          }
+
+          // Get logged-in user info
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("User not logged in.");
+            return;
+          }
+
+          const userRes = await fetch(`${baseUrl}/user`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const currentUser = await userRes.json();
+
+          const role = String(currentUser.role || "").toLowerCase();
+          const currentEngineer = (
+            currentUser.engineerName ||
+            currentUser.username ||
+            ""
+          ).trim();
+
+          // Filter out NAVAL KISHOR PANDEY
+          let filteredData = detailedData.filter(
+            (item) => item.engineerName !== "NAVAL KISHOR PANDEY",
+          );
+
+          // 🔑 Role-based filter: engineers only get their own data
+          if (role === "engineer" && currentEngineer) {
+            filteredData = filteredData.filter(
+              (item) =>
+                String(item.engineerName || "").toLowerCase() ===
+                currentEngineer.toLowerCase(),
+            );
+          }
+
+          if (filteredData.length === 0) {
+            alert("No AMC records available for your role.");
+            return;
+          }
+
+          // Sort by engineer name, then by RO code
+          filteredData.sort((a, b) => {
+            if (a.engineerName !== b.engineerName) {
+              return a.engineerName.localeCompare(b.engineerName);
+            }
+            return a.roCode.localeCompare(b.roCode);
+          });
+
+          // Prepare CSV rows
+          const rows = [];
+          const header = [
+            "Engineer Name",
+            "RO Code",
+            "RO Name",
+            "Region",
+            "Phase",
+            "Purpose of Visit",
+            "AMC Status",
+            "Visit Date",
+            "AMC QTR",
+            "Issue Type",
+            "Site Active Status",
+          ];
+          rows.push(header);
+
+          filteredData.forEach((item) => {
+            const rowData = [
+              item.engineerName,
+              item.roCode,
+              item.roName,
+              item.region,
+              item.phase,
+              item.purpose,
+              item.amcStatus,
+              item.visitDate,
+              item.amcQtr,
+              item.issueType,
+              item.siteActivestatus,
+            ];
+            rows.push(rowData);
+          });
+
+          // Generate CSV
+          const csvContent = rows.map((row) => row.join(",")).join("\n");
+          const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+          });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `amc_visit_detailed_status_${new Date().toLocaleDateString(
+            "en-CA",
+          )}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error("Error exporting AMC visit status CSV:", error);
+        }
+      }
+
+      loadOverview();
     </script>
   </body>
 </html>
