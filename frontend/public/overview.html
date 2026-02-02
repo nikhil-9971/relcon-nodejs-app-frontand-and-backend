@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Enterprise Dashboard | Relcon CRM</title>
+    <!-- Modern Font: Inter -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -45,6 +46,7 @@
         justify-content: space-between;
         background: #f8f9fa;
       }
+      /* Accent Stripes */
       .accent-green {
         border-top: 4px solid #2e844a;
       }
@@ -63,6 +65,7 @@
       .accent-gray {
         border-top: 4px solid #747474;
       }
+      /* Tables */
       table thead th {
         background-color: #f3f2f2;
         color: #514f4d;
@@ -73,13 +76,13 @@
         border-bottom: 2px solid var(--sf-border);
       }
       table tbody td {
-        padding: 12px !important;
+        padding: 10px 12px !important;
         border-bottom: 1px solid #f3f2f2;
       }
       .total-row {
-        background-color: #f8f9fa;
-        font-weight: 700;
-        border-top: 2px solid var(--sf-border);
+        background-color: #f8f9fa !important;
+        font-weight: 800 !important;
+        border-top: 2px solid #ccc !important;
       }
       .kpi-export {
         opacity: 0.3;
@@ -101,13 +104,13 @@
   </head>
   <body class="p-6">
     <section class="max-w-[1600px] mx-auto space-y-6">
-      <!-- Title Bar -->
+      <!-- Header -->
       <div
         class="flex items-center justify-between border-b border-gray-300 pb-4"
       >
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-blue-600 rounded">
-            <i class="fa-solid fa-chart-line text-white text-xl"></i>
+          <div class="p-2 bg-blue-600 rounded text-white">
+            <i class="fa-solid fa-chart-line text-xl"></i>
           </div>
           <div>
             <h2 class="text-xl font-bold tracking-tight">Dashboard Overview</h2>
@@ -115,7 +118,7 @@
               id="lastUpdated"
               class="text-[11px] text-gray-500 uppercase font-semibold"
             >
-              Initialising...
+              Syncing...
             </p>
           </div>
         </div>
@@ -212,7 +215,7 @@
         </div>
       </div>
 
-      <!-- Charts Row -->
+      <!-- Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="crm-card p-4">
           <p class="font-bold text-gray-600 mb-4 text-xs uppercase">
@@ -228,7 +231,7 @@
         </div>
       </div>
 
-      <!-- Customer Performance Bar Chart -->
+      <!-- Customer Performance Horizontal Bar -->
       <div class="crm-card">
         <div class="crm-card-header">
           <span class="font-bold text-xs uppercase"
@@ -244,7 +247,7 @@
         </div>
       </div>
 
-      <!-- AMC Table -->
+      <!-- AMC Table with Totals -->
       <div id="amcVisitStatusCard" class="crm-card">
         <div class="crm-card-header">
           <div class="flex items-center gap-4">
@@ -295,22 +298,22 @@
         </div>
       </div>
 
-      <!-- Relcon & PCB -->
+      <!-- Relcon & PCB with Totals -->
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div id="relconConnectivityCard" class="crm-card">
           <div class="crm-card-header">
             <div>
-              <span class="font-bold text-xs uppercase"
+              <span class="font-bold text-xs uppercase text-slate-700"
                 >RELCON Connectivity</span
               >
               <p
                 id="relconOverallCount"
-                class="text-[10px] text-gray-400 mt-1 font-bold"
+                class="text-[10px] text-blue-600 mt-1 font-bold"
               ></p>
             </div>
             <button
               onclick="exportRelconConnectivityCSV()"
-              class="text-emerald-600"
+              class="text-emerald-600 hover:text-emerald-800"
             >
               <i class="fa-solid fa-file-excel text-xl"></i>
             </button>
@@ -324,9 +327,10 @@
             </table>
           </div>
         </div>
+
         <div id="pcbInstallationCard" class="crm-card">
           <div class="crm-card-header">
-            <span class="font-bold text-xs uppercase"
+            <span class="font-bold text-xs uppercase text-slate-700"
               >Power Protection PCB Status</span
             >
             <div class="flex gap-2">
@@ -335,10 +339,11 @@
                 onclick="savePcbProvidedCounts()"
                 class="hidden bg-blue-600 text-white px-3 py-1 rounded text-[11px] font-bold"
               >
-                SAVE</button
-              ><button
+                SAVE
+              </button>
+              <button
                 onclick="exportPcbInstallationExcel()"
-                class="text-emerald-600"
+                class="text-emerald-600 hover:text-emerald-800"
               >
                 <i class="fa-solid fa-file-excel text-xl"></i>
               </button>
@@ -361,10 +366,10 @@
         </div>
       </div>
 
-      <!-- Monthly Summary -->
+      <!-- Monthly Summary with Totals -->
       <div class="crm-card">
         <div class="crm-card-header">
-          <span class="font-bold text-xs uppercase"
+          <span class="font-bold text-xs uppercase text-slate-700"
             >Monthly Performance Summary</span
           >
           <div class="flex items-center gap-3">
@@ -409,7 +414,6 @@
       function getToken() {
         return localStorage.getItem("token");
       }
-
       function downloadCSV(rows, headers, filename) {
         const csvContent =
           headers.join(",") +
@@ -469,28 +473,28 @@
           const status = await statusRes.json();
           window.__statusRecords = status;
           const jio = await jioRes.json();
-          window.__jioStatus = jio;
+          window.__allJio = jio;
           const inc = await incidentRes.json();
           const logs = await loginLogsRes.json();
 
           const today = new Date().toLocaleDateString("en-CA");
-          const plansToday = plans.filter(
+          const plansT = plans.filter(
             (p) =>
               (p.date || "").slice(0, 10) === today &&
               !["NO PLAN", "IN LEAVE"].includes(
                 String(p.purpose).toUpperCase(),
               ),
           );
-          const holdToday = plans.filter(
+          const holdT = plans.filter(
             (p) =>
               (p.date || "").slice(0, 10) === today &&
               ["NO PLAN", "IN LEAVE"].includes(String(p.purpose).toUpperCase()),
           );
 
-          byId("kpiPlansToday").textContent = plansToday.length;
-          byId("kpiHold").textContent = holdToday.length;
+          byId("kpiPlansToday").textContent = plansT.length;
+          byId("kpiHold").textContent = holdT.length;
           byId("kpiHoldBreakdown").textContent =
-            `NO PLAN: ${holdToday.filter((p) => String(p.purpose).toUpperCase() === "NO PLAN").length} • LEAVE: ${holdToday.filter((p) => String(p.purpose).toUpperCase() === "IN LEAVE").length}`;
+            `NO PLAN: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "NO PLAN").length} • LEAVE: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "IN LEAVE").length}`;
 
           const uH = status.filter((r) => String(r.isVerified) !== "true");
           const uJ = jio.filter((r) => String(r.isVerified) !== "true");
@@ -513,6 +517,7 @@
               .map((l) => l.engineerName || l.username),
           ).size;
 
+          // 7 Day Pending Logic
           const k = (rc, d) =>
             `${String(rc || "")
               .trim()
@@ -564,13 +569,13 @@
           // KPI Exports
           byId("exportPlansToday").onclick = () =>
             downloadCSV(
-              plansToday,
+              plansT,
               ["date", "engineer", "roCode", "roName", "region"],
               "plans_today.csv",
             );
           byId("exportHold").onclick = () =>
             downloadCSV(
-              holdToday,
+              holdT,
               ["date", "engineer", "purpose"],
               "hold_engineers.csv",
             );
@@ -980,13 +985,20 @@
 
       function renderCustomerChart(plans) {
         const counts = { HPCL: 0, RBML: 0, BPCL: 0, OTHER: 0 };
-        plans.forEach((p) => counts[customerFromPlan(p)]++);
+        plans.forEach((p) => {
+          const c = customerFromPlan(p);
+          if (counts[c] !== undefined) counts[c]++;
+          else counts.OTHER++;
+        });
         const labels = ["HPCL", "BPCL", "RBML", "OTHER"];
         const data = labels.map((l) => counts[l]);
         const colors = ["#0176d3", "#fcc003", "#2e844a", "#e96d9d"];
         new Chart(byId("chartCustomer"), {
           type: "bar",
-          data: { labels, datasets: [{ data, backgroundColor: colors }] },
+          data: {
+            labels,
+            datasets: [{ label: "Visits", data, backgroundColor: colors }],
+          },
           options: {
             indexAxis: "y",
             maintainAspectRatio: false,
@@ -994,6 +1006,18 @@
             scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
           },
         });
+      }
+
+      function renderCustomerCards(counts) {
+        byId("customerCards").innerHTML = Array.from(counts.entries())
+          .map(
+            ([label, count]) => `
+          <div class="border p-2 rounded bg-slate-50 flex items-center gap-2 shadow-sm">
+            <div class="w-1 h-6 bg-blue-600"></div>
+            <div><p class="text-[9px] font-bold text-gray-500 uppercase">${label}</p><p class="text-sm font-bold">${count}</p></div>
+          </div>`,
+          )
+          .join("");
       }
 
       function buildMonthDropdown(plans) {
