@@ -96,7 +96,7 @@
   </head>
   <body class="p-6">
     <section class="max-w-[1600px] mx-auto space-y-6">
-      <!-- Title Bar -->
+      <!-- Top Title Bar -->
       <div
         class="flex items-center justify-between border-b border-gray-300 pb-4"
       >
@@ -110,7 +110,7 @@
               id="lastUpdated"
               class="text-[11px] text-gray-500 uppercase font-semibold"
             >
-              Syncing Data...
+              Initialising...
             </p>
           </div>
         </div>
@@ -223,7 +223,7 @@
         </div>
       </div>
 
-      <!-- Performance Section -->
+      <!-- Customer Bar -->
       <div class="crm-card">
         <div class="crm-card-header">
           <span class="font-bold text-xs uppercase"
@@ -252,9 +252,8 @@
                 id="amcStartDate"
                 class="text-[11px] outline-none"
                 value="2026-01-01"
-              />
-              <span class="text-gray-300">to</span>
-              <input
+              /><span>to</span
+              ><input
                 type="date"
                 id="amcEndDate"
                 class="text-[11px] outline-none"
@@ -331,9 +330,8 @@
                 onclick="savePcbProvidedCounts()"
                 class="hidden bg-blue-600 text-white px-3 py-1 rounded text-[11px] font-bold"
               >
-                SAVE
-              </button>
-              <button
+                SAVE</button
+              ><button
                 onclick="exportPcbInstallationExcel()"
                 class="text-emerald-600"
               >
@@ -369,9 +367,9 @@
             ></select>
             <button
               onclick="exportEngineerMonthlyCSV()"
-              class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold"
+              class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm"
             >
-              DOWNLOAD EXCEL
+              <i class="fa-solid fa-file-excel mr-1"></i> DOWNLOAD EXCEL
             </button>
           </div>
         </div>
@@ -380,13 +378,13 @@
             <thead>
               <tr>
                 <th>Engineer</th>
-                <th>HPCL</th>
-                <th>RBML</th>
-                <th>BPCL</th>
-                <th>NAYARA</th>
-                <th>NPL</th>
-                <th>OTHER</th>
-                <th>LEAVE</th>
+                <th class="text-center">HPCL</th>
+                <th class="text-center">RBML</th>
+                <th class="text-center">BPCL</th>
+                <th class="text-center">NAYARA</th>
+                <th class="text-center">NPL</th>
+                <th class="text-center">OTHER</th>
+                <th class="text-center">LEAVE</th>
                 <th class="text-right">TOTAL</th>
               </tr>
             </thead>
@@ -404,12 +402,43 @@
       function getToken() {
         return localStorage.getItem("token");
       }
+      function downloadCSV(rows, headers, filename) {
+        const csvContent =
+          headers.join(",") +
+          "\n" +
+          rows
+            .map((r) =>
+              headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
+            )
+            .join("\n");
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+      }
+
+      function customerFromPlan(p) {
+        const ph = String(p.phase || "").toUpperCase();
+        if (ph.startsWith("HPCL")) return "HPCL";
+        if (ph.includes("RBML")) return "RBML";
+        if (ph.includes("BPCL")) return "BPCL";
+        if (ph.includes("NPL")) return "NPL";
+        if (ph.includes("NAYARA")) return "NAYARA";
+        return "OTHER";
+      }
+
+      function ymKey(d) {
+        return new Date(d).toLocaleDateString("en-CA").slice(0, 7);
+      }
 
       async function loadOverview() {
         try {
           const token = getToken();
           const headers = { Authorization: `Bearer ${token}` };
-
           const [
             userRes,
             plansRes,
@@ -425,268 +454,195 @@
             fetch(`${baseUrl}/getAllIncidents`, { headers }),
             fetch(`${baseUrl}/audit/loginLogs`, { headers }),
           ]);
-
-          const currentUser = await userRes.json();
-          // CRITICAL FIX: Set global user before calling sub-functions
-          window.__currentUser = currentUser;
-
+          const user = await userRes.json();
+          window.__currentUser = user;
           const plans = await plansRes.json();
-          const hpcl = await statusRes.json();
+          window.__allPlans = plans;
+          const status = await statusRes.json();
+          window.__statusRecords = status;
           const jio = await jioRes.json();
-          const incJson = await incidentRes.json();
-          const loginLogs = await loginLogsRes.json();
+          window.__jioStatus = jio;
+          const inc = await incidentRes.json();
+          const logs = await loginLogsRes.json();
 
           const today = new Date().toLocaleDateString("en-CA");
-          const plansT = (Array.isArray(plans) ? plans : []).filter((p) => {
-            const pd = String(p.date || "").slice(0, 10);
-            const prp = String(p.purpose || "").toUpperCase();
-            return pd === today && prp !== "NO PLAN" && prp !== "IN LEAVE";
-          });
-
-          const holdT = (Array.isArray(plans) ? plans : []).filter((p) => {
-            const pd = String(p.date || "").slice(0, 10);
-            const prp = String(p.purpose || "").toUpperCase();
-            return pd === today && (prp === "NO PLAN" || prp === "IN LEAVE");
-          });
-
-          const uHpcl = hpcl.filter(
-            (r) => String(r.isVerified).toLowerCase() !== "true",
+          const plansToday = plans.filter(
+            (p) =>
+              (p.date || "").slice(0, 10) === today &&
+              !["NO PLAN", "IN LEAVE"].includes(
+                String(p.purpose).toUpperCase(),
+              ),
           );
-          const uJio = jio.filter(
-            (r) => String(r.isVerified).toLowerCase() !== "true",
+          const holdToday = plans.filter(
+            (p) =>
+              (p.date || "").slice(0, 10) === today &&
+              ["NO PLAN", "IN LEAVE"].includes(String(p.purpose).toUpperCase()),
           );
-          window.__unverifiedHpcl = uHpcl;
-          window.__unverifiedJio = uJio;
 
-          byId("kpiPlansToday").textContent = plansT.length;
-          byId("kpiUnverified").textContent = uHpcl.length + uJio.length;
-          byId("kpiUnverifiedBreakdown").textContent =
-            `HPCL: ${uHpcl.length} • RBML: ${uJio.length}`;
-          byId("kpiOpenIncidents").textContent = (
-            incJson?.incidents || []
-          ).filter((i) => (i.status || "").toLowerCase() !== "close").length;
-          byId("kpiHold").textContent = holdT.length;
+          byId("kpiPlansToday").textContent = plansToday.length;
+          byId("kpiHold").textContent = holdToday.length;
           byId("kpiHoldBreakdown").textContent =
-            `NO PLAN: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "NO PLAN").length} • LEAVE: ${holdT.filter((p) => String(p.purpose).toUpperCase() === "IN LEAVE").length}`;
+            `NO PLAN: ${holdToday.filter((p) => String(p.purpose).toUpperCase() === "NO PLAN").length} • LEAVE: ${holdToday.filter((p) => String(p.purpose).toUpperCase() === "IN LEAVE").length}`;
 
-          // Pending Logics
-          const key = (rc, d) =>
+          const uH = status.filter((r) => String(r.isVerified) !== "true");
+          const uJ = jio.filter((r) => String(r.isVerified) !== "true");
+          window.__uH = uH;
+          window.__uJ = uJ;
+          byId("kpiUnverified").textContent = uH.length + uJ.length;
+          byId("kpiUnverifiedBreakdown").textContent =
+            `HPCL: ${uH.length} • RBML: ${uJ.length}`;
+
+          byId("kpiOpenIncidents").textContent = (inc?.incidents || []).filter(
+            (i) => (i.status || "").toLowerCase() !== "close",
+          ).length;
+          byId("kpiActiveUsers").textContent = new Set(
+            logs
+              .filter(
+                (l) =>
+                  new Date(l.loginTime).toDateString() ===
+                  new Date().toDateString(),
+              )
+              .map((l) => l.engineerName || l.username),
+          ).size;
+
+          // 7 Day Pending Logic
+          const k = (rc, d) =>
             `${String(rc || "")
               .trim()
               .toUpperCase()}-${String(d || "").slice(0, 10)}`;
-          const tObj = new Date();
-          const endD = tObj.toISOString().slice(0, 10);
-          tObj.setDate(tObj.getDate() - 6);
-          const startD = tObj.toISOString().slice(0, 10);
+          const tO = new Date();
+          const endD = tO.toISOString().slice(0, 10);
+          tO.setDate(tO.getDate() - 6);
+          const startD = tO.toISOString().slice(0, 10);
 
-          const hpclSet = new Set(
-            hpcl
+          const sSet = new Set(
+            status
               .filter(
                 (r) => (r.date || r.uploadDate || "").slice(0, 10) >= startD,
               )
-              .map((r) => key(r.roCode, r.date || r.uploadDate)),
+              .map((r) => k(r.roCode, r.date || r.uploadDate)),
           );
-          const rbmlSet = new Set(
+          const jSet = new Set(
             jio
               .filter(
                 (r) => (r.date || r.uploadDate || "").slice(0, 10) >= startD,
               )
               .map((r) =>
-                key(r.roCode || r.siteCode || "", r.date || r.uploadDate),
+                k(r.roCode || r.siteCode || "", r.date || r.uploadDate),
               ),
           );
 
           const p7 = plans.filter((p) => {
             const d = (p.date || "").slice(0, 10);
-            const prp = String(p.purpose).toUpperCase();
             return (
               d >= startD &&
               d <= endD &&
-              prp !== "NO PLAN" &&
-              prp !== "IN LEAVE"
+              !["NO PLAN", "IN LEAVE"].includes(String(p.purpose).toUpperCase())
             );
           });
           const p7H = p7.filter(
             (p) =>
               String(p.phase).toUpperCase().startsWith("HPCL") &&
-              !hpclSet.has(key(p.roCode, p.date)),
+              !sSet.has(k(p.roCode, p.date)),
           ).length;
           const p7R = p7.filter(
             (p) =>
               String(p.phase).toUpperCase().includes("RBML") &&
-              !rbmlSet.has(key(p.roCode, p.date)),
+              !jSet.has(k(p.roCode, p.date)),
           ).length;
-
           byId("kpiPendingToday").textContent = p7H + p7R;
           byId("kpiPendingBreakdown").textContent =
-            `HPCL: ${p7H} • RBML: ${p7R} (7d)`;
-          byId("kpiActiveUsers").textContent = new Set(
-            loginLogs
-              .filter(
-                (l) =>
-                  (l.loginTime && new Date(l.loginTime)).toDateString() ===
-                  new Date().toDateString(),
-              )
-              .map((l) => l.engineerName || l.username),
-          ).size;
-          byId("lastUpdated").textContent =
-            `LAST SYNC: ${new Date().toLocaleTimeString()}`;
+            `HPCL: ${p7H} • RBML: ${p7R} (7 days)`;
 
-          const isAdmin = String(currentUser.role).toLowerCase() === "admin";
-          if (!isAdmin) {
+          // KPI Exports
+          byId("exportPlansToday").onclick = () =>
+            downloadCSV(
+              plansToday,
+              ["date", "engineer", "roCode", "roName", "region"],
+              "plans_today.csv",
+            );
+          byId("exportHold").onclick = () =>
+            downloadCSV(
+              holdToday,
+              ["date", "engineer", "purpose"],
+              "hold_engineers.csv",
+            );
+          byId("exportUnverified").onclick = () =>
+            downloadCSV(
+              [...uH, ...uJ],
+              ["engineer", "roCode", "roName", "phase", "date"],
+              "unverified.csv",
+            );
+          byId("exportOpenInc").onclick = () =>
+            downloadCSV(
+              inc.incidents.filter(
+                (i) => String(i.status).toLowerCase() !== "close",
+              ),
+              ["incidentId", "roCode", "siteName", "status"],
+              "incidents.csv",
+            );
+          byId("exportPending").onclick = () =>
+            downloadCSV(
+              p7.filter(
+                (p) =>
+                  (String(p.phase).toUpperCase().startsWith("HPCL") &&
+                    !sSet.has(k(p.roCode, p.date))) ||
+                  (String(p.phase).toUpperCase().includes("RBML") &&
+                    !jSet.has(k(p.roCode, p.date))),
+              ),
+              ["date", "engineer", "roCode", "roName", "phase"],
+              "pending_7days.csv",
+            );
+          byId("exportActiveUsers").onclick = () =>
+            downloadCSV(
+              logs.filter(
+                (l) =>
+                  new Date(l.loginTime).toDateString() ===
+                  new Date().toDateString(),
+              ),
+              ["username", "engineerName", "loginTime"],
+              "active_users.csv",
+            );
+
+          const isAdmin = String(user.role).toLowerCase() === "admin";
+          if (!isAdmin)
             [
               "exportPlansToday",
+              "exportHold",
               "exportUnverified",
               "exportOpenInc",
-              "exportActiveUsers",
-              "exportHold",
               "exportPending",
-            ].forEach((id) => {
-              if (byId(id)) byId(id).style.display = "none";
-            });
-            if (byId("holdEngineersCard"))
-              byId("holdEngineersCard").style.display = "none";
-          }
+              "exportActiveUsers",
+            ].forEach((id) => (byId(id).style.display = "none"));
 
           renderVerifyChart(
-            uHpcl.length + uJio.length,
-            hpcl.length + jio.length - (uHpcl.length + uJio.length),
+            uH.length + uJ.length,
+            status.length + jio.length - (uH.length + uJ.length),
           );
-          renderPlansRegionChart(plansT);
-          renderCustomerChart(plansT);
-
-          const cCounts = new Map();
-          plansT.forEach((p) => {
-            const c = customerFromPlan(p);
-            cCounts.set(c, (cCounts.get(c) || 0) + 1);
-          });
-          renderCustomerCards(cCounts);
-
-          window.__allPlans = plans;
-          window.__statusRecords = hpcl;
+          renderPlansRegionChart(plansToday);
+          renderCustomerChart(plansToday);
           buildMonthDropdown(plans);
           renderEngineerMonthly(plans, byId("monthSelect").value);
-          renderRelconConnectivity(hpcl);
-          renderPcbInstallation(hpcl);
+          byId("monthSelect").onchange = () =>
+            renderEngineerMonthly(plans, byId("monthSelect").value);
+          renderRelconConnectivity(status);
+          renderPcbInstallation(status);
           loadAMCVisitStatus();
+          byId("lastUpdated").textContent =
+            `LAST SYNC: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-          console.error("overview load error", e);
+          console.error(e);
         }
-      }
-
-      function renderVerifyChart(u, v) {
-        new Chart(byId("chartVerify"), {
-          type: "doughnut",
-          data: {
-            labels: ["Unverified", "Verified"],
-            datasets: [
-              { data: [u, v], backgroundColor: ["#b78103", "#2e844a"] },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: "75%",
-            plugins: { legend: { position: "bottom" } },
-          },
-        });
-      }
-
-      function renderPlansRegionChart(plans) {
-        const counts = new Map();
-        plans.forEach((p) => {
-          const r = (p.region || "Unknown").toUpperCase();
-          counts.set(r, (counts.get(r) || 0) + 1);
-        });
-        new Chart(byId("chartPlansRegion"), {
-          type: "bar",
-          data: {
-            labels: Array.from(counts.keys()),
-            datasets: [
-              {
-                label: "Plans",
-                data: Array.from(counts.values()),
-                backgroundColor: "#0176d3",
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-          },
-        });
-      }
-
-      function customerFromPlan(p) {
-        const ph = String(p.phase || "").toUpperCase();
-        if (ph.startsWith("HPCL")) return "HPCL";
-        if (ph.includes("RBML")) return "RBML";
-        if (ph.includes("BPCL")) return "BPCL";
-        if (ph.includes("NAYARA")) return "NAYARA";
-        return "OTHER";
-      }
-
-      function renderCustomerChart(plans) {
-        const counts = new Map();
-        plans.forEach((p) => {
-          const cust = customerFromPlan(p);
-          counts.set(cust, (counts.get(cust) || 0) + 1);
-        });
-        const labels = Array.from(counts.keys());
-        new Chart(byId("chartCustomer"), {
-          type: "bar",
-          data: {
-            labels,
-            datasets: [
-              {
-                data: labels.map((l) => counts.get(l)),
-                backgroundColor: "#0176d3",
-              },
-            ],
-          },
-          options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-          },
-        });
-      }
-
-      function renderCustomerCards(counts) {
-        byId("customerCards").innerHTML = Array.from(counts.entries())
-          .map(
-            ([label, count]) => `
-          <div class="border p-2 rounded bg-slate-50 flex items-center gap-2">
-            <div class="w-1 h-6 bg-blue-600"></div>
-            <div><p class="text-[9px] font-bold text-gray-500 uppercase">${label}</p><p class="text-sm font-bold">${count}</p></div>
-          </div>`,
-          )
-          .join("");
-      }
-
-      function ymKey(d) {
-        return new Date(d).toLocaleDateString("en-CA").slice(0, 7);
-      }
-      function buildMonthDropdown(plans) {
-        const keys = new Set(plans.map((p) => ymKey(p.date)).filter(Boolean));
-        if (keys.size === 0)
-          keys.add(new Date().toLocaleDateString("en-CA").slice(0, 7));
-        byId("monthSelect").innerHTML = Array.from(keys)
-          .sort()
-          .reverse()
-          .map((k) => `<option value="${k}">${k}</option>`)
-          .join("");
       }
 
       function renderEngineerMonthly(plans, ym) {
         const map = new Map();
-        const customers = [
+        const cats = [
           "HPCL",
           "RBML",
           "BPCL",
           "NAYARA",
+          "NPL",
           "OTHER",
           "IN LEAVE",
         ];
@@ -698,31 +654,74 @@
           )
           .forEach((p) => {
             const eng = p.engineer || "-";
-            const cust =
+            const c =
               String(p.purpose).toUpperCase() === "IN LEAVE"
                 ? "IN LEAVE"
                 : customerFromPlan(p);
-            if (!map.has(eng))
-              map.set(eng, new Map(customers.map((c) => [c, 0])));
-            const row = map.get(eng);
-            row.set(cust, row.get(cust) + 1);
+            if (!map.has(eng)) map.set(eng, new Map(cats.map((x) => [x, 0])));
+            map.get(eng).set(c, (map.get(eng).get(c) || 0) + 1);
           });
         byId("engMonthBody").innerHTML = Array.from(map.entries())
           .sort()
-          .map(([eng, row]) => {
-            const total = customers
-              .filter((c) => c !== "IN LEAVE")
-              .reduce((s, c) => s + row.get(c), 0);
-            return `<tr><td>${eng}</td>${customers.map((c) => `<td class="text-center">${row.get(c)}</td>`).join("")}<td class="text-right font-bold">${total}</td></tr>`;
-          })
+          .map(
+            ([eng, row]) => `
+          <tr class="hover:bg-gray-50"><td>${eng}</td>${cats.map((c) => `<td class="text-center">${row.get(c) || 0}</td>`).join("")}
+          <td class="text-right font-bold text-blue-600">${cats.filter((x) => x !== "IN LEAVE").reduce((s, c) => s + row.get(c), 0)}</td></tr>`,
+          )
           .join("");
       }
 
-      function renderRelconConnectivity(statusRecords) {
-        const relcon = statusRecords.filter((r) =>
-          String(r.connectivityType || r.ConnectivityType || "")
-            .toUpperCase()
-            .includes("RELCON"),
+      window.exportEngineerMonthlyCSV = function () {
+        const ym = byId("monthSelect").value;
+        const cats = [
+          "HPCL",
+          "RBML",
+          "BPCL",
+          "NAYARA",
+          "NPL",
+          "OTHER",
+          "IN LEAVE",
+        ];
+        const map = new Map();
+        const filtered = window.__allPlans.filter(
+          (p) =>
+            ymKey(p.date) === ym &&
+            String(p.purpose).toUpperCase() !== "NO PLAN",
+        );
+        filtered.forEach((p) => {
+          const eng = p.engineer || "-";
+          const c =
+            String(p.purpose).toUpperCase() === "IN LEAVE"
+              ? "IN LEAVE"
+              : customerFromPlan(p);
+          if (!map.has(eng))
+            map.set(eng, Object.fromEntries(cats.map((x) => [x, 0])));
+          map.get(eng)[c]++;
+        });
+        const summary = Array.from(map.entries()).map(([eng, counts]) => ({
+          Engineer: eng,
+          ...counts,
+          Total: cats
+            .filter((x) => x !== "IN LEAVE")
+            .reduce((s, c) => s + counts[c], 0),
+        }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.json_to_sheet(summary),
+          "Summary",
+        );
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.json_to_sheet(filtered),
+          "Details",
+        );
+        XLSX.writeFile(wb, `Monthly_Report_${ym}.xlsx`);
+      };
+
+      function renderRelconConnectivity(recs) {
+        const relcon = recs.filter((r) =>
+          String(r.connectivityType).toUpperCase().includes("RELCON"),
         );
         const regMap = new Map();
         const phs = new Set();
@@ -752,23 +751,34 @@
           `Unique Sites: ${new Set(relcon.map((r) => r.roCode)).size}`;
       }
 
-      function renderPcbInstallation(statusRecords) {
+      window.exportRelconConnectivityCSV = function () {
+        const data = window.__statusRecords.filter((r) =>
+          String(r.connectivityType).toUpperCase().includes("RELCON"),
+        );
+        downloadCSV(
+          data,
+          ["region", "roCode", "roName", "phase", "engineer"],
+          "relcon_connectivity.csv",
+        );
+      };
+
+      function renderPcbInstallation(recs) {
         const isAdmin =
           String(window.__currentUser.role).toLowerCase() === "admin";
-        const providedMap = JSON.parse(
+        const provMap = JSON.parse(
           localStorage.getItem("pcb_provided_alltime") || "{}",
         );
         const map = new Map();
-        statusRecords.forEach((r) => {
+        recs.forEach((r) => {
           const eng = r.engineer || "-";
           if (!map.has(eng))
             map.set(eng, {
-              provided: Number(providedMap[eng] || 0),
+              provided: Number(provMap[eng] || 0),
               installed: 0,
               today: 0,
             });
           if (
-            String(r.purpose).toUpperCase().includes("POWER PROTECTION PCB") &&
+            String(r.purpose).toUpperCase().includes("PCB") &&
             String(r.purpose).toUpperCase().includes("INSTALL")
           ) {
             map.get(eng).installed++;
@@ -791,6 +801,21 @@
           byId("savePcbProvidedBtn").classList.remove("hidden");
       }
 
+      window.exportPcbInstallationExcel = function () {
+        const data = window.__statusRecords.filter(
+          (r) =>
+            String(r.purpose).toUpperCase().includes("PCB") &&
+            String(r.purpose).toUpperCase().includes("INSTALL"),
+        );
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.json_to_sheet(data),
+          "PCB Data",
+        );
+        XLSX.writeFile(wb, "PCB_Installation_Report.xlsx");
+      };
+
       function savePcbProvidedCounts() {
         const p = {};
         document
@@ -801,52 +826,63 @@
       }
 
       async function loadAMCVisitStatus() {
-        try {
-          const s = byId("amcStartDate").value;
-          const e = byId("amcEndDate").value;
-          const res = await fetch(
-            `${baseUrl}/romaster/amcCountStatus?startDate=${s}&endDate=${e}`,
-            { headers: { Authorization: `Bearer ${getToken()}` } },
+        const s = byId("amcStartDate").value;
+        const e = byId("amcEndDate").value;
+        const res = await fetch(
+          `${baseUrl}/romaster/amcCountStatus?startDate=${s}&endDate=${e}`,
+          { headers: { Authorization: `Bearer ${getToken()}` } },
+        );
+        const json = await res.json();
+        const isAdmin =
+          String(window.__currentUser.role).toLowerCase() === "admin";
+        const eng = (
+          window.__currentUser.engineerName || window.__currentUser.username
+        ).toLowerCase();
+        let data = json.data.filter(
+          (i) => i.engineerName !== "NAVAL KISHOR PANDEY",
+        );
+        if (!isAdmin)
+          data = data.filter(
+            (i) => String(i.engineerName).toLowerCase() === eng,
           );
-          const result = await res.json();
-          const isAdmin =
-            String(window.__currentUser?.role || "").toLowerCase() === "admin";
-          const eng = (
-            window.__currentUser?.engineerName ||
-            window.__currentUser?.username ||
-            ""
-          ).toLowerCase();
-          let data = result.data.filter(
-            (i) => i.engineerName !== "NAVAL KISHOR PANDEY",
-          );
-          if (!isAdmin)
-            data = data.filter(
-              (i) => String(i.engineerName).toLowerCase() === eng,
-            );
-          byId("amcVisitStatusBody").innerHTML = data
-            .map((item) => {
-              const pct =
-                item.totalAMCAssigned > 0
-                  ? (
-                      (item.totalAMCCompleted / item.totalAMCAssigned) *
-                      100
-                    ).toFixed(1)
-                  : 0;
-              return `<tr><td>${item.engineerName}</td><td>${item.totalAMCAssigned}</td><td>${item.totalAMCCompleted}</td><td>${item.pendingAMC}</td><td class="text-right font-bold text-blue-600">${pct}%</td></tr>`;
-            })
-            .join("");
-        } catch (err) {
-          console.error(err);
-        }
+        byId("amcVisitStatusBody").innerHTML = data
+          .map((item) => {
+            const pct =
+              item.totalAMCAssigned > 0
+                ? (
+                    (item.totalAMCCompleted / item.totalAMCAssigned) *
+                    100
+                  ).toFixed(1)
+                : 0;
+            return `<tr><td>${item.engineerName}</td><td class="text-center">${item.totalAMCAssigned}</td><td class="text-center">${item.totalAMCCompleted}</td><td class="text-center">${item.pendingAMC}</td><td class="text-right font-bold text-blue-600">${pct}%</td></tr>`;
+          })
+          .join("");
       }
+
+      window.exportAMCVisitStatusCSV = function () {
+        const rows = Array.from(
+          document.querySelectorAll("#amcVisitStatusBody tr"),
+        ).map((tr) => {
+          const tds = tr.querySelectorAll("td");
+          return {
+            Name: tds[0].innerText,
+            Assigned: tds[1].innerText,
+            Completed: tds[2].innerText,
+            Pending: tds[3].innerText,
+            Pct: tds[4].innerText,
+          };
+        });
+        downloadCSV(
+          rows,
+          ["Name", "Assigned", "Completed", "Pending", "Pct"],
+          "amc_status.csv",
+        );
+      };
 
       byId("copyUnverifiedMail")?.addEventListener("click", () => {
         let mail = `<p>Unverified Report:</p><table border="1" style="border-collapse:collapse"><thead><tr><th>Engineer</th><th>Count</th></tr></thead><tbody>`;
         const map = new Map();
-        [
-          ...(window.__unverifiedHpcl || []),
-          ...(window.__unverifiedJio || []),
-        ].forEach((r) => {
+        [...(window.__uH || []), ...(window.__uJ || [])].forEach((r) => {
           const e = r.engineer || "-";
           map.set(e, (map.get(e) || 0) + 1);
         });
@@ -862,6 +898,78 @@
           .write([new ClipboardItem({ "text/html": bH, "text/plain": bT })])
           .then(() => alert("Copied!"));
       });
+
+      function renderVerifyChart(u, v) {
+        new Chart(byId("chartVerify"), {
+          type: "doughnut",
+          data: {
+            labels: ["Unverified", "Verified"],
+            datasets: [
+              { data: [u, v], backgroundColor: ["#b78103", "#2e844a"] },
+            ],
+          },
+          options: {
+            maintainAspectRatio: false,
+            cutout: "75%",
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+      }
+      function renderPlansRegionChart(plans) {
+        const c = {};
+        plans.forEach((p) => {
+          const r = (p.region || "").toUpperCase();
+          c[r] = (c[r] || 0) + 1;
+        });
+        new Chart(byId("chartPlansRegion"), {
+          type: "bar",
+          data: {
+            labels: Object.keys(c),
+            datasets: [
+              {
+                label: "Plans",
+                data: Object.values(c),
+                backgroundColor: "#0176d3",
+              },
+            ],
+          },
+          options: { maintainAspectRatio: false },
+        });
+      }
+      function renderCustomerChart(plans) {
+        const c = {};
+        plans.forEach((p) => {
+          const cust = customerFromPlan(p);
+          c[cust] = (c[cust] || 0) + 1;
+        });
+        new Chart(byId("chartCustomer"), {
+          type: "bar",
+          data: {
+            labels: Object.keys(c),
+            datasets: [{ data: Object.values(c), backgroundColor: "#0176d3" }],
+          },
+          options: { indexAxis: "y", maintainAspectRatio: false },
+        });
+      }
+      function renderCustomerCards(counts) {
+        byId("customerCards").innerHTML = Array.from(counts.entries())
+          .map(
+            ([label, count]) => `
+          <div class="border p-2 rounded bg-slate-50 flex items-center gap-2">
+            <div class="w-1 h-6 bg-blue-600"></div>
+            <div><p class="text-[9px] font-bold text-gray-500 uppercase">${label}</p><p class="text-sm font-bold">${count}</p></div>
+          </div>`,
+          )
+          .join("");
+      }
+      function buildMonthDropdown(plans) {
+        const keys = new Set(plans.map((p) => ymKey(p.date)).filter(Boolean));
+        byId("monthSelect").innerHTML = Array.from(keys)
+          .sort()
+          .reverse()
+          .map((k) => `<option value="${k}">${k}</option>`)
+          .join("");
+      }
 
       window.onload = loadOverview;
     </script>
